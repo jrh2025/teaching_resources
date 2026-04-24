@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>資源管理後台 | 通用展示系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/react@18.2.0/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- 載入目前的資料 -->
+    <script src="data.js"></script>
+
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f1f5f9;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+        const { createRoot } = ReactDOM;
+
+        // --- Lucide Icon Helper ---
+        const LucideIcon = ({ name, size = 24, className = "", ...props }) => {
+            if (!window.lucide || !window.lucide.icons) {
+                return <span className="inline-block bg-slate-200 rounded text-xs text-slate-500 flex items-center justify-center" style={{ width: size, height: size }}>?</span>;
+            }
+            const iconData = window.lucide.icons[name] || window.lucide.icons['CircleHelp'];
+            if (!iconData) return null;
+
+            // React 屬性名稱轉換 helper: 將 SVG 的 kebab-case 轉為 camelCase
+            const convertAttrs = (attrs) => {
+                if (!attrs) return attrs;
+                const map = {
+                    'stroke-width': 'strokeWidth',
+                    'stroke-linecap': 'strokeLinecap',
+                    'stroke-linejoin': 'strokeLinejoin',
+                    'fill-rule': 'fillRule',
+                    'clip-rule': 'clipRule',
+                    'class': 'className'
+                };
+                return Object.entries(attrs).reduce((acc, [key, val]) => {
+                    acc[map[key] || key] = val;
+                    return acc;
+                }, {});
+            };
+
+            const [tag, attrs, children] = iconData;
+            const renderChild = (child, index) => {
+                const [childTag, childAttrs, grandChildren] = child;
+                return React.createElement(childTag, { ...convertAttrs(childAttrs), key: index }, grandChildren ? grandChildren.map(renderChild) : null);
+            };
+            return React.createElement(tag, { ...convertAttrs(attrs), width: size, height: size, className: className, strokeWidth: 2, ...props }, children ? children.map(renderChild) : null);
+        };
+
+        const Icons = {
+            Dashboard: (p) => <LucideIcon name="LayoutDashboard" {...p} />,
+            Settings: (p) => <LucideIcon name="Settings" {...p} />,
+            Plus: (p) => <LucideIcon name="Plus" {...p} />,
+            Trash2: (p) => <LucideIcon name="Trash2" {...p} />,
+            Edit: (p) => <LucideIcon name="Edit" {...p} />,
+            X: (p) => <LucideIcon name="X" {...p} />,
+            Download: (p) => <LucideIcon name="Download" {...p} />,
+            FileCode: (p) => <LucideIcon name="FileCode" {...p} />,
+            ExternalLink: (p) => <LucideIcon name="ExternalLink" {...p} />,
+            Search: (p) => <LucideIcon name="Search" {...p} />
+        };
+
+        // 預設設定
+        const defaultSettings = {
+            siteTitle: "通用展示系統",
+            siteSubtitle: "探索各式各樣的資源與工具",
+            footerText: "© 2026 Designed for Education",
+            categoryLabel: "分類",
+            categoriesString: "一般, 進階, 其他" // 改用字串儲存，避免輸入時被強制過濾
+        };
+
+        function AdminApp() {
+            const [activeTab, setActiveTab] = useState('items'); // 'items' or 'settings'
+            const [settings, setSettings] = useState(defaultSettings);
+            const [items, setItems] = useState([]);
+            const [editingId, setEditingId] = useState(null);
+            const [formData, setFormData] = useState({});
+            const [showModal, setShowModal] = useState(false);
+
+            // 初始化讀取資料 (包含舊版相容邏輯)
+            useEffect(() => {
+                if (window.APP_DATA) {
+                    const loadedSettings = window.APP_DATA.settings || defaultSettings;
+                    // 將陣列轉為字串供編輯使用
+                    loadedSettings.categoriesString = loadedSettings.categories ? loadedSettings.categories.join(', ') : "一般, 進階, 其他";
+                    setSettings(loadedSettings);
+                    setItems(window.APP_DATA.items || []);
+                } else if (window.MATH_TOOLS_DATA) {
+                    // 舊版轉移邏輯
+                    console.log("偵測到舊版資料，執行無痛轉移...");
+                    const migratedSettings = {
+                        siteTitle: "數學實驗室",
+                        siteSubtitle: "國小數學互動教學實驗室",
+                        footerText: "© 2025 國小數學互動教學實驗室",
+                        categoryLabel: "適用年級",
+                        categoriesString: '一年級, 二年級, 三年級, 四年級, 五年級, 六年級, 其他'
+                    };
+                    const migratedItems = window.MATH_TOOLS_DATA.map(item => ({
+                        ...item,
+                        category: item.grade // 將 grade 轉為 category
+                    }));
+                    setSettings(migratedSettings);
+                    setItems(migratedItems);
+                }
+            }, []);
+
+            // 取得目前的分類陣列供下拉選單即時使用
+            const currentCategories = (settings.categoriesString || '').split(',').map(s => s.trim()).filter(s => s);
+            const displayCategories = currentCategories.length > 0 ? currentCategories : ['預設分類'];
+
+            // 處理設定值變更
+            const handleSettingChange = (field, value) => {
+                setSettings(prev => ({ ...prev, [field]: value }));
+            };
+
+            // 開啟新增/編輯視窗
+            const handleEdit = (item = null) => {
+                if (item) {
+                    setEditingId(item.id);
+                    setFormData({ ...item });
+                } else {
+                    setEditingId(null);
+                    setFormData({
+                        id: `item_${Date.now()}`,
+                        title: '',
+                        category: displayCategories[0],
+                        description: '',
+                        link: '',
+                        icon: 'BookOpen',
+                        color: 'blue'
+                    });
+                }
+                setShowModal(true);
+            };
+
+            // 儲存單一項目
+            const handleSaveItem = (e) => {
+                e.preventDefault();
+                let newItems;
+                if (editingId) {
+                    newItems = items.map(t => t.id === editingId ? formData : t);
+                } else {
+                    newItems = [...items, formData];
+                }
+                setItems(newItems);
+                setShowModal(false);
+            };
+
+            // 刪除項目
+            const handleDelete = (id) => {
+                if (confirm('確定要刪除這個項目嗎？')) {
+                    setItems(items.filter(t => t.id !== id));
+                }
+            };
+
+            // 匯出設定檔
+            const handleExport = () => {
+                // 在匯出時才將字串過濾並轉換為陣列
+                const finalCategories = (settings.categoriesString || '').split(',').map(s => s.trim()).filter(s => s);
+                const exportSettings = {
+                    siteTitle: settings.siteTitle,
+                    siteSubtitle: settings.siteSubtitle,
+                    footerText: settings.footerText,
+                    categoryLabel: settings.categoryLabel,
+                    categories: finalCategories.length > 0 ? finalCategories : ['預設分類']
+                };
+
+                const appData = {
+                    settings: exportSettings,
+                    items: items
+                };
+
+                const dataStr = `/**\n * 通用型互動展示系統 - 系統設定檔\n * 此檔案由 admin.html 生成，請勿手動修改格式。\n */\nwindow.APP_DATA = ${JSON.stringify(appData, null, 2)};`;
+
+                const blob = new Blob([dataStr], { type: 'text/javascript' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'data.js';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                alert('設定檔已下載！\n請將下載的 "data.js" 覆蓋掉網站資料夾中的舊檔案即可完成更新。');
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    {/* Admin Header */}
+                    <header className="bg-slate-800 text-white shadow-md sticky top-0 z-50">
+                        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+                            <div className="flex items-center gap-6">
+                                <div className="flex items-center gap-3">
+                                    <Icons.Dashboard className="text-emerald-400" />
+                                    <h1 className="text-xl font-bold truncate max-w-[200px]">{settings.siteTitle} - 後台</h1>
+                                </div>
+                                <nav className="hidden md:flex gap-2">
+                                    <button onClick={() => setActiveTab('items')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'items' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}>
+                                        項目管理
+                                    </button>
+                                    <button onClick={() => setActiveTab('settings')} className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${activeTab === 'settings' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}>
+                                        網站設定
+                                    </button>
+                                </nav>
+                            </div>
+                            <div className="flex gap-4 items-center">
+                                <a href="index.html" target="_blank" className="hidden sm:flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors">
+                                    <Icons.ExternalLink size={16} /> 預覽前台
+                                </a>
+                                <button
+                                    onClick={handleExport}
+                                    className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-1.5 rounded-lg font-bold text-sm transition-colors shadow-lg shadow-emerald-500/20"
+                                >
+                                    <Icons.Download size={16} /> <span className="hidden sm:inline">下載設定檔 (更新網站)</span><span className="sm:hidden">匯出</span>
+                                </button>
+                            </div>
+                        </div>
+                        {/* Mobile Nav */}
+                        <div className="md:hidden flex bg-slate-900 px-4 py-2">
+                            <button onClick={() => setActiveTab('items')} className={`flex-1 py-2 text-sm font-bold text-center rounded ${activeTab === 'items' ? 'bg-slate-800 text-white' : 'text-slate-400'}`}>項目管理</button>
+                            <button onClick={() => setActiveTab('settings')} className={`flex-1 py-2 text-sm font-bold text-center rounded ${activeTab === 'settings' ? 'bg-slate-800 text-white' : 'text-slate-400'}`}>網站設定</button>
+                        </div>
+                    </header>
+
+                    <main className="flex-grow p-4 md:p-6 max-w-5xl mx-auto w-full">
+
+                        {/* Tab: Items Management */}
+                        {activeTab === 'items' && (
+                            <div className="animate-in fade-in duration-300">
+                                <div className="flex justify-between items-end mb-6">
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-slate-800">展示項目管理</h2>
+                                        <p className="text-slate-500 text-sm mt-1">目前共有 {items.length} 個項目</p>
+                                    </div>
+                                    <button
+                                        onClick={() => handleEdit(null)}
+                                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-all active:scale-95"
+                                    >
+                                        <Icons.Plus size={20} /> 新增項目
+                                    </button>
+                                </div>
+
+                                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden overflow-x-auto">
+                                    <table className="w-full text-left border-collapse min-w-[600px]">
+                                        <thead className="bg-slate-50 border-b border-slate-200">
+                                            <tr>
+                                                <th className="px-6 py-4 font-bold text-slate-600 text-sm">圖示</th>
+                                                <th className="px-6 py-4 font-bold text-slate-600 text-sm">標題 / 描述</th>
+                                                <th className="px-6 py-4 font-bold text-slate-600 text-sm">檔案連結</th>
+                                                <th className="px-6 py-4 font-bold text-slate-600 text-sm">操作</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100">
+                                            {items.map(item => (
+                                                <tr key={item.id} className="hover:bg-slate-50 transition-colors">
+                                                    <td className="px-6 py-4">
+                                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-white bg-${item.color}-500 `}>
+                                                            <LucideIcon name={item.icon} size={20} />
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="font-bold text-slate-800">{item.title}</div>
+                                                        <div className="text-xs text-slate-500 mt-1 line-clamp-1 max-w-xs">{item.description}</div>
+                                                        <span className="inline-block mt-1 px-2 py-0.5 bg-slate-100 text-slate-600 text-[10px] rounded font-bold">
+                                                            {item.category || item.grade}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex items-center gap-2 text-sm text-slate-600 font-mono bg-slate-100 px-2 py-1 rounded max-w-[150px] truncate">
+                                                            <Icons.FileCode size={14} /> {item.link}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex gap-2">
+                                                            <button onClick={() => handleEdit(item)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                                                <Icons.Edit size={18} />
+                                                            </button>
+                                                            <button onClick={() => handleDelete(item.id)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                                                <Icons.Trash2 size={18} />
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                    {items.length === 0 && (
+                                        <div className="p-10 text-center text-slate-400 flex flex-col items-center gap-2">
+                                            <Icons.Dashboard size={48} className="opacity-20" />
+                                            目前沒有任何項目，請點擊右上角新增。
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Tab: Settings */}
+                        {activeTab === 'settings' && (
+                            <div className="animate-in fade-in duration-300 max-w-3xl">
+                                <div className="mb-6">
+                                    <h2 className="text-2xl font-bold text-slate-800">全站設定檔</h2>
+                                    <p className="text-slate-500 text-sm mt-1">自訂您的網站外觀與結構，修改後記得點擊右上角「下載設定檔」。</p>
+                                </div>
+
+                                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-2">網站主標題 (Site Title)</label>
+                                        <input
+                                            type="text"
+                                            value={settings.siteTitle}
+                                            onChange={e => handleSettingChange('siteTitle', e.target.value)}
+                                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-2">網站副標題 (Subtitle)</label>
+                                        <input
+                                            type="text"
+                                            value={settings.siteSubtitle}
+                                            onChange={e => handleSettingChange('siteSubtitle', e.target.value)}
+                                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-2">頁尾版權文字 (Footer)</label>
+                                        <input
+                                            type="text"
+                                            value={settings.footerText}
+                                            onChange={e => handleSettingChange('footerText', e.target.value)}
+                                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                        />
+                                    </div>
+                                    <div className="pt-4 border-t border-slate-100">
+                                        <label className="block text-sm font-bold text-slate-700 mb-2">分類維度名稱 (例如：適用年級、系統分類、難易度)</label>
+                                        <input
+                                            type="text"
+                                            value={settings.categoryLabel}
+                                            onChange={e => handleSettingChange('categoryLabel', e.target.value)}
+                                            className="w-full md:w-1/2 px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-2">可用分類列表 (請用半形逗號 , 分隔)</label>
+                                        <textarea
+                                            value={settings.categoriesString}
+                                            onChange={e => handleSettingChange('categoriesString', e.target.value)}
+                                            className="w-full px-4 py-2 border border-slate-300 rounded-lg outline-none h-24 resize-none"
+                                            placeholder="分類一, 分類二, 分類三..."
+                                        />
+                                        <p className="text-xs text-slate-500 mt-2">提示：前台的排序將會根據您在此處輸入的先後順序進行運算。</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Modal Form for Items */}
+                    {showModal && (
+                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+                                <div className="bg-slate-50 px-6 py-4 border-b border-slate-200 flex justify-between items-center">
+                                    <h3 className="font-bold text-lg text-slate-800">
+                                        {editingId ? '編輯項目' : '新增項目'}
+                                    </h3>
+                                    <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600">
+                                        <Icons.X size={20} />
+                                    </button>
+                                </div>
+                                <form onSubmit={handleSaveItem} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1">標題</label>
+                                        <input
+                                            required
+                                            type="text"
+                                            value={formData.title}
+                                            onChange={e => setFormData({ ...formData, title: e.target.value })}
+                                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-bold text-slate-700 mb-1">{settings.categoryLabel}</label>
+                                            <select
+                                                value={formData.category || formData.grade}
+                                                onChange={e => setFormData({ ...formData, category: e.target.value, grade: e.target.value })}
+                                                className="w-full px-4 py-2 border border-slate-300 rounded-lg outline-none"
+                                            >
+                                                {displayCategories.map((cat, i) => <option key={i} value={cat}>{cat}</option>)}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-slate-700 mb-1">主題顏色</label>
+                                            <select
+                                                value={formData.color}
+                                                onChange={e => setFormData({ ...formData, color: e.target.value })}
+                                                className="w-full px-4 py-2 border border-slate-300 rounded-lg outline-none"
+                                            >
+                                                <option value="blue">藍色</option>
+                                                <option value="sky">天藍</option>
+                                                <option value="indigo">靛青</option>
+                                                <option value="green">綠色</option>
+                                                <option value="orange">橘色</option>
+                                                <option value="rose">玫瑰</option>
+                                                <option value="purple">紫色</option>
+                                                <option value="slate">鐵灰</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1">檔案連結 / 外部網址</label>
+                                        <input
+                                            required
+                                            type="text"
+                                            value={formData.link}
+                                            onChange={e => setFormData({ ...formData, link: e.target.value })}
+                                            className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-mono text-sm"
+                                            placeholder="例如：app.html 或 https://..."
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1">圖示名稱 (Lucide Icon)</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={formData.icon}
+                                                onChange={e => setFormData({ ...formData, icon: e.target.value })}
+                                                className="w-full px-4 py-2 border border-slate-300 rounded-lg outline-none font-mono text-sm"
+                                                placeholder="例如：Book, Rocket..."
+                                            />
+                                            <div className="w-10 h-10 flex items-center justify-center bg-slate-100 rounded-lg border border-slate-200 shrink-0">
+                                                <LucideIcon name={formData.icon} size={20} className="text-slate-600" />
+                                            </div>
+                                            <a
+                                                href="./icon_browser.html"
+                                                target="_blank"
+                                                className="shrink-0 flex items-center gap-1 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-bold transition-colors"
+                                            >
+                                                <Icons.Search size={16} /> 查找
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1">簡短描述</label>
+                                        <textarea
+                                            value={formData.description}
+                                            onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                            className="w-full px-4 py-2 border border-slate-300 rounded-lg outline-none h-24 resize-none"
+                                        />
+                                    </div>
+                                    <div className="pt-4 flex gap-3 sticky bottom-0 bg-white">
+                                        <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">取消</button>
+                                        <button type="submit" className="flex-1 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-md transition-colors">確認儲存</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<AdminApp />);
+    </script>
+</body>
+
+</html>

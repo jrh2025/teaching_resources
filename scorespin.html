@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小瑪莉班級積分管理系統</title>
+    <style>
+        :root {
+            --primary-color: #ff6b6b;
+            --secondary-color: #feca57;
+            --bg-color: #2f3542;
+            --panel-bg: rgba(255, 255, 255, 0.1);
+            --text-color: #ffffff;
+            --active-shadow: 0 0 25px #feca57, 0 0 50px #ff9ff3;
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Segoe UI", "Microsoft JhengHei", sans-serif;
+            background-color: var(--bg-color);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.5s ease;
+        }
+
+        .glass-panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        h1#main-title {
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            color: var(--secondary-color);
+            text-align: center;
+            transition: color 0.3s;
+            z-index: 10;
+        }
+
+        .top-toolbar {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-settings {
+            background: #5f27cd;
+        }
+
+        .btn-admin {
+            background: #1dd1a1;
+            color: #222;
+        }
+
+        .btn-file-new {
+            background: #341f97;
+        }
+
+        .btn-file-load {
+            background: #ff9f43;
+        }
+
+        /* === 無窮大 遊戲主面板 === */
+        .game-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1000px;
+            position: relative;
+        }
+
+        .game-container {
+            width: 100%;
+            /* 讓容器維持適合無窮大圖形的寬高比 */
+            aspect-ratio: 2.2 / 1;
+            min-height: 350px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .cell {
+            position: absolute;
+            /* 絕對定位排列成無窮大 */
+            width: clamp(50px, 6vw, 75px);
+            height: clamp(50px, 6vw, 75px);
+            transform: translate(-50%, -50%);
+            /* 確保座標置中 */
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            /* 改成圓形更搭無窮大的流線 */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-weight: 900;
+            font-size: clamp(12px, 1.5vw, 16px);
+            transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: #ddd;
+            z-index: 2;
+        }
+
+        .cell .icon {
+            font-size: clamp(20px, 2.5vw, 34px);
+            margin-bottom: 2px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+        }
+
+        .cell.active {
+            background: var(--secondary-color);
+            color: #000;
+            box-shadow: var(--active-shadow);
+            transform: translate(-50%, -50%) scale(1.25);
+            border-color: #fff;
+            z-index: 10;
+        }
+
+        /* === 底部控制台 === */
+        .control-panel {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            z-index: 5;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .current-student-info {
+            flex-grow: 1;
+        }
+
+        #display-name {
+            font-size: 32px;
+            color: var(--secondary-color);
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+        }
+
+        #display-class {
+            font-size: 16px;
+            color: #ccc;
+            margin-bottom: 2px;
+            display: block;
+        }
+
+        .action-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .spin-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5253);
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            font-size: 28px;
+            font-weight: 900;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #831010, 0 10px 20px rgba(0, 0, 0, 0.4);
+            transition: all 0.1s;
+            letter-spacing: 2px;
+        }
+
+        .spin-btn:hover {
+            background: linear-gradient(135deg, #ff7b7b, #fe6263);
+        }
+
+        .spin-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 0px 0 #831010, 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+
+        .spin-btn:disabled {
+            background: #7f8c8d;
+            box-shadow: 0 6px 0 #2c3e50;
+            cursor: not-allowed;
+        }
+
+        .shuffle-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+
+        .shuffle-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(180deg);
+        }
+
+        /* 快速選擇區 */
+        .quick-select-area {
+            width: 100%;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 12px 20px;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            font-size: 16px;
+            margin-bottom: 15px;
+            outline: none;
+        }
+
+        .search-box:focus {
+            border-color: var(--secondary-color);
+        }
+
+        .search-box::placeholder {
+            color: #aaa;
+        }
+
+        .quick-student-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            max-height: 180px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .student-pill {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .student-pill:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .student-pill.selected {
+            background: var(--secondary-color);
+            color: #000;
+            font-weight: bold;
+            border-color: #fff;
+        }
+
+        .status-bar {
+            width: 100%;
+            text-align: center;
+            padding: 10px;
+            margin-top: 20px;
+            font-size: 14px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Modal 共用 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-color);
+            padding: 30px;
+            border-radius: 20px;
+            width: 95%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 10px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: var(--secondary-color);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* 設定面板 */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"],
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #555;
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            font-size: 16px;
+        }
+
+        .form-group select option {
+            background: #2f3542;
+            color: white;
+        }
+
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid #555;
+        }
+
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 5px;
+            cursor: pointer;
+            padding: 0;
+            background: transparent;
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        input[type="color"]::-webkit-color-swatch {
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 5px;
+        }
+
+        .file-upload-wrapper {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .file-upload-btn {
+            background: #2980b9;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .file-upload-btn:hover {
+            background: #3498db;
+        }
+
+        /* 管理面板 */
+        .admin-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .admin-table-container {
+            overflow-x: auto;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .admin-table th,
+        .admin-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-table th {
+            background: rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .admin-table th:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .admin-table tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn-tiny {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .btn-add-pt {
+            background: #2ecc71;
+        }
+
+        .btn-sub-pt {
+            background: #e74c3c;
+        }
+
+        .btn-edit {
+            background: #f39c12;
+        }
+
+        .btn-del {
+            background: #c0392b;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #print-area,
+            #print-area * {
+                visibility: visible;
+                color: black !important;
+            }
+
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                padding: 20px;
+            }
+
+            .admin-table th {
+                background: #eee !important;
+                color: black !important;
+                -webkit-print-color-adjust: exact;
+            }
+
+            .admin-table td,
+            .admin-table th {
+                border: 1px solid #ccc;
+                padding: 8px;
+            }
+
+            .action-btns {
+                display: none !important;
+            }
+
+            h2 {
+                color: black !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .top-toolbar {
+                flex-wrap: wrap;
+            }
+
+            .control-panel {
+                padding: 15px;
+                flex-direction: column;
+                text-align: center;
+            }
+
+            #display-name {
+                font-size: 24px;
+            }
+
+            .spin-btn {
+                width: 100%;
+                padding: 15px 0;
+            }
+
+            .game-container {
+                aspect-ratio: 1.5 / 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="top-toolbar">
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-file-new" onclick="fileManager.createFile()">📄 建立新檔</button>
+            <button class="btn btn-file-load" onclick="fileManager.loadFile()">📂 掛載隨身碟檔案</button>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-admin" onclick="ui.openAdmin()" id="btn-open-admin" disabled>⚙️ 學生管理</button>
+            <button class="btn btn-settings" onclick="ui.openSettings()">🎨 個人化設定</button>
+        </div>
+    </div>
+
+    <h1 id="main-title">🌟 小瑪莉班級積分盤</h1>
+
+    <div class="game-wrapper">
+        <!-- 無窮大軌跡動態產生區 -->
+        <div class="game-container" id="game-board">
+            <!-- JS 將在這裡動態生成無窮大圖案的獎項 -->
+        </div>
+
+        <div class="control-panel">
+            <div class="current-student-info">
+                <span id="display-class">班級：--</span>
+                <span id="display-name">請選擇學生</span>
+                <span id="display-score" style="font-size: 20px; color:#fff;">目前積分: 0</span>
+            </div>
+            <div class="action-group">
+                <button class="shuffle-btn" onclick="game.generateBoard()" title="打亂盤面圖案與分數">🔀</button>
+                <button id="spin-btn" class="spin-btn" onclick="game.start()">GO!</button>
+            </div>
+        </div>
+
+        <div class="quick-select-area glass-panel">
+            <input type="text" id="main-search" class="search-box" placeholder="🔍 搜尋班級或姓名快速選擇學生..."
+                onkeyup="ui.renderMainList()" disabled>
+            <div class="quick-student-grid" id="main-student-grid">
+                <div style="color: #aaa; width: 100%; text-align: center; padding: 20px;">請先從上方建立或掛載資料檔</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="sync-status" class="status-bar">狀態：等待掛載資料檔...</div>
+
+    <!-- 設定 Modal -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal-content glass-panel">
+            <div class="modal-header">
+                <h2>🎨 個人化設定</h2>
+                <button class="close-btn" onclick="ui.closeSettings()">×</button>
+            </div>
+
+            <div class="form-group">
+                <label>系統大標題名稱</label>
+                <input type="text" id="set-title" placeholder="例如：三年二班抽獎盤">
+            </div>
+
+            <div class="form-group color-picker-container">
+                <label style="margin: 0; width: 120px;">大標題字體顏色</label>
+                <input type="color" id="set-titlecolor" value="#feca57">
+            </div>
+
+            <div class="form-group color-picker-container">
+                <label style="margin: 0; width: 120px;">全域背景顏色</label>
+                <input type="color" id="set-bgcolor" value="#2f3542">
+            </div>
+
+            <div class="form-group" style="margin-top: 15px;">
+                <label>🎵 遊戲音效風格</label>
+                <select id="set-soundstyle">
+                    <option value="retro">👾 復古電子 (8-bit)</option>
+                    <option value="modern">🔔 現代清脆 (Pop)</option>
+                    <option value="crystal">💎 魔幻水晶 (Crystal)</option>
+                    <option value="party">🎉 歡樂派對 (Party)</option>
+                </select>
+            </div>
+
+            <div class="form-group" style="margin-top: 20px;">
+                <label>背景圖片 (覆蓋背景顏色)</label>
+                <input type="text" id="set-bgimg" placeholder="輸入網路圖片 URL (http...) 或使用下方按鈕選擇">
+
+                <div class="file-upload-wrapper">
+                    <label class="file-upload-btn">
+                        📁 從隨身碟/本機選擇圖片
+                        <input type="file" id="set-bgimg-file" accept="image/*" style="display: none;"
+                            onchange="ui.handleLocalImage(event)">
+                    </label>
+                    <button class="btn-tiny" style="background: #e74c3c; padding: 8px 12px;"
+                        onclick="ui.clearLocalImage()" id="btn-clear-img" style="display: none;">移除圖檔</button>
+                </div>
+                <small id="local-img-status"
+                    style="color: #2ecc71; display: none; margin-top: 8px; font-weight: bold;">✅ 已成功載入本機圖片檔</small>
+            </div>
+
+            <button class="btn btn-settings" style="width: 100%; justify-content: center; margin-top: 25px;"
+                onclick="ui.saveSettings()">💾 儲存設定</button>
+        </div>
+    </div>
+
+    <!-- 管理後台 Modal -->
+    <div class="modal-overlay" id="admin-modal">
+        <div class="modal-content glass-panel" style="max-width: 1000px;">
+            <div class="modal-header">
+                <h2>⚙️ 學生資料與積分管理</h2>
+                <button class="close-btn" onclick="ui.closeAdmin()">×</button>
+            </div>
+
+            <div class="admin-controls">
+                <input type="text" id="add-class" placeholder="班級/座號"
+                    style="padding: 8px; border-radius: 5px; border: none; width: 120px;">
+                <input type="text" id="add-name" placeholder="學生姓名"
+                    style="padding: 8px; border-radius: 5px; border: none; flex-grow: 1;">
+                <button class="btn btn-file-new" onclick="ui.addStudent()">➕ 新增學生</button>
+            </div>
+
+            <div class="admin-controls"
+                style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; align-items: center;">
+                <input type="text" id="admin-search" placeholder="🔍 搜尋班級或姓名..."
+                    style="padding: 8px; border-radius: 5px; border: none; flex-grow: 1;"
+                    onkeyup="ui.renderAdminTable()">
+                <button class="btn" style="background: #e67e22;" onclick="ui.resetAllScores()">⚠️ 全班積分歸零</button>
+                <button class="btn" style="background: #e84393;" onclick="ui.exportPDF()">🖨️ 列印/匯出 PDF</button>
+            </div>
+
+            <div class="admin-table-container">
+                <table class="admin-table" id="admin-table">
+                    <thead>
+                        <tr>
+                            <th onclick="ui.toggleSort('classRoom')">班級/座號 ↕️</th>
+                            <th onclick="ui.toggleSort('name')">姓名 ↕️</th>
+                            <th onclick="ui.toggleSort('score')">目前積分 ↕️</th>
+                            <th>操作管理</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="print-area" style="display:none;">
+        <h2 id="print-title" style="text-align: center; margin-bottom: 20px;">班級積分結算表</h2>
+        <div style="text-align: right; margin-bottom: 10px;" id="print-date"></div>
+        <table class="admin-table" style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="border: 1px solid #000; padding: 8px; text-align: left;">班級/座號</th>
+                    <th style="border: 1px solid #000; padding: 8px; text-align: left;">姓名</th>
+                    <th style="border: 1px solid #000; padding: 8px; text-align: left;">積分</th>
+                </tr>
+            </thead>
+            <tbody id="print-tbody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        // --- 預設資料結構 ---
+        const defaultSettings = {
+            title: "🌟 小瑪莉班級積分盤",
+            titleColor: "#feca57",
+            bgColor: "#2f3542",
+            bgImage: "",
+            soundStyle: "retro" // 音效風格
+        };
+
+        // --- 檔案系統管理 ---
+        const fileManager = {
+            handle: null,
+            data: { settings: { ...defaultSettings }, students: [] },
+
+            updateStatus(msg, isError = false) {
+                const statusEl = document.getElementById('sync-status');
+                statusEl.textContent = `狀態：${msg}`;
+                statusEl.style.color = isError ? '#ff7b7b' : '#2ecc71';
+            },
+
+            enableUI() {
+                document.getElementById('btn-open-admin').disabled = false;
+                document.getElementById('main-search').disabled = false;
+            },
+
+            applySettings() {
+                const s = this.data.settings;
+                const titleEl = document.getElementById('main-title');
+                titleEl.innerText = s.title || defaultSettings.title;
+                titleEl.style.color = s.titleColor || defaultSettings.titleColor;
+
+                if (s.bgImage) {
+                    document.body.style.backgroundImage = `url('${s.bgImage}')`;
+                    document.body.style.backgroundColor = 'transparent';
+                } else {
+                    document.body.style.backgroundImage = 'none';
+                    document.body.style.backgroundColor = s.bgColor || defaultSettings.bgColor;
+                }
+            },
+
+            parseData(text) {
+                if (!text) return { settings: { ...defaultSettings }, students: [] };
+                try {
+                    const parsed = JSON.parse(text);
+                    if (Array.isArray(parsed)) {
+                        return { settings: { ...defaultSettings }, students: parsed.map(s => ({ ...s, classRoom: '未指定' })) };
+                    }
+                    return { settings: { ...defaultSettings, ...(parsed.settings || {}) }, students: parsed.students || [] };
+                } catch (e) {
+                    return { settings: { ...defaultSettings }, students: [] };
+                }
+            },
+
+            async verifyPermission() {
+                if (!this.handle) return false;
+                const options = { mode: 'readwrite' };
+                if ((await this.handle.queryPermission(options)) === 'granted') return true;
+                if ((await this.handle.requestPermission(options)) === 'granted') return true;
+                return false;
+            },
+
+            async createFile() {
+                try {
+                    const handle = await window.showSaveFilePicker({
+                        suggestedName: 'class_data_v2.json',
+                        types: [{ description: 'JSON 資料檔', accept: { 'application/json': ['.json'] } }],
+                    });
+                    this.handle = handle;
+                    this.data = { settings: { ...defaultSettings }, students: [] };
+                    await this.save(true);
+                    this.enableUI();
+                    this.applySettings();
+                    ui.renderMainList();
+                    this.updateStatus('✅ 已建立並掛載新檔，資料自動同步中');
+                } catch (e) { }
+            },
+
+            async loadFile() {
+                try {
+                    const [handle] = await window.showOpenFilePicker({
+                        types: [{ description: 'JSON 資料檔', accept: { 'application/json': ['.json'] } }],
+                    });
+                    this.handle = handle;
+                    const hasPermission = await this.verifyPermission();
+                    if (!hasPermission) alert("⚠️ 未取得寫入權限！系統將無法自動將積分存入隨身碟。");
+
+                    const file = await handle.getFile();
+                    const text = await file.text();
+                    this.data = this.parseData(text);
+
+                    this.enableUI();
+                    this.applySettings();
+                    ui.renderMainList();
+                    ui.updateHeader();
+
+                    if (hasPermission) this.updateStatus('✅ 已成功掛載資料檔，變更將自動存入隨身碟');
+                    else this.updateStatus('⚠️ 掛載成功，但無寫入權限，請手動匯出備份');
+                } catch (e) { }
+            },
+
+            async save(isDirectUserAction = false) {
+                if (!this.handle) return;
+                try {
+                    this.updateStatus('⏳ 同步寫入中...');
+                    const writable = await this.handle.createWritable();
+                    await writable.write(JSON.stringify(this.data));
+                    await writable.close();
+                    this.updateStatus('✅ 已自動同步至隨身碟');
+                } catch (e) {
+                    this.updateStatus('❌ 寫入失敗！已啟動安全備份', true);
+                    this.fallbackSave();
+                    alert("🛡️ 瀏覽器安全機制阻擋了對隨身碟的直接寫入。\n系統已自動為您將最新資料「下載」為備份檔，請查看瀏覽器的下載區！");
+                    this.handle = null;
+                }
+            },
+
+            fallbackSave() {
+                const blob = new Blob([JSON.stringify(this.data)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const d = new Date();
+                a.href = url;
+                a.download = `積分救援備份_${d.getHours()}時${d.getMinutes()}分.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        };
+
+        // --- 無窮大遊戲邏輯與圖示擴充 ---
+        const prizePoolBase = [
+            { icon: '🚀', pts: 1 }, { icon: '🎮', pts: 2 }, { icon: '🍕', pts: 5 }, { icon: '👑', pts: 10 },
+            { icon: '👻', pts: 2 }, { icon: '🍔', pts: 1 }, { icon: '🦖', pts: 3 }, { icon: '💎', pts: 4 },
+            { icon: '🏆', pts: 20 }, { icon: '🦄', pts: 15 }, { icon: '🍩', pts: 3 }, { icon: '🎸', pts: 5 },
+            { icon: '🎯', pts: 8 }, { icon: '🎲', pts: 2 }, { icon: '⚽', pts: 3 }, { icon: '🌈', pts: 5 },
+            { icon: '🔥', pts: 10 }, { icon: '🌟', pts: 15 }, { icon: '🎁', pts: 20 }, { icon: '⚡', pts: 4 },
+            { icon: '🍎', pts: 1 }, { icon: '🍉', pts: 3 }, { icon: '🎵', pts: 2 }, { icon: '🧩', pts: 4 }
+        ];
+
+        const game = {
+            isRunning: false,
+            currentIndex: 0,
+            totalCells: 24, // 無窮大節點數量
+            prizes: [],
+            selectedStudentId: null,
+            audioCtx: null,
+
+            // 產生無窮大(Lissajous 曲線)盤面
+            generateBoard() {
+                const container = document.getElementById('game-board');
+                container.innerHTML = '';
+                this.prizes = [];
+
+                // 每次生成都將圖庫打亂 (洗牌)
+                let shuffledPool = [...prizePoolBase].sort(() => 0.5 - Math.random());
+
+                for (let i = 0; i < this.totalCells; i++) {
+                    // 使用參數方程式計算 8 字形軌跡
+                    // 加上 0.5 的偏移量避免正中心精準重疊
+                    let t = ((i + 0.5) / this.totalCells) * 2 * Math.PI;
+
+                    // X = 50% + 42% * sin(t), Y = 50% + 38% * sin(2t)
+                    let leftPct = 50 + 42 * Math.sin(t);
+                    let topPct = 50 + 38 * Math.sin(2 * t);
+
+                    // 確保選項不夠時會輪迴使用
+                    const prizeItem = shuffledPool[i % shuffledPool.length];
+                    this.prizes.push(prizeItem.pts);
+
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.id = `c${i}`;
+                    cell.style.left = `${leftPct}%`;
+                    cell.style.top = `${topPct}%`;
+                    cell.innerHTML = `<div class="icon">${prizeItem.icon}</div>+${prizeItem.pts}`;
+
+                    container.appendChild(cell);
+                }
+                this.currentIndex = 0;
+            },
+
+            playSound(freq, duration) {
+                try {
+                    if (!this.audioCtx) {
+                        const AudioContext = window.AudioContext || window.webkitAudioContext;
+                        if (AudioContext) this.audioCtx = new AudioContext();
+                    }
+                    if (this.audioCtx && this.audioCtx.state === 'suspended') this.audioCtx.resume();
+                    if (!this.audioCtx) return;
+
+                    const style = fileManager.data.settings.soundStyle || 'retro';
+                    const osc = this.audioCtx.createOscillator();
+                    const gain = this.audioCtx.createGain();
+
+                    let type = 'square';
+                    let freqMult = 1;
+
+                    // 根據設定改變音效波形與頻率
+                    if (style === 'modern') { type = 'sine'; }
+                    else if (style === 'crystal') { type = 'triangle'; freqMult = 2.5; }
+                    else if (style === 'party') { type = 'sawtooth'; freqMult = 1.2; }
+
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq * freqMult, this.audioCtx.currentTime);
+
+                    // 根據設定改變衰減模式
+                    if (style === 'modern') {
+                        gain.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration * 0.8);
+                    } else if (style === 'crystal') {
+                        gain.gain.setValueAtTime(0.15, this.audioCtx.currentTime);
+                        gain.gain.linearRampToValueAtTime(0, this.audioCtx.currentTime + duration);
+                    } else { // retro & party
+                        gain.gain.setValueAtTime(0.1, this.audioCtx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + duration);
+                    }
+
+                    osc.connect(gain);
+                    gain.connect(this.audioCtx.destination);
+                    osc.start();
+                    osc.stop(this.audioCtx.currentTime + duration);
+                } catch (e) { }
+            },
+
+            async start() {
+                if (this.isRunning) return;
+                const student = fileManager.data.students.find(s => s.id === this.selectedStudentId);
+                if (!student) {
+                    alert("請先從下方清單選擇一位學生！");
+                    return;
+                }
+
+                this.isRunning = true;
+                document.getElementById('spin-btn').disabled = true;
+
+                // 隨機轉動圈數
+                let steps = this.totalCells * 2 + Math.floor(Math.random() * this.totalCells);
+                let speed = 40;
+                let count = 0;
+
+                const run = () => {
+                    // 移除上一格的高光
+                    document.getElementById(`c${this.currentIndex}`).classList.remove('active');
+
+                    // 沿著軌跡前進
+                    this.currentIndex = (this.currentIndex + 1) % this.totalCells;
+                    document.getElementById(`c${this.currentIndex}`).classList.add('active');
+
+                    this.playSound(300 + (this.currentIndex * 15), 0.05);
+
+                    count++;
+                    if (count < steps) {
+                        // 減速邏輯
+                        if (steps - count < 5) speed += 120;
+                        else if (steps - count < 15) speed += 50;
+                        else if (steps - count < 25) speed += 15;
+                        setTimeout(run, speed);
+                    } else {
+                        this.finish(student);
+                    }
+                };
+                run();
+            },
+
+            async finish(student) {
+                const winPoints = this.prizes[this.currentIndex];
+
+                // 播放勝利和弦音效
+                this.playSound(880, 0.1);
+                setTimeout(() => this.playSound(1108, 0.1), 100);
+                setTimeout(() => this.playSound(1318, 0.4), 200);
+
+                student.score += winPoints;
+
+                await fileManager.save();
+
+                ui.updateHeader();
+                ui.renderMainList();
+                if (document.getElementById('admin-modal').classList.contains('active')) {
+                    ui.renderAdminTable();
+                }
+
+                this.isRunning = false;
+                document.getElementById('spin-btn').disabled = false;
+
+                const activeCell = document.getElementById(`c${this.currentIndex}`);
+                activeCell.style.background = "#fff";
+                setTimeout(() => { activeCell.style.background = ""; }, 600);
+            }
+        };
+
+        // --- UI 控制與管理後台邏輯 ---
+        const ui = {
+            currentSort: { key: 'score', desc: true },
+            tempLocalImageBase64: null,
+
+            renderMainList() {
+                const container = document.getElementById('main-student-grid');
+                if (!fileManager.handle && fileManager.data.students.length === 0) return;
+
+                const keyword = document.getElementById('main-search').value.toLowerCase();
+                let filtered = fileManager.data.students.filter(s =>
+                    (s.name && s.name.toLowerCase().includes(keyword)) ||
+                    (s.classRoom && s.classRoom.toLowerCase().includes(keyword))
+                );
+
+                filtered.sort((a, b) => b.score - a.score);
+
+                container.innerHTML = "";
+                if (filtered.length === 0) {
+                    container.innerHTML = `<div style="color: #aaa; padding: 10px;">找不到符合的學生。</div>`;
+                    return;
+                }
+
+                filtered.forEach(s => {
+                    const isSelected = game.selectedStudentId === s.id;
+                    const div = document.createElement('div');
+                    div.className = `student-pill ${isSelected ? 'selected' : ''}`;
+                    div.onclick = () => {
+                        game.selectedStudentId = s.id;
+                        this.renderMainList();
+                        this.updateHeader();
+                    };
+                    div.innerHTML = `<span style="font-size:12px; opacity:0.8">[${s.classRoom}]</span> ${s.name} <span style="background: rgba(0,0,0,0.3); padding: 2px 8px; border-radius: 10px; font-size:12px;">${s.score}</span>`;
+                    container.appendChild(div);
+                });
+            },
+
+            updateHeader() {
+                const student = fileManager.data.students.find(s => s.id === game.selectedStudentId);
+                const nameDisp = document.getElementById('display-name');
+                const classDisp = document.getElementById('display-class');
+                const scoreDisp = document.getElementById('display-score');
+
+                if (student) {
+                    classDisp.innerText = `班級：${student.classRoom}`;
+                    nameDisp.innerText = student.name;
+                    scoreDisp.innerText = `目前積分: ${student.score}`;
+                } else {
+                    classDisp.innerText = `班級：--`;
+                    nameDisp.innerText = "請選擇下方學生";
+                    scoreDisp.innerText = "目前積分: 0";
+                }
+            },
+
+            openSettings() {
+                document.getElementById('settings-modal').classList.add('active');
+                const s = fileManager.data.settings || defaultSettings;
+
+                document.getElementById('set-title').value = s.title || "";
+                document.getElementById('set-titlecolor').value = s.titleColor || defaultSettings.titleColor;
+                document.getElementById('set-bgcolor').value = s.bgColor || defaultSettings.bgColor;
+                document.getElementById('set-soundstyle').value = s.soundStyle || defaultSettings.soundStyle;
+
+                this.tempLocalImageBase64 = null;
+                document.getElementById('set-bgimg-file').value = "";
+
+                if (s.bgImage && s.bgImage.startsWith('data:image')) {
+                    document.getElementById('set-bgimg').value = "(已載入本地圖檔，若需變更請直接移除或輸入新網址)";
+                    document.getElementById('set-bgimg').disabled = true;
+                    this.tempLocalImageBase64 = s.bgImage;
+                    document.getElementById('local-img-status').style.display = 'block';
+                    document.getElementById('btn-clear-img').style.display = 'inline-block';
+                } else {
+                    document.getElementById('set-bgimg').value = s.bgImage || "";
+                    document.getElementById('set-bgimg').disabled = false;
+                    document.getElementById('local-img-status').style.display = 'none';
+                    document.getElementById('btn-clear-img').style.display = 'none';
+                }
+            },
+
+            handleLocalImage(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                if (file.size > 2 * 1024 * 1024) {
+                    alert("⚠️ 圖片檔案超過 2MB！\n為避免隨身碟 JSON 資料檔過大導致存取緩慢，建議選擇解析度較小的圖片。");
+                    event.target.value = "";
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    this.tempLocalImageBase64 = e.target.result;
+                    document.getElementById('set-bgimg').value = "(已載入本地圖檔，若需變更請直接移除或輸入新網址)";
+                    document.getElementById('set-bgimg').disabled = true;
+                    document.getElementById('local-img-status').style.display = 'block';
+                    document.getElementById('btn-clear-img').style.display = 'inline-block';
+                };
+                reader.readAsDataURL(file);
+            },
+
+            clearLocalImage() {
+                this.tempLocalImageBase64 = null;
+                document.getElementById('set-bgimg').value = "";
+                document.getElementById('set-bgimg').disabled = false;
+                document.getElementById('set-bgimg-file').value = "";
+                document.getElementById('local-img-status').style.display = 'none';
+                document.getElementById('btn-clear-img').style.display = 'none';
+            },
+
+            closeSettings() { document.getElementById('settings-modal').classList.remove('active'); },
+
+            async saveSettings() {
+                let finalBgImage = document.getElementById('set-bgimg').value.trim();
+                if (this.tempLocalImageBase64) {
+                    finalBgImage = this.tempLocalImageBase64;
+                }
+
+                fileManager.data.settings = {
+                    title: document.getElementById('set-title').value.trim() || defaultSettings.title,
+                    titleColor: document.getElementById('set-titlecolor').value,
+                    bgColor: document.getElementById('set-bgcolor').value,
+                    bgImage: finalBgImage,
+                    soundStyle: document.getElementById('set-soundstyle').value // 儲存音效風格
+                };
+
+                fileManager.applySettings();
+                await fileManager.save(true);
+                this.closeSettings();
+            },
+
+            openAdmin() {
+                document.getElementById('admin-modal').classList.add('active');
+                this.renderAdminTable();
+            },
+            closeAdmin() { document.getElementById('admin-modal').classList.remove('active'); },
+
+            toggleSort(key) {
+                if (this.currentSort.key === key) {
+                    this.currentSort.desc = !this.currentSort.desc;
+                } else {
+                    this.currentSort.key = key;
+                    this.currentSort.desc = (key === 'score');
+                }
+                this.renderAdminTable();
+            },
+
+            renderAdminTable() {
+                const tbody = document.getElementById('admin-tbody');
+                const keyword = document.getElementById('admin-search').value.toLowerCase();
+
+                let filtered = fileManager.data.students.filter(s =>
+                    (s.name && s.name.toLowerCase().includes(keyword)) ||
+                    (s.classRoom && s.classRoom.toLowerCase().includes(keyword))
+                );
+
+                filtered.sort((a, b) => {
+                    let valA = a[this.currentSort.key];
+                    let valB = b[this.currentSort.key];
+                    if (typeof valA === 'string') valA = valA.toLowerCase();
+                    if (typeof valB === 'string') valB = valB.toLowerCase();
+
+                    if (valA < valB) return this.currentSort.desc ? 1 : -1;
+                    if (valA > valB) return this.currentSort.desc ? -1 : 1;
+                    return 0;
+                });
+
+                tbody.innerHTML = "";
+                filtered.forEach(s => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${s.classRoom}</td>
+                        <td><strong>${s.name}</strong></td>
+                        <td style="font-size: 18px; font-weight: bold; color: var(--secondary-color);">${s.score}</td>
+                        <td class="action-btns">
+                            <button class="btn-tiny btn-add-pt" onclick="ui.modScore(${s.id}, 1)">+1分</button>
+                            <button class="btn-tiny btn-sub-pt" onclick="ui.modScore(${s.id}, -1)">-1分</button>
+                            <button class="btn-tiny btn-edit" onclick="ui.editStudent(${s.id})">編輯</button>
+                            <button class="btn-tiny btn-del" onclick="ui.deleteStudent(${s.id})">刪除</button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            },
+
+            async addStudent() {
+                const cInput = document.getElementById('add-class');
+                const nInput = document.getElementById('add-name');
+                const classRoom = cInput.value.trim() || "未指定";
+                const name = nInput.value.trim();
+
+                if (!name) { alert("請輸入學生姓名！"); return; }
+
+                fileManager.data.students.push({ id: Date.now(), classRoom, name, score: 0 });
+                await fileManager.save(true);
+
+                nInput.value = "";
+                this.renderAdminTable();
+                this.renderMainList();
+            },
+
+            async editStudent(id) {
+                const student = fileManager.data.students.find(s => s.id === id);
+                if (!student) return;
+
+                const newClass = prompt("請輸入新班級/座號：", student.classRoom);
+                if (newClass === null) return;
+                const newName = prompt("請輸入新姓名：", student.name);
+                if (newName === null || newName.trim() === "") return;
+                const newScore = prompt("請輸入新積分：", student.score);
+                if (newScore === null || isNaN(parseInt(newScore))) return;
+
+                student.classRoom = newClass.trim();
+                student.name = newName.trim();
+                student.score = parseInt(newScore);
+
+                await fileManager.save(true);
+                this.renderAdminTable();
+                this.renderMainList();
+                this.updateHeader();
+            },
+
+            async modScore(id, delta) {
+                const student = fileManager.data.students.find(s => s.id === id);
+                if (student) {
+                    student.score += delta;
+                    if (student.score < 0) student.score = 0;
+                    await fileManager.save(true);
+                    this.renderAdminTable();
+                    this.renderMainList();
+                    this.updateHeader();
+                }
+            },
+
+            async deleteStudent(id) {
+                if (!confirm("確定要刪除這位學生嗎？資料將自動從隨身碟中永久移除。")) return;
+                fileManager.data.students = fileManager.data.students.filter(s => s.id !== id);
+                if (game.selectedStudentId === id) {
+                    game.selectedStudentId = null;
+                    this.updateHeader();
+                }
+                await fileManager.save(true);
+                this.renderAdminTable();
+                this.renderMainList();
+            },
+
+            async resetAllScores() {
+                if (!confirm("⚠️ 警告：這將會把所有學生的積分歸零！\n確定要繼續嗎？")) return;
+                if (!confirm("再次確認：學期結束要歸零了嗎？此動作無法復原！")) return;
+
+                fileManager.data.students.forEach(s => s.score = 0);
+                await fileManager.save(true);
+                this.renderAdminTable();
+                this.renderMainList();
+                this.updateHeader();
+                alert("已全數歸零！");
+            },
+
+            exportPDF() {
+                const pTbody = document.getElementById('print-tbody');
+                document.getElementById('print-title').innerText = `${fileManager.data.settings.title || '班級'} - 積分結算表`;
+
+                const d = new Date();
+                document.getElementById('print-date').innerText = `製表日期：${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+
+                const keyword = document.getElementById('admin-search').value.toLowerCase();
+                let toPrint = fileManager.data.students.filter(s =>
+                    (s.name && s.name.toLowerCase().includes(keyword)) ||
+                    (s.classRoom && s.classRoom.toLowerCase().includes(keyword))
+                );
+
+                toPrint.sort((a, b) => {
+                    let valA = a[this.currentSort.key];
+                    let valB = b[this.currentSort.key];
+                    if (typeof valA === 'string') valA = valA.toLowerCase();
+                    if (typeof valB === 'string') valB = valB.toLowerCase();
+                    if (valA < valB) return this.currentSort.desc ? 1 : -1;
+                    if (valA > valB) return this.currentSort.desc ? -1 : 1;
+                    return 0;
+                });
+
+                pTbody.innerHTML = "";
+                toPrint.forEach(s => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="border: 1px solid #000; padding: 8px;">${s.classRoom}</td>
+                        <td style="border: 1px solid #000; padding: 8px;">${s.name}</td>
+                        <td style="border: 1px solid #000; padding: 8px;">${s.score}</td>
+                    `;
+                    pTbody.appendChild(tr);
+                });
+
+                document.getElementById('print-area').style.display = 'block';
+                setTimeout(() => {
+                    alert("請在接下來的列印視窗中，將「目的地(印表機)」更改為【另存為 PDF】即可匯出檔案。");
+                    window.print();
+                    document.getElementById('print-area').style.display = 'none';
+                }, 500);
+            }
+        };
+
+        window.onload = () => {
+            console.log("系統已啟動，等待掛載隨身碟資料檔...");
+            // 初始化產生一次預設的無窮大盤面
+            game.generateBoard();
+        };
+
+    </script>
+</body>
+
+</html>

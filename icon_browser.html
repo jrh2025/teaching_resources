@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>圖示瀏覽器(分類版) | 通用展示系統</title>
+
+    <!-- 樣式庫 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 字型 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- 核心函式庫 (UMD 版本，支援本地開啟) -->
+    <script src="https://unpkg.com/react@18.2.0/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js" crossorigin></script>
+    <!-- 更新 Lucide 版本 -->
+    <script src="https://unpkg.com/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+    <!-- Babel 編譯器 -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .category-btn.active {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+        const { createRoot } = ReactDOM;
+
+        // --- Lucide Icon Helper (核心轉接器 - 增加 React 屬性相容性修復) ---
+        // 負責將 Lucide 的 JSON 結構轉換為 React 元件
+        const LucideIcon = ({ name, size = 24, className = "", ...props }) => {
+            // 安全檢查
+            if (!window.lucide || !window.lucide.icons) {
+                return <span className="inline-block bg-slate-200 rounded" style={{ width: size, height: size }}></span>;
+            }
+
+            const iconData = window.lucide.icons[name] || window.lucide.icons['CircleHelp'];
+            // 如果找不到圖示，回傳 null 或佔位符
+            if (!iconData) return null;
+
+            // React 屬性名稱轉換 helper: 將 SVG 的 kebab-case 轉為 camelCase
+            const convertAttrs = (attrs) => {
+                if (!attrs) return attrs;
+                const map = {
+                    'stroke-width': 'strokeWidth',
+                    'stroke-linecap': 'strokeLinecap',
+                    'stroke-linejoin': 'strokeLinejoin',
+                    'fill-rule': 'fillRule',
+                    'clip-rule': 'clipRule',
+                    'class': 'className'
+                };
+
+                return Object.entries(attrs).reduce((acc, [key, val]) => {
+                    const newKey = map[key] || key;
+                    acc[newKey] = val;
+                    return acc;
+                }, {});
+            };
+
+            const [tag, attrs, children] = iconData;
+
+            const renderChild = (child, index) => {
+                const [childTag, childAttrs, grandChildren] = child;
+                // 遞迴渲染子元素時，也要進行屬性轉換
+                return React.createElement(childTag, { ...convertAttrs(childAttrs), key: index },
+                    grandChildren ? grandChildren.map(renderChild) : null
+                );
+            };
+
+            return React.createElement(tag,
+                {
+                    ...convertAttrs(attrs),
+                    width: size,
+                    height: size,
+                    className: className,
+                    strokeWidth: 2,
+                    ...props
+                },
+                children ? children.map(renderChild) : null
+            );
+        };
+
+        // 定義常用分類
+        const CATEGORIES = {
+            'math': {
+                label: '教學與科學',
+                icon: 'Calculator',
+                items: ['Calculator', 'Percent', 'Divide', 'Plus', 'Minus', 'X', 'Equal', 'Hash', 'Sigma', 'Pi', 'FunctionSquare', 'Triangle', 'Square', 'Circle', 'Hexagon', 'Octagon', 'Box', 'Cylinder', 'Cone', 'Pyramid', 'Ruler', 'Scale', 'Compass', 'Radius', 'Diameter', 'Binary', 'Variable', 'FlaskConical', 'Atom', 'Telescope']
+            },
+            'ui': {
+                label: '介面常用',
+                icon: 'LayoutGrid',
+                items: ['Home', 'Menu', 'Settings', 'User', 'LogOut', 'LogIn', 'Search', 'Bell', 'Calendar', 'Clock', 'Trash2', 'Edit', 'Save', 'Download', 'Upload', 'Share2', 'Link', 'ExternalLink', 'MoreHorizontal', 'Check', 'X', 'AlertCircle', 'Info', 'HelpCircle', 'Loader']
+            },
+            'arrows': {
+                label: '箭頭與方向',
+                icon: 'ArrowRight',
+                items: ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown', 'ChevronRight', 'ChevronLeft', 'ChevronUp', 'ChevronDown', 'Move', 'RotateCw', 'RotateCcw', 'RefreshCw', 'Undo2', 'Redo2', 'CornerDownRight', 'MousePointer2']
+            },
+            'education': {
+                label: '教育與文具',
+                icon: 'BookOpen',
+                items: ['Book', 'BookOpen', 'Notebook', 'Pen', 'Pencil', 'Highlighter', 'Eraser', 'Scissors', 'Paperclip', 'GraduationCap', 'School', 'Backpack', 'Library', 'StickyNote', 'Presentation']
+            },
+            'awards': {
+                label: '獎勵與遊戲',
+                icon: 'Trophy',
+                items: ['Trophy', 'Medal', 'Star', 'Crown', 'Award', 'Gamepad2', 'Dice1', 'Dice2', 'Dice3', 'Dice4', 'Dice5', 'Dice6', 'Target', 'Flag', 'Gift', 'Puzzle', 'Rocket']
+            },
+            'files': {
+                label: '檔案與媒體',
+                icon: 'FileText',
+                items: ['File', 'FileText', 'FilePlus', 'Folder', 'FolderOpen', 'Image', 'Video', 'Music', 'Mic', 'Volume2', 'Camera', 'Printer', 'Copy', 'Clipboard', 'MonitorPlay']
+            },
+            'nature': {
+                label: '自然與生活',
+                icon: 'Sun',
+                items: ['Sun', 'Moon', 'Cloud', 'Rain', 'Zap', 'Thermometer', 'Leaf', 'Flower', 'Trees', 'Smile', 'Frown', 'Meh', 'Heart', 'ThumbsUp', 'ThumbsDown', 'Coffee']
+            }
+        };
+
+        function IconBrowser() {
+            const [searchTerm, setSearchTerm] = useState('');
+            const [currentCategory, setCurrentCategory] = useState('math'); // 預設顯示教學與科學
+            const [copied, setCopied] = useState(null);
+
+            // 取得所有有效的圖示名稱 (用於"所有圖示"模式)
+            const allIconsList = useMemo(() => {
+                // 安全檢查
+                if (!window.lucide || !window.lucide.icons) return [];
+
+                return Object.keys(window.lucide.icons)
+                    .filter(key => {
+                        // 1. 只保留首字母大寫的屬性 (視為 Icon 元件名稱)
+                        return /^[A-Z]/.test(key);
+                    })
+                    .sort();
+            }, []);
+
+            // 決定要顯示的圖示清單
+            const displayIcons = useMemo(() => {
+                let sourceList = [];
+
+                if (currentCategory === 'all') {
+                    sourceList = allIconsList;
+                } else {
+                    // 只顯示該分類下且存在於 window.lucide.icons 中的圖示
+                    if (window.lucide && window.lucide.icons) {
+                        sourceList = CATEGORIES[currentCategory].items.filter(name => window.lucide.icons[name]);
+                    }
+                }
+
+                // 搜尋過濾
+                if (!searchTerm) return sourceList;
+                return sourceList.filter(name =>
+                    name.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }, [currentCategory, searchTerm, allIconsList]);
+
+            // 複製功能
+            const handleCopy = (name) => {
+                // 使用較新的 Clipboard API，如果失敗則退回到 execCommand
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(name);
+                } else {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = name;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                }
+
+                setCopied(name);
+                setTimeout(() => setCopied(null), 1500);
+            };
+
+            return (
+                <div className="min-h-screen p-6 md:p-10 max-w-7xl mx-auto flex flex-col md:flex-row gap-8">
+
+                    {/* 左側分類選單 */}
+                    <aside className="w-full md:w-64 flex-shrink-0 space-y-2">
+                        <div className="mb-6">
+                            <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                                <LucideIcon name="Search" size={24} className="text-blue-600" />
+                                圖示瀏覽器
+                            </h1>
+                            <p className="text-xs text-slate-500 mt-1">點擊圖示複製名稱，貼至後台</p>
+                        </div>
+
+                        <div className="space-y-1">
+                            {Object.entries(CATEGORIES).map(([key, cat]) => {
+                                return (
+                                    <button
+                                        key={key}
+                                        onClick={() => { setCurrentCategory(key); setSearchTerm(''); }}
+                                        className={`category-btn w-full text-left px-4 py-3 rounded-xl border border-transparent transition-all flex items-center gap-3 font-medium ${currentCategory === key
+                                            ? 'active shadow-md shadow-blue-500/20'
+                                            : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-100'
+                                            }`}
+                                    >
+                                        <LucideIcon name={cat.icon} size={18} />
+                                        {cat.label}
+                                    </button>
+                                );
+                            })}
+
+                            <div className="my-2 border-t border-slate-200"></div>
+
+                            <button
+                                onClick={() => setCurrentCategory('all')}
+                                className={`category-btn w-full text-left px-4 py-3 rounded-xl border border-transparent transition-all flex items-center gap-3 font-medium ${currentCategory === 'all'
+                                    ? 'active shadow-md shadow-blue-500/20'
+                                    : 'bg-white hover:bg-slate-50 text-slate-600 border-slate-100'
+                                    }`}
+                            >
+                                <LucideIcon name="Grid" size={18} />
+                                所有圖示 (完整搜尋)
+                            </button>
+                        </div>
+                    </aside>
+
+                    {/* 右側主要內容 */}
+                    <main className="flex-1">
+                        {/* 搜尋框 */}
+                        <div className="sticky top-0 bg-[#f8fafc] pt-2 pb-6 z-10">
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    placeholder={`在「${currentCategory === 'all' ? '所有圖示' : CATEGORIES[currentCategory].label}」中搜尋...`}
+                                    className="w-full px-4 py-3 pl-11 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:outline-none text-lg shadow-sm bg-white"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                                <div className="absolute left-3 top-3.5 text-slate-400">
+                                    <LucideIcon name="Search" size={20} />
+                                </div>
+                                {searchTerm && (
+                                    <button
+                                        onClick={() => setSearchTerm('')}
+                                        className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600"
+                                    >
+                                        <LucideIcon name="X" size={20} />
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* 圖示列表 */}
+                        <div className="icon-grid pb-10">
+                            {displayIcons.slice(0, currentCategory === 'all' && !searchTerm ? 200 : undefined).map(name => {
+                                // 使用 LucideIcon 元件來渲染
+                                return (
+                                    <button
+                                        key={name}
+                                        onClick={() => handleCopy(name)}
+                                        className={`group flex flex-col items-center justify-center p-4 rounded-xl border transition-all duration-200 hover:-translate-y-1 hover:shadow-lg bg-white relative ${copied === name
+                                            ? 'border-green-500 bg-green-50 text-green-700 ring-2 ring-green-200'
+                                            : 'border-slate-200 text-slate-600 hover:border-blue-400 hover:text-blue-600'
+                                            }`}
+                                    >
+                                        <LucideIcon name={name} size={32} className="mb-3 transition-transform group-hover:scale-110" />
+                                        <span className="text-xs font-mono truncate w-full text-center select-all font-bold">
+                                            {name}
+                                        </span>
+                                        {copied === name && (
+                                            <div className="absolute inset-0 flex items-center justify-center bg-green-500/90 text-white rounded-xl font-bold backdrop-blur-sm animate-in fade-in zoom-in duration-200">
+                                                已複製!
+                                            </div>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {/* 底部提示 */}
+                        {currentCategory === 'all' && !searchTerm && (
+                            <div className="text-center text-slate-400 text-sm py-4">
+                                為確保效能，預設僅顯示前 200 個圖示。請使用搜尋功能查找更多。
+                            </div>
+                        )}
+
+                        {displayIcons.length === 0 && (
+                            <div className="text-center text-slate-400 py-20 bg-white rounded-2xl border border-dashed border-slate-300">
+                                <LucideIcon name="Ghost" size={48} className="mx-auto mb-4 opacity-50" />
+                                <p>找不到與 "{searchTerm}" 相關的圖示</p>
+                                <button onClick={() => setCurrentCategory('all')} className="mt-2 text-blue-500 hover:underline">
+                                    試試在「所有圖示」中搜尋？
+                                </button>
+                            </div>
+                        )}
+                    </main>
+                </div>
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<IconBrowser />);
+    </script>
+</body>
+
+</html>
