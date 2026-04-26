@@ -4,15 +4,15 @@
  */
 window.APP_DATA = {
   "settings": {
-    "siteTitle": "通用展示系統",
+    "siteTitle": "JRH的雜七雜八 2026",
     "siteSubtitle": "探索各式各樣的資源與工具",
-    "footerText": "© 2026 Designed for Education",
+    "footerText": "© 2026 Designed for JRH",
     "categoryLabel": "分類",
     "categories": [
       "班級經營",
       "備課",
+      "遊戲",
       "測驗",
-      "教育行政",
       "其他"
     ]
   },
