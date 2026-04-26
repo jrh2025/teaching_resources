@@ -243,9 +243,14 @@
             transition: all 0.2s;
         }
 
-        .shuffle-btn:hover {
+        .shuffle-btn:hover:not(:disabled) {
             background: rgba(255, 255, 255, 0.3);
             transform: rotate(180deg);
+        }
+
+        .shuffle-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
         /* 快速選擇區 */
@@ -615,7 +620,8 @@
                 <span id="display-score" style="font-size: 20px; color:#fff;">目前積分: 0</span>
             </div>
             <div class="action-group">
-                <button class="shuffle-btn" onclick="game.generateBoard()" title="打亂盤面圖案與分數">🔀</button>
+                <button id="shuffle-btn" class="shuffle-btn" onclick="game.generateBoard()"
+                    title="打亂盤面圖案與分數">🔀</button>
                 <button id="spin-btn" class="spin-btn" onclick="game.start()">GO!</button>
             </div>
         </div>
@@ -893,6 +899,7 @@
 
             // 產生無窮大(Lissajous 曲線)盤面
             generateBoard() {
+                if (this.isRunning) return; // 防呆：運行中禁止洗牌
                 const container = document.getElementById('game-board');
                 container.innerHTML = '';
                 this.prizes = [];
@@ -978,6 +985,7 @@
 
                 this.isRunning = true;
                 document.getElementById('spin-btn').disabled = true;
+                document.getElementById('shuffle-btn').disabled = true; // 鎖定洗牌按鈕
 
                 // 隨機轉動圈數
                 let steps = this.totalCells * 2 + Math.floor(Math.random() * this.totalCells);
@@ -1028,6 +1036,7 @@
 
                 this.isRunning = false;
                 document.getElementById('spin-btn').disabled = false;
+                document.getElementById('shuffle-btn').disabled = false; // 解除鎖定洗牌按鈕
 
                 const activeCell = document.getElementById(`c${this.currentIndex}`);
                 activeCell.style.background = "#fff";
