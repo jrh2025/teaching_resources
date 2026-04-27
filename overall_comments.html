@@ -1,0 +1,1457 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國中小學生全方位導師綜合評語系統</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            transition: background-color: 0.3s, color: 0.3s;
+        }
+
+        /* 視覺風格定義 - 增強對比度 */
+        .theme-day {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --border-color: #cbd5e1;
+            --item-inactive-bg: #f1f5f9;
+            --hover-bg: #f8fafc;
+        }
+
+        .theme-night {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #cbd5e1;
+            --border-color: #475569;
+            --item-inactive-bg: #0b1120;
+            --hover-bg: #334155;
+        }
+
+        .theme-comfort {
+            --bg-color: #fdf6e3;
+            --card-bg: #f5edda;
+            --text-main: #3f3326;
+            --text-muted: #6b5c4b;
+            --border-color: #d8cdb4;
+            --item-inactive-bg: #efe7d1;
+            --hover-bg: #fdf6e3;
+        }
+
+        /* 自適應主題工具類別 */
+        .text-adaptive {
+            color: var(--text-main) !important;
+        }
+
+        .bg-adaptive {
+            background-color: var(--card-bg) !important;
+        }
+
+        .bg-adaptive-muted {
+            background-color: var(--item-inactive-bg) !important;
+        }
+
+        .border-adaptive {
+            border-color: var(--border-color) !important;
+        }
+
+        .hover-adaptive:hover {
+            background-color: var(--hover-bg) !important;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+        }
+
+        .custom-card {
+            background-color: var(--card-bg);
+            border-color: var(--border-color);
+            border-width: 1px;
+        }
+
+        .text-muted {
+            color: var(--text-muted);
+        }
+
+        .item-row {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            user-select: none;
+            border-width: 1px;
+        }
+
+        .item-inactive {
+            opacity: 0.6;
+            background-color: var(--item-inactive-bg);
+            filter: grayscale(0.3);
+            border-color: transparent;
+        }
+
+        .item-active {
+            opacity: 1;
+            background-color: var(--card-bg);
+            border-left: 5px solid #3b82f6;
+            border-color: var(--border-color);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        .score-btn {
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.15s;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-muted);
+        }
+
+        .item-active .score-btn:hover {
+            border-color: #3b82f6;
+            color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .score-btn.selected {
+            background-color: #3b82f6 !important;
+            color: white !important;
+            border-color: #3b82f6 !important;
+        }
+
+        .grade-btn,
+        .style-btn {
+            transition: all 0.2s;
+            border-width: 1px;
+            background-color: var(--card-bg);
+            color: var(--text-main);
+        }
+
+        .grade-btn.selected,
+        .style-btn.selected {
+            background-color: #3b82f6 !important;
+            color: white !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+        }
+
+        .mini-score-btn {
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            color: var(--text-muted);
+        }
+
+        .mini-score-btn.selected {
+            background: #3b82f6 !important;
+            color: white !important;
+            border-color: #3b82f6 !important;
+        }
+
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+
+        /* 切換開關樣式 */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #3b82f6;
+        }
+
+        .toggle-checkbox:checked+.toggle-label {
+            background-color: #3b82f6;
+        }
+    </style>
+</head>
+
+<body class="p-2 md:p-6 theme-day">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header 區塊 -->
+        <div class="custom-card rounded-2xl shadow-sm p-6 mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                <h1 class="text-2xl md:text-3xl font-extrabold text-blue-600 tracking-wide">國中小學生全方位導師綜合評語系統</h1>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <button onclick="openGuideModal()"
+                        class="px-5 py-2.5 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-sm font-bold hover:bg-blue-600 hover:text-white transition-all flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-book-open"></i> 使用說明
+                    </button>
+                    <button id="btn-open-records" onclick="openRecordsModal()"
+                        class="hidden px-5 py-2.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-xl text-sm font-bold hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-folder-open"></i> 紀錄管理
+                    </button>
+                    <button onclick="openSettings()"
+                        class="px-5 py-2.5 bg-adaptive-muted text-adaptive border border-adaptive rounded-xl text-sm font-bold hover:opacity-80 transition-all flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-gear"></i> API 設定
+                    </button>
+                    <button onclick="confirmReset()"
+                        class="px-5 py-2.5 bg-red-50 text-red-700 border border-red-200 rounded-xl text-sm font-bold hover:bg-red-600 hover:text-white transition-all flex items-center gap-2 shadow-sm">
+                        <i class="fa-solid fa-rotate-right"></i> 重置評量
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 border-y border-adaptive py-6 mb-4">
+                <!-- 適用對象選擇 (含自動記憶) -->
+                <div class="flex flex-col items-center lg:items-start gap-3">
+                    <span class="text-sm font-bold text-muted flex items-center gap-2">
+                        <i class="fa-solid fa-child-reaching text-blue-600 text-lg"></i> 適用對象（自動記憶）：
+                    </span>
+                    <div class="flex flex-wrap gap-2" id="grade-selector">
+                        <button onclick="selectGrade('國小低年級')"
+                            class="grade-btn px-4 py-2 text-sm border rounded-full font-bold">國小低年級</button>
+                        <button onclick="selectGrade('國小中年級')"
+                            class="grade-btn px-4 py-2 text-sm border rounded-full font-bold">國小中年級</button>
+                        <button onclick="selectGrade('國小高年級')"
+                            class="grade-btn px-4 py-2 text-sm border rounded-full font-bold">國小高年級</button>
+                        <button onclick="selectGrade('國中')"
+                            class="grade-btn px-4 py-2 text-sm border rounded-full font-bold">國中</button>
+                    </div>
+                </div>
+
+                <!-- 視覺風格選擇 (含自動記憶) -->
+                <div class="flex flex-col items-center lg:items-end gap-3">
+                    <span class="text-sm font-bold text-muted flex items-center gap-2">
+                        <i class="fa-solid fa-palette text-blue-600 text-lg"></i> 視覺風格（自動記憶）：
+                    </span>
+                    <div class="flex gap-2">
+                        <button onclick="changeTheme('day')" id="btn-theme-day"
+                            class="style-btn px-4 py-2 text-sm border rounded-full font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-sun"></i> 白天
+                        </button>
+                        <button onclick="changeTheme('night')" id="btn-theme-night"
+                            class="style-btn px-4 py-2 text-sm border rounded-full font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-moon"></i> 黑夜
+                        </button>
+                        <button onclick="changeTheme('comfort')" id="btn-theme-comfort"
+                            class="style-btn px-4 py-2 text-sm border rounded-full font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-eye text-amber-600"></i> 舒適
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <p
+                class="text-center text-sm font-medium text-muted mb-2 bg-blue-500/10 py-3 rounded-xl border border-blue-500/20">
+                💡 <span class="text-blue-600 font-bold">連點兩下項目</span> 以開啟評量，開啟後點選數字進行評分。點擊醒目的藍色 <span
+                    class="inline-flex items-center justify-center w-5 h-5 rounded-full bg-blue-500/20 text-blue-600 text-xs font-bold mx-1">?</span>
+                查看詳細描述。
+            </p>
+            <div id="top-hint" class="text-center text-sm font-bold transition-colors mt-2"></div>
+        </div>
+
+        <!-- 主要評量區 -->
+        <div id="assessment-container" class="space-y-6"></div>
+
+        <!-- 已評量清單匯總 -->
+        <div id="summary-list-container" class="mt-12 custom-card rounded-2xl shadow-sm overflow-hidden hidden">
+            <div class="bg-blue-600/10 px-6 py-4 border-b border-adaptive flex justify-between items-center">
+                <h3 class="font-bold flex items-center gap-2 text-base md:text-lg text-adaptive">
+                    <i class="fa-solid fa-list-check text-blue-600"></i> 已評量項目清單
+                </h3>
+                <div class="flex items-center gap-4">
+                    <button onclick="confirmReset()"
+                        class="text-sm text-red-600 font-bold hover:underline">清空全部</button>
+                    <span id="total-count-badge"
+                        class="bg-blue-600 text-white text-sm px-4 py-1.5 rounded-full font-bold shadow-sm">0 項目</span>
+                </div>
+            </div>
+            <div id="summary-content" class="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"></div>
+        </div>
+
+        <!-- 底部生成按鈕 -->
+        <div
+            class="mt-8 mb-20 p-10 custom-card rounded-2xl border-2 border-dashed text-center bg-adaptive-muted flex flex-col items-center">
+            <div id="bottom-hint" class="mb-6 text-base font-bold transition-colors"></div>
+
+            <label
+                class="flex items-center gap-2 cursor-pointer mb-6 p-2 rounded-lg hover:bg-adaptive border border-transparent hover:border-adaptive transition-colors select-none">
+                <input type="checkbox" id="chk-auto-reset"
+                    class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    onchange="saveAutoResetPref()">
+                <span class="text-sm font-bold text-adaptive">連續作業：儲存紀錄後自動重置目前評量</span>
+            </label>
+
+            <button onclick="generateAIComments()"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-12 py-4 rounded-2xl text-lg font-bold shadow-xl shadow-blue-200 transition-all flex items-center gap-3 transform hover:-translate-y-1">
+                <i class="fa-solid fa-wand-magic-sparkles text-xl"></i> 產生 AI 綜合分析報告
+            </button>
+        </div>
+    </div>
+
+    <!-- 項目說明彈窗 -->
+    <div id="help-modal"
+        class="fixed inset-0 bg-slate-900/70 hidden z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="custom-card rounded-2xl max-w-sm w-full shadow-2xl overflow-hidden bg-adaptive">
+            <div class="p-4 bg-blue-600 text-white flex justify-between items-center">
+                <h4 id="help-title" class="font-bold text-base">項目說明</h4>
+                <button onclick="closeHelp()"
+                    class="text-white text-3xl leading-none hover:text-blue-200">&times;</button>
+            </div>
+            <div class="p-6">
+                <p id="help-desc" class="text-base leading-relaxed font-medium text-adaptive"></p>
+                <div class="mt-8 flex justify-end">
+                    <button onclick="closeHelp()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-md transition-colors">我了解了</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 重置確認彈窗 -->
+    <div id="reset-modal"
+        class="fixed inset-0 bg-slate-900/70 hidden z-[70] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="custom-card rounded-2xl max-w-xs w-full shadow-2xl p-8 text-center bg-adaptive border-adaptive">
+            <div
+                class="w-20 h-20 bg-red-50 text-red-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-6 shadow-inner">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h4 class="font-bold text-xl mb-3 text-adaptive">確定要重置嗎？</h4>
+            <p class="text-base text-muted mb-8 font-medium">這將會清空目前所有已點選的指標與分數，且無法復原。</p>
+            <div class="flex gap-4">
+                <button onclick="closeResetModal()"
+                    class="flex-1 py-3 rounded-xl border-2 border-adaptive font-bold text-sm bg-adaptive-muted text-adaptive hover:opacity-80 transition-colors">取消</button>
+                <button onclick="resetAllAssessments()"
+                    class="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-sm shadow-md transition-colors">確定重置</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- API 設定彈窗 -->
+    <div id="settings-modal"
+        class="fixed inset-0 bg-slate-900/70 hidden z-[80] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="custom-card bg-adaptive rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border-adaptive">
+            <div class="p-4 bg-slate-800 text-white flex justify-between items-center">
+                <h4 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-gear"></i> 系統設定</h4>
+                <button onclick="closeSettings()"
+                    class="text-white text-3xl leading-none hover:text-slate-300 transition">&times;</button>
+            </div>
+            <div class="p-6 space-y-5">
+                <div
+                    class="bg-blue-500/10 text-blue-600 text-sm font-medium p-4 rounded-xl border border-blue-500/20 mb-2 leading-relaxed shadow-inner">
+                    💡 您的 API Key 及歷史紀錄僅會安全地儲存於當前設備的瀏覽器中（LocalStorage / IndexedDB），不會上傳雲端。
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-bold flex justify-between text-adaptive">
+                        <span>Gemini API Key <span class="text-red-500">*</span></span>
+                        <a href="https://aistudio.google.com/app/apikey" target="_blank"
+                            class="text-blue-600 hover:underline">取得 Key <i
+                                class="fa-solid fa-external-link-alt text-xs"></i></a>
+                    </label>
+                    <div class="relative">
+                        <input type="password" id="input-api-key" placeholder="AIzaSy..."
+                            class="w-full text-base p-3 pr-12 border-2 border-adaptive rounded-xl bg-adaptive-muted focus:outline-none focus:border-blue-500 text-adaptive font-mono transition-all">
+                        <button onclick="toggleApiKeyVisibility()"
+                            class="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-blue-500 text-lg">
+                            <i id="icon-api-key-eye" class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-adaptive">選擇 AI 模型</label>
+                    <select id="select-ai-model"
+                        class="w-full text-base p-3 border-2 border-adaptive rounded-xl bg-adaptive-muted focus:outline-none focus:border-blue-500 text-adaptive font-medium transition-all">
+                        <optgroup label="Gemini 2.5 (最新一代)">
+                            <option value="gemini-2.5-flash">Gemini 2.5 Flash (推薦：綜合效能最佳)</option>
+                            <option value="gemini-2.5-pro">Gemini 2.5 Pro (進階：複雜推理與深度分析)</option>
+                        </optgroup>
+                        <optgroup label="Gemini 2.0">
+                            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                            <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash-Lite (輕量級、極速)</option>
+                        </optgroup>
+                        <optgroup label="Gemini 1.5 (經典模型)">
+                            <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                            <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash-8B (低延遲、高吞吐)</option>
+                            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="space-y-2 pt-2 border-t border-adaptive">
+                    <div class="flex items-center justify-between">
+                        <label class="text-sm font-bold text-adaptive cursor-pointer"
+                            for="toggle-db">啟用本地端資料庫儲存功能</label>
+                        <div
+                            class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                            <input type="checkbox" name="toggle" id="toggle-db"
+                                class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer border-slate-300"
+                                checked />
+                            <label for="toggle-db"
+                                class="toggle-label block overflow-hidden h-5 rounded-full bg-slate-300 cursor-pointer"></label>
+                        </div>
+                    </div>
+                    <p class="text-xs text-muted">開啟後，可將生成的評語儲存至瀏覽器本地庫，便於統一管理與匯出 PDF。</p>
+                </div>
+
+                <div id="settings-status" class="text-sm font-bold text-center h-5"></div>
+
+                <div class="flex gap-4 pt-4 border-t border-adaptive mt-2">
+                    <button onclick="clearSettings()"
+                        class="flex-1 py-3 rounded-xl border-2 border-red-500/30 text-red-500 font-bold text-sm bg-red-500/10 hover:bg-red-500/20 transition-colors">刪除紀錄</button>
+                    <button onclick="saveSettings()"
+                        class="flex-[2] py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-lg transition-colors">儲存設定</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 儲存紀錄 Prompt 彈窗 -->
+    <div id="save-prompt-modal"
+        class="fixed inset-0 bg-slate-900/80 hidden z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="custom-card bg-adaptive border-adaptive rounded-2xl max-w-sm w-full shadow-2xl p-6">
+            <h3 class="text-lg font-bold text-adaptive mb-4 flex items-center gap-2"><i
+                    class="fa-solid fa-floppy-disk text-blue-500"></i> 儲存學生紀錄</h3>
+            <div class="space-y-3">
+                <label class="text-sm font-bold text-adaptive block">請輸入學生姓名、座號或代號：</label>
+                <input type="text" id="input-student-id" placeholder="例如：1號 王小明"
+                    class="w-full text-base p-3 border-2 border-adaptive rounded-xl bg-adaptive-muted focus:outline-none focus:border-blue-500 text-adaptive transition-all"
+                    autocomplete="off">
+            </div>
+            <div class="flex gap-3 mt-6">
+                <button onclick="closeSavePrompt()"
+                    class="flex-1 py-2.5 rounded-xl border-2 border-adaptive font-bold text-sm bg-adaptive-muted text-adaptive hover:opacity-80 transition-colors">取消</button>
+                <button onclick="confirmSaveRecord()"
+                    class="flex-1 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-md transition-colors">確定儲存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 歷史紀錄管理 Modal -->
+    <div id="records-modal"
+        class="fixed inset-0 bg-slate-900/80 hidden z-[85] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div
+            class="custom-card bg-adaptive border-adaptive rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl">
+            <div class="p-5 border-b border-adaptive flex justify-between items-center bg-adaptive-muted rounded-t-3xl">
+                <h2 class="text-xl font-bold flex items-center gap-2 text-adaptive">
+                    <i class="fa-solid fa-database text-emerald-600"></i> 本地評語紀錄管理
+                </h2>
+                <button onclick="closeRecordsModal()"
+                    class="text-muted hover:text-adaptive text-3xl font-bold transition-colors">&times;</button>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 custom-scroll" id="records-list-container">
+                <!-- Records injected here -->
+            </div>
+            <div class="p-5 border-t border-adaptive flex justify-between items-center bg-adaptive-muted rounded-b-3xl">
+                <button onclick="clearAllRecords()"
+                    class="text-red-500 hover:text-red-600 font-bold text-sm flex items-center gap-1 transition-colors"><i
+                        class="fa-solid fa-trash-can"></i> 清空資料庫</button>
+                <div class="flex gap-3">
+                    <button onclick="exportToPDF()"
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-file-pdf"></i> 匯出全部為 PDF
+                    </button>
+                    <button onclick="closeRecordsModal()"
+                        class="bg-slate-700 hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl font-bold text-sm shadow-md transition-colors">關閉</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI 分析結果報告彈窗 -->
+    <div id="ai-modal"
+        class="fixed inset-0 bg-slate-900/80 hidden z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div
+            class="custom-card bg-adaptive border-adaptive rounded-3xl max-w-5xl w-full max-h-[95vh] overflow-hidden flex flex-col shadow-2xl">
+            <div class="p-6 border-b border-adaptive flex justify-between items-center bg-adaptive-muted">
+                <h2 class="text-2xl font-bold flex items-center gap-3 text-adaptive">
+                    <i class="fa-solid fa-robot text-blue-600 text-3xl"></i> AI 學生綜合分析報告
+                </h2>
+                <button onclick="closeModal()"
+                    class="text-muted hover:text-adaptive text-3xl font-bold transition-colors">&times;</button>
+            </div>
+            <div id="ai-loading" class="p-20 flex flex-col items-center justify-center hidden">
+                <div class="loading-spinner mb-6 border-4 border-blue-600 border-t-transparent w-16 h-16"></div>
+                <p class="text-adaptive font-bold text-lg">正在深度分析數據並撰寫多元評語，請稍候...</p>
+            </div>
+            <div id="ai-content-wrapper" class="p-6 overflow-y-auto space-y-8 custom-scroll">
+                <div id="radar-container" class="bg-adaptive-muted rounded-2xl p-8 border border-adaptive shadow-sm">
+                    <h3 class="text-center font-bold text-adaptive mb-6 text-lg">五大向度發展指標雷達圖</h3>
+                    <div class="w-full max-w-md mx-auto aspect-square">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+                <div id="ai-comments-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-10"></div>
+            </div>
+            <div class="p-5 border-t border-adaptive flex justify-between items-center bg-adaptive-muted">
+                <div id="db-save-container" class="hidden">
+                    <button onclick="openSavePrompt()"
+                        class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold text-base shadow-md transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i> 儲存此紀錄
+                    </button>
+                </div>
+                <div class="ml-auto">
+                    <button onclick="closeModal()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold text-base shadow-md transition-colors">關閉報告</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 系統使用說明 Modal -->
+    <div id="guide-modal"
+        class="fixed inset-0 bg-slate-900/80 hidden z-[120] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div
+            class="custom-card bg-adaptive border-adaptive rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl">
+            <div class="p-5 border-b border-adaptive flex justify-between items-center bg-adaptive-muted rounded-t-3xl">
+                <h2 class="text-xl font-bold flex items-center gap-2 text-adaptive">
+                    <i class="fa-solid fa-book-open text-blue-500"></i> 系統簡介與使用說明
+                </h2>
+                <button onclick="closeGuideModal()"
+                    class="text-muted hover:text-adaptive text-3xl font-bold transition-colors">&times;</button>
+            </div>
+            <div class="p-6 md:p-8 overflow-y-auto flex-1 custom-scroll text-adaptive space-y-8 text-base">
+
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl md:text-3xl font-extrabold text-blue-600 mb-4 tracking-wide">🌟 國中小導師專屬：AI
+                        綜合評語小幫手使用指南</h2>
+                    <p class="text-muted font-medium text-lg">每到學期末，面對全班幾十位學生的綜合評語，您總是覺得傷透腦筋、熬夜到眼花嗎？</p>
+                </div>
+
+                <div class="bg-blue-500/10 border border-blue-500/20 p-5 rounded-2xl">
+                    <p class="font-bold leading-relaxed text-adaptive">這款「國中小學生全方位導師綜合評語系統」是專為老師們量身打造的貼心工具！我們運用了 Google
+                        最新的人工智慧技術，您只需要簡單點選學生平時的表現，AI 就會自動幫您轉化為一篇篇通順、有溫度且切中要點的評語，讓您提早下班，把時間留給自己！</p>
+                </div>
+
+                <div class="space-y-4">
+                    <h3 class="text-xl font-extrabold text-emerald-600 border-l-4 border-emerald-500 pl-3">✨ 為什麼要用這款小幫手？
+                    </h3>
+                    <ul class="list-decimal list-outside space-y-3 ml-5 text-adaptive font-medium leading-relaxed">
+                        <li><strong>看見學生的多面性：</strong> 我們內建了「身心素養、學習特質、人際互動、公民意識、多元潛能」五大向度。輕輕一點，冷冰冰的分數就能變成一段段鼓勵人心的好句子。
+                        </li>
+                        <li><strong>絕對保護學生隱私（最重要！）：</strong> 請老師們放一百萬個心！這個系統完全在您的瀏覽器上運作。您輸入的 API
+                            通行證和所有學生的評語紀錄，<strong>通通只會存在您現在用的這台電腦裡</strong>，絕對不會外洩到任何雲端資料庫。</li>
+                        <li><strong>流水線般的順暢體驗：</strong> 從評量、生成評語、存檔，到最後全班一鍵匯出成排版精美的 PDF 檔，所有動作一氣呵成。</li>
+                    </ul>
+                </div>
+
+                <div class="space-y-4">
+                    <h3 class="text-xl font-extrabold text-orange-500 border-l-4 border-orange-500 pl-3">🔑 準備工作：拿一張 AI
+                        通行證 (API Key)</h3>
+                    <p class="font-medium text-muted">因為系統需要請 Google 的 AI 來幫忙寫文章，所以首次使用時，我們需要先去免費申請一張「通行證」。</p>
+                    <ol class="list-decimal list-outside space-y-2 ml-5 text-adaptive font-medium">
+                        <li>請點擊前往 Google AI Studio 網站：<a href="https://aistudio.google.com/app/apikey" target="_blank"
+                                class="text-blue-500 hover:underline">申請 API Key <i
+                                    class="fa-solid fa-external-link-alt text-xs"></i></a>。</li>
+                        <li>用您的 Google 帳號登入。</li>
+                        <li>點一下畫面上的「<strong>Create API key</strong>」按鈕，然後把那一長串像密碼一樣的英數字複製下來備用。</li>
+                    </ol>
+                </div>
+
+                <div class="space-y-6">
+                    <h3 class="text-xl font-extrabold text-purple-600 border-l-4 border-purple-500 pl-3">🚀 輕鬆上手五步驟</h3>
+
+                    <div class="bg-adaptive-muted p-5 rounded-2xl border border-adaptive">
+                        <h4 class="font-bold text-lg mb-2 text-adaptive">步驟一：把通行證交給小幫手</h4>
+                        <ol class="list-decimal list-outside space-y-1.5 ml-5 font-medium text-adaptive">
+                            <li>點擊網頁右上角的「<i class="fa-solid fa-gear text-muted"></i> <strong>API 設定</strong>」。</li>
+                            <li>把剛剛複製的密碼（API Key）貼到指定的框框裡。</li>
+                            <li><strong>選擇 AI 腦袋：</strong> 預設的 <strong>Gemini 2.5 Flash</strong>
+                                就像是反應快又聰明的助教，建議直接用這個就好囉！</li>
+                            <li>確認「<strong>啟用本地端資料庫</strong>」有打開（開關是藍色的），這樣等一下寫好的評語才能存檔。</li>
+                            <li>點擊「<strong>儲存設定</strong>」，搞定！</li>
+                        </ol>
+                    </div>
+
+                    <div class="bg-adaptive-muted p-5 rounded-2xl border border-adaptive">
+                        <h4 class="font-bold text-lg mb-2 text-adaptive">步驟二：設定您的喜好</h4>
+                        <p class="font-medium mb-2">在畫面中間，您可以告訴小幫手您的習慣：</p>
+                        <ul class="list-disc list-outside space-y-1.5 ml-5 font-medium text-adaptive">
+                            <li><strong>適用對象：</strong> 您教的是國小低年級還是國中生呢？選對了，AI 寫出來的語氣才會符合學生的年紀喔。</li>
+                            <li><strong>視覺風格：</strong> 怕螢幕太亮傷眼睛？您可以自由切換「白天、黑夜、舒適」三種配色，善待自己的眼睛。</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-adaptive-muted p-5 rounded-2xl border border-adaptive">
+                        <h4 class="font-bold text-lg mb-2 text-adaptive">步驟三：開始幫學生打分數</h4>
+                        <ol class="list-decimal list-outside space-y-1.5 ml-5 font-medium text-adaptive">
+                            <li><strong>點兩下開啟：</strong> 為了怕老師不小心點錯，清單上的項目都要 <strong>「連點兩下」</strong> 才會亮起來啟用哦！</li>
+                            <li><strong>給個分數：</strong> 亮起來之後，點擊 1 到 5 分（分數越高代表這項表現越好）。</li>
+                            <li><strong>這項是什麼意思？</strong> 如果不太確定某個指標的意思，點一下旁邊的藍色小問號「<i
+                                    class="fa-solid fa-question text-[10px] bg-blue-100 text-blue-600 rounded-full px-1"></i>」，就有詳細的白話文說明。
+                            </li>
+                        </ol>
+                        <p class="mt-3 text-sm text-orange-600 font-bold bg-orange-50 p-2 rounded-lg inline-block">(💡
+                            <strong>小提醒：</strong> 為了讓 AI 有足夠的靈感幫您寫文章，請至少點選並評分 <strong>3 個以上</strong>的項目哦！)</p>
+                    </div>
+
+                    <div class="bg-adaptive-muted p-5 rounded-2xl border border-adaptive">
+                        <h4 class="font-bold text-lg mb-2 text-adaptive">步驟四：一鍵施展 AI 魔法</h4>
+                        <ol class="list-decimal list-outside space-y-1.5 ml-5 font-medium text-adaptive">
+                            <li><strong>連續批次作業：</strong> 如果您打算一口氣寫好幾位學生，強烈建議把畫面下方的「<strong>連續作業</strong>」勾起來！</li>
+                            <li><strong>產生報告：</strong> 按下最下方的「產生 AI 綜合分析報告」大按鈕。稍等幾秒鐘，系統就會給您五種不同口吻的評語，還附贈一張漂亮的雷達圖！</li>
+                            <li><strong>存檔換下一位：</strong>
+                                <ul class="list-disc list-outside space-y-1 mt-1 ml-5">
+                                    <li>點一下報告左下角的「儲存此紀錄」。</li>
+                                    <li>輸入這是哪位學生（例如：<code>01 王小明</code>）按確定。</li>
+                                    <li>如果您剛剛有勾「連續作業」，視窗會自動關閉，並且把分數通通歸零，您可以馬上接著點選下一位學生的狀況！</li>
+                                </ul>
+                            </li>
+                        </ol>
+                    </div>
+
+                    <div class="bg-adaptive-muted p-5 rounded-2xl border border-adaptive">
+                        <h4 class="font-bold text-lg mb-2 text-adaptive">步驟五：完美收工，匯出 PDF</h4>
+                        <p class="font-medium mb-2">當全班的評語都寫完、存好檔之後：</p>
+                        <ol class="list-decimal list-outside space-y-1.5 ml-5 font-medium text-adaptive">
+                            <li>點擊右上角的「<i class="fa-solid fa-folder-open text-muted"></i> <strong>紀錄管理</strong>」。</li>
+                            <li>這裡會列出您所有存好的學生檔案。您可以隨時點開來檢查，或是把寫錯的刪掉。</li>
+                            <li><strong>準備交差：</strong> 點擊「<strong>匯出全部為
+                                    PDF</strong>」。系統會自動把全班的評語排版得漂漂亮亮，變成一份可以直接列印或交給學校的正式文件（裡面的文字都可以自由複製哦）。</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <div class="bg-pink-500/10 border-2 border-pink-500/20 p-6 rounded-2xl mt-8">
+                    <h3 class="text-xl font-extrabold text-pink-600 mb-3 flex items-center gap-2"><i
+                            class="fa-solid fa-lightbulb"></i> 給老師的小建議</h3>
+                    <p class="font-medium leading-relaxed text-adaptive mb-3">雖然 AI 寫得又快又好，但最了解學生的還是您！</p>
+                    <p class="font-medium leading-relaxed text-adaptive mb-3">建議老師們可以把 AI
+                        寫出來的「客觀分析型」和「溫暖激勵型」混合著用。點擊「複製」按鈕，把文字貼到 Word
+                        或是校務系統裡，然後<strong>在開頭或結尾，親手加上一兩句專屬這位學生的小故事或期許</strong>。</p>
+                    <p class="font-medium leading-relaxed text-adaptive">讓 AI
+                        幫您處理掉最花時間的排版和想詞彙，您只需要加上畫龍點睛的人情味，就能輕鬆完成一份份完美又專業的期末評語了！祝您期末順利！</p>
+                </div>
+
+            </div>
+            <div class="p-5 border-t border-adaptive flex justify-end items-center bg-adaptive-muted rounded-b-3xl">
+                <button onclick="closeGuideModal()"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold text-sm shadow-md transition-colors">我已瞭解，開始使用！</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const categories = {
+            self_management: {
+                title: "身心素養與自我管理", color: "blue", items: [
+                    { name: "生活起居自理", desc: "能獨立管理個人事務，如準時起床、整理服儀、收納書包及個人物品。" },
+                    { name: "健康作息睡眠", desc: "具備穩定的作息規律，能確保充足睡眠，假日不熬夜，維持生理時鐘穩定。" },
+                    { name: "飲食營養均衡", desc: "有良好的進食習慣，理解並實踐健康飲食，不依賴零食或含糖飲料。" },
+                    { name: "體能活動習慣", desc: "有規律運動的意識與行為，理解體力是學習的基礎，能自主參與身體活動。" },
+                    { name: "情緒覺察調節", desc: "能識別自身情緒，並能運用適當方法紓解壓力或挫折感，不遷怒環境。" },
+                    { name: "挫折恢復韌性", desc: "面對失敗或批評時展現正向心態，能快速調適並從中學習改善方案。" },
+                    { name: "儀容衛生維護", desc: "維持個人清潔與得體外貌，在不同場合展現合宜的生理衛生習慣。" },
+                    { name: "數位時間掌控", desc: "能自律地管理 3C 產品使用時間，不因網路沉迷影響課業、社交或睡眠。" },
+                    { name: "隱私邊界尊重", desc: "懂得保護個人隱私資訊，同時也尊重他人的空間與個人財物界線。" },
+                    { name: "自信自尊發展", desc: "相信自己的價值，能正向評價自我能力，並維持健康的自信心。" },
+                    { name: "自主困難解決", desc: "遇到挑戰先嘗試動腦解決而非立即求救，展現初步的獨立排難能力。" },
+                    { name: "安全風險意識", desc: "能辨識生活中的潛在風險，具備自我保護常識並遠離危險情境。" }
+                ]
+            },
+            learning: {
+                title: "學習特質與學科能力", color: "emerald", items: [
+                    { name: "課堂專注投入", desc: "上課期間能維持高效專注，目光隨師長引導，積極參與課室互動。" },
+                    { name: "學習任務管理", desc: "能準時完成各項作業與交辦任務，並對其產出品質負責任。" },
+                    { name: "閱讀理解深度", desc: "能分析文章脈絡，抓取關鍵資訊並推論作者意圖，而非僅是表層閱讀。" },
+                    { name: "數理邏輯應用", desc: "具備量化思考與空間推理能力，能運用邏輯工具解決實際問題。" },
+                    { name: "語文表達溝通", desc: "能有條理地運用口語或文字傳達想法，結構清晰且語意明確。" },
+                    { name: "資訊檢索分析", desc: "能運用數位工具查找資料，並具備過濾虛假或無效資訊的基本素養。" },
+                    { name: "學習監控修正", desc: "了解自己的學習狀態，考後會認真訂正錯誤並針對弱點調整方法。" },
+                    { name: "系統連結整合", desc: "能將不同學科的知識點進行聯想與整合，展現跨領域學習的潛力。" },
+                    { name: "計畫制定執行", desc: "具備時間規劃能力，能為大考或專題制定複習進度並按部就班執行。" },
+                    { name: "科學探究精神", desc: "對未知現象有好奇心，喜歡透過觀察、假設與實驗來驗證想法。" },
+                    { name: "記憶提取效能", desc: "能運用技巧將知識內化，並在需要時（如考試或報告）精準提取。" },
+                    { name: "美感應用表達", desc: "在作品排版、視覺呈現上具備美學素養，讓學習成果更具吸引力。" }
+                ]
+            },
+            social: {
+                title: "人際互動與團隊合作", color: "amber", items: [
+                    { name: "同理心與感受", desc: "能敏銳覺察他人的需求與感受，展現體貼並願意提供心理支持。" },
+                    { name: "溝通傾聽技巧", desc: "溝通時能耐心聆聽，並以尊重對方的口氣表達個人意見，不強加於人。" },
+                    { name: "團隊協作貢獻", desc: "在群體中能發揮所長，積極分擔任務並主主動協助夥伴，共創成果。" },
+                    { name: "衝突協商處理", desc: "發生摩擦時能冷靜對話，尋求雙贏的替代方案，而非採取情緒對抗。" },
+                    { name: "師生信任互動", desc: "與長輩維持良性且信任的關係，願意接納導引並適時尋求諮詢。" },
+                    { name: "友誼建立維持", desc: "具備穩定的社交圈與深度友誼，能與同儕共享秘密與互相支持。" },
+                    { name: "異性社交尊重", desc: "與不同性別相處態度大方、自然，維持適當界線並落實平權精神。" },
+                    { name: "社交韌性抗壓", desc: "面對小團體排擠或摩擦時能保持理智，不因人際壓力而迷失自我。" },
+                    { name: "換位思考能力", desc: "吵架時能嘗試站在對方立場思考，理解不同的視角與需求。" },
+                    { name: "助人合作熱忱", desc: "在他人需要時主動給予幫助，享受團隊合作帶來的成就感。" },
+                    { name: "歸屬感與責任", desc: "覺得自己是班級的一份子，願意為班級榮譽付出並維護團體氛圍。" },
+                    { name: "社交媒體形象", desc: "在社群網路上展現正向言行，不過度沉溺於虛擬認可。" }
+                ]
+            },
+            citizenship: {
+                title: "道德實踐與公民意識", color: "purple", items: [
+                    { name: "誠實誠信品格", desc: "言行一致，勇於承認錯誤並承擔結果，不因怕受罰而說謊。" },
+                    { name: "正義公平守護", desc: "在意群體中的公平，面對不正當行為有勇氣發聲或向長輩反應。" },
+                    { name: "守法規範遵循", desc: "理解並認同校規與社會規範的價值，非盲目服從而是內化自律。" },
+                    { name: "公共服務參與", desc: "主動承擔公共勞務，對於維護公共環境或事務有高度使命感。" },
+                    { name: "多元文化包容", desc: "尊重不同背景、身分或習慣的人士，不存偏見且樂於交流。" },
+                    { name: "媒體資訊素養", desc: "能辨識假訊息與網路標題黨，不隨意散播未經證實的言論。" },
+                    { name: "網路公民禮儀", desc: "在網路互動中維持禮貌，理解數位足跡的重要性，遠離網路霸凌。" },
+                    { name: "感恩與謙虛心", desc: "能看見他人的付出並表達謝意，對成就保持謙和，不驕傲自滿。" },
+                    { name: "是非辨別分析", desc: "面對誘惑或同儕壓力能冷靜判斷對錯，有堅定的道德底線。" },
+                    { name: "權威理性對話", desc: "對長輩或制度有疑問時，能採取理性有禮的方式溝通與爭取權益。" },
+                    { name: "環境永續守護", desc: "具備環保意識，能確實落實垃圾分類、節約能源等綠色行為。" },
+                    { name: "公民價值落實", desc: "理解並實踐民主、平等與自由的價值，並在班級生活中體現。" }
+                ]
+            },
+            potential: {
+                title: "多元潛能與創新素養", color: "pink", items: [
+                    { name: "好奇心與探索", desc: "對新事物保有高度興趣，不設限自己的發展，勇於跨出舒適圈。" },
+                    { name: "創新思維展現", desc: "面對老問題時能嘗試提出不同想法，在勞作或專題中展現創意。" },
+                    { name: "藝術鑑賞力", desc: "能欣賞生活中的各種藝術形式，並能表達個人對美感的見解。" },
+                    { name: "美感實踐作品", desc: "在作業、筆記或活動佈置中，能運用色彩與排版展現美學品味。" },
+                    { name: "動手實作興趣", desc: "喜歡親自動手操作或組裝物品，享受從無到有的創造過程。" },
+                    { name: "數位工具適應", desc: "能快速上手新型數位軟體，並將其轉化為輔助學習的高效工具。" },
+                    { name: "跨域整合能力", desc: "能聯結不同學科的技巧解決問題，如用數學與美感完成模型。" },
+                    { name: "舞台表達展演", desc: "在人群面前表現自我時大方得體，能將想法透過展演清晰呈現。" },
+                    { name: "未來職涯願景", desc: "對未來職涯或學業發展有初步藍圖，並願意為此進行自主學習。" },
+                    { name: "批判思考分析", desc: "不盲從主流或權威，能對既有現象提出有建設性的反思。" },
+                    { name: "生活品味營造", desc: "注意生活細節，對於打造具美感的個人生活與學習空間有興趣。" },
+                    { name: "跨學科洞察力", desc: "能看見事物背後的邏輯關聯，具備多角度看問題的能力。" }
+                ]
+            }
+        };
+
+        // 狀態管理
+        let selectedGrade = localStorage.getItem('teacher_pref_grade') || "國小低年級";
+        let currentTheme = localStorage.getItem('teacher_pref_theme') || "day";
+        let userApiKey = localStorage.getItem('teacher_api_key') || "";
+        let selectedModel = localStorage.getItem('teacher_api_model') || "gemini-2.5-flash";
+        let dbEnabled = localStorage.getItem('teacher_db_enabled') !== 'false'; // default true
+        let autoResetEnabled = localStorage.getItem('teacher_auto_reset') === 'true'; // default false
+
+        const scoreState = {};
+        let radarChartInstance = null;
+        let currentAIResult = null; // Store latest generated comments
+        let isViewingHistoricalRecord = false; // Flag to check if returning to history is needed
+
+        // IndexedDB 管理
+        let db;
+        const DB_NAME = 'TeacherAssessmentDB';
+        const STORE_NAME = 'records';
+
+        function initDB() {
+            if (!dbEnabled) return;
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, 1);
+                request.onupgradeneeded = (event) => {
+                    db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        const store = db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                        store.createIndex('date', 'date', { unique: false });
+                    }
+                };
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    document.getElementById('btn-open-records').classList.remove('hidden');
+                    document.getElementById('db-save-container').classList.remove('hidden');
+                    resolve(db);
+                };
+                request.onerror = (event) => {
+                    console.error("IndexedDB error:", event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        function init() {
+            const container = document.getElementById('assessment-container');
+            Object.keys(categories).forEach(catKey => {
+                const cat = categories[catKey];
+                scoreState[catKey] = cat.items.map(() => ({ active: false, value: 3 }));
+                const section = document.createElement('div');
+                section.innerHTML = `
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="h-6 w-2 bg-${cat.color}-500 rounded-full"></div>
+                        <h2 class="text-xl font-bold text-adaptive">${cat.title}</h2>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3" id="grid-${catKey}"></div>
+                `;
+                container.appendChild(section);
+                const grid = document.getElementById(`grid-${catKey}`);
+                cat.items.forEach((itemObj, index) => {
+                    const card = document.createElement('div');
+                    card.id = `card-${catKey}-${index}`;
+                    card.className = "item-row item-inactive p-3.5 rounded-xl border flex flex-col gap-3 relative group";
+                    let buttonsHtml = '';
+                    for (let i = 1; i <= 5; i++) {
+                        buttonsHtml += `<button class="score-btn" onclick="updateValue(event, '${catKey}', ${index}, ${i})">${i}</button>`;
+                    }
+                    card.innerHTML = `
+                        <div class="flex items-center gap-2 overflow-hidden pr-8">
+                            <span class="text-sm font-bold text-muted flex-shrink-0 bg-adaptive-muted border border-adaptive w-6 h-6 rounded-full flex items-center justify-center">${index + 1}</span>
+                            <span class="text-sm font-bold truncate text-adaptive">${itemObj.name}</span>
+                        </div>
+                        <button onclick="showHelp(event, '${catKey}', ${index})" 
+                            class="absolute top-3 right-3 w-6 h-6 rounded-full bg-blue-500/10 text-blue-500 border border-blue-500/20 text-xs font-bold flex items-center justify-center hover:bg-blue-600 hover:text-white transition-all shadow-sm z-10">?</button>
+                        <div class="flex items-center justify-between mt-auto">
+                            <div class="flex gap-1.5" id="btns-${catKey}-${index}">${buttonsHtml}</div>
+                            <span id="val-badge-${catKey}-${index}" class="text-sm font-bold text-muted w-6 text-center">--</span>
+                        </div>
+                    `;
+                    card.addEventListener('dblclick', () => toggleItem(catKey, index));
+                    grid.appendChild(card);
+                });
+            });
+
+            // 加載保存的偏好
+            selectGrade(selectedGrade);
+            changeTheme(currentTheme);
+            document.getElementById('chk-auto-reset').checked = autoResetEnabled;
+            document.getElementById('toggle-db').checked = dbEnabled;
+
+            renderSummaryList();
+            initDB();
+        }
+
+        // 偏好設定功能
+        function changeTheme(theme) {
+            currentTheme = theme;
+            localStorage.setItem('teacher_pref_theme', theme);
+            document.body.className = `p-2 md:p-6 theme-${theme}`;
+            document.querySelectorAll('.style-btn').forEach(btn => btn.classList.remove('selected'));
+            document.getElementById(`btn-theme-${theme}`).classList.add('selected');
+        }
+
+        function selectGrade(grade) {
+            selectedGrade = grade;
+            localStorage.setItem('teacher_pref_grade', grade);
+            const btns = document.querySelectorAll('.grade-btn');
+            btns.forEach(btn => {
+                if (btn.innerText === grade) btn.classList.add('selected');
+                else btn.classList.remove('selected');
+            });
+        }
+
+        function saveAutoResetPref() {
+            autoResetEnabled = document.getElementById('chk-auto-reset').checked;
+            localStorage.setItem('teacher_auto_reset', autoResetEnabled);
+        }
+
+        // 重置功能
+        function confirmReset() { document.getElementById('reset-modal').classList.remove('hidden'); }
+        function closeResetModal() { document.getElementById('reset-modal').classList.add('hidden'); }
+
+        function resetAllAssessments() {
+            Object.keys(scoreState).forEach(catKey => {
+                scoreState[catKey].forEach((item, index) => {
+                    item.active = false;
+                    item.value = 3;
+                    const card = document.getElementById(`card-${catKey}-${index}`);
+                    card.className = "item-row item-inactive p-3.5 rounded-xl border flex flex-col gap-3 relative group";
+                    const valBadge = document.getElementById(`val-badge-${catKey}-${index}`);
+                    valBadge.innerText = '--';
+                    valBadge.className = "text-sm font-bold text-muted w-6 text-center";
+                    const btns = document.getElementById(`btns-${catKey}-${index}`).querySelectorAll('.score-btn');
+                    btns.forEach(b => b.classList.remove('selected'));
+                });
+            });
+            renderSummaryList();
+            closeResetModal();
+        }
+
+        // API 與系統設定功能
+        function openSettings() {
+            document.getElementById('input-api-key').value = userApiKey;
+            document.getElementById('select-ai-model').value = selectedModel;
+            document.getElementById('toggle-db').checked = dbEnabled;
+            document.getElementById('settings-status').innerText = '';
+            document.getElementById('settings-modal').classList.remove('hidden');
+        }
+
+        function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
+
+        function toggleApiKeyVisibility() {
+            const input = document.getElementById('input-api-key');
+            const icon = document.getElementById('icon-api-key-eye');
+            if (input.type === 'password') {
+                input.type = 'text'; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password'; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye');
+            }
+        }
+
+        function saveSettings() {
+            const key = document.getElementById('input-api-key').value.trim();
+            const model = document.getElementById('select-ai-model').value;
+            const dbToggled = document.getElementById('toggle-db').checked;
+
+            if (!key) { showSettingsStatus('⚠️ API Key 不能為空', 'text-red-500'); return; }
+
+            localStorage.setItem('teacher_api_key', key);
+            localStorage.setItem('teacher_api_model', model);
+            localStorage.setItem('teacher_db_enabled', dbToggled);
+
+            userApiKey = key;
+            selectedModel = model;
+
+            if (dbToggled && !dbEnabled) { dbEnabled = true; initDB(); }
+            else if (!dbToggled && dbEnabled) {
+                dbEnabled = false;
+                document.getElementById('btn-open-records').classList.add('hidden');
+                document.getElementById('db-save-container').classList.add('hidden');
+            }
+
+            showSettingsStatus('✅ 設定已儲存', 'text-green-500');
+            setTimeout(closeSettings, 1000);
+        }
+
+        function clearSettings() {
+            localStorage.removeItem('teacher_api_key');
+            localStorage.removeItem('teacher_api_model');
+            userApiKey = ""; selectedModel = "gemini-2.5-flash";
+            document.getElementById('input-api-key').value = '';
+            document.getElementById('select-ai-model').value = 'gemini-2.5-flash';
+            showSettingsStatus('🗑️ 紀錄已清除', 'text-red-500');
+        }
+
+        function showSettingsStatus(msg, className) {
+            const statusEl = document.getElementById('settings-status');
+            statusEl.innerText = msg;
+            statusEl.className = `text-xs font-bold text-center h-4 transition-colors ${className}`;
+        }
+
+        // 評量互動邏輯
+        function showHelp(event, catKey, index) {
+            event.stopPropagation();
+            const item = categories[catKey].items[index];
+            document.getElementById('help-title').innerText = item.name;
+            document.getElementById('help-desc').innerText = item.desc;
+            document.getElementById('help-modal').classList.remove('hidden');
+        }
+        function closeHelp() { document.getElementById('help-modal').classList.add('hidden'); }
+
+        function toggleItem(catKey, index) {
+            const card = document.getElementById(`card-${catKey}-${index}`);
+            const isActive = !scoreState[catKey][index].active;
+            scoreState[catKey][index].active = isActive;
+            const badge = document.getElementById(`val-badge-${catKey}-${index}`);
+            if (isActive) {
+                card.classList.remove('item-inactive'); card.classList.add('item-active');
+                badge.innerText = scoreState[catKey][index].value;
+                badge.className = "text-sm font-extrabold text-blue-600 w-6 text-center";
+                refreshButtonStyles(catKey, index);
+            } else {
+                card.classList.add('item-inactive'); card.classList.remove('item-active');
+                badge.innerText = '--'; badge.className = "text-sm font-bold text-muted w-6 text-center";
+                const btns = document.getElementById(`btns-${catKey}-${index}`).querySelectorAll('.score-btn');
+                btns.forEach(b => b.classList.remove('selected'));
+            }
+            renderSummaryList();
+        }
+
+        function updateValue(event, catKey, index, val) {
+            if (event) event.stopPropagation();
+            if (!scoreState[catKey][index].active) return;
+            scoreState[catKey][index].value = val;
+            const badge = document.getElementById(`val-badge-${catKey}-${index}`);
+            if (badge) badge.innerText = val;
+            refreshButtonStyles(catKey, index);
+            renderSummaryList();
+        }
+
+        function refreshButtonStyles(catKey, index) {
+            const container = document.getElementById(`btns-${catKey}-${index}`);
+            if (!container) return;
+            const btns = container.querySelectorAll('.score-btn');
+            btns.forEach((btn, i) => (i + 1 === scoreState[catKey][index].value) ? btn.classList.add('selected') : btn.classList.remove('selected'));
+        }
+
+        function renderSummaryList() {
+            const container = document.getElementById('summary-list-container');
+            const content = document.getElementById('summary-content');
+            const badgeLabel = document.getElementById('total-count-badge');
+            const topHint = document.getElementById('top-hint');
+            const bottomHint = document.getElementById('bottom-hint');
+            content.innerHTML = ''; let totalActive = 0;
+
+            Object.keys(categories).forEach(catKey => {
+                const activeItems = scoreState[catKey]
+                    .map((s, i) => ({ ...s, index: i, name: categories[catKey].items[i].name }))
+                    .filter(s => s.active);
+
+                if (activeItems.length > 0) {
+                    totalActive += activeItems.length;
+                    const group = document.createElement('div');
+                    group.className = "flex flex-col space-y-3 bg-adaptive p-3 rounded-xl shadow-sm border border-adaptive";
+                    let itemsHtml = activeItems.map(item => {
+                        let miniBtns = '';
+                        for (let i = 1; i <= 5; i++) {
+                            miniBtns += `<button onclick="updateValue(null, '${catKey}', ${item.index}, ${i})" class="mini-score-btn ${item.value === i ? 'selected' : ''}">${i}</button>`;
+                        }
+                        return `
+                            <div class="flex flex-col gap-2 bg-adaptive-muted p-2.5 rounded-lg border border-adaptive">
+                                <div class="flex justify-between items-center text-sm font-bold text-adaptive">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        <button onclick="toggleItem('${catKey}', ${item.index})" class="text-red-400 hover:text-red-600 transition" title="移除此項目"><i class="fa-solid fa-circle-minus"></i></button>
+                                        <span class="truncate" title="${item.name}">${item.name}</span>
+                                    </div>
+                                    <span class="font-extrabold text-blue-600 bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 rounded">${item.value}</span>
+                                </div>
+                                <div class="flex gap-1 justify-end mt-1">${miniBtns}</div>
+                            </div>
+                        `;
+                    }).join('');
+                    group.innerHTML = `<h4 class="text-sm font-extrabold text-blue-600 border-b border-adaptive pb-2 mb-1">${categories[catKey].title}</h4><div class="space-y-2">${itemsHtml}</div>`;
+                    content.appendChild(group);
+                }
+            });
+
+            let hintHtml = ""; let hintClass = "";
+            if (totalActive === 0) { hintHtml = "尚未選擇任何評量指標"; hintClass = "text-muted"; }
+            else if (totalActive < 3) { hintHtml = `⚠️ 已評量 ${totalActive} 項，尚需 ${3 - totalActive} 項方可生成評語`; hintClass = "text-red-500"; }
+            else { hintHtml = `✅ 已評量 ${totalActive} 項，符合 AI 評語生成條件`; hintClass = "text-emerald-500"; }
+
+            topHint.innerHTML = hintHtml; topHint.className = `text-center text-sm font-bold transition-colors ${hintClass} mt-3`;
+            bottomHint.innerHTML = hintHtml; bottomHint.className = `mb-6 text-lg font-bold transition-colors ${hintClass}`;
+            badgeLabel.innerText = `${totalActive} 項目`;
+            totalActive > 0 ? container.classList.remove('hidden') : container.classList.add('hidden');
+        }
+
+        // AI 生成
+        async function generateAIComments() {
+            const activeData = []; const averages = {};
+            Object.keys(categories).forEach(catKey => {
+                const catScores = scoreState[catKey].filter(s => s.active);
+                if (catScores.length > 0) {
+                    const avg = catScores.reduce((a, b) => a + b.value, 0) / catScores.length;
+                    averages[categories[catKey].title] = avg.toFixed(1);
+                    scoreState[catKey].forEach((s, idx) => { if (s.active) activeData.push({ category: categories[catKey].title, item: categories[catKey].items[idx].name, score: s.value }); });
+                } else averages[categories[catKey].title] = 0;
+            });
+
+            if (activeData.length < 3) { alert("❗ 評量項目不足：請至少連點兩下開啟 3 個指標。"); return; }
+            if (!userApiKey) { alert("⚠️ 尚未設定 API Key。\n請點擊右上角「API 設定」輸入您的 Gemini API Key。"); openSettings(); return; }
+
+            document.getElementById('ai-modal').classList.remove('hidden');
+            document.getElementById('ai-loading').classList.remove('hidden');
+            document.getElementById('ai-content-wrapper').classList.add('hidden');
+
+            // 確保生成時會顯示雷達圖容器
+            const radarContainer = document.getElementById('radar-container');
+            if (radarContainer) radarContainer.classList.remove('hidden');
+
+            // Draw Radar
+            const ctx = document.getElementById('radarChart').getContext('2d');
+            if (radarChartInstance) radarChartInstance.destroy();
+            const gridColor = currentTheme === 'night' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+            const labelColor = currentTheme === 'night' ? '#cbd5e1' : '#475569';
+            radarChartInstance = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels: Object.values(categories).map(c => c.title),
+                    datasets: [{ label: '向度得分', data: Object.values(categories).map(c => averages[c.title]), fill: true, backgroundColor: 'rgba(59, 130, 246, 0.2)', borderColor: 'rgb(59, 130, 246)', pointBackgroundColor: 'rgb(59, 130, 246)', borderWidth: 2, pointRadius: 4 }]
+                },
+                options: {
+                    scales: { r: { min: 0, max: 5, ticks: { stepSize: 1, display: false }, grid: { color: gridColor, lineWidth: 1 }, pointLabels: { color: labelColor, font: { size: 13, weight: 'bold', family: "'Noto Sans TC', sans-serif" } } } },
+                    plugins: { legend: { display: false } }, maintainAspectRatio: false
+                }
+            });
+
+            const systemPrompt = `你是一位資深的國中小導師。學生處於：${selectedGrade}。請根據提供的評量數據撰寫五種風格評語（warm, objective, future, short_positive, short_neutral）。每一項風格都必須產出內容。嚴禁出現具體的分數數字。務必以繁體中文撰寫流暢段落。`;
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${userApiKey}`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: JSON.stringify(activeData) }] }],
+                        systemInstruction: { parts: [{ text: systemPrompt }] },
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: "OBJECT",
+                                properties: { warm: { type: "STRING" }, objective: { type: "STRING" }, future: { type: "STRING" }, short_positive: { type: "STRING" }, short_neutral: { type: "STRING" } },
+                                required: ["warm", "objective", "future", "short_positive", "short_neutral"]
+                            }
+                        }
+                    })
+                });
+
+                if (!res.ok) { const errData = await res.json().catch(() => ({})); throw new Error(`API 請求失敗 (${res.status}): ${errData.error?.message || '請確認 API Key'}`); }
+                const responseData = await res.json();
+                const resultText = responseData.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!resultText) throw new Error("AI 回傳內容為空");
+
+                currentAIResult = JSON.parse(resultText); // Save to global state
+
+                // 重置歷史檢視標籤，並確保新生成時顯示儲存按鈕
+                isViewingHistoricalRecord = false;
+                if (dbEnabled) {
+                    document.getElementById('db-save-container').classList.remove('hidden');
+                }
+
+                renderAIComments(currentAIResult);
+            } catch (error) {
+                document.getElementById('ai-comments-grid').innerHTML = `<p class="text-red-500 text-center col-span-2 p-10 bg-red-500/10 border border-red-500/20 rounded-xl">AI 分析失敗。原因：${error.message}。</p>`;
+                document.getElementById('ai-loading').classList.add('hidden');
+                document.getElementById('ai-content-wrapper').classList.remove('hidden');
+            }
+        }
+
+        function renderAIComments(c) {
+            const grid = document.getElementById('ai-comments-grid');
+            const isNight = currentTheme === 'night';
+
+            const styles = [
+                { id: 'warm', label: '☀️ 溫暖激勵型', text: c.warm, bg: 'bg-pink-500/10', border: 'border-pink-500/20', textCol: isNight ? 'text-pink-400' : 'text-pink-700' },
+                { id: 'objective', label: '📊 客觀分析型', text: c.objective, bg: 'bg-blue-500/10', border: 'border-blue-500/20', textCol: isNight ? 'text-blue-400' : 'text-blue-700' },
+                { id: 'future', label: '🚀 未來引導型', text: c.future, bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', textCol: isNight ? 'text-emerald-400' : 'text-emerald-700', span: true },
+                { id: 'sp', label: '✨ 精簡鼓勵', text: c.short_positive, bg: 'bg-orange-500/10', border: 'border-orange-500/20', textCol: isNight ? 'text-orange-400' : 'text-orange-700' },
+                { id: 'sn', label: '📝 精簡務實', text: c.short_neutral, bg: 'bg-slate-500/10', border: 'border-slate-500/20', textCol: 'text-adaptive' }
+            ];
+
+            grid.innerHTML = styles.map(s => `
+                <div class="p-6 ${s.bg} border ${s.border} rounded-2xl relative shadow-sm hover:shadow-md transition-shadow ${s.span ? 'md:col-span-2' : ''}">
+                    <div class="flex justify-between items-center mb-4 border-b border-adaptive pb-3">
+                        <h4 class="font-extrabold ${s.textCol} text-lg tracking-wide">${s.label}</h4>
+                        <button onclick="copyText('txt-${s.id}', this)" class="text-xs bg-adaptive text-adaptive border border-adaptive px-4 py-1.5 rounded-xl shadow-sm hover:opacity-80 transition-colors font-bold flex items-center gap-1">
+                            <i class="fa-regular fa-copy"></i> 複製
+                        </button>
+                    </div>
+                    <p id="txt-${s.id}" class="text-base text-adaptive leading-loose font-medium text-justify">${s.text}</p>
+                </div>
+            `).join('');
+            document.getElementById('ai-loading').classList.add('hidden');
+            document.getElementById('ai-content-wrapper').classList.remove('hidden');
+        }
+
+        function copyText(id, btn) {
+            const text = document.getElementById(id).innerText;
+            const textArea = document.createElement("textarea");
+            textArea.value = text; document.body.appendChild(textArea); textArea.select();
+            try {
+                document.execCommand('copy');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> 已複製';
+                btn.className = "text-xs bg-emerald-600 text-white border border-emerald-600 px-4 py-1.5 rounded-xl shadow-sm font-bold flex items-center gap-1 transition-colors";
+                setTimeout(() => { btn.innerHTML = originalText; btn.className = "text-xs bg-adaptive text-adaptive border border-adaptive px-4 py-1.5 rounded-xl shadow-sm hover:opacity-80 transition-colors font-bold flex items-center gap-1"; }, 2000);
+            } catch (err) { }
+            document.body.removeChild(textArea);
+        }
+
+        function closeModal() {
+            document.getElementById('ai-modal').classList.add('hidden');
+            // 如果是從歷史紀錄來的，關閉報告後重新打開紀錄選單
+            if (isViewingHistoricalRecord) {
+                isViewingHistoricalRecord = false;
+                openRecordsModal();
+            }
+        }
+
+        // ================= 資料庫與儲存邏輯 =================
+        function openSavePrompt() {
+            if (!dbEnabled || !db) return alert("資料庫未啟用，請至設定開啟。");
+            document.getElementById('input-student-id').value = '';
+            document.getElementById('save-prompt-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('input-student-id').focus(), 100);
+        }
+
+        function closeSavePrompt() { document.getElementById('save-prompt-modal').classList.add('hidden'); }
+
+        function confirmSaveRecord() {
+            const studentId = document.getElementById('input-student-id').value.trim();
+            if (!studentId) return alert("請輸入學生代號或姓名！");
+
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+
+            const record = {
+                id: Date.now().toString(),
+                studentId: studentId,
+                grade: selectedGrade,
+                date: new Date().toLocaleString(),
+                comments: currentAIResult
+            };
+
+            const request = store.add(record);
+            request.onsuccess = () => {
+                closeSavePrompt();
+
+                // 自動重置邏輯
+                if (autoResetEnabled) {
+                    resetAllAssessments();
+                    closeModal(); // 關閉 AI 報告視窗，準備輸入下一位
+                    alert(`✅ 學生 ${studentId} 紀錄已儲存！已為您重置畫面以輸入下一位學生。`);
+                } else {
+                    alert(`✅ 學生 ${studentId} 紀錄已儲存！`);
+                }
+            };
+            request.onerror = (e) => { alert("儲存失敗：" + e.target.error); };
+        }
+
+        // ================= 紀錄管理邏輯 =================
+        function openRecordsModal() {
+            if (!dbEnabled || !db) return alert("資料庫未啟用。");
+            document.getElementById('records-modal').classList.remove('hidden');
+            loadRecordsToUI();
+        }
+
+        function closeRecordsModal() { document.getElementById('records-modal').classList.add('hidden'); }
+
+        function loadRecordsToUI() {
+            const container = document.getElementById('records-list-container');
+            container.innerHTML = '<div class="text-center p-10 text-muted"><div class="loading-spinner mx-auto mb-2"></div>讀取中...</div>';
+
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                const records = request.result.reverse(); // 最新在上
+                if (records.length === 0) {
+                    container.innerHTML = '<div class="text-center p-10 text-muted border-2 border-dashed border-adaptive rounded-xl"><i class="fa-solid fa-folder-open text-4xl mb-3 opacity-50"></i><p>目前尚無任何儲存的學生紀錄。</p></div>';
+                    return;
+                }
+
+                let html = '<div class="grid gap-4">';
+                records.forEach(r => {
+                    html += `
+                    <div class="bg-adaptive border border-adaptive p-4 rounded-xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2 py-0.5 rounded">學生代號</span>
+                                <h4 class="text-lg font-bold text-adaptive">${r.studentId}</h4>
+                            </div>
+                            <div class="text-xs text-muted font-medium flex gap-3">
+                                <span><i class="fa-regular fa-clock"></i> ${r.date}</span>
+                                <span><i class="fa-solid fa-layer-group"></i> ${r.grade}</span>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="viewRecord('${r.id}')" class="px-4 py-2 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white border border-blue-200 font-bold text-sm rounded-lg transition-colors">查看</button>
+                            <button onclick="deleteRecord('${r.id}')" class="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-600 hover:text-white border border-red-200 font-bold text-sm rounded-lg transition-colors">刪除</button>
+                        </div>
+                    </div>`;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+            };
+        }
+
+        function deleteRecord(id) {
+            if (!confirm("確定要刪除這筆紀錄嗎？無法復原。")) return;
+            const request = db.transaction([STORE_NAME], 'readwrite').objectStore(STORE_NAME).delete(id);
+            request.onsuccess = () => loadRecordsToUI();
+        }
+
+        function clearAllRecords() {
+            if (!confirm("⚠️ 警告：這將會清除您本機儲存的所有學生評語紀錄，且無法復原！確定要繼續嗎？")) return;
+            const request = db.transaction([STORE_NAME], 'readwrite').objectStore(STORE_NAME).clear();
+            request.onsuccess = () => loadRecordsToUI();
+        }
+
+        function viewRecord(id) {
+            const request = db.transaction([STORE_NAME], 'readonly').objectStore(STORE_NAME).get(id);
+            request.onsuccess = () => {
+                if (request.result) {
+                    currentAIResult = request.result.comments;
+                    isViewingHistoricalRecord = true;
+
+                    // 關閉歷史紀錄視窗，避免互相遮擋
+                    closeRecordsModal();
+
+                    // 隱藏歷史資料並未保存的雷達圖容器
+                    const radarContainer = document.getElementById('radar-container');
+                    if (radarContainer) radarContainer.classList.add('hidden');
+
+                    // 檢視歷史紀錄時隱藏儲存按鈕
+                    document.getElementById('db-save-container').classList.add('hidden');
+
+                    renderAIComments(currentAIResult);
+                    document.getElementById('ai-modal').classList.remove('hidden');
+                }
+            };
+        }
+
+        // ================= PDF 匯出邏輯 (原生列印解決方案) =================
+        function exportToPDF() {
+            const request = db.transaction([STORE_NAME], 'readonly').objectStore(STORE_NAME).getAll();
+            request.onsuccess = () => {
+                const records = request.result;
+                if (records.length === 0) return alert("目前沒有可匯出的紀錄！");
+
+                const btn = event.currentTarget;
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 準備文件中...';
+                btn.disabled = true;
+
+                // 建立乾淨的 HTML 供列印引擎使用
+                let htmlString = `
+                    <!DOCTYPE html>
+                    <html lang="zh-TW">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>學生綜合評語總表_${new Date().toLocaleDateString()}</title>
+                        <style>
+                            @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+                            body {
+                                font-family: 'Noto Sans TC', sans-serif;
+                                color: #1e293b;
+                                line-height: 1.6;
+                                padding: 20px;
+                                max-width: 800px;
+                                margin: 0 auto;
+                            }
+                            .header {
+                                text-align: center;
+                                margin-bottom: 40px;
+                                border-bottom: 2px solid #3b82f6;
+                                padding-bottom: 20px;
+                            }
+                            .header h1 { color: #2563eb; font-size: 28px; margin: 0; }
+                            .header p { color: #64748b; font-size: 14px; margin-top: 10px; }
+                            .record {
+                                page-break-inside: avoid;
+                                break-inside: avoid;
+                                margin-bottom: 40px;
+                                background: #f8fafc;
+                                padding: 25px;
+                                border-radius: 12px;
+                                border: 1px solid #e2e8f0;
+                            }
+                            .record-header {
+                                display: flex;
+                                justify-content: space-between;
+                                align-items: baseline;
+                                border-bottom: 1px solid #cbd5e1;
+                                padding-bottom: 10px;
+                                margin-bottom: 15px;
+                            }
+                            .record-header h2 { margin: 0; color: #0f172a; font-size: 20px; font-weight: bold; }
+                            .record-header span { font-size: 12px; color: #64748b; }
+                            h3 { font-size: 16px; margin-bottom: 5px; margin-top: 20px; font-weight: bold; }
+                            p { font-size: 14px; color: #334155; margin-top: 0; text-align: justify; }
+                            
+                            .title-warm { color: #db2777; }
+                            .title-obj { color: #2563eb; }
+                            .title-fut { color: #059669; }
+                            .title-sp { color: #ea580c; }
+                            .title-sn { color: #475569; }
+
+                            @media print {
+                                body { padding: 0; max-width: 100%; background: #fff; }
+                                .record { background: #fff; border: 1px solid #ccc; box-shadow: none; }
+                                @page { margin: 15mm; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>學生綜合評語總表</h1>
+                            <p>匯出日期：${new Date().toLocaleDateString()}</p>
+                        </div>
+                `;
+
+                records.forEach(r => {
+                    htmlString += `
+                        <div class="record">
+                            <div class="record-header">
+                                <h2>學生代號：${r.studentId}</h2>
+                                <span>${r.grade} | ${r.date}</span>
+                            </div>
+                            
+                            <h3 class="title-warm">☀️ 溫暖激勵型</h3>
+                            <p>${r.comments.warm}</p>
+
+                            <h3 class="title-obj">📊 客觀分析型</h3>
+                            <p>${r.comments.objective}</p>
+                            
+                            <h3 class="title-fut">🚀 未來引導型</h3>
+                            <p>${r.comments.future}</p>
+                            
+                            <h3 class="title-sp">✨ 精簡鼓勵</h3>
+                            <p>${r.comments.short_positive}</p>
+
+                            <h3 class="title-sn">📝 精簡務實</h3>
+                            <p>${r.comments.short_neutral}</p>
+                        </div>
+                    `;
+                });
+
+                htmlString += `</body></html>`;
+
+                // 建立一個隱藏的 iframe 來執行原生列印
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+
+                iframe.contentDocument.open();
+                iframe.contentDocument.write(htmlString);
+                iframe.contentDocument.close();
+
+                // 等待 iframe 資源載入後觸發列印
+                iframe.onload = function () {
+                    setTimeout(() => {
+                        try {
+                            iframe.contentWindow.focus();
+                            iframe.contentWindow.print();
+                        } catch (err) {
+                            console.error(err);
+                            alert('瀏覽器封鎖了列印功能，請允許彈出視窗或更換瀏覽器試試。');
+                        }
+
+                        // 清理狀態
+                        setTimeout(() => {
+                            document.body.removeChild(iframe);
+                            btn.innerHTML = originalText;
+                            btn.disabled = false;
+                        }, 1000);
+                    }, 500);
+                };
+            };
+        }
+
+        // 使用說明視窗控制邏輯
+        function openGuideModal() { document.getElementById('guide-modal').classList.remove('hidden'); }
+        function closeGuideModal() { document.getElementById('guide-modal').classList.add('hidden'); }
+
+        // 頁面加載後執行初始化
+        window.onload = init;
+    </script>
+</body>
+
+</html>
