@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小拼圖遊戲</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .puzzle-piece {
+            cursor: grab;
+            transition: transform 0.1s, box-shadow 0.1s;
+            touch-action: none;
+            user-select: none;
+        }
+
+        .puzzle-piece:active {
+            cursor: grabbing;
+        }
+
+        .dragging {
+            opacity: 0.6;
+            transform: scale(1.05);
+            z-index: 50;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .drop-target {
+            outline: 4px dashed #3b82f6;
+            outline-offset: -4px;
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+
+        #puzzle-container {
+            display: grid;
+            gap: 2px;
+            background-color: #d1d5db;
+            border: 4px solid #1f2937;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .loader {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        #preview-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            background-color: #000;
+            display: none;
+            border-radius: 0.75rem;
+            overflow: hidden;
+        }
+
+        #preview-overlay img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-100 min-h-screen font-sans text-slate-900">
+
+    <div class="max-w-4xl mx-auto p-4 md:p-8">
+        <header class="text-center mb-6">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-slate-800 mb-2">小拼圖遊戲</h1>
+            <p class="text-slate-500 italic text-sm md:text-base">上傳圖片，設定難度，按住眼睛按鈕即可對照原圖</p>
+        </header>
+
+        <!-- 控制區域 -->
+        <div
+            class="bg-white p-5 rounded-2xl shadow-lg mb-6 grid grid-cols-1 md:grid-cols-3 gap-6 items-end border border-slate-200">
+            <div class="space-y-2">
+                <label class="block text-sm font-bold text-slate-700">1. 選擇圖片</label>
+                <input type="file" id="imageInput" accept="image/*"
+                    class="block w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 transition-all cursor-pointer">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase">橫向格數</label>
+                    <input type="number" id="colsInput" value="3" min="2" max="10"
+                        class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold">
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-[10px] font-bold text-slate-400 uppercase">縱向格數</label>
+                    <input type="number" id="rowsInput" value="3" min="2" max="10"
+                        class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold">
+                </div>
+            </div>
+
+            <div>
+                <button id="startBtn"
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-md active:scale-95 disabled:bg-slate-300">
+                    開始挑戰
+                </button>
+            </div>
+        </div>
+
+        <!-- 數據儀表板 (整合預覽按鈕) -->
+        <div class="flex justify-between items-center mb-4 px-2">
+            <div class="flex items-center space-x-3">
+                <!-- 計時器 -->
+                <div
+                    class="flex items-center space-x-2 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-200">
+                    <span class="text-slate-400 text-[10px] uppercase font-bold hidden sm:inline">Time</span>
+                    <span id="timer" class="font-mono font-bold text-indigo-600 text-xl">00:00</span>
+                </div>
+
+                <!-- 整合預覽按鈕 (圖示 + 次數) -->
+                <button id="previewBtn"
+                    class="flex items-center space-x-2 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-200 hover:bg-slate-50 active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed text-slate-600"
+                    disabled title="按住查看原圖">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <span id="previewCounter" class="font-mono font-bold text-amber-600 text-xl">0</span>
+                </button>
+            </div>
+
+            <div id="gameStatus" class="hidden text-emerald-600 font-black animate-bounce text-sm md:text-base">
+                ✨ 完成匹配！
+            </div>
+        </div>
+
+        <!-- 遊戲主區域 -->
+        <div id="gameArea"
+            class="relative bg-slate-200/50 p-2 md:p-4 rounded-3xl shadow-inner min-h-[400px] flex items-center justify-center border-2 border-dashed border-slate-300 overflow-hidden">
+            <div id="placeholderText" class="text-slate-400 text-center pointer-events-none">
+                <div id="statusBox" class="bg-white p-8 rounded-2xl shadow-sm inline-block">
+                    <svg class="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                        </path>
+                    </svg>
+                    <p class="font-medium" id="statusMessage">請上傳圖片以開始拼圖</p>
+                </div>
+            </div>
+
+            <!-- 拼圖容器 -->
+            <div id="puzzle-container" class="hidden relative">
+                <!-- 預覽圖層 -->
+                <div id="preview-overlay">
+                    <img id="preview-img" src="" alt="Preview">
+                </div>
+            </div>
+        </div>
+
+        <!-- 成功彈窗 -->
+        <div id="successModal"
+            class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+            <div class="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-sm w-full">
+                <div
+                    class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-black text-slate-800 mb-2">拼圖完成！</h2>
+                <div class="space-y-1 mb-8">
+                    <p class="text-slate-500">總耗時：<span id="finalTime" class="font-bold text-indigo-600"></span></p>
+                    <p class="text-slate-500">原圖預覽次數：<span id="finalPreviews" class="font-bold text-amber-600"></span>
+                    </p>
+                </div>
+                <button onclick="closeModal()"
+                    class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold hover:bg-indigo-700 transition-all shadow-lg">
+                    再次挑戰
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const rowsInput = document.getElementById('rowsInput');
+        const colsInput = document.getElementById('colsInput');
+        const startBtn = document.getElementById('startBtn');
+        const previewBtn = document.getElementById('previewBtn');
+        const previewCounter = document.getElementById('previewCounter');
+        const puzzleContainer = document.getElementById('puzzle-container');
+        const previewOverlay = document.getElementById('preview-overlay');
+        const previewImg = document.getElementById('preview-img');
+        const timerDisplay = document.getElementById('timer');
+        const statusMessage = document.getElementById('statusMessage');
+        const placeholderText = document.getElementById('placeholderText');
+        const successModal = document.getElementById('successModal');
+        const finalTimeDisplay = document.getElementById('finalTime');
+        const finalPreviewsDisplay = document.getElementById('finalPreviews');
+
+        let originalImage = null;
+        let timerInterval = null;
+        let secondsElapsed = 0;
+        let previewCount = 0;
+        let isGameRunning = false;
+        let draggedPieceId = null;
+
+        // 圖片優化預處理
+        async function processAndResizeImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const MAX_SIZE = 1200;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > MAX_SIZE) {
+                                height = Math.round((height * MAX_SIZE) / width);
+                                width = MAX_SIZE;
+                            }
+                        } else {
+                            if (height > MAX_SIZE) {
+                                width = Math.round((width * MAX_SIZE) / height);
+                                height = MAX_SIZE;
+                            }
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        const optimizedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+                        const optimizedImg = new Image();
+                        optimizedImg.onload = () => resolve(optimizedImg);
+                        optimizedImg.src = optimizedDataUrl;
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        imageInput.addEventListener('change', async function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            startBtn.disabled = true;
+            statusMessage.innerHTML = `<span class="loader"></span> 正在處理高畫質影像...`;
+
+            try {
+                originalImage = await processAndResizeImage(file);
+                previewImg.src = originalImage.src;
+                statusMessage.innerHTML = `<span class="text-emerald-600 font-bold">準備就緒，隨時可開始！</span>`;
+                previewBtn.disabled = false;
+            } catch (err) {
+                statusMessage.innerText = "讀取失敗，請更換圖片。";
+            } finally {
+                startBtn.disabled = false;
+            }
+        });
+
+        startBtn.addEventListener('click', () => {
+            if (!originalImage) return alert('請先上傳圖片！');
+            initGame();
+        });
+
+        // --- 預覽功能邏輯 (整合計數) ---
+        const showPreview = () => {
+            if (isGameRunning) {
+                if (previewOverlay.style.display !== 'block') {
+                    previewCount++;
+                    previewCounter.innerText = previewCount;
+                }
+                previewOverlay.style.display = 'block';
+            }
+        };
+        const hidePreview = () => { previewOverlay.style.display = 'none'; };
+
+        previewBtn.addEventListener('mousedown', showPreview);
+        previewBtn.addEventListener('mouseup', hidePreview);
+        previewBtn.addEventListener('mouseleave', hidePreview);
+        previewBtn.addEventListener('touchstart', (e) => { e.preventDefault(); showPreview(); }, { passive: false });
+        previewBtn.addEventListener('touchend', hidePreview);
+        previewBtn.addEventListener('touchcancel', hidePreview);
+
+        function initGame() {
+            const rows = parseInt(rowsInput.value);
+            const cols = parseInt(colsInput.value);
+
+            clearInterval(timerInterval);
+            secondsElapsed = 0;
+            previewCount = 0;
+            previewCounter.innerText = "0";
+            updateTimerDisplay();
+            isGameRunning = true;
+            document.getElementById('gameStatus').classList.add('hidden');
+
+            const maxWidth = Math.min(800, window.innerWidth * 0.95);
+            const ratio = originalImage.height / originalImage.width;
+            const containerW = maxWidth;
+            const containerH = maxWidth * ratio;
+
+            puzzleContainer.style.width = `${containerW}px`;
+            puzzleContainer.style.height = `${containerH}px`;
+            puzzleContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            puzzleContainer.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+
+            pieces = [];
+            for (let i = 0; i < rows * cols; i++) {
+                pieces.push({ id: i, currentPos: i });
+            }
+
+            do { shuffleArray(pieces); } while (checkIfAlreadyWin(pieces));
+
+            renderPuzzle(rows, cols, containerW, containerH);
+
+            placeholderText.classList.add('hidden');
+            puzzleContainer.classList.remove('hidden');
+
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                const temp = arr[i].currentPos;
+                arr[i].currentPos = arr[j].currentPos;
+                arr[j].currentPos = temp;
+            }
+        }
+
+        function checkIfAlreadyWin(arr) { return arr.every(p => p.id === p.currentPos); }
+
+        function renderPuzzle(rows, cols, w, h) {
+            const existingPieces = puzzleContainer.querySelectorAll('.puzzle-piece');
+            existingPieces.forEach(p => p.remove());
+
+            const pieceW = w / cols;
+            const pieceH = h / rows;
+            const sorted = [...pieces].sort((a, b) => a.currentPos - b.currentPos);
+
+            sorted.forEach((piece) => {
+                const div = document.createElement('div');
+                div.className = 'puzzle-piece';
+                div.draggable = true;
+                div.dataset.id = piece.id;
+
+                const correctR = Math.floor(piece.id / cols);
+                const correctC = piece.id % cols;
+                div.style.backgroundImage = `url(${originalImage.src})`;
+                div.style.backgroundSize = `${w}px ${h}px`;
+                div.style.backgroundPosition = `-${correctC * pieceW}px -${correctR * pieceH}px`;
+
+                div.addEventListener('dragstart', (e) => {
+                    if (!isGameRunning) return;
+                    draggedPieceId = piece.id;
+                    div.classList.add('dragging');
+                });
+                div.addEventListener('dragover', (e) => e.preventDefault());
+                div.addEventListener('dragenter', () => div.classList.add('drop-target'));
+                div.addEventListener('dragleave', () => div.classList.remove('drop-target'));
+                div.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    div.classList.remove('drop-target');
+                    handleSwap(draggedPieceId, piece.id);
+                });
+                div.addEventListener('dragend', () => div.classList.remove('dragging'));
+
+                div.addEventListener('touchstart', handleTouchStart, { passive: false });
+                div.addEventListener('touchmove', handleTouchMove, { passive: false });
+                div.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+                puzzleContainer.appendChild(div);
+            });
+        }
+
+        function handleSwap(srcId, destId) {
+            if (srcId === null || srcId === destId) return;
+            const p1 = pieces.find(p => p.id === parseInt(srcId));
+            const p2 = pieces.find(p => p.id === parseInt(destId));
+            const temp = p1.currentPos;
+            p1.currentPos = p2.currentPos;
+            p2.currentPos = temp;
+
+            renderPuzzle(parseInt(rowsInput.value), parseInt(colsInput.value), puzzleContainer.offsetWidth, puzzleContainer.offsetHeight);
+            checkWin();
+        }
+
+        let touchTarget = null;
+        function handleTouchStart(e) {
+            if (!isGameRunning) return;
+            touchTarget = this;
+            this.classList.add('dragging');
+            draggedPieceId = this.dataset.id;
+        }
+
+        function handleTouchMove(e) {
+            if (!isGameRunning) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+            document.querySelectorAll('.puzzle-piece').forEach(p => p.classList.remove('drop-target'));
+            if (elem && elem.classList.contains('puzzle-piece') && elem !== touchTarget) {
+                elem.classList.add('drop-target');
+            }
+        }
+
+        function handleTouchEnd(e) {
+            if (!isGameRunning) return;
+            this.classList.remove('dragging');
+            const touch = e.changedTouches[0];
+            const elem = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (elem && elem.classList.contains('puzzle-piece')) {
+                handleSwap(draggedPieceId, elem.dataset.id);
+            }
+            document.querySelectorAll('.puzzle-piece').forEach(p => p.classList.remove('drop-target'));
+            draggedPieceId = null;
+        }
+
+        function checkWin() {
+            if (checkIfAlreadyWin(pieces)) {
+                isGameRunning = false;
+                clearInterval(timerInterval);
+                document.getElementById('gameStatus').classList.remove('hidden');
+                finalTimeDisplay.innerText = formatTime(secondsElapsed);
+                finalPreviewsDisplay.innerText = `${previewCount} 次`;
+                setTimeout(() => successModal.classList.remove('hidden'), 500);
+            }
+        }
+
+        function updateTimerDisplay() { timerDisplay.innerText = formatTime(secondsElapsed); }
+        function formatTime(s) { return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`; }
+        function closeModal() { successModal.classList.add('hidden'); }
+
+        window.addEventListener('resize', () => {
+            if (isGameRunning && originalImage) {
+                const w = Math.min(800, window.innerWidth * 0.95);
+                const h = w * (originalImage.height / originalImage.width);
+                puzzleContainer.style.width = `${w}px`;
+                puzzleContainer.style.height = `${h}px`;
+                renderPuzzle(parseInt(rowsInput.value), parseInt(colsInput.value), w, h);
+            }
+        });
+    </script>
+</body>
+
+</html>

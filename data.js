@@ -5,7 +5,7 @@
 window.APP_DATA = {
   "settings": {
     "siteTitle": "JRH的雜七雜八 2026",
-    "siteSubtitle": "探索各式各樣的資源與工具",
+    "siteSubtitle": "分享自製各式各樣的資源與工具",
     "footerText": "© 2026 Designed for JRH",
     "categoryLabel": "分類",
     "categories": [
@@ -13,6 +13,7 @@ window.APP_DATA = {
       "備課",
       "遊戲",
       "測驗",
+      "校務",
       "其他"
     ]
   },
@@ -26,6 +27,16 @@ window.APP_DATA = {
       "icon": "SmartphoneNfc",
       "color": "purple",
       "grade": "班級經營"
+    },
+    {
+      "id": "item_1777265671924",
+      "title": "全方位導師綜合評語系統",
+      "category": "校務",
+      "description": "專為老師們量身打造的客製化評語產生工具！運用了 Google 最新的人工智慧技術，只需要簡單點選學生平時的表現，AI 就會自動幫您轉化為一篇篇通順、有溫度且切中要點的評語！",
+      "link": "overall_comments.html",
+      "icon": "FileText",
+      "color": "orange",
+      "grade": "校務"
     }
   ]
 };
