@@ -37,6 +37,16 @@ window.APP_DATA = {
       "icon": "FileText",
       "color": "orange",
       "grade": "校務"
+    },
+    {
+      "id": "item_1777363033594",
+      "title": "🧩 小拼圖遊戲",
+      "category": "遊戲",
+      "description": "「小拼圖遊戲 Pro」是一款高度優化的輕量級網頁應用程式。本系統純粹以原生 JavaScript 與 Tailwind CSS 構建，展現了卓越的前端架構與效能管控。\n其核心搭載動態雙軸響應式縮放演算法，能完美自適應各種圖片比例與裝置螢幕，實現像素級的無縫精準切割。在人機互動（HCI）層面，系統整合了直覺的拖曳上載（Drag & Drop）與全螢幕沉浸模式，並在拼圖完成瞬間嚴格執行狀態鎖定，觸發高質感的邊框光暈融合特效與硬體震動回饋，提供流暢且具回饋感的使用者體驗。",
+      "link": "mini_puzzle_game.html",
+      "icon": "Puzzle",
+      "color": "sky",
+      "grade": "遊戲"
     }
   ]
 };
