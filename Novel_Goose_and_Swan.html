@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>籬笆內的糧，雲端上的夢 - 沉浸式閱讀器</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX transformation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Google Fonts: Noto Serif TC -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Serif TC', serif;
+        }
+
+        .indent-8 {
+            text-indent: 2rem;
+        }
+
+        /* 自定義捲軸樣式 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+
+<body class="bg-[#f8f5f0] text-slate-800">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // SVG 圖示組件庫
+        const Icons = {
+            Feather: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path><line x1="16" y1="8" x2="2" y2="22"></line><line x1="17.5" y1="15" x2="9" y2="15"></line></svg>
+            ),
+            BookOpen: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a4 4 0 0 0-4-4H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a4 4 0 0 1 4-4h6z"></path></svg>
+            ),
+            Music: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            ),
+            Info: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            ),
+            Menu: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            ),
+            ChevronRight: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            ),
+            Home: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            ),
+            ExternalLink: () => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            )
+        };
+
+        // 100% 完整還原的文本資料庫
+        const chapters = [
+            {
+                id: 'intro',
+                title: '首部曲：仰望',
+                subtitle: '籬笆內的守望者',
+                videoId: 'cEGKlyxKU60',
+                content: [
+                    { type: 'subheading', text: '膠鞋後的黃金色影子' },
+                    { type: 'paragraph', text: '那年春天，鄉下的傳統市場依舊熱鬧，叫賣聲與泥土味交織在一起。陳伯在一個泛黃的瓦楞紙箱前停下，裡面擠滿了幾十個黃色的小絨球。在一片混亂的擠弄中，有一隻小雛鵝顯得特別安靜，牠不像其他同伴那樣驚慌地縮成一團，而是歪著頭，用那雙如豆子般的黑眼珠，好奇地盯著陳伯那雙沾滿泥土的綠色膠鞋。' },
+                    { type: 'paragraph', text: '陳伯蹲下身，伸出粗糙的手。這小傢伙不但沒躲，反而張開稚嫩的小嘴，輕輕啄了啄陳伯的手指。' },
+                    { type: 'paragraph', text: '「這孩子有膽識，天生就是看家的料。」陳伯笑著掏出幾張汗溼的鈔票，將這隻小鵝帶回了那座紅磚砌成的小農莊。' },
+                    { type: 'paragraph', text: '阿白對這個世界的第一個記憶，就是那雙綠色膠鞋。阿白成了陳伯的小跟班，整天踩著鴨母步，發出「唧唧」的雛鳴，緊跟在膠鞋後頭。' },
+                    { type: 'note', title: '科普筆記：印痕行為 Imprinting', text: '雁鴨科動物（如鵝與雁）具有強烈的「印痕行為」。剛孵化的雛鳥會將出生後第一眼看見、且具備移動特徵的生物視為「母親」。這種本能確保雛鳥在野外能緊跟親鳥以增加生存機率。對阿白而言，牠將陳伯認作了生命中的領袖。' },
+                    { type: 'subheading', text: '華鵝的勳章' },
+                    { type: 'paragraph', text: '隨著日子過去，阿白褪去了嫩黃色的絨毛，換上一身如雪般厚實的白羽毛。牠長成了標準的「華鵝」。' },
+                    { type: 'paragraph', text: '陳伯常對鄰居誇獎阿白：「你看這華鵝，脖子長得像天鵝一樣優美，叫聲又響，看家比狗還靈！」' },
+                    { type: 'paragraph', text: '阿白確實長得威武。牠繼承了祖先「鴻雁」的修長頸部，最引人注目的是牠額頭上隆起的一顆橘紅色肉瘤，那隨著年齡增長而變得飽滿的硬塊，像是戴了一頂小皇冠，也是牠身為華鵝血統的驕傲勳章。每當阿白挺起胸膛，張開那一對寬大厚實的翅膀，氣勢足以讓路過的流浪狗夾著尾巴逃跑。' },
+                    { type: 'note', title: '科普筆記：華鵝（Chinese Goose）的起源', text: '華鵝是家鵝的一大體系，地理分布主要在亞洲。牠們與歐洲鵝（祖先為灰雁）不同，華鵝的直系祖先是「鴻雁」。外觀上最顯著的特徵就是修長的頸部以及額頭隆起的肉瘤。雖然經過數千年的馴化，產蛋量大幅提升且更適應定居生活，但華鵝仍完整保留了祖先強烈的領地意識與警戒心。' },
+                    { type: 'subheading', text: '三百六十度的警戒網' },
+                    { type: 'paragraph', text: '阿白的工作很單純，卻很重要：守護這方小小的菜園。' },
+                    { type: 'paragraph', text: '某個午後，一條滑溜的臭青母企圖潛入雞舍偷蛋。阿白正站在水盆邊梳理羽毛，牠看似專注，其實那雙長在頭部兩側的眼睛，正隨時監視著周遭。即便牠低著頭，也能察覺到後方草叢那極其細微的摩擦聲。' },
+                    { type: 'paragraph', text: '「亢——！」' },
+                    { type: 'paragraph', text: '一聲如喇叭般的嘹亮啼叫瞬間劃破寧靜。阿白並沒有退縮，而是將脖子壓得極低，幾乎貼近地面，像一輛白色的重型坦克，快速地向蛇衝去。牠張開嘴，露出喙邊緣那一排像鋸齒一樣的堅硬角質，死死擰住敵人的身軀。蛇被嚇得倉皇而逃。陳伯聽見動靜趕來，給了牠一小杓最愛吃的高粱。阿白驕傲地挺起胸膛，這份「警衛」的使命感，讓牠在籬笆內的生活感到無比踏實。' },
+                    { type: 'note', title: '科普筆記：全景視覺與防禦武器', text: '全景視覺：鵝的眼睛位於頭部兩側，視野廣度幾乎接近 360 度，這讓牠們即便在低頭覓食時，也能監控後方的死角。喙鋸齒（Tomia）：鵝嘴邊緣像牙齒的結構稱為「喙鋸齒」。這並非真正的牙齒，而是角質化的構造，能幫助牠們切斷堅韌的植物纖維，在戰鬥中則能產生強大的擰咬力與摩擦力。' },
+                    { type: 'subheading', text: '飛不動的靈魂' },
+                    { type: 'paragraph', text: '然而，每當夕陽西下，阿白總會獨自站在菜園最高的那堆土墩上。' },
+                    { type: 'paragraph', text: '深秋的天空如洗過般湛藍，天際偶爾會出現整齊的「V」字形編隊，那是候鳥正向南遷徙。每當那一刻，阿白會感到血液裡有一種莫名的躁動。牠會不自覺地展開雙翅，在農場的小徑上瘋狂助跑，橘色的腳掌在泥地上拍打出響亮的節奏。牠拼命地扇動翅膀，感覺風在耳邊呼嘯，腳尖甚至短暫地離開了地面幾公分，但隨即又被沈重的地心引力拽回地面。' },
+                    { type: 'paragraph', text: '農家充足的糧食讓阿白體態豐腴，體重足足是野外祖先的兩倍。雖然牠的胸肌發達，但那是為了短時間發力與防衛。對牠來說，沈重的身體需要更大的翅膀面積和極高的飛行速度才能升空，而牠的載重早已超過了這對翅膀的極限。' },
+                    { type: 'note', title: '科普筆記：家鵝為何喪失飛行能力？', text: '翼載荷與體重比：飛行需要克服重力。家鵝（華鵝）經過人工選育，體型變得肥大以供食用，但翅膀面積並未按比例增加。這導致其「翼載荷」過高，在物理上極難產生足以支撐長途飛行的升力。肌肉類型差異：野雁具備比例極高的「紅肌肉」（耐力型肌肉），含有大量線粒體，適合長途飛行；家鵝則演化出較多爆發力強、用於短距離防衛的「白肌肉」，無法支持高強度的持續振翅。' },
+                    { type: 'paragraph', text: '阿白收起翅膀，安靜地看著最後一抹夕陽消失。牠是一隻稱職的華鵝，吃著最好的糧，住在最穩固的籬笆裡，卻依然在每個秋夜，對著那片牠永遠無法觸及的深藍色天空，發出一聲長長的、充滿嚮往的啼叫。' },
+                    { type: 'paragraph', text: '在那一年的深秋，命運將為這道籬笆帶來一位意想不到的訪客。' }
+                ]
+            },
+            {
+                id: 'encounter',
+                title: '二部曲：邂逅',
+                subtitle: '碎裂在月光下的羽翼',
+                videoId: 'wlKbIY8dS8E',
+                content: [
+                    { type: 'subheading', text: '破碎的雲端長征' },
+                    { type: 'paragraph', text: '那是一個極其不安的深秋之夜。冷冽的北風如刀刃般刮過鄉間的紅磚牆，在漆黑的夜空中，一場壯闊的長征正在進行。' },
+                    { type: 'paragraph', text: '數十隻鴻雁組成的「V」字形編隊，正利用夜色作為掩護前進。對於這些野性的旅者而言，黑夜是最好的保護傘，冷冽而密集的空氣能為牠們提供更紮實的升力，也能避開白天橫行的猛禽。牠們拍打翅膀時，領頭雁劈開氣流，後方的同伴則精準地踩在前方留下的「上升氣流」上，這是一種刻在骨子裡的集體智慧。' },
+                    { type: 'paragraph', text: '然而，當這支編隊飛越陳伯農莊上空時，一場突如其來的山區濃霧像巨大的灰幕瞬間垂下。原本清晰的星辰指引消失了，氣流變得混亂且狂暴。混亂中，一聲短促且淒厲的尖叫劃破夜空——體力不支且受驚的阿雅，在迷霧中不慎撞上了橫越田野的高壓電線。' },
+                    { type: 'paragraph', text: '那對原本用來切割風暴的長翼，在瞬間的撞擊中失去了節律。阿雅像一片被暴雨擊落的枯葉，打著旋，重重地墜入了農莊外乾涸的灌溉溝渠中。' },
+                    { type: 'note', title: '科普筆記：夜間遷徙與 V 字編隊', text: '1. 夜間遷徙的優勢：許多候鳥選擇在夜間飛行，因為夜晚的空氣較冷且密度較大，能提供更佳的升力並幫助調節體溫，同時能有效避開掠食性猛禽的威脅。 2. V 字編隊的空氣動力學：領頭雁在飛行時會產生上升氣流（Upwash），後方的鳥兒透過精準定位在特定位置利用這股升力，能大幅減少能量消耗，這對跨越數千公里的長征至關重要。' },
+                    { type: 'subheading', text: '跨越千年的共振' },
+                    { type: 'paragraph', text: '此時，農場裡的阿白正縮起一隻腳，半閉著眼進行「單腦睡眠」。這是一種神奇的警戒本能，讓牠能一半大腦休息，另一半大腦則透過那雙長在頭部兩側、擁有近乎全景視野的眼睛，隨時監控著黑暗中的風吹草動。' },
+                    { type: 'paragraph', text: '突然，那聲墜落的悶響與殘留的雁鳴，像是一道無形的電流擊穿了阿白的意識。' },
+                    { type: 'paragraph', text: '阿白猛地睜開雙眼。牠感受到了一種前所未有的震撼。那不是面對侵略者時的憤怒，而是一種來自靈魂深處的顫抖。從天空中傳下的號角聲，頻率竟與牠自己的嘶吼如此接近，卻又多了一種牠從未聽過的、來自遙遠北方凍原的蒼茫感。' },
+                    { type: 'paragraph', text: '牠並不認識這些遠方來客，甚至不知道自己與牠們有著相同的基因源頭，但在那一刻，阿白胸膛裡的心跳頻率竟然與那遠去的編隊重合了。那是華鵝血液中殘留的野性本能，在向那抹墜落的影跡發出悲鳴。' },
+                    { type: 'note', title: '科普筆記：單腦睡眠 Unihemispheric Slow-Wave Sleep', text: '鵝與雁具備「單腦睡眠」的能力，這讓牠們能讓一半的大腦進入深層睡眠以獲得休息，而另一半大腦則保持清醒，並保持一隻眼睛張開監控環境。這種生理機制使牠們在休息時仍能對周遭威脅保持極高的警覺性。' },
+                    { type: 'subheading', text: '留在泥地裡的雲' },
+                    { type: 'paragraph', text: '黎明時分，大霧散去。雁群再度集結，那充滿金屬質感的鳴叫聲在遠方迴盪，漸漸消失在南方的地平線。牠們不能停下，因為遷徙是一場與季節的生死契約。' },
+                    { type: 'paragraph', text: '阿白在籬笆邊發現了阿雅。' },
+                    { type: 'paragraph', text: '阿雅蜷縮在泥土中，那身灰褐色的羽毛是為了在荒野中隱身而設計的天然防護衣。與阿白那身在陽光下有些刺眼的純白不同，阿雅的美是內斂而蒼勁的：她的脖子後方有一條深咖啡色的條紋，如同一道優美的墨跡；她的喙是如墨般的純黑，平坦的額頭上沒有阿白那隆起的橘色肉瘤。' },
+                    { type: 'paragraph', text: '那是為了在長途飛行中減少阻力、保持流線型的演化結果。她的左翼無力地拖在泥濘裡，那是用來切割高空冷冽氣流的精密工具，此刻卻因為嚴重的骨折與羽軸斷裂，再也無法支撐她回到雲端。' },
+                    { type: 'note', title: '科普筆記：野生鴻雁與家養華鵝的外觀差異', text: '1. 保護色：野生鴻雁擁有灰褐色的羽毛，這讓牠們在草叢或泥地中獲得極佳的隱蔽性。而家養華鵝因為長期處於受保護的環境，人工選育出了醒目的白色羽毛。 2. 形態與飛行演化：鴻雁的頭部平坦且身體呈流線型，是為了在飛行中最大限度地減少空氣阻力。相比之下，華鵝（特別是雄性）額頭上有明顯的肉瘤（Knob），這是在馴化過程中產生的特徵。' },
+                    { type: 'subheading', text: '籬笆內的另一種可能' },
+                    { type: 'paragraph', text: '陳伯巡視菜園時，驚訝地發現了這幅景象：平日裡對陌生生物充滿敵意的阿白，竟然安靜地低著頭，用那寬大厚實的喙，輕柔地撥開阿雅身邊的雜草。' },
+                    { type: 'paragraph', text: '「哎呀，這不是落單的野雁嗎？」陳伯放下鋤頭，看著這隻雖然受傷、卻依然透著一股野性英氣的鴻雁。' },
+                    { type: 'paragraph', text: '陳伯小心翼翼地將阿雅抱進籬笆內。原本警覺性極高、視人類為威脅的阿雅，在感受到阿白身上那股雖然沈重、卻異常安定的神態時，竟然慢慢放棄了掙扎。陳伯細心地為她清理傷口，並在阿白的食槽旁，特意多準備了一個乾淨的水盆。' },
+                    { type: 'paragraph', text: '「阿白，這是你的同類，以後就是你的伴了。」陳伯欣慰地摸了摸阿白的背，「這隻灰灰的，就叫她『阿雅』吧，願她能平平安安地留下來。」' },
+                    { type: 'paragraph', text: '阿白在阿雅身邊繞了一圈，張開那對雖然飛不高、卻厚實有力的翅膀，為虛弱的阿雅遮擋清晨的涼風。' },
+                    { type: 'paragraph', text: '阿雅靜靜地看著阿白。雖然眼前這隻白色的巨鳥看起來笨重且安逸，但他那雙溫暖的黑眼睛，卻成了她在這場墜落之後，在這陌生的籬笆內，唯一的依靠。' }
+                ]
+            },
+            {
+                id: 'symbiosis',
+                title: '三部曲：共生',
+                subtitle: '籬笆內的風與糧',
+                videoId: '0UCTsl8EUF8',
+                content: [
+                    { type: 'subheading', text: '斷裂的時空與生命的死刑' },
+                    { type: 'paragraph', text: '阿雅在農莊住下了。雖然她的傷口在陳伯細心的草藥敷治與阿白的守護下逐漸癒合，但原本能輕易切割高空冷冽氣流、支撐數千公里長征的左翼，卻再也無法恢復往日的輕盈與精準。' },
+                    { type: 'paragraph', text: '在浩瀚的荒野中，遷徙是一場永無止盡且殘酷的基因篩選。阿雅曾在北方的苔原看過無數同伴在暴風雨中墜落，或是因為體力不支而在穿越荒漠時化為枯骨。自然界從不相信眼淚，只有最強壯、最幸運、最能精準判讀地磁導航的個體，才能將生命傳遞下去。' },
+                    { type: 'paragraph', text: '「掉隊，就等於消失。」看著自己雖然癒合、卻微微下垂且不再對稱的羽翼，阿雅眼底閃過遷徙者被遺棄後的荒涼。在她的生命邏輯裡，無法飛翔的雁，已經領受了靈魂的「死刑」。' },
+                    { type: 'note', title: '科普筆記：鳥類的骨骼修復與飛行的精密性', text: '鳥類的骨骼為了適應飛行，演化出極其輕盈的「中空蜂窩狀」結構。雖然骨折後會產生骨痂進行修復，但對於需要極高空氣動力對稱性的「長途遷徙」而言，哪怕只有幾公釐的骨骼增生或角度偏差，都會導致飛行時阻力激增。阿雅即便能拍動翅膀，也再無法支撐連續數日、高頻率振翅的生理負荷。這在野外是冷酷的「自然淘汰」，但在籬笆內，卻成了生命的轉機。' },
+                    { type: 'subheading', text: '兩種靈魂的衝撞：糧與風的對立' },
+                    { type: 'paragraph', text: '起初，這段「共生」充滿了摩擦。阿雅是「天空的流民」，習慣了黎明時分吞食帶霜的水草根，對陳伯準備的那碗充滿澱粉香氣、金黃誘人的玉米粒抱持著極大的戒心。對她而言，這種不需要付出代價、不勞而獲的食物，往往伴隨著未知的危險。' },
+                    { type: 'paragraph', text: '「亢、亢！」阿雅焦躁地對著食槽嘶吼，她拒絕進入狹窄溫暖的木棚，寧可徹夜站在潮濕的籬笆邊。' },
+                    { type: 'paragraph', text: '阿白則像個耐心的土地領主，默默觀察著這一切。他無法理解阿雅為什麼對那碗珍貴的高粱與玉米視而不見。在阿白的成長經驗裡，人類的眷顧是生存的最高保障。' },
+                    { type: 'paragraph', text: '衝突在一次深夜的大雨中爆發。阿雅執意要在暴雨中站立，那是她在野外磨練出的警覺——巨大的雨聲會掩蓋捕食者的腳步聲。阿白則拼命想把她往乾燥的木棚推，甚至張開寬大的翅膀試圖將她圈進羽翼下。阿雅憤怒地反擊，用她那墨黑色的喙狠狠啄了阿白的肉瘤。' },
+                    { type: 'paragraph', text: '阿白沒有還手，他只是固執地擋在風口，像一尊溫暖的石像，為阿雅遮擋住最冷冽的風。他那厚實的華鵝白羽下積累了豐厚的脂肪層，雖然飛不高，卻像一件完美的防水雨衣，溫暖且穩定。' },
+                    { type: 'note', title: '科普筆記：生活環境與生理演化', text: '華鵝（家鵝）經過數千年人工選育，身體積累了大量脂肪，不僅是為了產肉，也是為了適應「定居生活」的能量儲存，其代謝系統高度適應穀物。而鴻雁則擁有比例極高的「紅肌肉」，適合長途飛行時緩慢燃燒脂肪來換取耐力，且食性以天然纖維為主。阿雅初期對人工飼料的排斥，正是野生動物對高能量、低纖維飲食的不適應。' },
+                    { type: 'subheading', text: '妥協與改變：社會連結的建立' },
+                    { type: 'paragraph', text: '時間是最好的翻譯官。' },
+                    { type: 'paragraph', text: '阿白開始改變他的溝通方式。他不再只是在食槽前大口吞嚥，他會去菜園邊的排水溝裡，用喙叼回一截一截鮮嫩的水生植物與野草，輕輕放在阿雅面前。當阿雅因為遠方老鷹的黑影而感到不安時，阿白會立刻挺起脖子，發出最宏亮的警衛啼叫，告訴她：這裡有他在，天空的威脅無法降臨這片籬笆。' },
+                    { type: 'paragraph', text: '而阿雅也開始了她的妥協。她發現，雖然這裡沒有西伯利亞的星光，但這隻白色的巨鳥總會在她半夜驚醒時，發出溫柔的低鳴。她開始觀察阿白是如何與陳伯互動的，那種透過脖子搖擺、輕聲啁啾所構成的語言。阿雅第一次嘗試吃下了那粒玉米，那種在舌尖散開的高澱粉甜味，讓她長年處於飢餓警戒狀態的身體，第一次感到的全然的放鬆。' },
+                    { type: 'note', title: '科普筆記：雁鴨科的一夫一妻制與社會連結', text: '雁與鵝在生物學上皆屬於「雁鴨科」。這類鳥類以強烈的「配對鍵」（Pair Bond）著稱。許多品種如鴻雁，一旦認定伴侶，往往會維持終身的一夫一妻制。這種社交連結不僅是為了繁殖，更是為了在極端環境下互相守望、提高生存機率。阿白與阿雅的結合，跨越了家養與野生的鴻溝，建立起了深厚的社會情感連結。' },
+                    { type: 'subheading', text: '築巢的承諾：留下的選擇' },
+                    { type: 'paragraph', text: '春天轉眼即至。' },
+                    { type: 'paragraph', text: '當第一陣暖風吹過菜園，天空再次傳來了熟悉的、充滿金屬感的長鳴。那是北返的雁群，牠們在雲端劃出優美的折線。' },
+                    { type: 'paragraph', text: '阿雅站在土墩上，脖子伸得筆直。她的雙眼倒映著雲端上的編隊，那是她原本該回歸的地方，是北方苔原的呼喚。她拍動著那雙已經復原、卻再也不對稱的翅膀，眼中充滿了痛苦與掙扎。' },
+                    { type: 'paragraph', text: '阿白靜靜地站在她身後，沒有阻攔，也沒有催促。他只是默默地銜來了一根乾枯的稻草，輕輕放在阿雅的腳邊。' },
+                    { type: 'paragraph', text: '阿雅低頭看著那根稻草，又看了看阿白。北方的風是自由的，但那裡只有無盡的遷徙與競爭；籬笆內的糧是沈重的，但這裡有溫暖的守護與不再孤單的夜晚。' },
+                    { type: 'paragraph', text: '阿雅彎下腰，銜起了阿白送來的那根稻草，轉身走回了陳伯準備的隱密角落。她開始將自己胸前柔軟的灰色絨毛拔下，混合著稻草與泥土，在那裡築起了一個溫馨的圓。那是她的選擇，也是她對這片土地、對阿白的最終認可。' },
+                    { type: 'paragraph', text: '這一年春天，農莊裡多了幾顆充滿希望的蛋。在那灰白色的蛋殼下，正孕育著結合了「天空夢想」與「土地厚重」的新生命。' }
+                ]
+            },
+            {
+                id: 'guard',
+                title: '四部曲：守衛',
+                subtitle: '跨越血脈的烽火',
+                videoId: 'UO2w8egRu8U',
+                content: [
+                    { type: 'subheading', text: '破殼：生命雜交的奇蹟' },
+                    { type: 'paragraph', text: '當夏日的蟬鳴開始在農莊的龍眼樹上喧鬧時，阿雅身下那幾顆沾著灰羽的蛋，終於傳來了細微的「啄殼」聲。' },
+                    { type: 'paragraph', text: '這不是普通的生命誕生。在生物學的世界裡，這是一場跨越了數千年演化鴻溝的重逢。阿白是高度馴化的華鵝，為了產蛋與守衛而生；阿雅則是自由的鴻雁，為了遷徙與生存而活。雖然牠們的外貌截然不同，但在遺傳基因的核心，牠們依然共享著相同的「屬名」。' },
+                    { type: 'paragraph', text: '兩隻探出頭的小傢伙，展現了令人驚嘆的雜交優勢。老大「大雄」繼承了阿白的壯碩骨架，淡黃色的絨毛中隱約透著點灰，小小年紀就展現出強烈的地盤意識；老二「小羽」則有著阿雅那雙靈動的黑眼睛，身形纖細，總是在出殼沒幾天就試圖拍動那對尚未豐滿的翅膀。' },
+                    { type: 'paragraph', text: '這是一場「跨物種生育」的生命實驗，將家養的安穩與野性的靈魂揉合在一起。陳伯看著這兩隻長相奇特的幼雛，笑得合不攏嘴，卻不知道這份喜悅很快就要面臨黑暗中的試煉。' },
+                    { type: 'note', title: '科普筆記：跨物種生育與遺傳', text: '華鵝（家鵝）與鴻雁在生物學上屬於同一個屬（Anser），且華鵝本身就是由鴻雁馴化而來，因此兩者之間沒有生殖隔離。這種雜交後代通常具備「雜種優勢」（Hybrid Vigor），體質往往比單一品種更強健。在阿白與阿雅的後代身上，我們能看見家鵝的耐力與野雁的敏感度同時並存。' },
+                    { type: 'subheading', text: '深夜的掠食者：當野性遇上威脅' },
+                    { type: 'paragraph', text: '夏夜的農莊並非絕對的安全。在籬笆外的灌木叢中，一對閃著幽綠光芒的眼睛已經窺視多時。那是一隻流浪多時、體型碩大的老狗，飢餓讓牠忘記了對人類的恐懼，也讓牠對那窩鮮嫩的小生命垂涎三尺。' },
+                    { type: 'paragraph', text: '深夜兩點，月亮躲進了雲層。' },
+                    { type: 'paragraph', text: '阿雅首先察覺到了異樣。即便她已經習慣了籬笆內的生活，但那份來自曠野的靈魂從未真正入睡。她敏銳地感覺到了空氣中氣流的微弱擾動，那是捕食者壓低身體、緩慢潛行時產生的振動。' },
+                    { type: 'paragraph', text: '「亢——！」' },
+                    { type: 'paragraph', text: '一聲短促且尖銳的警告聲從阿雅口中迸出。這不是平時社交的低鳴，而是野雁在凍原上發現狐狸時的最高戰鬥警報。這正是「協同防禦」的開始：阿雅運用她那野性的直覺，充當了農場最靈敏的「雷達」。' },
+                    { type: 'subheading', text: '陸戰之王的咆哮：華鵝的致命武器' },
+                    { type: 'paragraph', text: '接到信號的阿白，在瞬間從睡眠中切換到了戰鬥模式。' },
+                    { type: 'paragraph', text: '牠並沒有像其他家禽那樣驚慌逃竄，反而向前跨出一步，擋在了阿雅與幼雛的身前。阿白將脖子壓到最低，幾乎與地面平行，口中發出令人毛骨悚然的嘶嘶聲。當那條流浪狗猛然躍過低矮的籬笆時，阿白發動了反擊。' },
+                    { type: 'paragraph', text: '這是一場力量與技巧的展現。阿白並不只是亂啄，牠利用華鵝驚人的瞬間爆發力，精準地咬住了流浪狗的鼻頭。' },
+                    { type: 'note', title: '科普筆記：鵝的攻擊機制——喙鋸齒與翅膀打擊', text: '喙鋸齒（Tomia）：鵝的喙邊緣並非平滑，而是長滿了像鋸齒一樣的角質結構。雖然這不是真正的牙齒，但其堅硬程度足以撕裂堅韌的牧草，在戰鬥中則能像鋼鉗一般死死扣住對方的皮膚，並透過脖子的旋轉產生巨大的「擰力」。 翅膀骨骼的打擊力：鵝最致命的武器其實是翅膀。華鵝的翅膀骨骼極其堅實，尤其是肱骨與橈骨。在振翅打擊時，其力道足以折斷小型掠食者的肋骨或擊暈對手。這種力量是家養環境選育出的「重型肌肉」所賦予的。' },
+                    { type: 'subheading', text: '協同防禦：戰略與勇氣的合奏' },
+                    { type: 'paragraph', text: '戰鬥中，阿雅與阿白的互補性發揮到了極致。' },
+                    { type: 'paragraph', text: '阿白像是一台重型坦克，在正面吸引掠食者的火力，利用沈重的身體與強大的擰咬力纏鬥。而阿雅雖然翅膀受損無法高飛，但她利用輕巧的身形在側翼游走，不斷發出干擾性的尖叫，甚至利用短促的跳躍干擾掠食者的視線，讓流浪狗始終無法集中精神攻擊阿白。' },
+                    { type: 'paragraph', text: '這正是「野生動物與家禽防禦策略」的完美互補：阿白提供的是家養環境賦予的「硬實力」（體量與絕對力量），而阿雅提供的則是野生環境磨練出的「軟實力」（戰略意識與偵測能力）。' },
+                    { type: 'paragraph', text: '在一次激烈的碰撞中，阿白側身避開老狗的撲咬，一記厚實的翅膀重重地拍擊在狗的側臉上，伴隨著「啪」的一聲脆響，老狗發出一聲哀鳴。隨後，陳伯提著手電筒、揮舞著竹棍趕到了現場。' },
+                    { type: 'paragraph', text: '老狗看見了人類，又忌憚眼前這兩隻如戰神般的白影與灰影，最終夾著尾巴，灰溜溜地逃回了黑暗的森林。' },
+                    { type: 'subheading', text: '戰後的餘溫' },
+                    { type: 'paragraph', text: '黎明再度降臨，農莊恢復了平靜。' },
+                    { type: 'paragraph', text: '阿白站在土墩上，拍了拍沾染了些許塵土與狗毛的羽毛。雖然脖子上多了幾道紅痕，但牠那顆橘紅色的肉瘤在晨光中顯得更加鮮艷奪目。阿雅安靜地整理著受驚的小幼雛，偶爾低頭蹭了蹭阿白的肩膀。' },
+                    { type: 'paragraph', text: '這座籬笆，不再僅僅是人類給予的庇護所，而是牠們共同建立的堡壘。' },
+                    { type: 'paragraph', text: '陳伯看著這一地的戰鬥痕跡，又看著那兩隻已經能活蹦亂跳、開始爭奪玉米粒的小幼雛，深深地嘆了口氣。他知道，這對孩子繼承了父親的強悍與母親的靈動，牠們未來的世界，絕不會僅僅侷限在這道籬笆之內。' },
+                    { type: 'paragraph', text: '尤其是那個總愛盯著雲朵發呆的老二「小羽」，牠的翅膀，似乎比阿白更有力量。' }
+                ]
+            },
+            {
+                id: 'heritage',
+                title: '五部曲：傳承',
+                subtitle: '土地的重量與天空的夢',
+                videoId: '3YtBw0jzy_g',
+                content: [
+                    { type: 'subheading', text: '遺傳的骰子：大雄與小羽' },
+                    { type: 'paragraph', text: '隨著秋意漸濃，農莊裡的兩隻小傢伙早已脫去了稚嫩的黃絨，換上了結實的羽衣。這兩兄弟雖然同出一窩，卻像是造物主在投擲遺傳骰子時，分別選中了兩個極端的劇本。' },
+                    { type: 'paragraph', text: '老大「大雄」完美繼承了父親阿白的強健。他擁有雪白無瑕的羽毛，頸部粗壯且挺拔，額頭那顆橘紅色的肉瘤日益飽滿，宛如一枚戰士的勳章。他的體重飛速增長，走起路來步履沈穩，每一步都踏在厚實的土地上。' },
+                    { type: 'paragraph', text: '老二「小羽」則更像母親阿雅。他的體型纖細，羽色帶著淡淡的灰褐斑點，頸部後方那道深色的條紋若隱若現。最不同的是，他的翅膀相對於身體比例顯得格外修長，且他的骨架輕盈，肌肉緊實而富有彈性。' },
+                    { type: 'note', title: '科普筆記：雜交優勢與遺傳分離', text: '當家養華鵝與野生鴻雁雜交時，後代會出現「遺傳分離」現象。雖然基因來自同一對父母，但受精過程中染色體的隨機組合，會讓後代展現出不同的性狀趨勢。老大「大雄」展現了家養性狀（體型大、保護色退化），適合穩定生存；老二「小羽」則傾向野生性狀（體型流線、高比例紅肌肉），具備遷徙潛力。這正是生物多樣性能在多變環境中延續的關鍵。' },
+                    { type: 'subheading', text: '籬笆內的傳承：守衛者的誕生' },
+                    { type: 'paragraph', text: '大雄對籬笆外的世界毫無興趣。他每天跟在阿白身後，學習如何辨識草叢裡最輕微的騷動。阿白教他如何利用視覺死角監控天空，如何用低沈的嘶嘶聲威嚇不懷好意的野貓。' },
+                    { type: 'paragraph', text: '對於大雄而言，陳伯每天早晨準時撒下的金黃穀物，以及籬笆內那池清澈的井水，就是世界的全部。他對「安穩」有著天生的理解力。他明白，守護這座農莊，就是守護自己的生命。他那沈重的身體給了他力量，也給了他留下來的理由。' },
+                    { type: 'paragraph', text: '「父親，為什麼弟弟總是在風大的日子發呆？」大雄看著在土墩上拼命練習振翅的小羽，不解地問。' },
+                    { type: 'paragraph', text: '阿白看著大雄，眼中充滿了欣慰。他知道大雄會是這座農莊未來的國王，一個能讓陳伯放心的繼任者。但他轉頭看向小羽時，眼神中卻藏著一抹連他自己都無法解釋的憂傷。' },
+                    { type: 'subheading', text: '本能的騷動：遷徙不安' },
+                    { type: 'paragraph', text: '隨著北風帶來的寒意愈發強烈，小羽的行為變得古怪。他開始拒絕進食那些美味的高粱，甚至整夜不睡，焦躁地在籬笆邊徘徊。他的雙眼不再盯著地面的蟲蟻，而是時刻仰望著星空。' },
+                    { type: 'paragraph', text: '這是一種被生物學家稱為「遷徙不安」的現象。這種來自遠古鴻雁的遺傳代碼，正像火一樣燃燒著小羽的血液。即便他從未離開過這座農莊，即便他從未見過北方的苔原，但他體內的生物鐘正瘋狂地吶喊著：出發！向南！' },
+                    { type: 'paragraph', text: '阿雅默默地看著這一切。她知道那種痛苦——那是靈魂試圖衝破肉體枷鎖的掙扎。她看著小羽每天在空地上助跑，看著他那對比阿白更長、更尖的翅膀在空氣中劃出刺耳的風聲。' },
+                    { type: 'note', title: '科普筆記：本能與環境的博弈', text: '遷徙本能是由多組基因共同控制的複合行為，雖然會遺傳，但其強度會受到環境與發育過程的影響。小羽體內強大的「遷徙基因」與阿雅傳給他的流線型身體產生了共鳴。即便生長在糧食充足的農莊，內分泌系統產生的激素依然會強行切換他的生理狀態，讓他為了遠行而減少進食、增加肌肉強度。' },
+                    { type: 'subheading', text: '終章：風的歸風，土的歸土' },
+                    { type: 'paragraph', text: '那是一個清朗的晨曦。' },
+                    { type: 'paragraph', text: '天際傳來了熟悉的、充滿金屬感的嘶鳴。又一群鴻雁編隊掠過農莊上空，牠們如同一支銀色的箭，直指遠方。' },
+                    { type: 'paragraph', text: '這一次，小羽沒有再猶豫。他發出了一聲響徹農莊的啼叫，那是阿雅教他的、來自野性的語言。他邁開長腿，在農場的小徑上瘋狂助跑。這一次，他的翅膀拍擊的頻率不再是家鵝那種沈悶的聲響，而是像鋼鞭一樣抽打著空氣。' },
+                    { type: 'paragraph', text: '風，被他馴服了。' },
+                    { type: 'paragraph', text: '在阿白、阿雅和大雄的注視下，小羽的腳尖離開了土地，他的身體緩緩升起，越過了紅磚牆，越過了那道困住阿白一辈子的籬笆。他那纖細的身影在晨光中化作了一個黑點，雖然吃力，但他依然固執地向著高空的雁群飛去。' },
+                    { type: 'paragraph', text: '阿雅看著那個黑點，眼中流下了兩行淚水，但那是欣慰的淚。她失去了翅膀，卻透過兒子找回了天空。' },
+                    { type: 'paragraph', text: '而阿白，則緩緩地轉過身，領著大雄走向食槽。大雄在阿白的肉瘤上輕輕蹭了蹭，隨後發出了一聲嘹亮的守衛啼叫，向陳伯宣告新的一天開始。' },
+                    { type: 'subheading', text: '尾聲：生命的兩面' },
+                    { type: 'paragraph', text: '陳伯站在屋簷下，看著飛走的小羽，又看了看身邊依然忠誠的大雄，悠悠地嘆了一口氣。' },
+                    { type: 'paragraph', text: '「一個愛風，一個愛糧。這就是命啊。」' },
+                    { type: 'paragraph', text: '這座農莊的故事，依然在每一年的風中交替。大雄守護著土地的厚重，繼承了華鵝的忠誠與安穩；而小羽則追逐著風的自由，將鴻雁的野性帶向了遙遠的地平線。' },
+                    { type: 'paragraph', text: '生命從不只有一種樣貌。有的靈魂選擇了在籬笆內築起溫馨的家，而有的靈魂，注定要將生命揮灑在廣袤的雲端之上。' }
+                ]
+            },
+            {
+                id: 'epilogue',
+                title: '後記',
+                subtitle: '風與糧的交響曲，寫在籬笆之外的人性對話',
+                videoId: null, // 後記沒有配樂
+                content: [
+                    { type: 'paragraph', text: '當我們闔上這部關於家鵝阿白與鴻雁阿雅的童話時，或許會發現，這座名為「籬笆」的農莊，其實正是人類社會的縮影。 這不僅是一段跨越物種的共生故事，更是一面映照著不同人性抉擇的明鏡。' },
+                    { type: 'paragraph', text: '在人生的舞台上，我們總能看見兩種截然不同的靈魂。' },
+                    { type: 'paragraph', text: '有一種人，他們如同阿白與大雄，是社會中的「守成者」。 他們熱愛安穩的生活，懂得珍惜眼前的「糧」。他們就像阿白一樣，雖然體態豐腴、無法飛翔，甚至對天空的渴望最終只能化為一聲無奈的長啼，但他們卻是土地上最堅實的堡壘。當威脅降臨時，他們能化身為重型坦克，用絕對的力量與忠誠守護家園。大雄最終選擇留在農莊，正是這種守成精神的延續，他們明白：「守護這座農莊，就是守護自己的生命」。' },
+                    { type: 'paragraph', text: '另一種人，他們如同阿雅與小羽，是天生的「創業者」與「漂泊者」。 他們的靈魂屬於高空冷冽的「風」，血液裡流淌著對未知的渴望與遷徙的不安。即使在舒適的環境中，他們依然會仰望星空，拒絕被安逸的飼料所馴化。阿雅雖然折斷了用來切割風暴的長翼，但她將這份野性與夢想傳承給了小羽；而小羽最終選擇衝破籬笆，將生命揮灑在廣袤的雲端之上，展現了探索未知、絕不妥協的冒險精神。' },
+                    { type: 'paragraph', text: '當這兩種截然不同的人性相遇時，究竟會蹦出什麼樣的火花？' },
+                    { type: 'paragraph', text: '起初，必然是充滿摩擦與不解的。就像習慣了野外殘酷淘汰的阿雅，無法理解阿白為何能安逸地享受不勞而獲的玉米粒；而阿白也無法明白，為何阿雅寧可淋雨也不願走進溫暖的木棚。' },
+                    { type: 'paragraph', text: '然而， 當「漂泊」遇上「安穩」，最動人的火花便是「互補與共生」。 當流浪老狗深夜來襲時，我們看見了這兩種天性的完美合作：阿白展現了家養環境賦予的「硬實力」（體量與絕對力量），在正面死死扛住威脅；而阿雅則發揮了野生環境磨練出的「軟實力」（戰略意識與偵測能力），在側翼靈巧干擾。這不正是人類團隊中最理想的狀態嗎？ 創業者的敏銳與前瞻，若能加上守成者的穩健與執行力，便能構築出最堅不可摧的堡壘。' },
+                    { type: 'paragraph', text: '故事的最後，陳伯嘆道：「一個愛風，一個愛糧。這就是命啊。」' },
+                    { type: 'paragraph', text: '這句嘆息，為整部小說畫下了最完美的句點。 生命從不只有一種樣貌，不管是選擇在籬笆內築起溫馨的家，還是注定要將生命揮灑在無垠的天際，都沒有對錯之分 。這個世界同時需要仰望天空的開拓者，也需要腳踏實地的守護者。' },
+                    { type: 'paragraph', text: '願每一位讀者，無論你是追逐風的小羽，還是守護糧的大雄，都能在自己的那片天地裡，找到靈魂的歸宿。' }
+                ]
+            }
+        ];
+
+        const App = () => {
+            const [currentChapterIndex, setCurrentChapterIndex] = useState(0);
+            const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+            const currentChapter = chapters[currentChapterIndex];
+            const currentVideoId = currentChapter.videoId;
+
+            return (
+                <div className="flex h-screen bg-[#f8f5f0] text-slate-800 overflow-hidden">
+                    {/* 側邊欄遮罩 */}
+                    {isSidebarOpen && (
+                        <div
+                            className="fixed inset-0 bg-black/40 z-40 lg:hidden transition-opacity"
+                            onClick={() => setIsSidebarOpen(false)}
+                        />
+                    )}
+
+                    {/* 側邊導航 */}
+                    <nav className={`
+                        fixed lg:static inset-y-0 left-0 w-80 bg-white border-r border-slate-200 z-50 transition-transform duration-300 transform shadow-xl lg:shadow-none
+                        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+                    `}>
+                        <div className="p-8 h-full flex flex-col">
+                            <div className="flex items-center gap-3 mb-10 text-amber-800 border-b border-slate-100 pb-6">
+                                <Icons.Feather />
+                                <h1 className="text-2xl font-black tracking-widest">自然科普文庫</h1>
+                            </div>
+
+                            <div className="flex-1 space-y-3 overflow-y-auto pr-2 custom-scrollbar">
+                                {chapters.map((chapter, idx) => (
+                                    <button
+                                        key={chapter.id}
+                                        onClick={() => {
+                                            setCurrentChapterIndex(idx);
+                                            setIsSidebarOpen(false);
+                                            document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+                                        }}
+                                        className={`w-full text-left p-5 rounded-xl transition-all flex flex-col group
+                                            ${currentChapterIndex === idx
+                                                ? 'bg-amber-50 text-amber-900 border border-amber-200 shadow-sm'
+                                                : 'hover:bg-slate-50 text-slate-600 border border-transparent'}`}
+                                    >
+                                        <span className="text-[10px] uppercase tracking-[0.2em] opacity-60 mb-2 font-bold">
+                                            Chapter {idx + 1}
+                                        </span>
+                                        <span className="font-bold text-lg mb-1">{chapter.title}</span>
+                                        <span className="text-sm opacity-80 italic truncate leading-relaxed">{chapter.subtitle.split('，')[0]}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </nav>
+
+                    {/* 主要閱讀區塊 */}
+                    <main className="flex-1 flex flex-col overflow-y-auto relative bg-[#fdfaf5]">
+                        {/* 手機版頂部標頭 */}
+                        <header className="lg:hidden flex items-center justify-between p-4 bg-white/80 backdrop-blur-md border-b sticky top-0 z-30 shadow-sm">
+                            <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-slate-600 hover:text-amber-700 transition-colors">
+                                <Icons.Menu />
+                            </button>
+                            <span className="font-bold text-amber-800 tracking-tight text-sm">籬笆內的糧，雲端上的夢</span>
+                            <div className="w-10"></div>
+                        </header>
+
+                        <div className="max-w-4xl mx-auto px-6 py-12 lg:py-20 w-full space-y-16">
+                            {/* 章節標題 */}
+                            <div className="text-center space-y-6">
+                                <div className="inline-block px-4 py-1.5 bg-amber-100 text-amber-800 text-sm font-bold uppercase tracking-[0.2em] rounded-full mb-2">
+                                    {currentChapter.title}
+                                </div>
+                                <h2 className="text-4xl lg:text-5xl font-black text-slate-900 leading-snug">
+                                    {currentChapter.subtitle}
+                                </h2>
+                                <div className="w-20 h-1.5 bg-gradient-to-r from-amber-500 to-amber-700 mx-auto rounded-full"></div>
+                            </div>
+
+                            {/* 音樂播放器與優化備案（僅在有提供 videoId 時顯示） */}
+                            {currentVideoId && (
+                                <div className="flex flex-col gap-3">
+                                    <div className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl bg-slate-900 group border border-slate-200">
+                                        <iframe
+                                            className="absolute inset-0 w-full h-full"
+                                            src={`https://www.youtube-nocookie.com/embed/${currentVideoId}?rel=0`}
+                                            title="YouTube video player"
+                                            frameBorder="0"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            referrerPolicy="strict-origin-when-cross-origin"
+                                            allowFullScreen
+                                        ></iframe>
+                                        <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/70 backdrop-blur-md px-4 py-2 rounded-full text-white text-xs font-medium tracking-wide shadow-lg pointer-events-none">
+                                            <div className="animate-pulse flex items-center text-amber-400"><Icons.Music /></div>
+                                            <span className="ml-1">章節專屬配樂</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-end px-2">
+                                        <a
+                                            href={`https://www.youtube.com/watch?v=${currentVideoId}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-xs text-slate-500 hover:text-amber-700 transition-colors flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-full"
+                                            title="若遭版權方限制內嵌播放，請點擊跳轉聆聽"
+                                        >
+                                            <Icons.ExternalLink /> 若顯示「無法播放」，請點此至 YouTube 聆聽
+                                        </a>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* 文本內容呈現 */}
+                            <article className="space-y-8 text-lg lg:text-xl leading-[2.2] text-slate-700 selection:bg-amber-200 selection:text-amber-900">
+                                {currentChapter.content.map((item, idx) => {
+                                    if (item.type === 'subheading') {
+                                        return <h3 key={idx} className="text-2xl lg:text-3xl font-bold text-amber-900 mt-16 mb-6 tracking-wide flex items-center gap-3">
+                                            <span className="w-2 h-8 bg-amber-500 rounded-full inline-block"></span>
+                                            {item.text}
+                                        </h3>;
+                                    }
+                                    if (item.type === 'paragraph') {
+                                        return <p key={idx} className="indent-8 text-justify text-[1.1rem] lg:text-[1.2rem] opacity-90">{item.text}</p>;
+                                    }
+                                    if (item.type === 'note') {
+                                        return (
+                                            <div key={idx} className="relative my-14 p-8 lg:p-10 bg-white border-l-[6px] border-amber-600 rounded-r-3xl shadow-lg hover:shadow-xl transition-all group overflow-hidden">
+                                                <div className="absolute -top-6 -right-6 p-4 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity transform group-hover:scale-110 duration-500">
+                                                    <div className="scale-[5] text-amber-900"><Icons.BookOpen /></div>
+                                                </div>
+                                                <h4 className="flex items-center gap-3 text-amber-800 font-bold mb-5 text-lg uppercase tracking-widest relative z-10">
+                                                    <div className="bg-amber-100 p-2 rounded-full"><Icons.Info /></div>
+                                                    {item.title}
+                                                </h4>
+                                                <div className="text-slate-600 text-base lg:text-lg leading-loose relative z-10 font-medium">
+                                                    {item.text}
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+                                    return null;
+                                })}
+                            </article>
+
+                            {/* 底部導航 */}
+                            <div className="pt-20 pb-12 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-slate-200">
+                                {currentChapterIndex > 0 ? (
+                                    <button
+                                        onClick={() => {
+                                            setCurrentChapterIndex(prev => prev - 1);
+                                            document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+                                        }}
+                                        className="flex items-center gap-4 group p-3 pr-8 hover:bg-white rounded-full transition-all border border-transparent hover:border-slate-200 shadow-sm hover:shadow-md w-full sm:w-auto"
+                                    >
+                                        <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
+                                            <div className="rotate-180 text-slate-400 group-hover:text-amber-700 transition-colors">
+                                                <Icons.ChevronRight />
+                                            </div>
+                                        </div>
+                                        <div className="text-left">
+                                            <p className="text-[10px] text-slate-400 uppercase font-black tracking-[0.2em] mb-1">Previous</p>
+                                            <p className="font-bold text-slate-700 text-sm lg:text-base">{chapters[currentChapterIndex - 1].title}</p>
+                                        </div>
+                                    </button>
+                                ) : <div className="hidden sm:block" />}
+
+                                {currentChapterIndex < chapters.length - 1 ? (
+                                    <button
+                                        onClick={() => {
+                                            setCurrentChapterIndex(prev => prev + 1);
+                                            document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+                                        }}
+                                        className="flex items-center gap-4 group p-3 pl-8 hover:bg-white rounded-full transition-all border border-transparent hover:border-slate-200 shadow-sm hover:shadow-md w-full sm:w-auto justify-end sm:justify-start"
+                                    >
+                                        <div className="text-right">
+                                            <p className="text-[10px] text-slate-400 uppercase font-black tracking-[0.2em] mb-1">Next Chapter</p>
+                                            <p className="font-bold text-slate-700 text-sm lg:text-base">{chapters[currentChapterIndex + 1].title}</p>
+                                        </div>
+                                        <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
+                                            <div className="text-slate-400 group-hover:text-amber-700 transition-colors">
+                                                <Icons.ChevronRight />
+                                            </div>
+                                        </div>
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={() => {
+                                            setCurrentChapterIndex(0);
+                                            document.querySelector('main').scrollTo({ top: 0, behavior: 'smooth' });
+                                        }}
+                                        className="flex items-center gap-3 px-10 py-4 bg-gradient-to-r from-amber-700 to-amber-900 text-white rounded-full font-bold shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 w-full sm:w-auto justify-center"
+                                    >
+                                        <Icons.Home />
+                                        <span className="tracking-widest">回到開端</span>
+                                    </button>
+                                )}
+                            </div>
+
+                            <footer className="text-center text-slate-400 text-sm pb-24 italic tracking-widest font-medium">
+                                <p className="mb-3 leading-loose">「生命從不只有一種樣貌。有的靈魂選擇了在籬笆內築起溫馨的家，」</p>
+                                <p className="leading-loose">「而有的靈魂，注定要將生命揮灑在廣袤的雲端之上。」</p>
+                                <div className="mt-12 opacity-40 text-xs font-sans">© 2024 籬笆內的糧，雲端上的夢 | AI-Assisted Reading Experience</div>
+                            </footer>
+                        </div>
+                    </main>
+
+                    {/* 裝飾性背景元素 */}
+                    <div className="fixed bottom-0 right-0 p-12 pointer-events-none opacity-[0.04] hidden xl:block z-0 mix-blend-multiply">
+                        <div className="rotate-12 scale-[6] text-amber-900">
+                            <Icons.Feather />
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>
