@@ -58,6 +58,16 @@ window.APP_DATA = {
       "icon": "BookOpen",
       "color": "blue",
       "grade": "小說"
+    },
+    {
+      "id": "item_1777953471970",
+      "title": "AI 試卷審查系統",
+      "category": "校務",
+      "description": "本系統為一款專為中小學教育現場設計之「試卷審查輔助工具」。系統藉由串接 Google Gemini 大型語言模型，自動對未結構化的試卷檔案進行文字特徵萃取與邏輯推演。系統旨在協助教師檢核試卷是否具備合理的誘答鑑別度、是否符合特定年段認知負荷、以及有無雙重否定或偏見等命題瑕疵，進而產出逐題的專業審查報告。",
+      "link": "exampaper_review.html",
+      "icon": "Highlighter",
+      "color": "green",
+      "grade": "校務"
     }
   ]
 };

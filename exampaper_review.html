@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 試卷審查系統</title>
+    <!-- 引入 Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Babel 進行即時 JSX 編譯 -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- 設定 Import Map，讓瀏覽器原生支援 React 與 Lucide Icons 的 ESM 載入 -->
+    <script type="importmap">
+        {
+            "imports": {
+                "react": "https://esm.sh/react@18.2.0",
+                "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+                "lucide-react": "https://esm.sh/lucide-react@0.292.0"
+            }
+        }
+    </script>
+    <style>
+        /* 自訂滾動條樣式，提升專業質感 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        body {
+            background-color: #f8fafc;
+        }
+
+        /* --- 列印/輸出 PDF 專屬強制重置樣式 --- */
+        @media print {
+            @page {
+                margin: 1.2cm;
+                /* 設定 PDF 的頁面邊距 */
+            }
+
+            body {
+                background: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            /* 極度重要：強制移除所有可能導致瀏覽器將畫面「圖片化(點陣化)」的特效
+               確保輸出為純文字向量 PDF，讓滑鼠可以選取與複製文字。
+            */
+            * {
+                box-shadow: none !important;
+                text-shadow: none !important;
+                border-radius: 0 !important;
+                /* 移除圓角避免遮罩繪圖錯誤 */
+                overflow: visible !important;
+                /* 解除隱藏溢出，確保文字流暢 */
+                transform: none !important;
+                filter: none !important;
+                backdrop-filter: none !important;
+                transition: none !important;
+                -webkit-user-select: auto !important;
+                user-select: auto !important;
+            }
+
+            /* 隱藏非必要元素 */
+            .print\:hidden {
+                display: none !important;
+            }
+
+            /* 強制切換為區塊排列，避免 flex/grid 導致的版面壓縮 */
+            .print\:block {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
+            }
+
+            /* 避免卡片在換頁時被從中切斷 */
+            .print\:break-inside-avoid {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                margin-bottom: 20px !important;
+                border: 1px solid #e2e8f0 !important;
+            }
+
+            /* 針對試題原文區塊強制移除絕對定位的背景圖標 */
+            .print\:remove-bg-icon svg.absolute {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel" data-type="module">
+        import React, { useState, useEffect } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import {
+            UploadCloud, FileText, CheckCircle, AlertTriangle, Info,
+            Loader2, Play, FileUp, Tag, Quote, X, Settings, Key, Zap, Trash2, Save, Download
+        } from 'lucide-react';
+
+        const PRESET_FOCUS_OPTIONS = [
+            "誘答選項的合理性與鑑別度", "素養題情境的真實性與合理性",
+            "題幹敘述是否出現雙重否定或語意不清", "題目難易度是否符合該年段認知發展",
+            "是否有超出課綱或範圍的超前概念", "圖表、數據或科學事實的正確性",
+            "文字閱讀量是否造成過重認知負荷", "試題中是否隱含性別或特定族群偏見",
+            "題組之間是否存在連鎖效應或洩漏答案", "學理概念與運算邏輯是否有爭議",
+            "標點符號、錯別字與排版格式檢核", "選項字數與結構是否盡量對稱",
+            "是否出現「以上皆是/非」之逃避設計", "題幹是否過度引導答案",
+            "圖表或圖片是否清晰且具備解題必要性"
+        ];
+
+        const AUDIENCE_OPTIONS = [
+            "請選擇測驗對象", "國小一年級", "國小二年級", "國小三年級", "國小四年級", "國小五年級", "國小六年級",
+            "國中七年級", "國中八年級", "國中九年級"
+        ];
+
+        const SUBJECT_OPTIONS = [
+            "請選擇測驗科目", "國語文", "英語文", "數學", "自然科學", "社會 (歷/地/公)",
+            "科技 (生科/資科)", "綜合活動", "藝術與人文", "健康與體育"
+        ];
+
+        const GEMINI_MODELS = [
+            { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash (預設推薦 / 效能價格比最佳)" },
+            { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro (深度推論與複雜工作解析)" },
+            { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash-Lite (極致輕量與低延遲)" },
+            { id: "gemini-3.1-pro-preview", name: "Gemini 3.1 Pro 預覽版 (新世代進階智慧能力)" },
+            { id: "gemini-3-flash-preview", name: "Gemini 3 Flash 預覽版 (新世代快速模型)" }
+        ];
+
+        function App() {
+            const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+            const [apiKey, setApiKey] = useState('');
+            const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
+
+            const [tempApiKey, setTempApiKey] = useState('');
+            const [tempModel, setTempModel] = useState('');
+
+            const [file, setFile] = useState(null);
+            const [isDragging, setIsDragging] = useState(false); // 新增拖曳狀態
+            const [formData, setFormData] = useState({
+                audience: '', subject: '', scope: '', focusText: '', focusTags: []
+            });
+            const [isAnalyzing, setIsAnalyzing] = useState(false);
+            const [results, setResults] = useState(null);
+            const [errorMsg, setErrorMsg] = useState(null);
+
+            useEffect(() => {
+                const storedKey = localStorage.getItem('gemini_api_key');
+                const storedModel = localStorage.getItem('gemini_model');
+                if (storedKey) setApiKey(storedKey);
+                if (storedModel && GEMINI_MODELS.find(m => m.id === storedModel)) {
+                    setSelectedModel(storedModel);
+                } else {
+                    setSelectedModel('gemini-2.5-flash');
+                    localStorage.setItem('gemini_model', 'gemini-2.5-flash');
+                }
+            }, []);
+
+            const openSettings = () => {
+                setTempApiKey(apiKey);
+                setTempModel(selectedModel);
+                setIsSettingsOpen(true);
+            };
+
+            const saveSettings = () => {
+                setApiKey(tempApiKey);
+                setSelectedModel(tempModel);
+                localStorage.setItem('gemini_api_key', tempApiKey);
+                localStorage.setItem('gemini_model', tempModel);
+                setIsSettingsOpen(false);
+            };
+
+            const clearSettings = () => {
+                setTempApiKey('');
+                setApiKey('');
+                localStorage.removeItem('gemini_api_key');
+            };
+
+            // 處理點擊上傳
+            const handleFileChange = (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    setFile(e.target.files[0]);
+                    setErrorMsg(null);
+                }
+            };
+
+            // --- 新增：處理拖曳相關事件 ---
+            const handleDragOver = (e) => {
+                e.preventDefault(); // 必須阻止預設行為才能允許放置
+                setIsDragging(true);
+            };
+
+            const handleDragLeave = (e) => {
+                e.preventDefault();
+                setIsDragging(false);
+            };
+
+            const handleDrop = (e) => {
+                e.preventDefault(); // 阻止瀏覽器直接開啟檔案
+                setIsDragging(false);
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    setFile(e.dataTransfer.files[0]);
+                    setErrorMsg(null);
+                }
+            };
+
+            const handleInputChange = (e) => {
+                const { name, value } = e.target;
+                setFormData(prev => {
+                    const newData = { ...prev, [name]: value };
+                    if (name === 'focusText') {
+                        newData.focusTags = PRESET_FOCUS_OPTIONS.filter(opt => value.includes(opt));
+                    }
+                    return newData;
+                });
+            };
+
+            const toggleTag = (tag) => {
+                setFormData(prev => {
+                    const isSelected = prev.focusTags.includes(tag);
+                    let newFocusText = prev.focusText;
+
+                    if (isSelected) {
+                        newFocusText = newFocusText
+                            .replace(tag, '')
+                            .replace(/^[，,\s]+|[，,\s]+$/g, '')
+                            .replace(/[，,\s]{2,}/g, '，');
+                    } else {
+                        if (!newFocusText.includes(tag)) {
+                            newFocusText = newFocusText ? `${newFocusText}，${tag}` : tag;
+                        }
+                    }
+
+                    return {
+                        ...prev,
+                        focusText: newFocusText,
+                        focusTags: isSelected
+                            ? prev.focusTags.filter(t => t !== tag)
+                            : [...prev.focusTags, tag]
+                    };
+                });
+            };
+
+            const readFileAsBase64 = (file) => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            const fetchWithRetry = async (url, options, retries = 3) => {
+                const delays = [1000, 3000, 5000];
+                for (let i = 0; i < retries; i++) {
+                    try {
+                        const res = await fetch(url, options);
+                        if (!res.ok) throw new Error(`HTTP 錯誤! 狀態碼: ${res.status}`);
+                        return await res.json();
+                    } catch (err) {
+                        if (i === retries - 1) throw err;
+                        await new Promise(r => setTimeout(r, delays[i]));
+                    }
+                }
+            };
+
+            const startAnalysis = async () => {
+                if (!apiKey) {
+                    alert("⚠️ 請先點擊右上角「系統設定」輸入您的 Gemini API Key。");
+                    openSettings();
+                    return;
+                }
+                if (!file) return alert("請先上傳試卷檔案 (強烈建議使用 PDF 格式)");
+                if (!formData.audience || formData.audience === "請選擇測驗對象") return alert("請選擇測驗對象");
+                if (!formData.subject || formData.subject === "請選擇測驗科目") return alert("請選擇測驗科目");
+
+                setIsAnalyzing(true);
+                setResults(null);
+                setErrorMsg(null);
+
+                try {
+                    const base64Data = await readFileAsBase64(file);
+                    let mimeType = file.type;
+                    if (!mimeType) {
+                        mimeType = file.name.endsWith('.pdf') ? 'application/pdf' : 'text/plain';
+                    }
+
+                    const userPrompt = `您是一位專業的台灣中小學教師與試卷審查專家。
+請閱讀附檔的試卷（這是一份真實檔案），並嚴格根據以下條件進行「逐題審查」：
+- 測驗對象：${formData.audience}
+- 測驗科目：${formData.subject}
+- 測驗範圍：${formData.scope || '未提供，請依據年段常理判斷'}
+- 特別關注焦點：${formData.focusText || '無特別指定，請進行全面專業審查'}
+
+【嚴格指令】
+1. 請務必萃取並列出「真實檔案」中的每一道題目原文至 originalText 欄位。絕對不可自行發明或使用模擬題目。
+2. 針對每一題，提供專業的審查回饋。檢查是否有：雙重否定、誘答選項鑑別度、是否超綱、閱讀認知負荷、語意不清等問題。
+3. 如果該題設計良好無瑕疵，請標示 status 為 'success'；如果有瑕疵，請標示為 'warning' 或 'error'，並具體說明原因與修改建議。`;
+
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+
+                    const payload = {
+                        contents: [{
+                            parts: [
+                                { text: userPrompt },
+                                { inlineData: { mimeType: mimeType, data: base64Data } }
+                            ]
+                        }],
+                        generationConfig: {
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: "OBJECT",
+                                properties: {
+                                    summary: { type: "STRING", description: "整份試卷的總結報告，包含基本統計與整體評價。" },
+                                    questions: {
+                                        type: "ARRAY",
+                                        items: {
+                                            type: "OBJECT",
+                                            properties: {
+                                                id: { type: "INTEGER", description: "題號或流水號" },
+                                                title: { type: "STRING", description: "題目標題，例如 '第 1 題'" },
+                                                originalText: { type: "STRING", description: "擷取出的題目原文" },
+                                                status: { type: "STRING", description: "狀態，只能是 'success', 'warning', 或 'error'" },
+                                                feedbacks: {
+                                                    type: "ARRAY",
+                                                    items: {
+                                                        type: "OBJECT",
+                                                        properties: {
+                                                            type: { type: "STRING", description: "回饋類型，只能是 'success', 'warning', 'error', 或 'info'" },
+                                                            text: { type: "STRING", description: "具體審查建議" }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    };
+
+                    const data = await fetchWithRetry(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!resultText) throw new Error("API 未回傳有效的分析內容，請確認 API Key 與模型權限。");
+
+                    const resultJson = JSON.parse(resultText);
+                    setResults(resultJson);
+
+                } catch (error) {
+                    console.error("Analysis Error:", error);
+                    let displayError = "分析過程中發生錯誤。請確認：1. API Key 是否正確。2. 檔案格式是否支援。3. 網路連線狀態。";
+                    if (error.message.includes("403") || error.message.includes("400")) {
+                        displayError = `API 認證失敗或請求格式錯誤，請檢查您的金鑰是否有效，或確認所選模型 (${selectedModel}) 是否具備該權限與多模態支援。`;
+                    } else if (error.message.includes("404")) {
+                        displayError = `所選的模型端點 (${selectedModel}) 目前無法存取，這可能是由於預覽版模型端點變動，請至設定切換為穩定版本。`;
+                    }
+                    setErrorMsg(displayError);
+                } finally {
+                    setIsAnalyzing(false);
+                }
+            };
+
+            const downloadMarkdown = () => {
+                if (!results) return;
+
+                const dateStr = new Date().toISOString().split('T')[0];
+                let mdContent = `# 📝 AI 試卷審查報告\n\n`;
+
+                mdContent += `- **測驗對象：** ${formData.audience}\n`;
+                mdContent += `- **測驗科目：** ${formData.subject}\n`;
+                mdContent += `- **分析模型：** ${selectedModel}\n`;
+                mdContent += `- **生成日期：** ${dateStr}\n\n`;
+                mdContent += `---\n\n`;
+
+                mdContent += `## 📋 總結報告\n\n${results.summary}\n\n---\n\n`;
+
+                if (results.questions && results.questions.length > 0) {
+                    mdContent += `## 🔍 逐題審查明細\n\n`;
+                    results.questions.forEach((q, index) => {
+                        const title = q.title || `第 ${index + 1} 題`;
+                        const statusMap = { 'success': '🟢 無顯著異常', 'warning': '🟡 需注意', 'error': '🔴 需修正' };
+                        const statusLabel = statusMap[q.status] || q.status;
+
+                        mdContent += `### ${title} [${statusLabel}]\n\n`;
+
+                        if (q.originalText) {
+                            const formattedText = q.originalText
+                                .replace(/\r\n/g, '\n')
+                                .split('\n')
+                                .map(line => `> ${line}`)
+                                .join('\n');
+
+                            mdContent += `#### 【試題原文】\n\n${formattedText}\n\n`;
+                        }
+
+                        mdContent += `#### 【AI 審查建議】\n\n`;
+                        if (q.feedbacks && q.feedbacks.length > 0) {
+                            q.feedbacks.forEach(fb => {
+                                const fbTypeMap = { 'success': '✅', 'warning': '⚠️', 'error': '❌', 'info': 'ℹ️' };
+                                const fbIcon = fbTypeMap[fb.type] || '-';
+                                mdContent += `- ${fbIcon} ${fb.text}\n`;
+                            });
+                        } else {
+                            mdContent += `*無特別回饋建議，該題設計良好。*\n`;
+                        }
+                        mdContent += `\n---\n\n`;
+                    });
+                } else {
+                    mdContent += `*未能辨識出條列式題目結構。*\n`;
+                }
+
+                const blob = new Blob(['\uFEFF' + mdContent], { type: 'text/markdown;charset=utf-8;' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `試卷審查報告_${formData.subject}_${dateStr}.md`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+            };
+
+            const StatusIcon = ({ type }) => {
+                switch (type) {
+                    case 'success': return <CheckCircle className="w-5 h-5 text-emerald-500 mt-0.5 shrink-0" />;
+                    case 'warning': return <AlertTriangle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />;
+                    case 'error': return <AlertTriangle className="w-5 h-5 text-rose-500 mt-0.5 shrink-0" />;
+                    case 'info': return <Info className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />;
+                    default: return null;
+                }
+            };
+
+            return (
+                <div className="min-h-screen bg-slate-50 text-slate-800 font-sans p-4 sm:p-6 pb-20 print:p-0 print:bg-white print:min-h-0">
+
+                    {/* -- 設定彈跳視窗 (Modal) -- */}
+                    {isSettingsOpen && (
+                        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 print:hidden">
+                            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+                                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                                    <h3 className="font-bold text-lg text-slate-800 flex items-center">
+                                        <Settings className="w-5 h-5 mr-2 text-indigo-600" />
+                                        系統核心設定
+                                    </h3>
+                                    <button onClick={() => setIsSettingsOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                <div className="p-6 space-y-5">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center">
+                                            <Key className="w-4 h-4 mr-1.5 text-slate-500" /> Gemini API Key
+                                        </label>
+                                        <input
+                                            type="password"
+                                            value={tempApiKey}
+                                            onChange={(e) => setTempApiKey(e.target.value)}
+                                            placeholder="請輸入以 AIza 開頭的金鑰"
+                                            className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-mono text-sm"
+                                        />
+                                        <p className="text-xs text-slate-500 mt-2 leading-relaxed">
+                                            金鑰將安全地儲存於您當前瀏覽器的 LocalStorage 中，不會回傳至任何第三方伺服器。
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center">
+                                            <Zap className="w-4 h-4 mr-1.5 text-slate-500" /> 運算核心模型 (Model)
+                                        </label>
+                                        <select
+                                            value={tempModel}
+                                            onChange={(e) => setTempModel(e.target.value)}
+                                            className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-white"
+                                        >
+                                            {GEMINI_MODELS.map(m => (
+                                                <option key={m.id} value={m.id}>{m.name}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                                    <button
+                                        onClick={clearSettings}
+                                        className="flex items-center px-4 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                                    >
+                                        <Trash2 className="w-4 h-4 mr-1.5" /> 移除紀錄
+                                    </button>
+                                    <div className="space-x-3">
+                                        <button onClick={() => setIsSettingsOpen(false)} className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-200 rounded-lg transition-colors">取消</button>
+                                        <button onClick={saveSettings} className="flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-colors">
+                                            <Save className="w-4 h-4 mr-1.5" /> 儲存設定
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="max-w-6xl mx-auto space-y-6 print:space-y-0">
+
+                        <header className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 print:hidden">
+                            <div>
+                                <h1 className="text-2xl font-bold text-slate-800 tracking-tight">AI 試卷審查系統</h1>
+                                <p className="text-sm text-slate-500 mt-1">單機無伺服器架構・直接由瀏覽器驅動 LLM 引擎</p>
+                            </div>
+                            <div className="flex items-center space-x-3">
+                                <div className={`flex items-center space-x-2 text-sm font-medium px-4 py-2 rounded-full border ${apiKey ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-amber-700 bg-amber-50 border-amber-200'}`}>
+                                    {apiKey ? <CheckCircle className="w-4 h-4" /> : <AlertTriangle className="w-4 h-4" />}
+                                    <span>{apiKey ? 'API 已就緒' : '未設定 API 金鑰'}</span>
+                                </div>
+                                <button
+                                    onClick={openSettings}
+                                    className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors border border-transparent hover:border-indigo-100"
+                                    title="系統設定 (API Key / 模型)"
+                                >
+                                    <Settings className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </header>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 print:block">
+
+                            <div className="lg:col-span-5 space-y-6 print:hidden">
+
+                                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                                    <h2 className="text-lg font-semibold flex items-center mb-4 text-slate-800">
+                                        <FileUp className="w-5 h-5 mr-2 text-indigo-500" />
+                                        1. 匯入真實試卷檔案
+                                    </h2>
+                                    {/* --- 修正：加入了拖曳事件監聽 (onDragOver, onDragLeave, onDrop) 與動態樣式 --- */}
+                                    <label
+                                        onDragOver={handleDragOver}
+                                        onDragLeave={handleDragLeave}
+                                        onDrop={handleDrop}
+                                        className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-all ${isDragging ? 'border-indigo-500 bg-indigo-100 shadow-inner' : (file ? 'border-indigo-400 bg-indigo-50/50' : 'border-slate-300 hover:bg-slate-50 bg-white')}`}
+                                    >
+                                        <div className="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4 pointer-events-none">
+                                            {file ? (
+                                                <>
+                                                    <FileText className="w-10 h-10 text-indigo-500 mb-2" />
+                                                    <p className="text-sm font-bold text-indigo-900 truncate w-full">{file.name}</p>
+                                                    <p className="text-xs text-indigo-600/70 mt-1 font-medium">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <UploadCloud className={`w-10 h-10 mb-3 transition-colors ${isDragging ? 'text-indigo-500' : 'text-slate-300'}`} />
+                                                    <p className="mb-1 text-sm text-slate-600 font-bold">點擊或<span className="text-indigo-500 mx-1">拖曳檔案</span>至此處</p>
+                                                    <p className="text-xs text-slate-400 font-medium">支援 PDF 格式 (推薦) 或 DOCX</p>
+                                                </>
+                                            )}
+                                        </div>
+                                        <input type="file" className="hidden" accept=".pdf,.doc,.docx,.txt" onChange={handleFileChange} />
+                                    </label>
+                                </div>
+
+                                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                                    <h2 className="text-lg font-semibold flex items-center mb-5 text-slate-800">
+                                        <FileText className="w-5 h-5 mr-2 text-indigo-500" />
+                                        2. 設定測驗與審查參數
+                                    </h2>
+                                    <div className="space-y-4">
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">測驗對象</label>
+                                                <select name="audience" value={formData.audience} onChange={handleInputChange} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-slate-50 hover:bg-white text-slate-700 text-sm">
+                                                    {AUDIENCE_OPTIONS.map(opt => <option key={opt} value={opt === "請選擇測驗對象" ? "" : opt} disabled={opt === "請選擇測驗對象"}>{opt}</option>)}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">測驗科目</label>
+                                                <select name="subject" value={formData.subject} onChange={handleInputChange} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-slate-50 hover:bg-white text-slate-700 text-sm">
+                                                    {SUBJECT_OPTIONS.map(opt => <option key={opt} value={opt === "請選擇測驗科目" ? "" : opt} disabled={opt === "請選擇測驗科目"}>{opt}</option>)}
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">測驗範圍 / 目標</label>
+                                            <input type="text" name="scope" placeholder="例如：CH1~CH3，著重實驗變因判斷" value={formData.scope} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-slate-50 hover:bg-white text-sm" />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center">特別關注的焦點指標</label>
+                                            <textarea name="focusText" rows="2" placeholder="在此處補充您自訂的特別關注焦點..." value={formData.focusText} onChange={handleInputChange} className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-slate-50 hover:bg-white resize-none mb-3 text-sm leading-relaxed"></textarea>
+                                            <div className="text-xs text-slate-400 mb-2 font-semibold">點擊選取下方常用指標 (可複選)：</div>
+                                            <div className="flex flex-wrap gap-2">
+                                                {PRESET_FOCUS_OPTIONS.map((preset, index) => {
+                                                    const isSelected = formData.focusTags.includes(preset);
+                                                    return (
+                                                        <button key={index} onClick={() => toggleTag(preset)} className={`flex items-center text-xs px-2.5 py-1.5 rounded-md border transition-all text-left ${isSelected ? 'bg-indigo-600 border-indigo-600 text-white font-medium shadow-sm' : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300 hover:text-indigo-600'}`}>
+                                                            <Tag className={`w-3 h-3 mr-1.5 shrink-0 ${isSelected ? 'text-indigo-200' : 'text-slate-400'}`} />
+                                                            {preset}
+                                                            {isSelected && <X className="w-3 h-3 ml-1.5 text-indigo-200 hover:text-white" />}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button onClick={startAnalysis} disabled={isAnalyzing || !file} className={`w-full mt-8 py-3.5 rounded-xl font-bold text-white flex items-center justify-center transition-all ${isAnalyzing || !file ? 'bg-slate-300 cursor-not-allowed shadow-none' : 'bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 active:scale-[0.98]'}`}>
+                                        {isAnalyzing ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> LLM 深度解析中...</> : <><Play className="w-5 h-5 mr-2" /> 開始分析真實檔案</>}
+                                    </button>
+                                    <div className="mt-3 text-center text-xs text-slate-400 font-medium flex justify-center items-center">
+                                        當前使用引擎: <span className="text-indigo-500 ml-1 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">{selectedModel}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="lg:col-span-7 print:block print:w-full">
+                                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 h-full min-h-[600px] flex flex-col print:border-none print:shadow-none print:p-0 print:min-h-0 print:block">
+
+                                    {!isAnalyzing && !results && !errorMsg && (
+                                        <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 print:hidden">
+                                            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-5 border border-slate-100 shadow-inner">
+                                                <FileText className="w-10 h-10 text-slate-300" />
+                                            </div>
+                                            <p className="text-xl font-bold text-slate-700 mb-2">等待啟動審查</p>
+                                            <p className="text-sm mt-2 text-center max-w-sm leading-relaxed text-slate-500">
+                                                請確保您已於設定中填寫 API 金鑰。上傳試卷後，系統將呼叫 <span className="font-semibold text-slate-600">Google Gemini</span> 進行逐題特徵萃取與邏輯推演。
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {!isAnalyzing && errorMsg && (
+                                        <div className="flex-1 flex flex-col items-center justify-center text-rose-500 p-8 print:hidden">
+                                            <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mb-4">
+                                                <AlertTriangle className="w-10 h-10" />
+                                            </div>
+                                            <p className="text-lg font-bold text-rose-700">處理失敗</p>
+                                            <p className="text-sm mt-3 text-center max-w-md text-rose-600/80 leading-relaxed">{errorMsg}</p>
+                                            <button onClick={() => openSettings()} className="mt-6 px-4 py-2 bg-rose-100 text-rose-700 rounded-lg text-sm font-bold hover:bg-rose-200 transition-colors">檢查 API 設定</button>
+                                        </div>
+                                    )}
+
+                                    {isAnalyzing && (
+                                        <div className="flex-1 flex flex-col items-center justify-center text-indigo-600 space-y-5 p-8 print:hidden">
+                                            <div className="relative">
+                                                <Loader2 className="w-14 h-14 animate-spin text-indigo-200" />
+                                                <Loader2 className="w-14 h-14 animate-spin absolute top-0 left-0 text-indigo-600" style={{ animationDirection: 'reverse', animationDuration: '3s' }} />
+                                            </div>
+                                            <p className="text-lg font-bold text-indigo-800 animate-pulse">正在解析真實檔案，請稍候...</p>
+                                            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 w-full max-w-xs">
+                                                <div className="text-sm text-indigo-700/80 space-y-2.5 font-medium">
+                                                    <p className="flex items-center"><CheckCircle className="w-3.5 h-3.5 mr-2 text-indigo-500" /> 檔案編碼與傳輸</p>
+                                                    <p className="flex items-center"><CheckCircle className="w-3.5 h-3.5 mr-2 text-indigo-500" /> 多模態視覺與文字萃取</p>
+                                                    <p className="flex items-center"><Loader2 className="w-3.5 h-3.5 mr-2 text-indigo-500 animate-spin" /> 跨題邏輯推理與課綱比對</p>
+                                                </div>
+                                            </div>
+                                            <p className="text-xs text-slate-400 mt-2 font-medium">(根據試卷頁數與模型運算力，可能需要 15~40 秒)</p>
+                                        </div>
+                                    )}
+
+                                    {results && !isAnalyzing && (
+                                        <div className="animate-in fade-in duration-500 flex-1 flex flex-col print:block">
+                                            <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
+                                                <h2 className="text-2xl font-bold text-slate-800 tracking-tight">試卷逐題審查報告</h2>
+                                                <span className="px-3.5 py-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-lg border border-emerald-200 flex items-center">
+                                                    <CheckCircle className="w-3.5 h-3.5 mr-1" /> AI 分析完成
+                                                </span>
+                                            </div>
+
+                                            <div className="text-slate-700 mb-6 bg-gradient-to-r from-slate-50 to-white p-5 rounded-xl border border-slate-200 text-sm leading-relaxed shadow-sm print:shadow-none print:border-slate-300">
+                                                <span className="font-bold block mb-2 text-slate-800">總結報告：</span>
+                                                {results.summary}
+                                                <div className="mt-3 text-xs text-slate-500 flex items-center">
+                                                    <Info className="w-4 h-4 mr-1.5" /> 本報告由 {selectedModel} 分析生成
+                                                </div>
+                                            </div>
+
+                                            <div className="space-y-6 flex-1 print:space-y-8">
+                                                {results.questions?.map((q, index) => (
+                                                    <div key={index} className="print:remove-bg-icon bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-200 group print:shadow-none print:border-slate-300 print:break-inside-avoid">
+
+                                                        <div className="bg-slate-50 px-5 py-3 border-b border-slate-200 flex items-center justify-between print:bg-slate-100">
+                                                            <span className="font-bold text-slate-800 text-lg">{q.title || `第 ${index + 1} 題`}</span>
+                                                            {q.status === 'success' && <span className="px-3 py-1 bg-emerald-100 text-emerald-800 text-xs rounded-md font-bold border border-emerald-200">無顯著異常</span>}
+                                                            {q.status === 'warning' && <span className="px-3 py-1 bg-amber-100 text-amber-800 text-xs rounded-md font-bold border border-amber-200">需注意 / 建議</span>}
+                                                            {q.status === 'error' && <span className="px-3 py-1 bg-rose-100 text-rose-800 text-xs rounded-md font-bold border border-rose-200">需修正</span>}
+                                                        </div>
+
+                                                        <div className="p-5 bg-white border-b border-slate-100 relative overflow-hidden print:relative-reset">
+                                                            <Quote className="w-16 h-16 text-slate-50 absolute -top-2 -left-2 z-0 transform -scale-x-100 print:hidden" />
+                                                            <div className="relative z-10 flex items-start">
+                                                                <div className="text-sm text-slate-700 font-serif whitespace-pre-wrap leading-relaxed">
+                                                                    {q.originalText || '（未能成功擷取題目內容）'}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="p-5 space-y-3 bg-slate-50/50 print:bg-white">
+                                                            <div className="text-xs font-bold text-indigo-500 mb-3 tracking-wider flex items-center uppercase">
+                                                                <Zap className="w-3.5 h-3.5 mr-1" /> AI 審查建議
+                                                            </div>
+                                                            {q.feedbacks?.map((fb, idx) => (
+                                                                <div key={idx} className="flex items-start text-sm text-slate-700 bg-white p-3.5 rounded-xl border border-slate-200 shadow-sm transition-colors group-hover:border-indigo-100 print:shadow-none print:border-slate-300">
+                                                                    <StatusIcon type={fb.type} />
+                                                                    <span className="ml-3.5 leading-relaxed">{fb.text}</span>
+                                                                </div>
+                                                            ))}
+                                                            {(!q.feedbacks || q.feedbacks.length === 0) && (
+                                                                <div className="text-sm text-slate-500 italic bg-white p-3 rounded-lg border border-slate-100 print:border-slate-200">無特別回饋建議，該題設計良好。</div>
+                                                            )}
+                                                        </div>
+
+                                                    </div>
+                                                ))}
+
+                                                {(!results.questions || results.questions.length === 0) && (
+                                                    <div className="text-center text-slate-500 py-12 bg-slate-50 rounded-xl border border-dashed border-slate-300 print:hidden">
+                                                        <AlertTriangle className="w-8 h-8 mx-auto text-slate-400 mb-3" />
+                                                        未能從檔案中成功辨識出具體的題目結構。<br />請確認檔案內容是否為標準的條列式考卷。
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="mt-8 pt-6 border-t border-slate-200 flex justify-end gap-3 print:hidden">
+                                                <button onClick={downloadMarkdown} className="px-6 py-2.5 bg-white text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-50 transition-colors border border-slate-300 flex items-center shadow-sm">
+                                                    <Download className="w-4 h-4 mr-2 text-slate-500" /> 下載為 Markdown (純文字)
+                                                </button>
+                                                <button onClick={() => window.print()} className="px-6 py-2.5 bg-indigo-50 text-indigo-700 rounded-xl text-sm font-bold hover:bg-indigo-100 transition-colors border border-indigo-200 flex items-center shadow-sm">
+                                                    <FileText className="w-4 h-4 mr-2" /> 列印純淨版 PDF
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        const root = createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>
