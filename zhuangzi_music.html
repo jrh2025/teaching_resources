@@ -101,6 +101,9 @@
         const Upload = ({ size = 24, className = "" }) => (
             <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
         );
+        const Menu = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        );
 
         // ---------------------------------------------------------
         // 資料模型 (Initial State)
@@ -152,6 +155,7 @@
             const [activeId, setActiveId] = useState(songs.length > 0 ? songs[0].id : null);
             const [isEditing, setIsEditing] = useState(false);
             const [editForm, setEditForm] = useState(null);
+            const [isSidebarOpen, setIsSidebarOpen] = useState(false); // 新增：控制行動版側邊欄狀態
 
             const activeSong = songs.find(s => s.id === activeId) || songs[0];
 
@@ -198,6 +202,7 @@
                 setActiveId(newSong.id);
                 setEditForm({ ...newSong, youtubeUrl: '' });
                 setIsEditing(true);
+                setIsSidebarOpen(false); // 在手機版點擊新增時自動收合側邊欄
             };
 
             const handleDelete = (id) => {
@@ -230,13 +235,37 @@
             if (!activeSong) return <div className="p-8 text-center">正在載入系統...</div>;
 
             return (
-                <div className="flex h-screen bg-[#f7f5f0] text-[#2c2c2c] font-serif overflow-hidden">
+                <div className="flex flex-col md:flex-row h-screen bg-[#f7f5f0] text-[#2c2c2c] font-serif overflow-hidden relative">
 
-                    {/* 左側導覽列 */}
-                    <div className="w-72 bg-white border-r border-stone-200 flex flex-col shadow-sm z-10 flex-shrink-0">
-                        <div className="p-8 border-b border-stone-100">
-                            <h1 className="text-xl font-bold tracking-widest text-stone-800">莊子思想</h1>
-                            <p className="text-xs text-stone-500 tracking-widest mt-2 uppercase">音樂數位典藏系統</p>
+                    {/* 行動版頂部導覽列 */}
+                    <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-stone-200 shadow-sm z-30 flex-shrink-0">
+                        <div className="flex flex-col">
+                            <h1 className="text-lg font-bold tracking-widest text-stone-800">莊子思想</h1>
+                            <p className="text-[10px] text-stone-500 tracking-widest uppercase">音樂數位典藏系統</p>
+                        </div>
+                        <button onClick={() => setIsSidebarOpen(true)} className="p-2 text-stone-600 hover:bg-stone-100 rounded-md transition-colors">
+                            <Menu size={24} />
+                        </button>
+                    </div>
+
+                    {/* 行動版側邊欄背景遮罩 */}
+                    {isSidebarOpen && (
+                        <div
+                            className="fixed inset-0 bg-black/40 z-40 md:hidden backdrop-blur-sm transition-opacity duration-300"
+                            onClick={() => setIsSidebarOpen(false)}
+                        />
+                    )}
+
+                    {/* 左側導覽列 (支援行動版抽屜效果) */}
+                    <div className={`fixed inset-y-0 left-0 z-50 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 transition-transform duration-300 ease-in-out w-72 bg-white border-r border-stone-200 flex flex-col shadow-sm flex-shrink-0 h-full`}>
+                        <div className="p-6 md:p-8 border-b border-stone-100 flex justify-between items-start">
+                            <div>
+                                <h1 className="text-xl font-bold tracking-widest text-stone-800">莊子思想</h1>
+                                <p className="text-xs text-stone-500 tracking-widest mt-2 uppercase">音樂數位典藏系統</p>
+                            </div>
+                            <button className="md:hidden p-1 text-stone-400 hover:bg-stone-100 rounded-md" onClick={() => setIsSidebarOpen(false)}>
+                                <X size={20} />
+                            </button>
                         </div>
 
                         <div className="flex-1 overflow-y-auto py-4">
@@ -247,13 +276,14 @@
                                             onClick={() => {
                                                 setActiveId(song.id);
                                                 setIsEditing(false);
+                                                setIsSidebarOpen(false); // 切換樂章時自動收合側邊欄
                                             }}
                                             className={`w-full text-left px-4 py-3 rounded-md transition-all flex items-center gap-3 ${activeId === song.id
-                                                    ? 'bg-stone-100 text-stone-900 font-medium shadow-sm'
-                                                    : 'text-stone-600 hover:bg-stone-50'
+                                                ? 'bg-stone-100 text-stone-900 font-medium shadow-sm'
+                                                : 'text-stone-600 hover:bg-stone-50'
                                                 }`}
                                         >
-                                            <Music size={16} className={activeId === song.id ? "text-stone-700" : "text-stone-400"} />
+                                            <Music size={16} className={activeId === song.id ? "text-stone-700" : "text-stone-400"} flex-shrink-0 />
                                             <span className="truncate">{song.title}</span>
                                         </button>
                                     </li>
@@ -262,7 +292,7 @@
                         </div>
 
                         {/* 下方控制區塊 (新增樂章 & 資料庫匯出) */}
-                        <div className="p-4 border-t border-stone-100 space-y-3">
+                        <div className="p-4 border-t border-stone-100 space-y-3 bg-white">
                             <button
                                 onClick={handleAddSong}
                                 className="w-full flex items-center justify-center gap-2 py-3 px-4 border border-dashed border-stone-300 rounded-md text-stone-600 hover:bg-stone-50 hover:text-stone-800 hover:border-stone-400 transition-colors"
@@ -280,26 +310,26 @@
                                 <span>儲存至 zhuangzi_music.js</span>
                             </button>
                         </div>
-                    </div> {/* <-- 修復了此處未閉合的 div */}
+                    </div>
 
                     {/* 右側主要內容區 */}
                     <div className="flex-1 overflow-y-auto bg-[#f7f5f0]">
-                        <div className="max-w-4xl mx-auto p-8 md:p-12">
+                        <div className="max-w-4xl mx-auto p-5 md:p-12">
 
                             {!isEditing ? (
                                 /* 檢視模式 */
                                 <div className="transition-opacity duration-500">
-                                    <div className="flex justify-between items-start mb-8">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 md:mb-8">
                                         <div>
-                                            <h2 className="text-3xl font-bold text-stone-800 tracking-wide mb-2">{activeSong.title}</h2>
-                                            <p className="text-stone-500 text-sm tracking-widest uppercase flex items-center gap-2">
+                                            <h2 className="text-2xl md:text-3xl font-bold text-stone-800 tracking-wide mb-2 leading-snug">{activeSong.title}</h2>
+                                            <p className="text-stone-500 text-xs md:text-sm tracking-widest uppercase flex items-center gap-2">
                                                 <BookOpen size={14} />
                                                 <span>Zhuangzi Music Collection</span>
                                             </p>
                                         </div>
                                         <button
                                             onClick={handleEditClick}
-                                            className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 rounded-full text-stone-600 hover:bg-stone-50 hover:shadow-sm transition-all text-sm font-medium"
+                                            className="w-full sm:w-auto justify-center flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 rounded-full text-stone-600 hover:bg-stone-50 hover:shadow-sm transition-all text-sm font-medium"
                                         >
                                             <Edit3 size={16} />
                                             編輯內容
@@ -307,7 +337,7 @@
                                     </div>
 
                                     {/* YouTube 播放器 */}
-                                    <div className="w-full bg-black rounded-xl overflow-hidden shadow-lg mb-10 relative" style={{ paddingTop: '56.25%' }}>
+                                    <div className="w-full bg-black rounded-xl overflow-hidden shadow-lg mb-8 md:mb-10 relative" style={{ paddingTop: '56.25%' }}>
                                         {activeSong.youtubeId ? (
                                             <iframe
                                                 className="absolute top-0 left-0 w-full h-full"
@@ -325,7 +355,7 @@
                                     </div>
 
                                     {/* 內容區塊 */}
-                                    <div className="grid md:grid-cols-2 gap-12">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
                                         <div>
                                             <h3 className="text-sm font-bold text-stone-400 tracking-widest uppercase mb-4 border-b border-stone-200 pb-2 flex items-center gap-2">
                                                 <BookOpen size={16} /> 創作理念
@@ -349,9 +379,9 @@
                                 </div>
                             ) : (
                                 /* 編輯模式 (CMS介面) */
-                                <div className="bg-white rounded-2xl shadow-xl border border-stone-100 p-8 md:p-10 transition-transform duration-300 transform translate-y-0">
-                                    <div className="flex justify-between items-center mb-8 border-b border-stone-100 pb-6">
-                                        <h2 className="text-2xl font-bold text-stone-800 flex items-center gap-3">
+                                <div className="bg-white rounded-2xl shadow-xl border border-stone-100 p-6 md:p-10 transition-transform duration-300 transform translate-y-0">
+                                    <div className="flex justify-between items-center mb-6 md:mb-8 border-b border-stone-100 pb-4 md:pb-6">
+                                        <h2 className="text-xl md:text-2xl font-bold text-stone-800 flex items-center gap-3">
                                             <Edit3 className="text-stone-400" />
                                             編輯樂章資訊
                                         </h2>
@@ -363,7 +393,7 @@
                                         </button>
                                     </div>
 
-                                    <div className="space-y-6">
+                                    <div className="space-y-5 md:space-y-6">
                                         <div>
                                             <label className="block text-sm font-bold text-stone-600 mb-2">樂章標題</label>
                                             <input
@@ -414,26 +444,26 @@
                                         </div>
                                     </div>
 
-                                    <div className="mt-10 pt-6 border-t border-stone-100 flex justify-between items-center">
+                                    <div className="mt-8 md:mt-10 pt-6 border-t border-stone-100 flex flex-col sm:flex-row justify-between items-center gap-4">
                                         <button
                                             onClick={() => handleDelete(editForm.id)}
                                             disabled={songs.length <= 1}
-                                            className="flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed order-2 sm:order-1"
                                         >
                                             <Trash2 size={16} />
                                             刪除此樂章
                                         </button>
 
-                                        <div className="flex gap-3">
+                                        <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-3 order-1 sm:order-2">
                                             <button
                                                 onClick={handleCancelEdit}
-                                                className="px-6 py-2 border border-stone-200 text-stone-600 rounded-lg hover:bg-stone-50 transition-colors font-medium text-sm"
+                                                className="w-full sm:w-auto px-6 py-2 border border-stone-200 text-stone-600 rounded-lg hover:bg-stone-50 transition-colors font-medium text-sm text-center"
                                             >
                                                 取消
                                             </button>
                                             <button
                                                 onClick={handleSave}
-                                                className="flex items-center gap-2 px-6 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-700 shadow-md transition-all font-medium text-sm"
+                                                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-700 shadow-md transition-all font-medium text-sm"
                                             >
                                                 <Save size={16} />
                                                 儲存變更
