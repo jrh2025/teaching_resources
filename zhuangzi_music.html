@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>莊子思想：音樂數位典藏系統</title>
+
+    <!-- 引入字體 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- 引入 Tailwind CSS 引擎 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        serif: ['"Noto Serif TC"', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- 引入 React 核心與 ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+
+    <!-- 引入 Babel 進行瀏覽器端 JSX 編譯 -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- 引入外部扁平化資料庫 -->
+    <script src="zhuangzi_music.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        /* 自訂現代化捲軸樣式 */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d6d3d1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a29e;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root"></div>
+
+    <!-- 系統核心邏輯 -->
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // ---------------------------------------------------------
+        // 模組化 SVG 圖示元件
+        // ---------------------------------------------------------
+        const Music = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+        );
+        const Edit3 = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        );
+        const Save = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        );
+        const Plus = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        );
+        const Trash2 = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+        );
+        const BookOpen = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+        );
+        const Feather = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"></path><line x1="16" y1="8" x2="2" y2="22"></line><line x1="17.5" y1="15" x2="9" y2="15"></line></svg>
+        );
+        const X = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        );
+        const Download = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        );
+        const Upload = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+        );
+
+        // ---------------------------------------------------------
+        // 資料模型 (Initial State)
+        // ---------------------------------------------------------
+        const defaultInitialSongs = [
+            {
+                id: '1',
+                title: '第一樂章：逍遙遊',
+                youtubeId: 'rpWs0IeVfk8',
+                concept: '以宏大的合成器音色詮釋〈逍遙遊〉中鯤鵬展翅的廣闊與不受拘束的精神自由。',
+                lyrics: '北冥有魚，其名為鯤。\n化而為鳥，其名為鵬。\n水擊三千里，摶扶搖而上者九萬里。'
+            },
+            {
+                id: '2',
+                title: '第二樂章：齊物論',
+                youtubeId: 'J1y3b6lqGpE',
+                concept: '探討〈齊物論〉中物我兩忘的境界，旋律交織象徵著莊周夢蝶的虛實難辨。',
+                lyrics: '昔者莊周夢為胡蝶，\n栩栩然胡蝶也，自喻適志與！\n不知周也。\n俄然覺，則蘧蘧然周也。'
+            },
+            {
+                id: '3',
+                title: '第三樂章：庖丁解牛',
+                youtubeId: 'MFPZw5H8AJo',
+                concept: '節奏的游刃有餘，展現順應自然規律、以無厚入有間的養生與處世哲學。',
+                lyrics: '依乎天理，批大郤，導大窾，因其固然。\n彼節者有間，而刀刃者無厚；\n以無厚入有間，恢恢乎其於遊刃必有餘地矣。'
+            },
+            {
+                id: '4',
+                title: '第四樂章：坐忘',
+                youtubeId: 'kU90mfnPIas',
+                concept: '以極簡的音樂編排帶領聽眾達到同於大通的寧靜，回歸心如死灰的純粹。',
+                lyrics: '墮肢體，黜聰明，\n離形去知，同於大通，\n此謂坐忘。'
+            }
+        ];
+
+        // ---------------------------------------------------------
+        // 應用程式主體 (Main App Component)
+        // ---------------------------------------------------------
+        function App() {
+            // 系統初始化：嘗試從外部引入的 window.ZHUANGZI_MUSIC_DATA 讀取資料
+            const loadInitialData = () => {
+                if (typeof window !== 'undefined' && window.ZHUANGZI_MUSIC_DATA && Array.isArray(window.ZHUANGZI_MUSIC_DATA) && window.ZHUANGZI_MUSIC_DATA.length > 0) {
+                    return window.ZHUANGZI_MUSIC_DATA;
+                }
+                return defaultInitialSongs;
+            };
+
+            const [songs, setSongs] = useState(loadInitialData);
+            const [activeId, setActiveId] = useState(songs.length > 0 ? songs[0].id : null);
+            const [isEditing, setIsEditing] = useState(false);
+            const [editForm, setEditForm] = useState(null);
+
+            const activeSong = songs.find(s => s.id === activeId) || songs[0];
+
+            const handleEditClick = () => {
+                setEditForm({ ...activeSong, youtubeUrl: `https://www.youtube.com/watch?v=${activeSong.youtubeId}` });
+                setIsEditing(true);
+            };
+
+            const handleCancelEdit = () => {
+                setIsEditing(false);
+                setEditForm(null);
+            };
+
+            const handleInputChange = (e) => {
+                const { name, value } = e.target;
+                setEditForm(prev => ({ ...prev, [name]: value }));
+            };
+
+            const extractYouTubeId = (url) => {
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                const match = url.match(regExp);
+                return (match && match[2].length === 11) ? match[2] : url;
+            };
+
+            const handleSave = () => {
+                const updatedId = extractYouTubeId(editForm.youtubeUrl);
+                const updatedSong = {
+                    ...editForm,
+                    youtubeId: updatedId
+                };
+                setSongs(prev => prev.map(s => s.id === updatedSong.id ? updatedSong : s));
+                setIsEditing(false);
+            };
+
+            const handleAddSong = () => {
+                const newSong = {
+                    id: Date.now().toString(),
+                    title: '未命名樂章',
+                    youtubeId: '',
+                    concept: '請輸入創作理念...',
+                    lyrics: '請輸入歌詞或意象...'
+                };
+                setSongs([...songs, newSong]);
+                setActiveId(newSong.id);
+                setEditForm({ ...newSong, youtubeUrl: '' });
+                setIsEditing(true);
+            };
+
+            const handleDelete = (id) => {
+                if (songs.length <= 1) {
+                    alert("必須至少保留一個樂章。");
+                    return;
+                }
+                const newSongs = songs.filter(s => s.id !== id);
+                setSongs(newSongs);
+                if (activeId === id) {
+                    setActiveId(newSongs[0].id);
+                }
+                setIsEditing(false);
+            };
+
+            // 匯出為 JS 資料庫檔案
+            const handleExportJS = () => {
+                const dataStr = `window.ZHUANGZI_MUSIC_DATA = ${JSON.stringify(songs, null, 4)};`;
+                const blob = new Blob([dataStr], { type: "application/javascript", endings: "native" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = "zhuangzi_music.js";
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            };
+
+            if (!activeSong) return <div className="p-8 text-center">正在載入系統...</div>;
+
+            return (
+                <div className="flex h-screen bg-[#f7f5f0] text-[#2c2c2c] font-serif overflow-hidden">
+
+                    {/* 左側導覽列 */}
+                    <div className="w-72 bg-white border-r border-stone-200 flex flex-col shadow-sm z-10 flex-shrink-0">
+                        <div className="p-8 border-b border-stone-100">
+                            <h1 className="text-xl font-bold tracking-widest text-stone-800">莊子思想</h1>
+                            <p className="text-xs text-stone-500 tracking-widest mt-2 uppercase">音樂數位典藏系統</p>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto py-4">
+                            <ul className="space-y-1 px-4">
+                                {songs.map((song) => (
+                                    <li key={song.id}>
+                                        <button
+                                            onClick={() => {
+                                                setActiveId(song.id);
+                                                setIsEditing(false);
+                                            }}
+                                            className={`w-full text-left px-4 py-3 rounded-md transition-all flex items-center gap-3 ${activeId === song.id
+                                                    ? 'bg-stone-100 text-stone-900 font-medium shadow-sm'
+                                                    : 'text-stone-600 hover:bg-stone-50'
+                                                }`}
+                                        >
+                                            <Music size={16} className={activeId === song.id ? "text-stone-700" : "text-stone-400"} />
+                                            <span className="truncate">{song.title}</span>
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+
+                        {/* 下方控制區塊 (新增樂章 & 資料庫匯出) */}
+                        <div className="p-4 border-t border-stone-100 space-y-3">
+                            <button
+                                onClick={handleAddSong}
+                                className="w-full flex items-center justify-center gap-2 py-3 px-4 border border-dashed border-stone-300 rounded-md text-stone-600 hover:bg-stone-50 hover:text-stone-800 hover:border-stone-400 transition-colors"
+                            >
+                                <Plus size={18} />
+                                <span className="font-medium text-sm">新增樂章</span>
+                            </button>
+
+                            <button
+                                onClick={handleExportJS}
+                                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-stone-800 rounded-md text-white hover:bg-stone-700 shadow-md transition-all text-sm font-medium"
+                                title="下載並覆蓋原有的 zhuangzi_music.js"
+                            >
+                                <Download size={16} />
+                                <span>儲存至 zhuangzi_music.js</span>
+                            </button>
+                        </div>
+                    </div> {/* <-- 修復了此處未閉合的 div */}
+
+                    {/* 右側主要內容區 */}
+                    <div className="flex-1 overflow-y-auto bg-[#f7f5f0]">
+                        <div className="max-w-4xl mx-auto p-8 md:p-12">
+
+                            {!isEditing ? (
+                                /* 檢視模式 */
+                                <div className="transition-opacity duration-500">
+                                    <div className="flex justify-between items-start mb-8">
+                                        <div>
+                                            <h2 className="text-3xl font-bold text-stone-800 tracking-wide mb-2">{activeSong.title}</h2>
+                                            <p className="text-stone-500 text-sm tracking-widest uppercase flex items-center gap-2">
+                                                <BookOpen size={14} />
+                                                <span>Zhuangzi Music Collection</span>
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={handleEditClick}
+                                            className="flex items-center gap-2 px-4 py-2 bg-white border border-stone-200 rounded-full text-stone-600 hover:bg-stone-50 hover:shadow-sm transition-all text-sm font-medium"
+                                        >
+                                            <Edit3 size={16} />
+                                            編輯內容
+                                        </button>
+                                    </div>
+
+                                    {/* YouTube 播放器 */}
+                                    <div className="w-full bg-black rounded-xl overflow-hidden shadow-lg mb-10 relative" style={{ paddingTop: '56.25%' }}>
+                                        {activeSong.youtubeId ? (
+                                            <iframe
+                                                className="absolute top-0 left-0 w-full h-full"
+                                                src={`https://www.youtube.com/embed/${activeSong.youtubeId}?rel=0`}
+                                                title={activeSong.title}
+                                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                allowFullScreen
+                                            ></iframe>
+                                        ) : (
+                                            <div className="absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center text-stone-500 bg-stone-900">
+                                                <Music size={48} className="mb-4 opacity-20" />
+                                                <p>尚未設定 YouTube 影片</p>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* 內容區塊 */}
+                                    <div className="grid md:grid-cols-2 gap-12">
+                                        <div>
+                                            <h3 className="text-sm font-bold text-stone-400 tracking-widest uppercase mb-4 border-b border-stone-200 pb-2 flex items-center gap-2">
+                                                <BookOpen size={16} /> 創作理念
+                                            </h3>
+                                            <p className="text-stone-700 leading-relaxed text-justify whitespace-pre-line">
+                                                {activeSong.concept}
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <h3 className="text-sm font-bold text-stone-400 tracking-widest uppercase mb-4 border-b border-stone-200 pb-2 flex items-center gap-2">
+                                                <Feather size={16} /> 核心意象 / 歌詞
+                                            </h3>
+                                            <div className="bg-white p-6 rounded-lg shadow-sm border border-stone-100">
+                                                <p className="text-stone-600 leading-loose italic whitespace-pre-line text-center md:text-left">
+                                                    {activeSong.lyrics}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* 編輯模式 (CMS介面) */
+                                <div className="bg-white rounded-2xl shadow-xl border border-stone-100 p-8 md:p-10 transition-transform duration-300 transform translate-y-0">
+                                    <div className="flex justify-between items-center mb-8 border-b border-stone-100 pb-6">
+                                        <h2 className="text-2xl font-bold text-stone-800 flex items-center gap-3">
+                                            <Edit3 className="text-stone-400" />
+                                            編輯樂章資訊
+                                        </h2>
+                                        <button
+                                            onClick={handleCancelEdit}
+                                            className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-50 rounded-full transition-colors"
+                                        >
+                                            <X size={20} />
+                                        </button>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block text-sm font-bold text-stone-600 mb-2">樂章標題</label>
+                                            <input
+                                                type="text"
+                                                name="title"
+                                                value={editForm.title}
+                                                onChange={handleInputChange}
+                                                className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-400 transition-shadow text-stone-800 font-serif"
+                                                placeholder="例如：第一樂章：逍遙遊"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-bold text-stone-600 mb-2">YouTube 影片網址</label>
+                                            <input
+                                                type="text"
+                                                name="youtubeUrl"
+                                                value={editForm.youtubeUrl}
+                                                onChange={handleInputChange}
+                                                className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-400 transition-shadow text-stone-800"
+                                                placeholder="請貼上 YouTube 影片網址 (例如: https://www.youtube.com/watch?v=...)"
+                                            />
+                                            <p className="text-xs text-stone-400 mt-2">系統會自動擷取影片 ID，您也可以直接輸入 ID。</p>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-bold text-stone-600 mb-2">創作理念 / 對應篇章</label>
+                                            <textarea
+                                                name="concept"
+                                                value={editForm.concept}
+                                                onChange={handleInputChange}
+                                                rows="4"
+                                                className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-400 transition-shadow text-stone-800 font-serif leading-relaxed"
+                                                placeholder="描述這首歌對應了莊子的哪一個核心概念..."
+                                            ></textarea>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-bold text-stone-600 mb-2">核心歌詞 / 意象</label>
+                                            <textarea
+                                                name="lyrics"
+                                                value={editForm.lyrics}
+                                                onChange={handleInputChange}
+                                                rows="6"
+                                                className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-stone-400 transition-shadow text-stone-800 font-serif leading-relaxed italic"
+                                                placeholder="填入歌曲的核心歌詞或代表性的意象描述..."
+                                            ></textarea>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-10 pt-6 border-t border-stone-100 flex justify-between items-center">
+                                        <button
+                                            onClick={() => handleDelete(editForm.id)}
+                                            disabled={songs.length <= 1}
+                                            className="flex items-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <Trash2 size={16} />
+                                            刪除此樂章
+                                        </button>
+
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={handleCancelEdit}
+                                                className="px-6 py-2 border border-stone-200 text-stone-600 rounded-lg hover:bg-stone-50 transition-colors font-medium text-sm"
+                                            >
+                                                取消
+                                            </button>
+                                            <button
+                                                onClick={handleSave}
+                                                className="flex items-center gap-2 px-6 py-2 bg-stone-800 text-white rounded-lg hover:bg-stone-700 shadow-md transition-all font-medium text-sm"
+                                            >
+                                                <Save size={16} />
+                                                儲存變更
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // 初始化與渲染
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>

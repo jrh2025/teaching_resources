@@ -15,6 +15,7 @@ window.APP_DATA = {
       "測驗",
       "校務",
       "小說",
+      "音樂",
       "其他"
     ]
   },
@@ -68,6 +69,16 @@ window.APP_DATA = {
       "icon": "Highlighter",
       "color": "green",
       "grade": "校務"
+    },
+    {
+      "id": "item_1777961455093",
+      "title": "莊子思想的音樂數位典藏",
+      "category": "音樂",
+      "description": "Zhuangzi Music Collection\n基於對莊子思想的喜愛與啟發，自創關於莊子思想的音樂收藏平台。",
+      "link": "zhuangzi_music.html",
+      "icon": "Music4",
+      "color": "slate",
+      "grade": "音樂"
     }
   ]
 };
