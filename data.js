@@ -16,6 +16,7 @@ window.APP_DATA = {
       "校務",
       "小說",
       "音樂",
+      "小程式",
       "其他"
     ]
   },
@@ -79,6 +80,16 @@ window.APP_DATA = {
       "icon": "Music4",
       "color": "slate",
       "grade": "音樂"
+    },
+    {
+      "id": "item_1778046554509",
+      "title": "AI 繁簡轉換與字幕工具",
+      "category": "小程式",
+      "description": "協助將CapCut自動生成的字幕轉成繁體字。\n這工具整合 OpenCC 語義邏輯 與 深度遞歸解析 轉換，直接為draft_content.json 動手術。\n簡單三步驟搞定：\n1️⃣ 載入：直接拖入 draft_content.json（內附 Windows/macOS 預設路徑指引）。\n2️⃣ 轉換：點擊 AI 繁簡轉換，系統自動偵測並提取時間軸數據。\n3️⃣ 導出：下載原格式檔案(覆蓋原檔，記得要先把你的專案先關閉了)，或匯出獨立的字幕/歌詞檔。\n✴️建議先做字幕簡轉繁再進行其他剪輯，如此檔案較簡單。",
+      "link": "capcut_c2t_v2.html",
+      "icon": "AppWindow",
+      "color": "purple",
+      "grade": "小程式"
     }
   ]
 };
