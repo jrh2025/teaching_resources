@@ -90,6 +90,16 @@ window.APP_DATA = {
       "icon": "AppWindow",
       "color": "purple",
       "grade": "小程式"
+    },
+    {
+      "id": "item_1778218748596",
+      "title": "Gemini Gems 收集盒",
+      "category": "其他",
+      "description": "系統化收集、管理並分享精心調校的客製化 AI 代理（Gemini Gems）",
+      "link": "gem_collect.html",
+      "icon": "Boxes",
+      "color": "blue",
+      "grade": "其他"
     }
   ]
 };
