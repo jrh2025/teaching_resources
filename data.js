@@ -100,6 +100,16 @@ window.APP_DATA = {
       "icon": "Boxes",
       "color": "blue",
       "grade": "其他"
+    },
+    {
+      "id": "item_1778576187062",
+      "title": "Chrome 擴充功能管理庫",
+      "category": "小程式",
+      "description": "主要展示並提供由個人自行開發的數款 Chrome 瀏覽器擴充功能。",
+      "link": "chrome_ext_collect.html",
+      "icon": "ExternalLink",
+      "color": "rose",
+      "grade": "小程式"
     }
   ]
 };
