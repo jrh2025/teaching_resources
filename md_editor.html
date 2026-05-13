@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown & LaTeX 編輯器</title>
+    <!-- 引入 Tailwind CSS 以便快速且美觀地排版 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- 使用可靠的 CDN 引入 Marked.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+
+    <!-- 引入 DOMPurify 清理 HTML 避免 XSS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+
+    <!-- 引入 KaTeX 核心與樣式 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+
+    <!-- 引入 FontAwesome 圖示 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* 基礎字體與滾動條樣式 */
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* 預覽區域的 Markdown 樣式 */
+        .markdown-body {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .markdown-body h1,
+        .markdown-body h2,
+        .markdown-body h3,
+        .markdown-body h4,
+        .markdown-body h5,
+        .markdown-body h6 {
+            margin-top: 24px;
+            margin-bottom: 16px;
+            font-weight: 600;
+            line-height: 1.25;
+            border-bottom: 1px solid #eaecef;
+            padding-bottom: 0.3em;
+        }
+
+        .markdown-body p,
+        .markdown-body blockquote,
+        .markdown-body ul,
+        .markdown-body ol,
+        .markdown-body dl,
+        .markdown-body table,
+        .markdown-body pre,
+        .markdown-body details {
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        .markdown-body a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body blockquote {
+            padding: 0 1em;
+            color: #6a737d;
+            border-left: 0.25em solid #dfe2e5;
+        }
+
+        .markdown-body ul {
+            padding-left: 2em;
+            list-style-type: disc;
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        .markdown-body ol {
+            padding-left: 2em;
+            list-style-type: decimal;
+            margin-top: 0;
+            margin-bottom: 16px;
+        }
+
+        .markdown-body code {
+            padding: 0.2em 0.4em;
+            margin: 0;
+            font-size: 85%;
+            background-color: rgba(27, 31, 35, 0.05);
+            border-radius: 3px;
+            font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
+        }
+
+        .markdown-body pre {
+            word-wrap: normal;
+            padding: 16px;
+            overflow: auto;
+            font-size: 85%;
+            line-height: 1.45;
+            background-color: #f6f8fa;
+            border-radius: 6px;
+        }
+
+        .markdown-body pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        /* 螢光標記樣式 */
+        .markdown-body mark {
+            background-color: #fef08a;
+            /* 柔和的黃色 */
+            color: #1f2937;
+            padding: 0.1em 0.3em;
+            border-radius: 0.25rem;
+            font-weight: 500;
+        }
+
+        /* 工具列按鈕特效 */
+        .tool-btn {
+            transition: all 0.2s ease;
+        }
+
+        .tool-btn:hover {
+            background-color: #e2e8f0;
+            transform: translateY(-1px);
+        }
+
+        .tool-btn:active {
+            transform: translateY(1px);
+        }
+
+        /* 工具列分隔線 */
+        .tool-divider {
+            width: 1px;
+            height: 24px;
+            background-color: #cbd5e1;
+            margin: 0 4px;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 h-screen flex flex-col overflow-hidden text-gray-800">
+
+    <!-- 頂部導航列 (Navbar) -->
+    <header class="bg-white border-b border-gray-200 shadow-sm z-10 flex-none">
+        <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- 標題 -->
+                <div class="flex items-center">
+                    <i class="fa-brands fa-markdown text-3xl text-indigo-600 mr-2"></i>
+                    <h1 class="text-xl font-bold text-gray-900 tracking-tight">MD & LaTeX 編輯器</h1>
+                </div>
+
+                <!-- 檔案操作與全螢幕按鈕 -->
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <!-- 匯入按鈕與隱藏的輸入框 -->
+                    <input type="file" id="fileInput" class="hidden" accept=".md,.txt">
+                    <button onclick="document.getElementById('fileInput').click()"
+                        class="flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                        <i class="fa-solid fa-file-import mr-1.5"></i> <span class="hidden sm:inline">匯入</span>
+                    </button>
+
+                    <!-- 匯出下拉選單 (使用 details/summary 模擬) -->
+                    <div class="relative inline-block text-left">
+                        <button id="exportMenuBtn"
+                            class="flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                            <i class="fa-solid fa-file-export mr-1.5"></i> <span class="hidden sm:inline">匯出</span> <i
+                                class="fa-solid fa-chevron-down ml-1.5 text-xs"></i>
+                        </button>
+
+                        <!-- 下拉選單內容 -->
+                        <div id="exportMenu"
+                            class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden z-20">
+                            <div class="py-1" role="menu" aria-orientation="vertical" aria-labelledby="options-menu">
+                                <a href="#" onclick="exportMD(); return false;"
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                    role="menuitem"><i class="fa-brands fa-markdown w-5"></i> 匯出 Markdown (.md)</a>
+                                <a href="#" onclick="exportHTML(); return false;"
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                                    role="menuitem"><i class="fa-brands fa-html5 w-5"></i> 匯出 HTML (.html)</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 全螢幕切換按鈕 -->
+                    <button id="fullscreenBtn" onclick="toggleFullScreen()"
+                        class="p-2 text-gray-500 hover:text-gray-700 rounded-full hover:bg-gray-100 focus:outline-none transition-colors"
+                        title="切換全螢幕">
+                        <i class="fa-solid fa-expand text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 編輯器工具列 (擴充版) -->
+    <div class="bg-gray-100 border-b border-gray-200 px-4 py-2 flex flex-wrap gap-y-2 items-center flex-none text-sm">
+
+        <!-- 文字樣式 -->
+        <div class="flex items-center">
+            <button onclick="insertText('**', '**')"
+                class="tool-btn p-1.5 rounded text-gray-700 w-8 h-8 flex items-center justify-center"
+                title="粗體 (Ctrl+B)"><i class="fa-solid fa-bold"></i></button>
+            <button onclick="insertText('*', '*')"
+                class="tool-btn p-1.5 rounded text-gray-700 w-8 h-8 flex items-center justify-center"
+                title="斜體 (Ctrl+I)"><i class="fa-solid fa-italic"></i></button>
+            <button onclick="insertText('~~', '~~')"
+                class="tool-btn p-1.5 rounded text-gray-700 w-8 h-8 flex items-center justify-center" title="刪除線"><i
+                    class="fa-solid fa-strikethrough"></i></button>
+            <button onclick="insertText('==', '==')"
+                class="tool-btn p-1.5 rounded text-gray-700 w-8 h-8 flex items-center justify-center" title="螢光標記"><i
+                    class="fa-solid fa-highlighter"></i></button>
+        </div>
+
+        <div class="tool-divider"></div>
+
+        <!-- 標題與段落 -->
+        <div class="flex items-center">
+            <div class="relative inline-block text-left group">
+                <button class="tool-btn p-1.5 rounded text-gray-700 h-8 flex items-center justify-center px-2"
+                    title="標題">
+                    <i class="fa-solid fa-heading mr-1"></i> <i class="fa-solid fa-angle-down text-xs"></i>
+                </button>
+                <div
+                    class="absolute left-0 mt-0 w-32 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 hidden group-hover:block z-30">
+                    <div class="py-1" role="menu">
+                        <a href="#" onclick="insertText('# ', ''); return false;"
+                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-bold text-xl"
+                            role="menuitem">標題 1</a>
+                        <a href="#" onclick="insertText('## ', ''); return false;"
+                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-bold text-lg"
+                            role="menuitem">標題 2</a>
+                        <a href="#" onclick="insertText('### ', ''); return false;"
+                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-bold text-base"
+                            role="menuitem">標題 3</a>
+                        <a href="#" onclick="insertText('#### ', ''); return false;"
+                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 font-bold text-sm"
+                            role="menuitem">標題 4</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tool-divider"></div>
+
+        <!-- 列表與引用 -->
+        <div class="flex items-center">
+            <button onclick="insertText('- ', '')"
+                class="tool-btn p-1.5 rounded text-gray-700 w-8 h-8 flex items-center justify-center" title="無序列表"><i
+                    class="fa-solid fa-list-ul"></i></button>
+            <button onclick="insertText('1. ', '')"
+                class="tool-btn p-1.5 rounded text-gray-700 w-8 h-8 flex items-center justify-center" title="有序列表"><i
+                    class="fa-solid fa-list-ol"></i></button>
+            <button onclick="insertText('- [ ] ', '')"
+                class="tool-btn p-1.5 rounded text-gray-700 w-8 h-8 flex items-center justify-center" title="待辦清單"><i
+                    class="fa-regular fa-square-check"></i></button>
+            <button onclick="insertText('> ', '')"
+                class="tool-btn p-1.5 rounded text-gray-700 w-8 h-8 flex items-center justify-center" title="引用區塊"><i
+                    class="fa-solid fa-quote-right"></i></button>
+        </div>
+
+        <div class="tool-divider"></div>
+
+        <!-- 插入元素 -->
+        <div class="flex items-center">
+            <button onclick="insertText('[', '](https://)')"
+                class="tool-btn p-1.5 rounded text-gray-700 w-8 h-8 flex items-center justify-center" title="插入連結"><i
+                    class="fa-solid fa-link"></i></button>
+            <button onclick="insertText('![圖片替代文字](', 'https://)')"
+                class="tool-btn p-1.5 rounded text-gray-700 w-8 h-8 flex items-center justify-center" title="插入圖片"><i
+                    class="fa-regular fa-image"></i></button>
+            <button onclick="insertText('\n---\n', '')"
+                class="tool-btn p-1.5 rounded text-gray-700 w-8 h-8 flex items-center justify-center" title="水平分隔線"><i
+                    class="fa-solid fa-minus"></i></button>
+            <button onclick="insertTable()"
+                class="tool-btn p-1.5 rounded text-gray-700 w-8 h-8 flex items-center justify-center" title="插入表格"><i
+                    class="fa-solid fa-table"></i></button>
+        </div>
+
+        <div class="tool-divider"></div>
+
+        <!-- 程式碼與 LaTeX -->
+        <div class="flex items-center">
+            <button onclick="insertText('`', '`')"
+                class="tool-btn p-1.5 rounded text-gray-700 w-8 h-8 flex items-center justify-center" title="行內程式碼"><i
+                    class="fa-solid fa-terminal text-xs"></i></button>
+            <button onclick="insertText('\n```\n', '\n```\n')"
+                class="tool-btn p-1.5 rounded text-gray-700 w-8 h-8 flex items-center justify-center" title="程式碼區塊"><i
+                    class="fa-solid fa-code"></i></button>
+
+            <div class="tool-divider hidden sm:block"></div>
+
+            <button onclick="insertText('$', '$')"
+                class="tool-btn p-1.5 rounded text-indigo-700 bg-indigo-50 hover:bg-indigo-100 w-8 h-8 flex items-center justify-center font-serif italic font-bold mx-1"
+                title="行內公式 (LaTeX)">$\Sigma$</button>
+            <button onclick="insertText('\n$$\n', '\n$$\n')"
+                class="tool-btn p-1.5 rounded text-indigo-700 bg-indigo-50 hover:bg-indigo-100 w-8 h-8 flex items-center justify-center font-serif italic font-bold"
+                title="區塊公式 (LaTeX)">$$</button>
+
+            <!-- 新增：LaTeX 參考連結按鈕 -->
+            <a href="https://katex.org/docs/supported.html" target="_blank" rel="noopener noreferrer"
+                class="tool-btn p-1.5 rounded text-gray-500 hover:text-indigo-600 w-8 h-8 flex items-center justify-center ml-1"
+                title="LaTeX 語法指南 (另開視窗)">
+                <i class="fa-regular fa-circle-question"></i>
+            </a>
+        </div>
+
+        <!-- 清除與排版工具 -->
+        <div class="flex items-center ml-auto">
+            <button onclick="formatDocument()"
+                class="tool-btn p-1.5 rounded text-gray-600 hover:text-indigo-600 w-8 h-8 flex items-center justify-center mr-1"
+                title="快速整理格式"><i class="fa-solid fa-broom"></i></button>
+            <button onclick="clearEditor()"
+                class="tool-btn p-1.5 rounded text-red-500 hover:bg-red-50 hover:text-red-600 w-8 h-8 flex items-center justify-center"
+                title="清除全部內容"><i class="fa-solid fa-trash-can"></i></button>
+        </div>
+    </div>
+
+    <!-- 主要編輯區 (分割視窗) -->
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden relative" id="workspace">
+
+        <!-- 左側：Markdown 輸入區 -->
+        <section
+            class="w-full md:w-1/2 flex md:flex flex-col border-b md:border-b-0 md:border-r border-gray-200 bg-white h-1/2 md:h-full relative"
+            id="editorContainer">
+            <!-- 視窗標題列 -->
+            <div
+                class="bg-gray-50 px-4 py-1.5 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider flex justify-between items-center">
+                <span>編輯器</span>
+                <button onclick="toggleView('previewContainer')" class="md:hidden text-gray-400 hover:text-gray-600"><i
+                        class="fa-solid fa-eye"></i> 看預覽</button>
+            </div>
+            <!-- 文字區域 -->
+            <textarea id="editor" class="flex-1 w-full p-4 resize-none outline-none font-mono text-sm bg-transparent"
+                placeholder="在此輸入 Markdown 語法或 LaTeX 公式...&#10;&#10;例如：&#10;# 標題&#10;**粗體**&#10;方程式：$E=mc^2$&#10;$$\int_0^\infty e^{-x^2} dx = \frac{\sqrt{\pi}}{2}$$"></textarea>
+        </section>
+
+        <!-- 分割線 (用於視覺提示，此版本暫不實作拖拽調整寬度以保持簡單穩定) -->
+        <div class="hidden md:block w-1 bg-gray-200 hover:bg-indigo-300 cursor-col-resize z-10 transition-colors"></div>
+
+        <!-- 右側：即時預覽區 -->
+        <section class="w-full md:w-1/2 hidden md:flex flex-col bg-white h-1/2 md:h-full relative"
+            id="previewContainer">
+            <!-- 視窗標題列 -->
+            <div
+                class="bg-gray-50 px-4 py-1.5 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider flex justify-between items-center">
+                <span>預覽</span>
+                <button onclick="toggleView('editorContainer')" class="md:hidden text-gray-400 hover:text-gray-600"><i
+                        class="fa-solid fa-pen"></i> 回編輯</button>
+            </div>
+            <!-- 渲染結果呈現區域 -->
+            <div id="preview" class="flex-1 w-full p-6 overflow-y-auto markdown-body">
+                <!-- 渲染內容會產生在這裡 -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 訊息提示框 (Toast) -->
+    <div id="toast"
+        class="fixed bottom-5 right-5 bg-gray-800 text-white px-4 py-2 rounded shadow-lg transform transition-transform duration-300 translate-y-20 opacity-0 z-50">
+        <span id="toastMessage">訊息</span>
+    </div>
+
+    <script>
+        const editor = document.getElementById('editor');
+        const preview = document.getElementById('preview');
+        const fileInput = document.getElementById('fileInput');
+        const exportMenuBtn = document.getElementById('exportMenuBtn');
+        const exportMenu = document.getElementById('exportMenu');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const workspace = document.getElementById('workspace');
+
+        const defaultContent = `# 歡迎使用 Markdown & LaTeX 編輯器
+
+這是一個簡單且強大的網頁編輯器。
+
+## 功能特色
+- **即時預覽**：左邊輸入，右邊立刻看見結果。
+- **LaTeX 支援**：輕鬆輸入數學公式。
+- **匯出功能**：支援 MD 與 HTML 格式。
+
+## LaTeX 範例
+這是一個行內公式：$x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$
+
+這是一個區塊公式：
+$$
+\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}
+$$
+
+## 程式碼範例
+\`\`\`javascript
+function greet(name) {
+  console.log(\`Hello, \${name}!\`);
+}
+\`\`\`
+`;
+
+        function init() {
+            // 基礎檢查
+            if (typeof marked === 'undefined' || typeof katex === 'undefined') {
+                preview.innerHTML = "<div class='text-red-500 p-4'>載入核心組件失敗，請檢查網路連線或重新整理頁面。</div>";
+                return;
+            }
+
+            // 載入內容
+            const savedContent = localStorage.getItem('md_editor_content');
+            if (savedContent) {
+                editor.value = savedContent;
+            } else {
+                editor.value = defaultContent;
+            }
+
+            // 初次渲染
+            updatePreview();
+
+            // 綁定編輯器輸入事件
+            editor.addEventListener('input', () => {
+                updatePreview();
+                saveToLocal();
+            });
+
+            // 處理選單與同步滾動等其餘事件...
+            setupEventListeners();
+        }
+
+        function setupEventListeners() {
+            exportMenuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                exportMenu.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', () => {
+                if (!exportMenu.classList.contains('hidden')) {
+                    exportMenu.classList.add('hidden');
+                }
+            });
+
+            fileInput.addEventListener('change', handleFileUpload);
+
+            let isSyncingLeft = false;
+            let isSyncingRight = false;
+
+            editor.addEventListener('scroll', function () {
+                if (!isSyncingLeft && window.innerWidth >= 768) {
+                    isSyncingRight = true;
+                    const percentage = this.scrollTop / (this.scrollHeight - this.clientHeight);
+                    preview.scrollTop = percentage * (preview.scrollHeight - preview.clientHeight);
+                }
+                isSyncingLeft = false;
+            });
+
+            preview.addEventListener('scroll', function () {
+                if (!isSyncingRight && window.innerWidth >= 768) {
+                    isSyncingLeft = true;
+                    const percentage = this.scrollTop / (this.scrollHeight - this.clientHeight);
+                    editor.scrollTop = percentage * (editor.scrollHeight - editor.clientHeight);
+                }
+                isSyncingRight = false;
+            });
+        }
+
+        function updatePreview() {
+            const rawText = editor.value || '';
+
+            try {
+                // 1. 手動提取 LaTeX 公式，避免被 marked 誤解析
+                const mathBlocks = [];
+                let processedText = rawText;
+
+                // 暫存區塊公式 ($$...$$) - 使用純英數佔位符，防止被 Markdown 解析為斜體
+                processedText = processedText.replace(/\$\$([\s\S]+?)\$\$/g, (match, code) => {
+                    mathBlocks.push({ type: 'block', code: code });
+                    return `KATEXBLOCK${mathBlocks.length - 1}END`;
+                });
+
+                // 暫存行內公式 ($...$)
+                processedText = processedText.replace(/\$([^$\n]+?)\$/g, (match, code) => {
+                    mathBlocks.push({ type: 'inline', code: code });
+                    return `KATEXINLINE${mathBlocks.length - 1}END`;
+                });
+
+                // 處理螢光標記 ==高亮== -> <mark>高亮</mark>
+                processedText = processedText.replace(/==([^=\n]+?)==/g, '<mark>$1</mark>');
+
+                // 2. 解析 Markdown (針對 marked v12 寫法，直接傳入 options)
+                let htmlStr = marked.parse(processedText, {
+                    gfm: true,
+                    breaks: true
+                });
+
+                // 3. 清理 HTML (DOMPurify) - 在還原公式前執行，避免 KaTeX 標籤與樣式被誤刪
+                if (typeof DOMPurify !== 'undefined') {
+                    htmlStr = DOMPurify.sanitize(htmlStr);
+                }
+
+                // 4. 還原並渲染 LaTeX 公式
+                htmlStr = htmlStr.replace(/KATEXBLOCK(\d+)END/g, (match, index) => {
+                    try {
+                        return katex.renderToString(mathBlocks[index].code, { displayMode: true, throwOnError: false });
+                    } catch (err) { return `<span class="text-red-500">${err.message}</span>`; }
+                });
+
+                htmlStr = htmlStr.replace(/KATEXINLINE(\d+)END/g, (match, index) => {
+                    try {
+                        return katex.renderToString(mathBlocks[index].code, { displayMode: false, throwOnError: false });
+                    } catch (err) { return `<span class="text-red-500">${err.message}</span>`; }
+                });
+
+                // 5. 輸出渲染結果
+                preview.innerHTML = htmlStr;
+
+            } catch (e) {
+                console.error("渲染錯誤:", e);
+                preview.innerHTML = `<div class="text-red-500 p-4">渲染發生錯誤: ${e.message}</div>`;
+            }
+        }
+
+        function saveToLocal() {
+            localStorage.setItem('md_editor_content', editor.value);
+        }
+
+        function insertText(prefix, suffix) {
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const selectedText = editor.value.substring(start, end);
+
+            const newText = prefix + selectedText + suffix;
+            editor.setRangeText(newText, start, end, 'end');
+            editor.focus();
+
+            if (selectedText.length === 0) {
+                editor.selectionStart = editor.selectionEnd = start + prefix.length;
+            }
+
+            updatePreview();
+            saveToLocal();
+        }
+
+        function clearEditor() {
+            if (confirm('確定要清除所有內容嗎？此動作無法復原。')) {
+                editor.value = '';
+                updatePreview();
+                saveToLocal();
+                editor.focus();
+            }
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                editor.value = e.target.result;
+                updatePreview();
+                saveToLocal();
+                showToast('檔案匯入成功！');
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function downloadFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast(`已匯出 ${filename}`);
+        }
+
+        // 新增：動態生成包含標題與時間戳記的檔名
+        function generateExportFilename(extension) {
+            const content = editor.value;
+            // 使用正規表達式提取第一個一級標題 (# Title)
+            const titleMatch = content.match(/^#\s+(.+)$/m);
+            let title = '未命名文件';
+
+            if (titleMatch && titleMatch[1]) {
+                // 淨化檔名，移除作業系統不允許的特殊字元，並限制長度
+                title = titleMatch[1].replace(/[\\/:*?"<>|]/g, '').trim();
+                if (title.length > 50) title = title.substring(0, 50);
+            }
+
+            // 產生格式化時間戳記 YYYYMMDD_HHMMSS
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
+            const ss = String(now.getSeconds()).padStart(2, '0');
+
+            const timestamp = `${yyyy}${mm}${dd}_${hh}${min}${ss}`;
+            return {
+                filename: `${title}_${timestamp}.${extension}`,
+                title: title // 回傳純標題供 HTML <title> 使用
+            };
+        }
+
+        function exportMD() {
+            exportMenu.classList.add('hidden');
+            const exportData = generateExportFilename('md');
+            downloadFile(editor.value, exportData.filename, 'text/markdown;charset=utf-8');
+        }
+
+        function exportHTML() {
+            exportMenu.classList.add('hidden');
+            const exportData = generateExportFilename('html');
+            const content = `<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>${exportData.title}</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<style>
+body { font-family: sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 2rem; }
+pre { background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto; }
+code { font-family: monospace; background: #f5f5f5; padding: 0.2rem 0.4rem; border-radius: 3px; }
+blockquote { border-left: 4px solid #ddd; padding-left: 1rem; color: #666; margin-left: 0; }
+img { max-width: 100%; height: auto; }
+table { border-collapse: collapse; width: 100%; margin-bottom: 1rem; }
+th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+th { background-color: #f2f2f2; }
+</style>
+</head>
+<body>${preview.innerHTML}</body></html>`;
+            downloadFile(content, exportData.filename, 'text/html;charset=utf-8');
+        }
+
+        function toggleFullScreen() {
+            const doc = window.document;
+            const docEl = doc.documentElement;
+            const requestFullScreen = docEl.requestFullscreen || docEl.mozRequestFullScreen || docEl.webkitRequestFullScreen || docEl.msRequestFullscreen;
+            const cancelFullScreen = doc.exitFullscreen || doc.mozCancelFullScreen || doc.webkitExitFullscreen || doc.msExitFullscreen;
+
+            if (!doc.fullscreenElement && !doc.mozFullScreenElement && !doc.webkitFullscreenElement && !doc.msFullscreenElement) {
+                if (requestFullScreen) requestFullScreen.call(docEl);
+            } else {
+                if (cancelFullScreen) cancelFullScreen.call(doc);
+            }
+        }
+
+        document.addEventListener('fullscreenchange', updateFullscreenIcon);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenIcon);
+        function updateFullscreenIcon() {
+            if (!document.fullscreenElement && !document.webkitIsFullScreen) {
+                fullscreenBtn.innerHTML = '<i class="fa-solid fa-expand text-lg"></i>';
+                fullscreenBtn.title = "切換全螢幕";
+            } else {
+                fullscreenBtn.innerHTML = '<i class="fa-solid fa-compress text-lg"></i>';
+                fullscreenBtn.title = "退出全螢幕";
+            }
+        }
+
+        function toggleView(showId) {
+            const editorCont = document.getElementById('editorContainer');
+            const previewCont = document.getElementById('previewContainer');
+
+            if (showId === 'previewContainer') {
+                editorCont.classList.remove('flex');
+                editorCont.classList.add('hidden');
+                previewCont.classList.remove('hidden');
+                previewCont.classList.add('flex');
+            } else {
+                previewCont.classList.remove('flex');
+                previewCont.classList.add('hidden');
+                editorCont.classList.remove('hidden');
+                editorCont.classList.add('flex');
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const msgEl = document.getElementById('toastMessage');
+            if (!toast || !msgEl) return;
+            msgEl.textContent = message;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); }, 3000);
+        }
+
+        // 啟動程式
+        document.addEventListener('DOMContentLoaded', init);
+
+        // 新增：插入表格的輔助函數
+        function insertTable() {
+            const tableTemplate = `
+| 標題 1 | 標題 2 | 標題 3 |
+| :--- | :---: | ---: |
+| 靠左 | 置中 | 靠右 |
+| 內容 | 內容 | 內容 |
+`;
+            insertText('\n' + tableTemplate, '\n');
+        }
+
+        // 新增：快速整理格式 (簡單去除多餘空白行)
+        function formatDocument() {
+            let val = editor.value;
+            // 將連續 3 個以上的換行替換為 2 個換行
+            val = val.replace(/\n{3,}/g, '\n\n');
+            // 去除每一行行尾的空白
+            val = val.replace(/[ \t]+$/gm, '');
+
+            editor.value = val;
+            updatePreview();
+            saveToLocal();
+            showToast('文件格式已整理');
+        }
+
+    </script>
+</body>
+
+</html>
