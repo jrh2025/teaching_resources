@@ -110,6 +110,16 @@ window.APP_DATA = {
       "icon": "ExternalLink",
       "color": "rose",
       "grade": "小程式"
+    },
+    {
+      "id": "item_1778668627698",
+      "title": "MD & LaTeX 編輯器",
+      "category": "小程式",
+      "description": "本程式為一款輕量、高效的純前端 Markdown 與 LaTeX 編輯器，專為技術與學術寫作設計。\n核心功能涵蓋：所見即所得的雙視窗即時預覽、多功能快捷工具列、瀏覽器本機自動存檔，以及具備自動時間戳記的檔案匯出入（MD、HTML）功能。系統無需依賴後端伺服器，即可提供專業且安全的獨立寫作環境。",
+      "link": "md_editor.html",
+      "icon": "BookMarked",
+      "color": "orange",
+      "grade": "小程式"
     }
   ]
 };
