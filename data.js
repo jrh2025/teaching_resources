@@ -120,6 +120,16 @@ window.APP_DATA = {
       "icon": "BookMarked",
       "color": "orange",
       "grade": "小程式"
+    },
+    {
+      "id": "item_1779082201280",
+      "title": "Chrome Skills 收集分享庫",
+      "category": "其他",
+      "description": "一款基於 React 與 Tailwind CSS 開發的單頁應用程式，旨在高效管理與共享 Chrome Skills 提示詞資產。程式包含兩大核心模組：「新手指南」提供前瞻性的自動化架構教學；「收集庫」則實作了視覺化的提示詞管理系統。",
+      "link": "chrome_skills.html",
+      "icon": "Goal",
+      "color": "purple",
+      "grade": "其他"
     }
   ]
 };
