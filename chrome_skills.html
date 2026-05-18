@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrome Skills 收集分享庫</title>
+
+    <!-- 讀取外部的 Skills 資料庫檔案 (上傳到網站時請確保有此檔案) -->
+    <script src="chrome_skills.js"></script>
+
+    <!-- 導入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['System-ui', 'sans-serif'] },
+                    animation: {
+                        'fade-in': 'fadeIn 0.3s ease-out',
+                        'bounce-slight': 'bounceSlight 2s infinite'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        bounceSlight: {
+                            '0%, 100%': { transform: 'translateY(-5%)' },
+                            '50%': { transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- 導入 Phosphor Icons 圖示庫 -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- 引入 React 與 Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+
+<body class="min-h-screen bg-slate-50 font-sans text-gray-800 selection:bg-pink-200">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- 預設的防呆資料 (當 chrome_skills.js 尚未建立時的替代方案) ---
+        const defaultFallbackSkills = [
+            {
+                id: '1',
+                name: '📝 爆款文案改寫',
+                instructions: '請將以下文字改寫為適合社群媒體的風格。要求：\n1. 語氣活潑、具備煽動力。\n2. 加上適當的 Emoji。\n3. 結尾加上互動式的 Call to Action (CTA)。'
+            },
+            {
+                id: '2',
+                name: '📊 財報重點提煉',
+                instructions: '作為資深金融分析師，請從這份文件中提煉出：\n1. 營收與毛利率表現\n2. 下一季度的成長動能\n3. 潛在的風險提示\n請務必以 Markdown 表格呈現，不要多餘的廢話。'
+            },
+            {
+                id: '3',
+                name: '🧑‍💻 程式碼重構大師',
+                instructions: '請檢閱這段程式碼，進行以下優化：\n1. 提升時間/空間複雜度\n2. 修正潛在的邊界錯誤(Edge cases)\n3. 以 JSDoc 格式加上完整註解\n4. 提供重構前後的差異說明'
+            }
+        ];
+
+        // ==========================================
+        // 子元件：技術指引分頁 (GuideTab) 完整版
+        // ==========================================
+        function GuideTab() {
+            return (
+                <div className="animate-fade-in space-y-8 pb-12">
+                    {/* 英雄區塊 */}
+                    <header className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-8 md:p-12 text-white shadow-xl shadow-purple-500/20">
+                        <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl"></div>
+                        <div className="relative z-10">
+                            <span className="inline-block py-1 px-3 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-sm font-semibold mb-4 shadow-sm">
+                                ✨ 新手必讀指南
+                            </span>
+                            <h2 className="text-3xl md:text-4xl font-extrabold leading-tight mb-4 drop-shadow-md">
+                                Google Chrome 原生技能架構 <br className="hidden md:block" />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-100">
+                                    (Skills Mode) 深度技術指引
+                                </span>
+                            </h2>
+                            <p className="text-lg font-medium text-white/90 max-w-2xl leading-relaxed">
+                                從單點對話邁向跨分頁的智能自動化生態！準備好升級你的大腦協作模式了嗎？
+                            </p>
+                        </div>
+                    </header>
+
+                    {/* 區塊一：範式轉變 */}
+                    <section className="bg-white rounded-[2rem] p-8 shadow-xl shadow-gray-200/50 border border-gray-100 transform transition-all hover:-translate-y-1 hover:shadow-2xl duration-300">
+                        <h2 className="flex items-center gap-3 text-2xl font-bold text-indigo-900 mb-6">
+                            <div className="p-3 bg-indigo-100 rounded-2xl text-indigo-600 flex items-center justify-center">
+                                <i className="ph-fill ph-rocket text-[28px]"></i>
+                            </div>
+                            一、 範式轉變：從「勞動型打字員」晉升為「生成式架構師」
+                        </h2>
+
+                        <div className="space-y-4 text-gray-600 leading-relaxed text-lg">
+                            <p>
+                                在傳統的生成式 AI 應用場景中，用戶普遍受限於<strong className="text-pink-500 bg-pink-50 px-1 rounded">「打字員思維」</strong>。此模式的核心痛點在於高度碎片化與低效的重複性勞動：用戶必須频繁在 Notion、本地記事本與 AI 對話視窗之間進行大量的複製與貼上（Ctrl+C / Ctrl+V），使大腦充斥著低價值的非連續性工作，此時的 AI 僅能扮演被動接收指令的聊天工具。
+                            </p>
+                            <p>
+                                邁入 2026 年，Google Chrome 推出的原生 <strong className="text-indigo-600 bg-indigo-50 px-1 rounded">Skills 模式</strong> 徹底顛覆了此一局面，引領技術人員走向<strong className="text-purple-600 bg-purple-50 px-1 rounded">「架構師思維」</strong>的全新變革。
+                            </p>
+                        </div>
+
+                        <div className="mt-8 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-orange-400 p-6 rounded-r-2xl rounded-l-md relative overflow-hidden">
+                            <i className="ph-fill ph-sparkle absolute top-4 right-4 text-orange-200 opacity-50 text-[64px]"></i>
+                            <h3 className="text-orange-800 font-bold text-lg mb-2 flex items-center gap-2">
+                                <i className="ph-fill ph-warning-circle text-[20px]"></i> 核心思維的演進
+                            </h3>
+                            <p className="text-orange-900/80 leading-relaxed relative z-10">
+                                未來核心的競爭力不再聚焦於撰寫單一、複雜的提示詞（Prompt），而是取決於是否具備<strong>「封裝技能（Encapsulation of Skills）」</strong>的架構能力。透過將驗證完成的高階邏輯封裝為瀏覽器底層的原生按鈕，即可實現跨分頁一鍵自動化流轉，促使 AI 正式由被動式對話視窗，演進為自動化的協同大腦。
+                            </p>
+                        </div>
+                    </section>
+
+                    {/* 區塊二：Skills 核心架構解析 */}
+                    <section className="bg-white rounded-[2rem] p-8 shadow-xl shadow-gray-200/50 border border-gray-100 transform transition-all hover:-translate-y-1 hover:shadow-2xl duration-300">
+                        <h2 className="flex items-center gap-3 text-2xl font-bold text-emerald-900 mb-6">
+                            <div className="p-3 bg-emerald-100 rounded-2xl text-emerald-600 flex items-center justify-center">
+                                <i className="ph-fill ph-cpu text-[28px]"></i>
+                            </div>
+                            二、 Skills 核心架構解析與技術優勢
+                        </h2>
+
+                        <div className="mb-8">
+                            <h3 className="text-xl font-bold text-emerald-800 mb-3 flex items-center gap-2">
+                                <i className="ph-bold ph-caret-right text-emerald-500"></i> （一） 底層邏輯
+                            </h3>
+                            <p className="text-gray-600 leading-relaxed text-lg bg-emerald-50/50 p-5 rounded-2xl border border-emerald-100">
+                                Skills 的核心心法在於將其視為一個<strong className="text-emerald-700">「邏輯的容器」</strong>。它將工程師或用戶腦海中複雜的推理鏈、決策流程與特定背景邊界條件，高度濃縮並封裝成單一的功能觸發點。
+                                <br /><br />
+                                此架構具備深度<strong className="text-emerald-700">上下文感知能力（Context-Awareness）</strong>，能主動解析並理解當前活動分頁中的網頁數據結構與文本內容，達成免除複製貼上動作的「零輸入」意圖式操作。
+                            </p>
+                        </div>
+
+                        <div>
+                            <h3 className="text-xl font-bold text-emerald-800 mb-4 flex items-center gap-2">
+                                <i className="ph-bold ph-caret-right text-emerald-500"></i> （二） 與傳統瀏覽器外掛之對比優勢
+                            </h3>
+                            <div className="overflow-x-auto rounded-2xl border border-emerald-100 shadow-sm">
+                                <table className="w-full text-left border-collapse min-w-[600px]">
+                                    <thead>
+                                        <tr className="bg-emerald-100/50 text-emerald-900">
+                                            <th className="p-4 font-bold border-b border-emerald-200 w-1/4">優勢維度</th>
+                                            <th className="p-4 font-bold border-b border-emerald-200 w-1/4">傳統外掛 (Extensions)</th>
+                                            <th className="p-4 font-bold border-b border-emerald-200 w-1/4 bg-emerald-100 text-emerald-950">Chrome 原生 Skills</th>
+                                            <th className="p-4 font-bold border-b border-emerald-200 w-1/4">技術原理解析</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-gray-600 bg-white">
+                                        <tr className="hover:bg-emerald-50/30 transition-colors">
+                                            <td className="p-4 border-b border-emerald-50 font-semibold text-gray-800">🚀 執行效能</td>
+                                            <td className="p-4 border-b border-emerald-50 text-sm">依賴第三方 API 與 DOM 注入，延遲較高</td>
+                                            <td className="p-4 border-b border-emerald-50 bg-emerald-50/50 font-bold text-emerald-700">原生系統級調用，反應速度提升 5 倍</td>
+                                            <td className="p-4 border-b border-emerald-50 text-sm text-gray-500">減少了跨進程通信與外掛層的解析損耗。</td>
+                                        </tr>
+                                        <tr className="hover:bg-emerald-50/30 transition-colors">
+                                            <td className="p-4 border-b border-emerald-50 font-semibold text-gray-800">🛡️ 數據隱私</td>
+                                            <td className="p-4 border-b border-emerald-50 text-sm">數據常需上傳至第三方伺服器，具洩密風險</td>
+                                            <td className="p-4 border-b border-emerald-50 bg-emerald-50/50 font-bold text-emerald-700">安全沙盒（Sandbox）內部處理</td>
+                                            <td className="p-4 border-b border-emerald-50 text-sm text-gray-500">嚴格限制數據流出，保障企業商業機密與資訊安全。</td>
+                                        </tr>
+                                        <tr className="hover:bg-emerald-50/30 transition-colors">
+                                            <td className="p-4 font-semibold text-gray-800">🧠 演進能力</td>
+                                            <td className="p-4 text-sm">規則固定，需手動調整提示詞或程式碼</td>
+                                            <td className="p-4 bg-emerald-50/50 font-bold text-emerald-700">具備持續學習屬性</td>
+                                            <td className="p-4 text-sm text-gray-500">能依據用戶後續的修正與反饋，動態優化底層邏輯。</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* 區塊三：環境配置 */}
+                    <section className="bg-white rounded-[2rem] p-8 shadow-xl shadow-gray-200/50 border border-gray-100 transform transition-all hover:-translate-y-1 hover:shadow-2xl duration-300">
+                        <h2 className="flex items-center gap-3 text-2xl font-bold text-blue-900 mb-6">
+                            <div className="p-3 bg-blue-100 rounded-2xl text-blue-600 flex items-center justify-center">
+                                <i className="ph-fill ph-wrench text-[28px]"></i>
+                            </div>
+                            三、 環境配置與部署指南
+                        </h2>
+
+                        <p className="text-gray-600 mb-6 text-lg">欲啟用此項隱藏實驗功能，請依循以下雙階段步驟進行配置：</p>
+
+                        <div className="grid md:grid-cols-2 gap-6 mb-6">
+                            <div className="bg-blue-50/50 rounded-2xl p-6 border border-blue-100">
+                                <h3 className="text-xl font-bold text-blue-800 mb-4">階段一：激活側邊欄</h3>
+                                <ul className="space-y-4 text-gray-700">
+                                    <li className="flex gap-3">
+                                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-200 text-blue-700 flex items-center justify-center font-bold text-sm">1</span>
+                                        <p><strong>初始化開啟：</strong> 確保 Chrome 已更新至最新版。點擊頂部右側的彩色「問問 Gemini」圖示，或透過「三點選單」開啟。</p>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-200 text-blue-700 flex items-center justify-center font-bold text-sm">2</span>
+                                        <p><strong>介面固化：</strong> 點擊釘選圖示將側邊欄固定於右側，建立常駐式的協同工作區。</p>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div className="bg-cyan-50/50 rounded-2xl p-6 border border-cyan-100">
+                                <h3 className="text-xl font-bold text-cyan-800 mb-4">階段二：解鎖 Skills 旗標</h3>
+                                <ul className="space-y-4 text-gray-700">
+                                    <li className="flex gap-3">
+                                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-cyan-200 text-cyan-700 flex items-center justify-center font-bold text-sm">1</span>
+                                        <p>網址列輸入 <code className="bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded font-mono text-sm">chrome://flags</code> 進入實驗頁面。</p>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-cyan-200 text-cyan-700 flex items-center justify-center font-bold text-sm">2</span>
+                                        <p>搜尋欄輸入 <code className="bg-cyan-100 text-cyan-800 px-2 py-0.5 rounded font-mono text-sm">skills</code> 進行檢索。</p>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-cyan-200 text-cyan-700 flex items-center justify-center font-bold text-sm">3</span>
+                                        <p>將狀態由 Default 切換為 <strong className="text-cyan-700">Enabled</strong>。</p>
+                                    </li>
+                                    <li className="flex gap-3">
+                                        <span className="flex-shrink-0 w-6 h-6 rounded-full bg-cyan-200 text-cyan-700 flex items-center justify-center font-bold text-sm">4</span>
+                                        <p>點擊右下角藍色 <strong className="bg-blue-600 text-white px-2 py-0.5 rounded text-sm">Relaunch</strong> 重啟瀏覽器。</p>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {/* 終端機風格的進階提示框 */}
+                        <div className="bg-gray-900 rounded-2xl overflow-hidden shadow-lg border border-gray-800 mt-8">
+                            <div className="bg-gray-800 px-4 py-2 flex items-center justify-between border-b border-gray-700">
+                                <div className="flex gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                </div>
+                                <span className="text-gray-400 text-xs font-mono">Terminal - Regional Unlock</span>
+                            </div>
+                            <div className="p-5 text-gray-300 font-mono text-sm space-y-4">
+                                <p className="text-yellow-400 font-sans font-bold flex items-center gap-2">
+                                    💡 進階技巧：區域限制解鎖（Regional Unlock）
+                                </p>
+                                <p className="font-sans text-gray-400 text-xs">若未尋獲圖示，請先完全關閉 Chrome，再利用終端機執行以下指令：</p>
+
+                                <div>
+                                    <p className="text-green-400 mb-1"># Windows 系統 (64位元)：Win + R 執行</p>
+                                    <code className="block bg-gray-950 p-3 rounded-xl overflow-x-auto text-blue-300 border border-gray-800">
+                                        "C:\Program Files\Google\Chrome\Application\chrome.exe" --variations-override-country=us
+                                    </code>
+                                </div>
+
+                                <div>
+                                    <p className="text-green-400 mb-1"># Mac 系統：開啟終端機 (Terminal) 執行</p>
+                                    <code className="block bg-gray-950 p-3 rounded-xl overflow-x-auto text-blue-300 border border-gray-800">
+                                        /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --variations-override-country=us
+                                    </code>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* 區塊四：技能管理矩陣 */}
+                    <section className="bg-white rounded-[2rem] p-8 shadow-xl shadow-gray-200/50 border border-gray-100 transform transition-all hover:-translate-y-1 hover:shadow-2xl duration-300">
+                        <h2 className="flex items-center gap-3 text-2xl font-bold text-violet-900 mb-6">
+                            <div className="p-3 bg-violet-100 rounded-2xl text-violet-600 flex items-center justify-center">
+                                <i className="ph-fill ph-database text-[28px]"></i>
+                            </div>
+                            四、 技能管理矩陣與自訂卡片工程
+                        </h2>
+
+                        <p className="text-gray-600 text-lg mb-6">
+                            透過在網址列輸入 <code className="bg-violet-100 text-violet-800 px-2 py-1 rounded-md font-mono text-sm">chrome://skills/</code>，可進入專屬的自動化控制台，在此配置的所有技能卡片皆會同步託管於個人的 Google 帳號中。
+                        </p>
+
+                        <div className="bg-gradient-to-br from-violet-50 to-fuchsia-50 p-6 md:p-8 rounded-3xl border border-violet-100 relative">
+                            <h3 className="text-xl font-bold text-violet-900 mb-6 flex items-center gap-2">
+                                🛠️ 自訂 AI 技能卡片標準化流程
+                            </h3>
+
+                            <div className="grid md:grid-cols-2 gap-6 relative z-10">
+                                <div className="bg-white/80 backdrop-blur p-5 rounded-2xl shadow-sm border border-violet-100">
+                                    <div className="text-violet-500 font-bold mb-2 flex items-center gap-2">
+                                        <span className="bg-violet-200 text-violet-800 w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span> 建立實例
+                                    </div>
+                                    <p className="text-gray-600 text-sm">點擊管理介面右上角的<strong>「新增」</strong>按鈕。</p>
+                                </div>
+
+                                <div className="bg-white/80 backdrop-blur p-5 rounded-2xl shadow-sm border border-violet-100">
+                                    <div className="text-violet-500 font-bold mb-2 flex items-center gap-2">
+                                        <span className="bg-violet-200 text-violet-800 w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span> 命名規範
+                                    </div>
+                                    <p className="text-gray-600 text-sm">建議採用<strong>「Emoji 圖標 + 動作 + 目標」</strong>的語意化命名邏輯（範例：📝 撰寫文案、🔍 檢索資料），以利高效率檢索。</p>
+                                </div>
+
+                                <div className="bg-white/80 backdrop-blur p-5 rounded-2xl shadow-sm border border-violet-100">
+                                    <div className="text-violet-500 font-bold mb-2 flex items-center gap-2">
+                                        <span className="bg-violet-200 text-violet-800 w-6 h-6 rounded-full flex items-center justify-center text-xs">3</span> 指令編寫
+                                    </div>
+                                    <p className="text-gray-600 text-sm">填入核心任務流程。若需支援，可點擊左下角<strong>「魔法棒」</strong>圖示，由系統內建 AI 進行 Prompt 優化與自動生成。</p>
+                                </div>
+
+                                <div className="bg-white/80 backdrop-blur p-5 rounded-2xl shadow-sm border border-violet-100">
+                                    <div className="text-violet-500 font-bold mb-2 flex items-center gap-2">
+                                        <span className="bg-violet-200 text-violet-800 w-6 h-6 rounded-full flex items-center justify-center text-xs">4</span> 持久化儲存
+                                    </div>
+                                    <p className="text-gray-600 text-sm">點擊右下角藍色儲存按鈕完成部署。若需變更，點擊「鉛筆」圖示進入編輯模式，或進行刪除。</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* 區塊五：雙符號控制語法 */}
+                    <section className="bg-white rounded-[2rem] p-8 shadow-xl shadow-gray-200/50 border border-gray-100 transform transition-all hover:-translate-y-1 hover:shadow-2xl duration-300">
+                        <h2 className="flex items-center gap-3 text-2xl font-bold text-rose-900 mb-6">
+                            <div className="p-3 bg-rose-100 rounded-2xl text-rose-600 flex items-center justify-center">
+                                <i className="ph-fill ph-terminal text-[28px]"></i>
+                            </div>
+                            五、 執行期雙符號控制語法（Dual-Token Syntax）
+                        </h2>
+
+                        <p className="text-gray-600 text-lg mb-6">
+                            在「問問 Gemini」側邊欄的對話框中，利用雙符號分工技術，能極速調度自動化工作流：
+                        </p>
+
+                        <div className="bg-slate-900 rounded-2xl p-6 md:p-8 font-mono text-sm md:text-base text-gray-300 shadow-inner overflow-x-auto mb-8">
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className="bg-rose-500 text-white font-bold px-3 py-1 rounded-lg shadow-[0_0_15px_rgba(244,63,94,0.5)]">[ / 斜線符號 ]</div>
+                                <div className="text-slate-500">────────►</div>
+                                <div className="text-rose-300 whitespace-nowrap">動作指令（動態調用特定的 AI 任務行為）</div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="bg-amber-500 text-white font-bold px-3 py-1 rounded-lg shadow-[0_0_15px_rgba(245,158,11,0.5)]">[ @ 艾特符號 ]</div>
+                                <div className="text-slate-500">────────►</div>
+                                <div className="text-amber-300 whitespace-nowrap">資料來源（動態關聯外部多模態數據資產）</div>
+                            </div>
+                        </div>
+
+                        <ul className="space-y-4 text-gray-700 mb-8">
+                            <li className="flex gap-3 items-start">
+                                <div className="bg-rose-100 text-rose-600 p-1.5 rounded-lg mt-0.5"><i className="ph-fill ph-terminal text-[18px]"></i></div>
+                                <p><strong><code>/</code>（斜線）— 動作指令：</strong> 用於定義執行的具體 AI 任務（例如 <code>/寫作改寫</code>、<code>/數據可視化</code>）。執行時可同步勾選右側的<strong>「思考型模式」</strong>，以啟動更深度的推理鏈（Reasoning Chain）運算。</p>
+                            </li>
+                            <li className="flex gap-3 items-start">
+                                <div className="bg-amber-100 text-amber-600 p-1.5 rounded-lg mt-0.5"><i className="ph-fill ph-database text-[18px]"></i></div>
+                                <p><strong><code>@</code>（小老鼠）— 資料來源：</strong> 用於精準勾連外部數據源，可直接映射至 Google Drive 雲端硬碟、Gmail 郵件內容，或當前已開啟的瀏覽器分頁。</p>
+                            </li>
+                        </ul>
+
+                        <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6">
+                            <h3 className="text-lg font-bold text-gray-800 mb-4 border-b pb-2">運用場景示範</h3>
+                            <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <h4 className="font-bold text-rose-700 flex items-center gap-2">
+                                        <span className="text-xl">🎨</span> 場景 A：多模態創意工作流
+                                    </h4>
+                                    <p className="text-gray-600 text-sm leading-relaxed">
+                                        用戶在左側分頁閱讀文本時，於右側側邊欄輸入 <code className="bg-white px-1.5 py-0.5 rounded border text-rose-600 shadow-sm">@分頁名稱 + /生圖指令</code>，系統將自動擷取文本中的關鍵特徵與主角描述，並即時轉化為高品質的 Midjourney 提示詞。
+                                    </p>
+                                </div>
+                                <div className="space-y-2">
+                                    <h4 className="font-bold text-amber-700 flex items-center gap-2">
+                                        <span className="text-xl">📊</span> 場景 B：自動化數據決報流
+                                    </h4>
+                                    <p className="text-gray-600 text-sm leading-relaxed">
+                                        在 Google Sheets 試算表中，直接輸入 <code className="bg-white px-1.5 py-0.5 rounded border text-amber-600 shadow-sm">@財報雲端文件 + /數據可視化</code>，AI 將自動提煉目標文件中的財務指標，並在當前試算表中完成排版與可視化規劃。
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* 區塊六：進階心法與清單 */}
+                    <section className="bg-white rounded-[2rem] p-8 shadow-xl shadow-gray-200/50 border border-gray-100 transform transition-all hover:-translate-y-1 hover:shadow-2xl duration-300">
+                        <h2 className="flex items-center gap-3 text-2xl font-bold text-teal-900 mb-6">
+                            <div className="p-3 bg-teal-100 rounded-2xl text-teal-600 flex items-center justify-center">
+                                <i className="ph-fill ph-check-circle text-[28px]"></i>
+                            </div>
+                            六、 進階封裝心法與自動化 CheckList
+                        </h2>
+
+                        <p className="text-gray-600 text-lg mb-4">
+                            為了確保封裝的 Skills 具備高魯棒性（Robustness）與精準度，在編輯指令時應導入<strong>「多維度指令封裝」</strong>心法：
+                        </p>
+
+                        <div className="flex flex-col md:flex-row gap-4 mb-8">
+                            <div className="flex-1 bg-teal-50 border border-teal-100 p-5 rounded-2xl">
+                                <h4 className="font-bold text-teal-800 mb-2">1. 角色上下文定義</h4>
+                                <p className="text-sm text-teal-700">賦予明確且具備領域知識的角色設定（例如：「你是一位具備 10 年經驗的資深採購顧問」）。</p>
+                            </div>
+                            <div className="flex-1 bg-teal-50 border border-teal-100 p-5 rounded-2xl">
+                                <h4 className="font-bold text-teal-800 mb-2">2. 嚴格的輸出約束</h4>
+                                <p className="text-sm text-teal-700">明確限制回應的結構格式（例如：「務必使用 Markdown 表格輸出，禁止包含額外的解釋性文本」）。</p>
+                            </div>
+                        </div>
+
+                        <div className="bg-gray-900 rounded-3xl p-8 relative overflow-hidden">
+                            <div className="absolute -right-4 -top-4 w-32 h-32 bg-teal-500 opacity-20 rounded-full blur-2xl"></div>
+                            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2 relative z-10">
+                                🚀 實作前最後檢查清單（CheckList）
+                            </h3>
+
+                            <p className="text-gray-400 mb-6 text-sm relative z-10">在正式將自動化工作流投入生產環境前，請確認滿足以下所有合規項：</p>
+
+                            <ul className="space-y-4 relative z-10">
+                                <li className="flex items-start gap-3 bg-gray-800/50 p-3 rounded-xl border border-gray-700 hover:border-teal-500 transition-colors cursor-default group">
+                                    <div className="text-teal-400 mt-0.5 group-hover:scale-110 transition-transform"><i className="ph-fill ph-check-circle text-[20px]"></i></div>
+                                    <p className="text-gray-200">實驗室功能頁面（<code className="text-teal-300 font-mono text-sm px-1">chrome://flags</code>）中的 <strong>Skills</strong> 項目已確實變更為 <strong>Enabled</strong>？</p>
+                                </li>
+                                <li className="flex items-start gap-3 bg-gray-800/50 p-3 rounded-xl border border-gray-700 hover:border-teal-500 transition-colors cursor-default group">
+                                    <div className="text-teal-400 mt-0.5 group-hover:scale-110 transition-transform"><i className="ph-fill ph-check-circle text-[20px]"></i></div>
+                                    <p className="text-gray-200"><strong>Gemini 側邊欄</strong>已成功固定於瀏覽器右側常駐待命？</p>
+                                </li>
+                                <li className="flex items-start gap-3 bg-gray-800/50 p-3 rounded-xl border border-gray-700 hover:border-teal-500 transition-colors cursor-default group">
+                                    <div className="text-teal-400 mt-0.5 group-hover:scale-110 transition-transform"><i className="ph-fill ph-check-circle text-[20px]"></i></div>
+                                    <p className="text-gray-200">操作人員已能清晰區分 <strong className="text-amber-400">@（動態檢索資料）</strong> 與 <strong className="text-rose-400">/（執行特定動作）</strong> 的職責分工？</p>
+                                </li>
+                                <li className="flex items-start gap-3 bg-gray-800/50 p-3 rounded-xl border border-gray-700 hover:border-teal-500 transition-colors cursor-default group">
+                                    <div className="text-teal-400 mt-0.5 group-hover:scale-110 transition-transform"><i className="ph-fill ph-check-circle text-[20px]"></i></div>
+                                    <p className="text-gray-200">所有常用技能卡片皆已配置專屬的 <strong>Emoji</strong> 以利視覺化檢索與分類？</p>
+                                </li>
+                            </ul>
+                        </div>
+                    </section>
+                </div>
+            );
+        }
+
+        // ==========================================
+        // 子元件：收集庫分頁 (CollectionTab)
+        // ==========================================
+        function CollectionTab({ showToast }) {
+            // 解析 URL 參數以控制編輯權限
+            const urlParams = new URLSearchParams(window.location.search);
+            const allowEdit = urlParams.get('edit') === '1';
+
+            const [skills, setSkills] = useState(() => {
+                // 優先讀取外部檔案 (chrome_skills.js) 中的全域變數 window.chromeSkillsData
+                const externalData = typeof window.chromeSkillsData !== 'undefined' ? window.chromeSkillsData : defaultFallbackSkills;
+
+                // 如果是編輯模式 (allowEdit)，才嘗試讀取 localStorage 中暫存的進度
+                if (allowEdit) {
+                    const saved = localStorage.getItem('chrome_skills');
+                    if (saved) {
+                        try {
+                            return JSON.parse(saved);
+                        } catch (e) {
+                            console.error("LocalStorage parsing error", e);
+                        }
+                    }
+                }
+
+                // 一般訪客 (無 edit=1) 永遠只會看到外部 js 檔案的最新真實資料
+                return externalData;
+            });
+
+            const [activeId, setActiveId] = useState(skills[0]?.id || null);
+            const [isEditing, setIsEditing] = useState(false);
+            const [editForm, setEditForm] = useState(null);
+
+            // 只有在編輯模式下，才將更動寫入 localStorage 作為防呆機制
+            useEffect(() => {
+                if (allowEdit) {
+                    localStorage.setItem('chrome_skills', JSON.stringify(skills));
+                }
+            }, [skills, allowEdit]);
+
+            const activeSkill = skills.find(s => s.id === activeId);
+
+            const handleCopyText = (text) => {
+                if (!text) return;
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast('✨ 指令已成功複製！');
+                }).catch(() => {
+                    // Fallback
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    showToast('✨ 指令已成功複製！');
+                });
+            };
+
+            const handleAdd = () => {
+                const newSkill = { id: Date.now().toString(), name: '✨ 新的 Skill', instructions: '' };
+                setSkills([...skills, newSkill]);
+                setActiveId(newSkill.id);
+                setEditForm({ ...newSkill });
+                setIsEditing(true);
+            };
+
+            const handleEdit = () => {
+                setEditForm({ ...activeSkill });
+                setIsEditing(true);
+            };
+
+            const handleSave = () => {
+                if (!editForm.name.trim()) {
+                    showToast('⚠️ Skill 名稱不能為空');
+                    return;
+                }
+                setSkills(prev => prev.map(s => s.id === editForm.id ? editForm : s));
+                setIsEditing(false);
+                showToast('💾 技能變更已暫存！記得匯出 JS 並更新網站。');
+            };
+
+            const handleDelete = (id) => {
+                const newSkills = skills.filter(s => s.id !== id);
+                setSkills(newSkills);
+                if (activeId === id) setActiveId(newSkills[0]?.id || null);
+                setIsEditing(false);
+                showToast('🗑️ Skill 已刪除');
+            };
+
+            const handleExport = () => {
+                // 將資料結構化為直接可執行的 JavaScript 程式碼
+                const dataStr = `window.chromeSkillsData = ${JSON.stringify(skills, null, 4)};`;
+                const blob = new Blob([dataStr], { type: "application/javascript" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = "chrome_skills.js"; // 下載為 JS 檔
+                link.click();
+                URL.revokeObjectURL(url);
+                showToast('📦 技能庫已匯出為 JS 檔案！請覆蓋原檔。');
+            };
+
+            return (
+                <div className="relative bg-white border border-purple-100 shadow-xl shadow-purple-100/50 rounded-[2rem] overflow-hidden flex flex-col md:flex-row min-h-[600px] animate-fade-in">
+
+                    {/* 左側邊欄：列表 */}
+                    <div className="w-full md:w-1/3 bg-slate-50 border-r border-purple-100 flex flex-col">
+                        <div className="p-5 bg-white border-b border-purple-50 flex justify-between items-center z-10 shadow-sm">
+                            <h3 className="font-extrabold text-purple-900 flex items-center gap-2 text-lg">
+                                <i className="ph-fill ph-cards text-purple-500 text-2xl"></i>
+                                我的技能庫
+                            </h3>
+                            {/* 僅在 allowEdit 為 true 時顯示新增按鈕 */}
+                            {allowEdit && (
+                                <button onClick={handleAdd} className="w-8 h-8 flex items-center justify-center bg-purple-100 text-purple-600 rounded-full hover:bg-purple-600 hover:text-white transition-colors" title="新增 Skill">
+                                    <i className="ph-bold ph-plus text-lg"></i>
+                                </button>
+                            )}
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                            {skills.length === 0 && (
+                                <div className="text-center text-gray-400 py-10 text-sm">目前沒有任何技能。</div>
+                            )}
+                            {skills.map((skill) => (
+                                <button
+                                    key={skill.id}
+                                    onClick={() => { setActiveId(skill.id); setIsEditing(false); }}
+                                    className={`w-full text-left px-4 py-3.5 rounded-2xl transition-all flex items-center gap-3 ${activeId === skill.id && !isEditing
+                                        ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-md shadow-pink-200/50 translate-x-1'
+                                        : 'bg-white text-gray-600 hover:bg-purple-50 hover:text-purple-700 border border-transparent hover:border-purple-100 shadow-sm'
+                                        }`}
+                                >
+                                    <span className="truncate font-bold text-sm">{skill.name}</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* 底部操作區：只在 allowEdit 為 true 時顯示 */}
+                        {allowEdit && (
+                            <div className="p-4 bg-white border-t border-purple-50">
+                                <button onClick={handleExport} className="w-full py-2.5 px-4 bg-pink-50 text-pink-600 font-bold text-sm rounded-xl hover:bg-pink-100 transition-colors flex items-center justify-center gap-2">
+                                    <i className="ph-bold ph-export text-lg"></i> 匯出 JS
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* 右側內容區：顯示 / 編輯 */}
+                    <div className="flex-1 p-6 md:p-10 bg-white relative">
+                        {(!activeSkill && !isEditing) ? (
+                            <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                                <i className="ph-fill ph-magic-wand text-6xl mb-4 opacity-20"></i>
+                                <p>請從左側選擇一個 Skill</p>
+                            </div>
+                        ) : isEditing ? (
+                            // --- 編輯模式 ---
+                            <div className="h-full flex flex-col animate-fade-in max-w-2xl mx-auto">
+                                <div className="flex items-center gap-3 mb-8">
+                                    <div className="w-10 h-10 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
+                                        <i className="ph-fill ph-pencil-simple text-xl"></i>
+                                    </div>
+                                    <h2 className="text-2xl font-extrabold text-purple-900">編輯 Skill 配置</h2>
+                                </div>
+
+                                <div className="space-y-6 flex-1">
+                                    <div>
+                                        <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                                            <i className="ph-bold ph-text-t"></i> Skill 名稱
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={editForm.name}
+                                            onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                                            placeholder="例如: 📝 爆款文案改寫"
+                                            className="w-full px-5 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all text-gray-800 font-bold"
+                                        />
+                                    </div>
+                                    <div className="flex-1 flex flex-col">
+                                        <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-1">
+                                            <i className="ph-bold ph-terminal-window"></i> Skill 指令 (Prompt)
+                                        </label>
+                                        <textarea
+                                            value={editForm.instructions}
+                                            onChange={e => setEditForm({ ...editForm, instructions: e.target.value })}
+                                            placeholder="請輸入 AI 提示詞..."
+                                            className="w-full flex-1 min-h-[250px] px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 outline-none transition-all text-gray-800 font-mono text-sm leading-relaxed resize-y"
+                                        ></textarea>
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 pt-6 border-t border-slate-100 flex justify-between items-center">
+                                    <button onClick={() => handleDelete(editForm.id)} className="text-red-500 font-bold text-sm px-4 py-2 hover:bg-red-50 rounded-xl transition-colors flex items-center gap-2">
+                                        <i className="ph-bold ph-trash"></i> 刪除
+                                    </button>
+                                    <div className="flex gap-3">
+                                        <button onClick={() => setIsEditing(false)} className="px-6 py-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 font-bold text-sm transition-colors">取消</button>
+                                        <button onClick={handleSave} className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-500 text-white rounded-xl hover:shadow-lg hover:shadow-pink-500/30 font-bold text-sm transition-all flex items-center gap-2">
+                                            <i className="ph-bold ph-floppy-disk"></i> 儲存配置
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            // --- 檢視模式 ---
+                            <div className="h-full flex flex-col animate-fade-in max-w-2xl mx-auto">
+                                <div className="flex justify-between items-start mb-8 pb-6 border-b border-slate-100">
+                                    <h2 className="text-3xl font-extrabold text-slate-800 leading-tight pr-4">{activeSkill.name}</h2>
+                                    {/* 僅在 allowEdit 為 true 時顯示編輯按鈕 */}
+                                    {allowEdit && (
+                                        <button onClick={handleEdit} className="flex-shrink-0 flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-purple-100 hover:text-purple-700 transition-colors font-bold text-sm">
+                                            <i className="ph-fill ph-pencil-simple"></i> 編輯
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-1 rounded-3xl shadow-sm flex-1 flex flex-col relative group">
+                                    <div className="bg-white/80 backdrop-blur-sm p-6 rounded-[1.35rem] h-full flex flex-col">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h4 className="font-bold text-indigo-900 flex items-center gap-2">
+                                                <i className="ph-fill ph-terminal-window text-indigo-500 text-xl"></i>
+                                                封裝指令 (Prompt)
+                                            </h4>
+                                            <button
+                                                onClick={() => handleCopyText(activeSkill.instructions)}
+                                                className="bg-indigo-600 text-white px-4 py-2 rounded-xl shadow-md hover:bg-indigo-700 hover:scale-105 active:scale-95 font-bold text-sm flex items-center gap-2 transition-all"
+                                            >
+                                                <i className="ph-bold ph-copy"></i> 複製指令
+                                            </button>
+                                        </div>
+                                        <div className="flex-1 bg-slate-50/80 p-5 rounded-xl border border-slate-100 font-mono text-sm text-slate-700 leading-relaxed whitespace-pre-wrap overflow-y-auto">
+                                            {activeSkill.instructions || <span className="text-slate-400 italic">尚無內容...</span>}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // ==========================================
+        // 主應用程式 (App)
+        // ==========================================
+        function App() {
+            // 設定預設分頁為 'guide' (新手指南)
+            const [activeTab, setActiveTab] = useState('guide');
+            const [toastMessage, setToastMessage] = useState('');
+
+            const showToast = (message) => {
+                setToastMessage(message);
+                setTimeout(() => setToastMessage(''), 3000);
+            };
+
+            return (
+                <div>
+                    {/* 全局 Toast 提示 */}
+                    {toastMessage && (
+                        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] bg-gray-900 text-white px-6 py-3 rounded-full shadow-2xl font-bold flex items-center gap-2 animate-fade-in text-sm border border-gray-700">
+                            {toastMessage}
+                        </div>
+                    )}
+
+                    {/* 頂部導航 */}
+                    <nav className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-purple-100 shadow-sm">
+                        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2 font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-500 text-xl tracking-tight">
+                                <i className="ph-fill ph-sparkle text-purple-500 text-2xl"></i>
+                                Chrome Skills
+                            </div>
+
+                            <div className="flex bg-slate-100 p-1 rounded-full">
+                                <button
+                                    onClick={() => setActiveTab('guide')}
+                                    className={`px-5 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === 'guide'
+                                        ? 'bg-white text-purple-700 shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-700'
+                                        }`}
+                                >
+                                    <i className="ph-bold ph-book-open mr-1 inline-block align-text-bottom"></i> 新手指南
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('collection')}
+                                    className={`px-5 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === 'collection'
+                                        ? 'bg-white text-purple-700 shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-700'
+                                        }`}
+                                >
+                                    <i className="ph-bold ph-cards mr-1 inline-block align-text-bottom"></i> 收集庫
+                                </button>
+                            </div>
+                        </div>
+                    </nav>
+
+                    {/* 主內容區 */}
+                    <main className="max-w-5xl mx-auto px-4 py-8 md:py-10">
+                        {activeTab === 'collection' ? <CollectionTab showToast={showToast} /> : <GuideTab />}
+                    </main>
+
+                    <footer className="text-center text-slate-400 text-sm py-6 pb-10 font-medium">
+                        Skills Collection &copy; 2026. Made with JRH and Generative AI.
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>
