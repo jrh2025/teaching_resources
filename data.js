@@ -139,6 +139,16 @@ window.APP_DATA = {
       "link": "bulletin_board.html",
       "icon": "ClipboardList",
       "color": "indigo"
+    },
+    {
+      "id": "item_1779259708753",
+      "title": "跨域素養評量動態生成引擎",
+      "category": "測驗",
+      "description": "一款純前端架構的單頁應用程式 (SPA)，旨在協助教育工作者快速生成符合 108 課綱、PISA（跨域解決問題）與 PIRLS（閱讀理解四層次）精神的素養導向測驗卷。使用者可匯入多種格式的文本素材，系統將透過介接 Google Gemini AI API，動態解析語意並生成具備獨立運作能力、可直接下載派發的互動式 HTML 試卷。\n",
+      "link": "crossdomain_assessment_v2.html",
+      "icon": "Computer",
+      "color": "blue",
+      "grade": "測驗"
     }
   ]
 };
