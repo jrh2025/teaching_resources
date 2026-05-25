@@ -149,6 +149,15 @@ window.APP_DATA = {
       "icon": "Computer",
       "color": "blue",
       "grade": "測驗"
+    },
+    {
+      "id": "item_1779680672843",
+      "title": "智慧電子白板",
+      "category": "班級經營",
+      "description": "一款專為教師教學設計的純前端 (Client-Side Only) 獨立網頁式智慧電子白板系統。本系統無需任何後端伺服器支援，所有運算、圖形渲染及影像處理均在使用者瀏覽器端完成，具備高隱私性、零伺服器成本以及即時互動的優勢。\n",
+      "link": "web_board.html",
+      "icon": "LayoutDashboard",
+      "color": "indigo"
     }
   ]
 };
