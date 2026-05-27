@@ -158,6 +158,15 @@ window.APP_DATA = {
       "link": "web_board.html",
       "icon": "LayoutDashboard",
       "color": "indigo"
+    },
+    {
+      "id": "item_1779864056004",
+      "title": "時間管理與跑馬燈系統",
+      "category": "班級經營",
+      "description": "一款專為智慧化班級管理與教學情境設計的一體化時間管理與資訊看板平台。系統融合了多點鬧鐘、倒數計時器、精準碼表、番茄鐘等教學輔助工具，並搭載多方位、可彈性排程的班級跑馬燈系統，提供強大的多媒體背景渲染技術。",
+      "link": "time_scrolling.html",
+      "icon": "Timer",
+      "color": "purple"
     }
   ]
 };
