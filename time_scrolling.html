@@ -2381,6 +2381,9 @@
                 timerRemainingSec = lastLeft;
                 updateTimerDisplay();
             }
+
+            // 同步番茄鐘初始設定狀態與顯示
+            setPomoState('work');
         }
 
         function updateTimerDisplay() {
@@ -2592,22 +2595,18 @@
             renderPomoDisplay();
         }
 
+        // 番茄鐘專注與休息自動轉換排程引擎
         document.getElementById('pomoPlayBtn').addEventListener('click', () => {
             document.getElementById('pomoPlayBtn').classList.add('hidden');
             document.getElementById('pomoPauseBtn').classList.remove('hidden');
 
+            // 啟動番茄鐘秒級監控
             pomodoroTimer = setInterval(() => {
                 pomoRemainingSec--;
                 renderPomoDisplay();
 
+                // 當單一計時週期結束，自動流轉切換下一階段並繼續倒數計時 (不中斷，不暫停)
                 if (pomoRemainingSec <= 0) {
-                    clearInterval(pomodoroTimer);
-                    pomodoroTimer = null;
-
-                    document.getElementById('pomoPlayBtn').classList.remove('hidden');
-                    document.getElementById('pomoPauseBtn').classList.add('hidden');
-
-                    // 切換階段
                     if (pomoState === 'work') {
                         playSound('chime');
                         if (pomoCycle >= 4) {
@@ -2645,6 +2644,16 @@
             document.getElementById('pomoPlayBtn').classList.remove('hidden');
             document.getElementById('pomoPauseBtn').classList.add('hidden');
         });
+
+        // 當使用者在未開始計時狀態下調整時間數值，立即更新 UI 顯示 (無需重置)
+        function handlePomoInputChange() {
+            if (!pomodoroTimer) {
+                setPomoState(pomoState);
+            }
+        }
+        document.getElementById('pomoWorkDur').addEventListener('input', handlePomoInputChange);
+        document.getElementById('pomoBreakDur').addEventListener('input', handlePomoInputChange);
+        document.getElementById('pomoLongDur').addEventListener('input', handlePomoInputChange);
     </script>
 </body>
 
