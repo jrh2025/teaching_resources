@@ -1,0 +1,2651 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>班級時間管理與跑馬燈</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+TC:wght=300;400;500;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .digital-font {
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        /* 垂直跑馬燈效果 */
+        .marquee-vertical-up {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            animation: marquee-v-up 15s linear infinite;
+        }
+
+        .marquee-vertical-down {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            animation: marquee-v-down 15s linear infinite;
+        }
+
+        @keyframes marquee-v-up {
+            0% {
+                transform: translateY(100%);
+            }
+
+            100% {
+                transform: translateY(-100%);
+            }
+        }
+
+        @keyframes marquee-v-down {
+            0% {
+                transform: translateY(-100%);
+            }
+
+            100% {
+                transform: translateY(100%);
+            }
+        }
+
+        /* 水平跑馬燈 */
+        .marquee-horizontal {
+            white-space: nowrap;
+            animation: marquee-h 15s linear infinite;
+        }
+
+        @keyframes marquee-h {
+            0% {
+                transform: translateX(100%);
+            }
+
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        /* 自訂滾動條 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(156, 163, 175, 0.5);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(156, 163, 175, 0.8);
+        }
+    </style>
+</head>
+
+<body
+    class="transition-colors duration-500 min-h-screen flex flex-col justify-between relative bg-[#1E3F20] text-[#F5EBE0]">
+
+    <!-- 背景多媒體渲染層 -->
+    <div id="mediaBgContainer"
+        class="absolute inset-0 w-full h-full pointer-events-none overflow-hidden z-0 transition-opacity duration-500 opacity-20">
+    </div>
+
+    <!-- 本地端音樂/鈴聲播放器 -->
+    <audio id="ringtoneAudio" class="hidden"></audio>
+
+    <!-- 背景音樂播放器 -->
+    <audio id="bgMusicAudio" loop class="hidden"></audio>
+
+    <!-- ================= HEADER: 日期 & 縮小時鐘 & 全螢幕 & 管理者登入 ================= -->
+    <header
+        class="relative z-10 w-full px-6 py-4 flex flex-wrap justify-between items-center gap-4 bg-black/10 backdrop-blur-sm border-b border-white/5">
+        <div class="flex items-center gap-4 flex-wrap">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-white/10 rounded-lg">
+                    <i data-lucide="calendar" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h1 id="headerDate" class="text-xl font-bold tracking-wider">----年--月--日 星期-</h1>
+                    <p class="text-xs opacity-60">智慧班級時間看板系統</p>
+                </div>
+            </div>
+
+            <!-- 縮小模式數字鐘 -->
+            <div id="miniClockContainer" class="hidden flex items-center gap-3 border-l-2 border-white/20 pl-4">
+                <div id="miniDigitalClock" class="digital-font text-2xl font-bold text-amber-300 tracking-wider">
+                    00:00:00</div>
+                <div id="miniClockPeriod"
+                    class="text-xs font-semibold bg-white/10 px-1.5 py-0.5 rounded text-white uppercase">AM</div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 flex-wrap">
+            <!-- 狀態顯示器 -->
+            <span id="adminStatusBadge"
+                class="px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/20 text-amber-300 flex items-center gap-1.5 border border-amber-500/30">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                一般顯示模式
+            </span>
+
+            <!-- 背景音樂播放開關按鈕 (上傳音樂後自動顯示) -->
+            <button id="toggleBgmBtn"
+                class="px-4 py-2 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-300 active:scale-95 transition rounded-lg text-sm font-semibold flex items-center gap-2 border border-emerald-500/30 shadow-lg hidden">
+                <i id="bgmIcon" data-lucide="play" class="w-4 h-4"></i>
+                <span id="bgmBtnText">播放背景音樂</span>
+            </button>
+
+            <!-- 縮小時鐘模式按鈕 -->
+            <button id="toggleMinimizeBtn"
+                class="px-4 py-2 bg-white/10 hover:bg-white/20 active:scale-95 transition rounded-lg text-sm font-medium flex items-center gap-2 border border-white/10 shadow-lg">
+                <i data-lucide="minimize-2" class="w-4 h-4"></i>
+                <span id="toggleMinimizeText">縮小時鐘</span>
+            </button>
+
+            <!-- 顯示/隱藏設定區按鈕 -->
+            <button id="toggleWidgetsBtn"
+                class="px-4 py-2 bg-white/10 hover:bg-white/20 active:scale-95 transition rounded-lg text-sm font-medium flex items-center gap-2 border border-white/10 shadow-lg">
+                <i data-lucide="eye-off" class="w-4 h-4"></i>
+                <span id="toggleWidgetsText">隱藏設定區</span>
+            </button>
+
+            <!-- 控制按鈕組 -->
+            <button id="toggleAdminBtn"
+                class="px-4 py-2 bg-white/10 hover:bg-white/20 active:scale-95 transition rounded-lg text-sm font-medium flex items-center gap-2 border border-white/10 shadow-lg">
+                <i data-lucide="lock" class="w-4 h-4"></i>
+                <span>管理設定</span>
+            </button>
+
+            <button id="fullscreenBtn"
+                class="p-2 bg-white/10 hover:bg-white/20 active:scale-95 transition rounded-lg border border-white/10 shadow-lg"
+                title="切換全螢幕">
+                <i data-lucide="maximize" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ================= MARQUEE CONTAINER: TOP / BOTTOM ================= -->
+    <div id="marqueeTop" class="w-full relative z-10 hidden overflow-hidden select-none border-b border-black/10"></div>
+
+    <!-- ================= MAIN LAYOUT ================= -->
+    <main class="relative z-10 flex-1 w-full flex flex-col justify-center transition-all duration-500">
+
+        <!-- 中央主要網格容器 (可被隱藏，但 main 依然維持 flex-1 保持上下跑馬燈位置) -->
+        <div id="mainGrid"
+            class="w-full max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1 transition-all duration-500">
+
+            <!-- LEFT: 時鐘大心臟 (預設佔據 5 格，隱藏設定時佔滿 12 格) -->
+            <div id="clockContainer"
+                class="lg:col-span-5 flex flex-col gap-6 items-center justify-center bg-black/10 backdrop-blur-md p-8 rounded-2xl border border-white/5 shadow-2xl w-full h-full min-h-[420px] transition-all duration-500">
+
+                <!-- 指針型時鐘 -->
+                <div class="relative flex items-center justify-center">
+                    <svg id="clockSvg"
+                        class="w-48 h-48 md:w-56 md:h-56 transition-all duration-300 transform -rotate-90"
+                        viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="1.5"
+                            class="opacity-10"></circle>
+                        <!-- 鐘面刻度 -->
+                        <g id="clockTicks" stroke="currentColor" stroke-width="1" class="opacity-40"></g>
+                        <!-- 指針 -->
+                        <line id="hourHand" x1="50" y1="50" x2="68" y2="50" stroke="currentColor" stroke-width="3"
+                            stroke-linecap="round"></line>
+                        <line id="minuteHand" x1="50" y1="50" x2="78" y2="50" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round"></line>
+                        <line id="secondHand" x1="50" y1="50" x2="84" y2="50" stroke="#EF4444" stroke-width="1"
+                            stroke-linecap="round"></line>
+                        <circle cx="50" cy="50" r="2.5" fill="#EF4444"></circle>
+                    </svg>
+                </div>
+
+                <!-- 數字型時鐘 -->
+                <div class="text-center">
+                    <div id="digitalClock"
+                        class="digital-font text-4xl md:text-5xl font-bold tracking-wider drop-shadow-md">00:00:00</div>
+                    <div id="clockPeriod" class="text-sm font-semibold opacity-80 mt-1 uppercase">AM</div>
+                    <div class="flex justify-center gap-2 mt-4">
+                        <button id="toggleFormatBtn"
+                            class="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-md text-xs transition border border-white/10">切換
+                            12H/24H</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: 效率小工具切換器 (預設佔據 7 格) -->
+            <div id="widgetContainer" class="lg:col-span-7 flex flex-col gap-4 w-full transition-all duration-500">
+                <!-- 標籤導覽列 -->
+                <div class="flex overflow-x-auto gap-2 bg-black/15 p-1.5 rounded-xl border border-white/5">
+                    <button onclick="switchWidget('alarm')"
+                        class="widget-tab-btn flex-1 min-w-[80px] py-2 px-3 rounded-lg flex flex-col items-center gap-1 transition text-sm font-semibold bg-white/10 text-white"
+                        id="tab-alarm">
+                        <i data-lucide="bell" class="w-4 h-4"></i>
+                        <span>鬧鐘</span>
+                    </button>
+                    <button onclick="switchWidget('timer')"
+                        class="widget-tab-btn flex-1 min-w-[80px] py-2 px-3 rounded-lg flex flex-col items-center gap-1 transition text-sm opacity-60 hover:opacity-100"
+                        id="tab-timer">
+                        <i data-lucide="hourglass" class="w-4 h-4"></i>
+                        <span>計時器</span>
+                    </button>
+                    <button onclick="switchWidget('stopwatch')"
+                        class="widget-tab-btn flex-1 min-w-[80px] py-2 px-3 rounded-lg flex flex-col items-center gap-1 transition text-sm opacity-60 hover:opacity-100"
+                        id="tab-stopwatch">
+                        <i data-lucide="timer" class="w-4 h-4"></i>
+                        <span>碼表</span>
+                    </button>
+                    <button onclick="switchWidget('pomodoro')"
+                        class="widget-tab-btn flex-1 min-w-[80px] py-2 px-3 rounded-lg flex flex-col items-center gap-1 transition text-sm opacity-60 hover:opacity-100"
+                        id="tab-pomodoro">
+                        <i data-lucide="brain" class="w-4 h-4"></i>
+                        <span>番茄鐘</span>
+                    </button>
+                </div>
+
+                <!-- 鬧鐘模組 -->
+                <section id="widget-alarm-panel"
+                    class="widget-panel bg-black/10 backdrop-blur-md p-6 rounded-2xl border border-white/5 shadow-lg min-h-[300px]">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold flex items-center gap-2">
+                            <i data-lucide="bell" class="w-5 h-5 text-amber-400"></i> 多點鬧鐘管理
+                        </h2>
+                        <button onclick="openAddAlarmModal()"
+                            class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm flex items-center gap-1.5 active:scale-95 transition shadow-md">
+                            <i data-lucide="plus" class="w-4 h-4"></i> 新增鬧鐘
+                        </button>
+                    </div>
+                    <div id="alarmList" class="space-y-3 max-h-[220px] overflow-y-auto pr-1">
+                        <!-- 鬧鐘列表由 JS 動態生成 -->
+                        <div class="text-center py-8 opacity-40 text-sm">無設定中鬧鐘</div>
+                    </div>
+                </section>
+
+                <!-- 計時器模組 -->
+                <section id="widget-timer-panel"
+                    class="widget-panel bg-black/10 backdrop-blur-md p-6 rounded-2xl border border-white/5 shadow-lg min-h-[300px] hidden">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i data-lucide="hourglass" class="w-5 h-5 text-sky-400"></i>
+                        <h2 class="text-lg font-bold">倒數計時器</h2>
+                    </div>
+
+                    <!-- 計時器主顯示與環 -->
+                    <div class="flex flex-col md:flex-row items-center gap-6 justify-around">
+                        <div class="relative w-36 h-36 flex items-center justify-center">
+                            <svg class="w-full h-full transform -rotate-90 absolute" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="4"
+                                    class="opacity-10"></circle>
+                                <circle id="timerProgressRing" cx="50" cy="50" r="45" fill="none" stroke="#38BDF8"
+                                    stroke-width="4" stroke-dasharray="283" stroke-dashoffset="0" stroke-linecap="round"
+                                    class="transition-all duration-300"></circle>
+                            </svg>
+                            <div id="timerDisplay" class="digital-font text-3xl font-bold tracking-widest z-10">00:00:00
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-4 w-full md:w-auto">
+                            <!-- 快速設定按鈕 -->
+                            <div class="grid grid-cols-4 gap-2">
+                                <button onclick="setTimerPreset(60)"
+                                    class="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-xs">1分</button>
+                                <button onclick="setTimerPreset(180)"
+                                    class="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-xs">3分</button>
+                                <button onclick="setTimerPreset(300)"
+                                    class="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-xs">5分</button>
+                                <button onclick="setTimerPreset(600)"
+                                    class="px-2 py-1 bg-white/10 hover:bg-white/20 rounded text-xs">10分</button>
+                            </div>
+                            <!-- 自訂時間輸入 -->
+                            <div class="flex gap-2 items-center justify-center">
+                                <input type="number" id="timerHr" min="0" max="23" placeholder="時"
+                                    class="w-12 py-1 text-center rounded bg-white/10 text-white placeholder-white/30 text-sm">
+                                <span class="text-xs">:</span>
+                                <input type="number" id="timerMin" min="0" max="59" placeholder="分"
+                                    class="w-12 py-1 text-center rounded bg-white/10 text-white placeholder-white/30 text-sm">
+                                <span class="text-xs">:</span>
+                                <input type="number" id="timerSec" min="0" max="59" placeholder="秒"
+                                    class="w-12 py-1 text-center rounded bg-white/10 text-white placeholder-white/30 text-sm">
+                            </div>
+                            <!-- 計時器控制鍵 -->
+                            <div class="flex gap-3">
+                                <button id="timerPlayBtn"
+                                    class="flex-1 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-semibold transition active:scale-95">開始</button>
+                                <button id="timerPauseBtn"
+                                    class="flex-1 py-1.5 bg-amber-600 hover:bg-amber-500 rounded-lg text-sm font-semibold transition active:scale-95 hidden">暫停</button>
+                                <button id="timerResetBtn"
+                                    class="flex-1 py-1.5 bg-rose-600/40 hover:bg-rose-600 text-rose-200 rounded-lg text-sm font-semibold transition active:scale-95">重設</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 碼表模組 -->
+                <section id="widget-stopwatch-panel"
+                    class="widget-panel bg-black/10 backdrop-blur-md p-6 rounded-2xl border border-white/5 shadow-lg min-h-[300px] hidden">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i data-lucide="timer" class="w-5 h-5 text-emerald-400"></i>
+                        <h2 class="text-lg font-bold">精準碼表</h2>
+                    </div>
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <div class="flex-1 flex flex-col items-center justify-center gap-4">
+                            <div id="stopwatchDisplay"
+                                class="digital-font text-4xl md:text-5xl font-bold tracking-wider">00:00:00.00</div>
+                            <div class="flex gap-2 w-full max-w-[280px]">
+                                <button id="swStartBtn"
+                                    class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-semibold transition active:scale-95">啟動</button>
+                                <button id="swStopBtn"
+                                    class="flex-1 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-sm font-semibold transition active:scale-95 hidden">停止</button>
+                                <button id="swLapBtn"
+                                    class="flex-1 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold transition active:scale-95 disabled:opacity-50"
+                                    disabled>分段</button>
+                                <button id="swResetBtn"
+                                    class="flex-1 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm font-semibold transition active:scale-95">重設</button>
+                            </div>
+                        </div>
+                        <!-- 分段清單 -->
+                        <div class="flex-1 border-t md:border-t-0 md:border-l border-white/10 pt-4 md:pt-0 md:pl-4">
+                            <h3 class="text-xs font-semibold opacity-60 mb-2 uppercase tracking-widest">分段紀錄 (Lap)</h3>
+                            <div id="swLapList" class="space-y-1.5 max-h-[140px] overflow-y-auto pr-1">
+                                <div class="text-xs opacity-40 text-center py-4">無分段紀錄</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 番茄鐘模組 -->
+                <section id="widget-pomodoro-panel"
+                    class="widget-panel bg-black/10 backdrop-blur-md p-6 rounded-2xl border border-white/5 shadow-lg min-h-[300px] hidden">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-bold flex items-center gap-2">
+                            <i data-lucide="brain" class="w-5 h-5 text-rose-400"></i> 番茄鐘
+                        </h2>
+                        <span id="pomoState"
+                            class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                            專注時間
+                        </span>
+                    </div>
+                    <div class="flex flex-col md:flex-row items-center gap-6 justify-around">
+                        <div class="relative w-36 h-36 flex items-center justify-center">
+                            <svg class="w-full h-full transform -rotate-90 absolute" viewBox="0 0 100 100">
+                                <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="4"
+                                    class="opacity-10"></circle>
+                                <circle id="pomoProgressRing" cx="50" cy="50" r="45" fill="none" stroke="#F43F5E"
+                                    stroke-width="4" stroke-dasharray="283" stroke-dashoffset="0" stroke-linecap="round"
+                                    class="transition-all duration-300"></circle>
+                            </svg>
+                            <div class="flex flex-col items-center z-10">
+                                <div id="pomoDisplay" class="digital-font text-3xl font-bold tracking-widest">25:00
+                                </div>
+                                <span id="pomoRound" class="text-[10px] opacity-60 mt-1">回合 1/4</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-col gap-3 w-full md:w-auto">
+                            <!-- 設定細節 -->
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label class="block text-[10px] opacity-60 mb-1">工作 (分)</label>
+                                    <input type="number" id="pomoWorkDur" value="25" min="1"
+                                        class="w-full p-1 text-center bg-white/10 rounded text-sm text-white border border-white/5">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] opacity-60 mb-1">短暫休息</label>
+                                    <input type="number" id="pomoBreakDur" value="5" min="1"
+                                        class="w-full p-1 text-center bg-white/10 rounded text-sm text-white border border-white/5">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] opacity-60 mb-1">長期休息</label>
+                                    <input type="number" id="pomoLongDur" value="15" min="1"
+                                        class="w-full p-1 text-center bg-white/10 rounded text-sm text-white border border-white/5">
+                                </div>
+                            </div>
+                            <!-- 番茄鐘控制鍵 -->
+                            <div class="flex gap-3 mt-1">
+                                <button id="pomoPlayBtn"
+                                    class="flex-1 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-sm font-semibold transition active:scale-95">開始專注</button>
+                                <button id="pomoPauseBtn"
+                                    class="flex-1 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-sm font-semibold transition active:scale-95 hidden">暫停</button>
+                                <button id="pomoResetBtn"
+                                    class="flex-1 py-1.5 bg-gray-600 hover:bg-gray-500 text-white rounded-lg text-sm font-semibold transition active:scale-95">重置</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <!-- ================= MARQUEE CONTAINER: BOTTOM ================= -->
+    <div id="marqueeBottom" class="w-full relative z-10 hidden overflow-hidden select-none border-t border-black/10">
+    </div>
+
+    <!-- 側邊垂直跑馬燈掛載點 -->
+    <div id="marqueeLeft"
+        class="fixed left-0 top-16 bottom-16 w-12 z-10 hidden flex-col items-center justify-center overflow-hidden pointer-events-none border-r border-black/10 bg-black/5">
+    </div>
+    <div id="marqueeRight"
+        class="fixed right-0 top-16 bottom-16 w-12 z-10 hidden flex-col items-center justify-center overflow-hidden pointer-events-none border-l border-black/10 bg-black/5">
+    </div>
+
+    <!-- ================= FOOTER / SIGNATURE ================= -->
+    <footer
+        class="relative z-10 w-full text-center py-4 bg-black/20 text-xs opacity-50 flex justify-center items-center gap-4">
+        <span>© Classroom Manager. Powered by IndexedDB</span>
+        <span class="text-white/20">|</span>
+        <span>離線合成音響引擎運作中</span>
+    </footer>
+
+    <!-- ================= 管理者密碼模組 (MODAL) ================= -->
+    <div id="passwordModal"
+        class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="bg-slate-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i data-lucide="shield-check" class="text-amber-400"></i> 管理者登入
+                </h3>
+                <button onclick="closePasswordModal()" class="text-gray-400 hover:text-white transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">請輸入 management 密碼 (預設為 1234)</label>
+                    <input type="password" id="adminPasswordInput"
+                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-amber-500 transition"
+                        placeholder="請輸入密碼">
+                </div>
+                <div id="passwordError" class="text-xs text-rose-400 hidden">密碼錯誤，請再試一次</div>
+                <button onclick="submitPassword()"
+                    class="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg transition active:scale-95 shadow-md">驗證密碼</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 鬧鐘新增/修改模組 (MODAL) ================= -->
+    <div id="alarmModal"
+        class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 hidden">
+        <div class="bg-slate-900 border border-white/10 rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl text-white">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="alarmModalTitle" class="text-lg font-bold flex items-center gap-2">
+                    <i data-lucide="bell-ring" class="text-emerald-400"></i> 設定新鬧鐘
+                </h3>
+                <button onclick="closeAlarmModal()" class="text-gray-400 hover:text-white transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">選擇時間</label>
+                    <input type="time" id="alarmTime"
+                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-lg focus:outline-none focus:border-emerald-500 transition">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">重複週期 (未勾選代表只響單次)</label>
+                    <div class="flex justify-between gap-1 mt-1">
+                        <button type="button" onclick="toggleAlarmDay(1)" id="alarmDay-1"
+                            class="alarm-day-btn w-8 h-8 rounded-full border border-white/10 bg-white/5 text-xs font-semibold flex items-center justify-center transition hover:bg-white/10">一</button>
+                        <button type="button" onclick="toggleAlarmDay(2)" id="alarmDay-2"
+                            class="alarm-day-btn w-8 h-8 rounded-full border border-white/10 bg-white/5 text-xs font-semibold flex items-center justify-center transition hover:bg-white/10">二</button>
+                        <button type="button" onclick="toggleAlarmDay(3)" id="alarmDay-3"
+                            class="alarm-day-btn w-8 h-8 rounded-full border border-white/10 bg-white/5 text-xs font-semibold flex items-center justify-center transition hover:bg-white/10">三</button>
+                        <button type="button" onclick="toggleAlarmDay(4)" id="alarmDay-4"
+                            class="alarm-day-btn w-8 h-8 rounded-full border border-white/10 bg-white/5 text-xs font-semibold flex items-center justify-center transition hover:bg-white/10">四</button>
+                        <button type="button" onclick="toggleAlarmDay(5)" id="alarmDay-5"
+                            class="alarm-day-btn w-8 h-8 rounded-full border border-white/10 bg-white/5 text-xs font-semibold flex items-center justify-center transition hover:bg-white/10">五</button>
+                        <button type="button" onclick="toggleAlarmDay(6)" id="alarmDay-6"
+                            class="alarm-day-btn w-8 h-8 rounded-full border border-white/10 bg-white/5 text-xs font-semibold flex items-center justify-center transition hover:bg-white/10">六</button>
+                        <button type="button" onclick="toggleAlarmDay(0)" id="alarmDay-0"
+                            class="alarm-day-btn w-8 h-8 rounded-full border border-white/10 bg-white/5 text-xs font-semibold flex items-center justify-center transition hover:bg-white/10">日</button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">鬧鐘備註 (例: 第一節上課)</label>
+                    <input type="text" id="alarmMemo"
+                        class="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500 transition"
+                        placeholder="無備註">
+                </div>
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">鈴聲音效</label>
+                    <select id="alarmRingtone"
+                        class="w-full px-4 py-2 bg-slate-800 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500">
+                        <option value="chime">優雅班級和弦 (推薦)</option>
+                        <option value="beep">懷舊電子滴滴</option>
+                        <option value="siren">高頻急促警報</option>
+                    </select>
+                </div>
+                <button id="saveAlarmBtn" onclick="saveAlarm()"
+                    class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition active:scale-95 shadow-md">儲存鬧鐘設定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 鬧鐘響起全螢幕警戒模組 ================= -->
+    <div id="alarmAlertModal"
+        class="fixed inset-0 bg-rose-950/95 backdrop-blur-md flex flex-col items-center justify-center z-50 hidden select-none">
+        <div class="text-center space-y-6 max-w-lg px-6">
+            <div
+                class="w-24 h-24 bg-rose-600/30 border border-rose-500/50 rounded-full flex items-center justify-center mx-auto animate-bounce">
+                <i data-lucide="bell" class="w-12 h-12 text-rose-400 animate-pulse"></i>
+            </div>
+            <h2 id="alertTimeText" class="digital-font text-5xl font-black text-white">00:00</h2>
+            <div class="space-y-2">
+                <p class="text-rose-300 font-medium text-lg">【鬧鐘提醒時間】</p>
+                <p id="alertMemoText"
+                    class="text-white text-2xl font-bold bg-white/5 py-3 px-6 rounded-xl border border-white/10">備註事項...
+                </p>
+            </div>
+            <div class="flex gap-4">
+                <button onclick="dismissAlarm()"
+                    class="px-8 py-3 bg-white text-rose-950 font-extrabold text-lg rounded-xl active:scale-95 transition shadow-2xl">關閉鬧鈴</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= 管理者控制台面板 (底抽屜 / 彈窗模式) ================= -->
+    <div id="adminPanel"
+        class="fixed inset-y-0 right-0 w-full max-w-lg bg-slate-900 border-l border-white/10 shadow-2xl z-40 transform translate-x-full transition-transform duration-300 flex flex-col text-white">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center bg-slate-950">
+            <h2 class="text-lg font-bold flex items-center gap-2 text-amber-400">
+                <i data-lucide="settings-2"></i> 管理者控制中心
+            </h2>
+            <button onclick="closeAdminPanel()" class="p-1.5 hover:bg-white/10 rounded-lg transition">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <!-- 控制台分頁 -->
+        <div class="flex border-b border-white/10 bg-slate-950 text-xs">
+            <button onclick="switchAdminTab('marquee')"
+                class="admin-tab-btn flex-1 py-3 text-center border-b-2 border-amber-500 font-bold text-amber-400"
+                id="adminTab-marquee">跑馬燈</button>
+            <button onclick="switchAdminTab('display')"
+                class="admin-tab-btn flex-1 py-3 text-center border-b-2 border-transparent opacity-60 hover:opacity-100"
+                id="adminTab-display">顯示設定</button>
+            <button onclick="switchAdminTab('security')"
+                class="admin-tab-btn flex-1 py-3 text-center border-b-2 border-transparent opacity-60 hover:opacity-100"
+                id="adminTab-security">安全機制</button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6 space-y-6">
+
+            <!-- TAB 1: 跑馬燈排程管理 -->
+            <section id="adminSec-marquee" class="admin-section space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-amber-300">班級跑馬燈內容設定</h3>
+                    <button onclick="toggleMarqueeVisibilityGlobal()" id="globalMarqueeToggle"
+                        class="px-3 py-1 bg-rose-600/20 text-rose-300 hover:bg-rose-600/40 rounded text-xs border border-rose-500/30">
+                        全部隱藏
+                    </button>
+                </div>
+
+                <!-- 跑馬燈新增/編輯器 -->
+                <div class="bg-white/5 border border-white/10 rounded-xl p-4 space-y-3">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">跑馬燈文字</label>
+                        <input type="text" id="mqTextInput"
+                            class="w-full px-3 py-1.5 bg-slate-800 border border-white/10 rounded text-sm text-white"
+                            placeholder="請輸入欲播放的跑馬燈內容">
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">開始時間</label>
+                            <input type="time" id="mqStartInput"
+                                class="w-full px-3 py-1.5 bg-slate-800 border border-white/10 rounded text-xs text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">結束時間</label>
+                            <input type="time" id="mqEndInput"
+                                class="w-full px-3 py-1.5 bg-slate-800 border border-white/10 rounded text-xs text-white">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">字型大小 (px)</label>
+                            <input type="number" id="mqSizeInput" value="24" min="12" max="72"
+                                class="w-full px-3 py-1.5 bg-slate-800 border border-white/10 rounded text-xs text-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">輪播間隔 (秒)</label>
+                            <input type="number" id="mqIntervalInput" value="15" min="5"
+                                class="w-full px-3 py-1.5 bg-slate-800 border border-white/10 rounded text-xs text-white"
+                                title="若多筆時滾動多久切換下一個">
+                        </div>
+                    </div>
+
+                    <!-- 預設色彩組合 -->
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">推薦色彩組合</label>
+                        <div class="grid grid-cols-4 gap-1.5">
+                            <button onclick="setMqColorPreset('#FFFF00', '#000000')"
+                                class="px-1 py-1 text-[10px] bg-black text-yellow-300 rounded border border-white/10">醒目黃黑</button>
+                            <button onclick="setMqColorPreset('#FFFFFF', '#DC2626')"
+                                class="px-1 py-1 text-[10px] bg-red-600 text-white rounded border border-white/10">緊急紅底</button>
+                            <button onclick="setMqColorPreset('#10B981', '#061C14')"
+                                class="px-1 py-1 text-[10px] bg-emerald-950 text-emerald-400 rounded border border-white/10">森林幽綠</button>
+                            <button onclick="setMqColorPreset('#38BDF8', '#082F49')"
+                                class="px-1 py-1 text-[10px] bg-sky-950 text-sky-400 rounded border border-white/10">高科技藍</button>
+                        </div>
+                    </div>
+
+                    <!-- 自訂顏色 -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">文字顏色</label>
+                            <input type="color" id="mqColorInput" value="#FFFF00"
+                                class="w-full h-8 bg-transparent cursor-pointer rounded">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-gray-400 mb-1">背景顏色</label>
+                            <input type="color" id="mqBgColorInput" value="#000000"
+                                class="w-full h-8 bg-transparent cursor-pointer rounded">
+                        </div>
+                    </div>
+
+                    <!-- 跑馬燈背景透明度設定 -->
+                    <div class="space-y-1">
+                        <div class="flex justify-between items-center text-xs">
+                            <span class="text-gray-400">跑馬燈背景透明度</span>
+                            <span id="mqBgOpacityVal" class="text-amber-400">100%</span>
+                        </div>
+                        <input type="range" id="mqBgOpacityInput" min="0" max="100" value="100"
+                            class="w-full accent-amber-500"
+                            oninput="document.getElementById('mqBgOpacityVal').innerText = this.value + '%'">
+                    </div>
+
+                    <!-- 播放位置 (複選) -->
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1.5">播放方位 (可複選)</label>
+                        <div class="flex flex-wrap gap-4 text-xs">
+                            <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" id="mqPosTop"
+                                    class="accent-amber-500" checked> 上</label>
+                            <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox"
+                                    id="mqPosBottom" class="accent-amber-500"> 下</label>
+                            <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox"
+                                    id="mqPosLeft" class="accent-amber-500"> 左</label>
+                            <label class="flex items-center gap-1.5 cursor-pointer"><input type="checkbox"
+                                    id="mqPosRight" class="accent-amber-500"> 右</label>
+                        </div>
+                    </div>
+
+                    <!-- 新增/更新按鈕控制 -->
+                    <div class="flex gap-2">
+                        <button id="addMqBtn" onclick="addMarquee()"
+                            class="flex-1 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-sm transition active:scale-95 shadow-md">新增跑馬燈項目</button>
+                        <button id="cancelMqEditBtn" onclick="cancelMarqueeEdit()"
+                            class="py-2 px-3 bg-gray-600 hover:bg-gray-500 text-white rounded text-sm transition active:scale-95 hidden">取消</button>
+                    </div>
+                </div>
+
+                <!-- 跑馬燈列表 -->
+                <div class="space-y-2">
+                    <h4 class="text-xs font-semibold text-gray-400">已存跑馬燈庫</h4>
+                    <div id="adminMarqueeList" class="space-y-2 max-h-[180px] overflow-y-auto pr-1">
+                        <!-- JS 載入 -->
+                        <div class="text-xs opacity-40 py-4 text-center">無登錄跑馬燈項目</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: 全局與多媒體顯示設定 -->
+            <section id="adminSec-display" class="admin-section space-y-4 hidden">
+                <div>
+                    <h3 class="text-sm font-bold text-amber-300 mb-3">主題底色 presets</h3>
+                    <div class="grid grid-cols-3 gap-3">
+                        <button onclick="changeTheme('darkgreen')"
+                            class="py-2.5 rounded-lg bg-[#1E3F20] border border-white/20 text-[#F5EBE0] font-bold text-xs hover:border-[#F5EBE0] transition">深沉墨綠</button>
+                        <button onclick="changeTheme('white')"
+                            class="py-2.5 rounded-lg bg-zinc-50 border border-zinc-300 text-zinc-900 font-bold text-xs hover:border-zinc-500 transition shadow-sm">高潔素白</button>
+                        <button onclick="changeTheme('lightbrown')"
+                            class="py-2.5 rounded-lg bg-[#F5EBE0] border border-[#D5C6B1] text-[#3D2B1F] font-bold text-xs hover:border-[#3D2B1F] transition">溫潤淺棕</button>
+                    </div>
+                </div>
+
+                <!-- 線上媒體背景設定 -->
+                <div class="space-y-3">
+                    <h3 class="text-sm font-bold text-amber-300">線上多媒體背景</h3>
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">背景圖片 / 影片 / Youtube網址</label>
+                        <input type="text" id="bgMediaUrl"
+                            class="w-full px-3 py-1.5 bg-slate-800 border border-white/10 rounded text-xs text-white"
+                            placeholder="URL 或 Youtube 連結(支援自動轉Embed)" onchange="updateBgMedia()">
+                        <p class="text-[10px] text-gray-500 mt-1">範例：支援直接貼入網路圖片、MP4 直連或 Youtube 播放網址。</p>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center text-xs mb-1">
+                            <span class="text-gray-400">背景多媒體透明度</span>
+                            <span id="bgOpacityVal" class="text-amber-400">20%</span>
+                        </div>
+                        <input type="range" id="bgOpacitySlider" min="0" max="100" value="20"
+                            class="w-full accent-amber-500" oninput="changeBgOpacity(this.value)">
+                    </div>
+                </div>
+
+                <!-- 背景影片與音效開關 -->
+                <div class="space-y-3 border-t border-white/10 pt-4">
+                    <h3 class="text-sm font-bold text-amber-300">背景影片播放與音效控制</h3>
+                    <div class="flex items-center justify-between bg-white/5 p-3 rounded-lg border border-white/10">
+                        <div>
+                            <span class="text-xs font-semibold block">播放背景影片</span>
+                            <span class="text-[10px] text-gray-400">開啟或暫停背景影片（含 YouTube 與本機影片）</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="bgVideoPlayToggle" class="sr-only peer" checked
+                                onchange="toggleBgVideoPlay(this.checked)">
+                            <div
+                                class="w-9 h-5 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500">
+                            </div>
+                        </label>
+                    </div>
+                    <div class="flex items-center justify-between bg-white/5 p-3 rounded-lg border border-white/10">
+                        <div>
+                            <span class="text-xs font-semibold block">播放背景影片聲音</span>
+                            <span class="text-[10px] text-gray-400">開啟後將播放背景影片（含 YouTube 與本機影片）的原聲</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="bgVideoSoundToggle" class="sr-only peer"
+                                onchange="toggleBgVideoSound(this.checked)">
+                            <div
+                                class="w-9 h-5 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500">
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 本地多媒體匯入（專利離線核心） -->
+                <div class="space-y-3 border-t border-white/10 pt-4">
+                    <h3 class="text-sm font-bold text-amber-300">本機多媒體匯入 (完全離線可用)</h3>
+
+                    <!-- 本地背景匯入 -->
+                    <div class="bg-white/5 p-4 rounded-xl border border-white/10 space-y-3">
+                        <h4 class="text-xs font-semibold text-white flex items-center gap-1.5">
+                            <i data-lucide="image" class="w-4 h-4 text-amber-400"></i> 本地端背景檔案 (圖片/影片)
+                        </h4>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="document.getElementById('localBgInput').click()"
+                                class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded text-xs flex items-center gap-1 border border-white/10">
+                                <i data-lucide="upload" class="w-3.5 h-3.5"></i> 選擇本機媒體檔
+                            </button>
+                            <button onclick="clearLocalBg()"
+                                class="px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900 text-rose-300 rounded text-xs border border-rose-500/20">
+                                清除本地背景
+                            </button>
+                        </div>
+                        <input type="file" id="localBgInput" accept="image/*,video/*" class="hidden"
+                            onchange="handleLocalBgUpload(this)">
+                        <div id="localBgInfo" class="text-[10px] text-gray-500 truncate">目前使用: 系統預設/線上 URL 背景</div>
+                    </div>
+
+                    <!-- 本地背景音樂匯入 -->
+                    <div class="bg-white/5 p-4 rounded-xl border border-white/10 space-y-3">
+                        <h4 class="text-xs font-semibold text-white flex items-center gap-1.5">
+                            <i data-lucide="music-2" class="w-4 h-4 text-amber-400"></i> 本地端背景音樂 (BGM)
+                        </h4>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="document.getElementById('localBgmInput').click()"
+                                class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded text-xs flex items-center gap-1 border border-white/10">
+                                <i data-lucide="upload" class="w-3.5 h-3.5"></i> 選擇本機 BGM
+                            </button>
+                            <button onclick="clearLocalBgm()"
+                                class="px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900 text-rose-300 rounded text-xs border border-rose-500/20">
+                                清除 BGM
+                            </button>
+                        </div>
+                        <input type="file" id="localBgmInput" accept="audio/*" class="hidden"
+                            onchange="handleLocalBgmUpload(this)">
+                        <div id="localBgmInfo" class="text-[10px] text-gray-500 truncate">目前使用: 無背景音樂</div>
+                    </div>
+
+                    <!-- 本地鈴聲匯入 -->
+                    <div class="bg-white/5 p-4 rounded-xl border border-white/10 space-y-3">
+                        <h4 class="text-xs font-semibold text-white flex items-center gap-1.5">
+                            <i data-lucide="music" class="w-4 h-4 text-amber-400"></i> 本地端自訂鬧鐘鈴聲 (音樂檔)
+                        </h4>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="document.getElementById('localRingtoneInput').click()"
+                                class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded text-xs flex items-center gap-1 border border-white/10">
+                                <i data-lucide="upload" class="w-3.5 h-3.5"></i> 選擇本機音樂檔
+                            </button>
+                            <button onclick="clearLocalRingtone()"
+                                class="px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900 text-rose-300 rounded text-xs border border-rose-500/20">
+                                清除自訂鈴聲
+                            </button>
+                        </div>
+                        <input type="file" id="localRingtoneInput" accept="audio/*" class="hidden"
+                            onchange="handleLocalRingtoneUpload(this)">
+                        <div id="localRingtoneInfo" class="text-[10px] text-gray-500 truncate">目前使用: 預設系統合成音</div>
+                    </div>
+                </div>
+
+                <div class="space-y-3 border-t border-white/10 pt-4">
+                    <h3 class="text-sm font-bold text-amber-300">頂部狀態與日期顯示</h3>
+                    <div class="flex items-center justify-between bg-white/5 p-3 rounded-lg border border-white/10">
+                        <div>
+                            <span class="text-xs font-semibold block">顯示今日日期(含星期)</span>
+                            <span class="text-[10px] text-gray-400">開啟後將於上方顯示今日詳細資訊</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="showDateToggle" class="sr-only peer" checked
+                                onchange="toggleDateDisplay(this.checked)">
+                            <div
+                                class="w-9 h-5 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500">
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: 安全密碼修改 -->
+            <section id="adminSec-security" class="admin-section space-y-4 hidden">
+                <div>
+                    <h3 class="text-sm font-bold text-amber-300 mb-2">安全防護</h3>
+                    <p class="text-xs text-gray-400 leading-relaxed mb-4">
+                        您可以自行更變管理員密碼，確保一般學生無法隨意進入控制中心更動班級鬧鐘或跑馬燈。一旦遺失密碼，可重新清除瀏覽器快取重設系統。</p>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">新設定密碼</label>
+                        <input type="password" id="newPassword"
+                            class="w-full px-3 py-1.5 bg-slate-800 border border-white/10 rounded text-sm text-white"
+                            placeholder="請輸入新設定的純數字或英數密碼">
+                    </div>
+                    <button onclick="changeAdminPassword()"
+                        class="w-full py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded text-sm transition active:scale-95 shadow-md">確認修改管理者密碼</button>
+                </div>
+            </section>
+
+        </div>
+
+        <!-- 鎖定回一般模式 -->
+        <div class="p-6 border-t border-white/10 bg-slate-950 text-center">
+            <button onclick="lockAdminConsole()"
+                class="w-full py-2 bg-gray-700 hover:bg-gray-600 rounded text-xs font-bold transition active:scale-95 text-white flex items-center justify-center gap-1.5">
+                <i data-lucide="lock" class="w-4 h-4"></i> 鎖定系統並退回一般模式
+            </button>
+        </div>
+    </div>
+
+    <!-- 全局精美彈跳通知 Toast 引擎 -->
+    <div id="toastContainer" class="fixed top-20 right-6 z-50 pointer-events-none space-y-2"></div>
+
+    <!-- ==============================================
+       JAVASCRIPT: ALL IN ONE CLIENT SIDE LOGIC
+       ============================================== -->
+    <script>
+        // ================= GLOBAL CONFIGS & STORES =================
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'classroom-time-mgr';
+        let isAdminUnlocked = false;
+        let currentTheme = 'darkgreen';
+        let clockFormat24H = true;
+        let widgetsVisible = true; // 小工具面板顯示狀態
+        let clockMinimized = false; // 時鐘縮小至左上角狀態
+        let editingMarqueeId = null; // 當前正在編輯的跑馬燈 ID
+        let editingAlarmId = null; // 當前正在編輯的鬧鐘 ID
+        let tempAlarmDays = []; // 暫存鬧鐘選取的星期重複天數
+        let bgMusicPlaying = false; // 背景音樂播放狀態
+        let bgVideoPlaySound = false; // 背景影片播放聲音
+        let bgVideoPlaying = true; // 背景影片播放狀態
+
+        // 時鐘、計時器、碼表、番茄鐘等工作變數
+        let systemClockInterval = null;
+        let countdownTimer = null;
+        let stopwatchTimer = null;
+        let pomodoroTimer = null;
+
+        // 碼表變數
+        let swStartTime = 0;
+        let swElapsedTime = 0;
+        let swLaps = [];
+
+        // 計時器變數
+        let timerTotalSec = 0;
+        let timerRemainingSec = 0;
+
+        // 番茄鐘變數
+        let pomoState = 'work'; // work, short_break, long_break
+        let pomoCycle = 1;
+        let pomoRemainingSec = 1500; // 25 min default
+
+        // IndexedDB 精美包裝封裝
+        let db = null;
+        const DB_NAME = 'ClassroomTimeMgmtDB';
+        const DB_VER = 1;
+
+        // Web Audio 合成器引擎
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // 播放音效主路由 (包含本地 Blob 或系統合成音)
+        async function playSound(type) {
+            const audioPlayer = document.getElementById('ringtoneAudio');
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
+
+            if (type === 'local') {
+                const blob = await dbGet('settings', 'localRingtoneBlob');
+                if (blob) {
+                    const url = URL.createObjectURL(blob);
+                    audioPlayer.src = url;
+                    audioPlayer.loop = true; // 鬧鐘鈴聲無限循環
+                    audioPlayer.play().catch(e => {
+                        console.warn("自動播放本地音訊失敗，切換為系統合成音:", e);
+                        playSynthesizedSound('chime');
+                    });
+                } else {
+                    playSynthesizedSound('chime');
+                }
+            } else {
+                playSynthesizedSound(type);
+            }
+        }
+
+        // 播放離線生成樂音
+        function playSynthesizedSound(type) {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+
+                if (type === 'chime') {
+                    // 優雅和弦
+                    const freqs = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                    freqs.forEach((f, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(f, now + idx * 0.15);
+                        gain.gain.setValueAtTime(0, now + idx * 0.15);
+                        gain.gain.linearRampToValueAtTime(0.25, now + idx * 0.15 + 0.05);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.15 + 1.8);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + idx * 0.15);
+                        osc.stop(now + idx * 0.15 + 2);
+                    });
+                } else if (type === 'beep') {
+                    // 經典電子滴滴聲
+                    [0, 0.2, 0.4].forEach(delay => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(1000, now + delay);
+                        gain.gain.setValueAtTime(0, now + delay);
+                        gain.gain.linearRampToValueAtTime(0.15, now + delay + 0.02);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.15);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + delay);
+                        osc.stop(now + delay + 0.2);
+                    });
+                } else if (type === 'siren') {
+                    // 急促警報聲
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.linearRampToValueAtTime(800, now + 0.5);
+                    osc.frequency.linearRampToValueAtTime(400, now + 1.0);
+                    osc.frequency.linearRampToValueAtTime(800, now + 1.5);
+                    osc.frequency.linearRampToValueAtTime(400, now + 2.0);
+
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.2, now + 1.8);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 2.0);
+                }
+            } catch (err) {
+                console.warn("無法開啟音訊合成：", err);
+            }
+        }
+
+        // 十六進制顏色代碼轉 RGBA 字串工具
+        function hexToRgba(hex, opacity) {
+            if (!hex) return 'rgba(0,0,0,1)';
+            hex = hex.replace('#', '');
+            if (hex.length === 3) {
+                hex = hex.split('').map(char => char + char).join('');
+            }
+            const r = parseInt(hex.substring(0, 2), 16) || 0;
+            const g = parseInt(hex.substring(2, 4), 16) || 0;
+            const b = parseInt(hex.substring(4, 6), 16) || 0;
+            const a = (opacity !== undefined ? opacity : 100) / 100;
+            return `rgba(${r}, ${g}, ${b}, ${a})`;
+        }
+
+        // 初始化資料庫
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VER);
+                req.onupgradeneeded = (e) => {
+                    const d = e.target.result;
+                    if (!d.objectStoreNames.contains('settings')) {
+                        d.createObjectStore('settings');
+                    }
+                    if (!d.objectStoreNames.contains('marquees')) {
+                        d.createObjectStore('marquees', { keyPath: 'id', autoIncrement: true });
+                    }
+                    if (!d.objectStoreNames.contains('alarms')) {
+                        d.createObjectStore('alarms', { keyPath: 'id', autoIncrement: true });
+                    }
+                };
+                req.onsuccess = (e) => {
+                    db = e.target.result;
+                    resolve(db);
+                };
+                req.onerror = (e) => reject(e);
+            });
+        }
+
+        // IndexedDB 通用資料存取包裝
+        function dbGet(storeName, key) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readonly');
+                const store = tx.objectStore(storeName);
+                const request = store.get(key);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // 用於更新無內建 keyPath 的設定表
+        function dbSet(storeName, key, val) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                const request = store.put(val, key);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // 用於更新有內建 keyPath 屬性的主體資料 (避免 IndexedDB 的 DataError)
+        function dbUpdate(storeName, val) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                const request = store.put(val);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function dbGetAll(storeName) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readonly');
+                const store = tx.objectStore(storeName);
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function dbAdd(storeName, data) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                const request = store.add(data);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function dbDelete(storeName, id) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(storeName, 'readwrite');
+                const store = tx.objectStore(storeName);
+                const request = store.delete(id);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // ================= TOAST 通知系統 =================
+        function showToast(message, type = 'info') {
+            const colors = {
+                success: 'bg-emerald-600 border-emerald-400 text-white',
+                error: 'bg-rose-600 border-rose-400 text-white',
+                warning: 'bg-amber-600 border-amber-400 text-white',
+                info: 'bg-slate-800 border-slate-600 text-white'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg transform translate-y-2 opacity-0 transition-all duration-300 max-w-sm pointer-events-auto ${colors[type]}`;
+            toast.innerHTML = `
+        <span class="text-sm font-medium">${message}</span>
+      `;
+            document.getElementById('toastContainer').appendChild(toast);
+
+            // 動態淡入
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            // 自動移除
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // ================= INITIALIZATION & ONLOAD =================
+        window.onload = async function () {
+            // 載入 Lucide 圖標
+            lucide.createIcons();
+
+            try {
+                await initDB();
+                await loadSettings();
+                await initTimers();
+                startSystemClock();
+                await renderAllMarquees();
+                await renderAlarms();
+                renderClockTicks();
+                checkAndApplySecurityDefault();
+
+                // 綁定按鈕監聽
+                document.getElementById('toggleWidgetsBtn').addEventListener('click', toggleWidgetsVisibility);
+                document.getElementById('toggleMinimizeBtn').addEventListener('click', toggleClockMinimization);
+
+                // 綁定背景音樂開關
+                document.getElementById('toggleBgmBtn').addEventListener('click', toggleBgmPlayState);
+            } catch (err) {
+                console.error("系統初始化發生錯誤:", err);
+            }
+        };
+
+        // 檢查並寫入預設安全密碼
+        async function checkAndApplySecurityDefault() {
+            let pwd = await dbGet('settings', 'adminPassword');
+            if (!pwd) {
+                await dbSet('settings', 'adminPassword', '1234'); // 預設管理密碼
+            }
+        }
+
+        // 載入全局持久化設定
+        async function loadSettings() {
+            // 1. Theme
+            const theme = await dbGet('settings', 'theme') || 'darkgreen';
+            changeTheme(theme, false);
+
+            // 2. Clock Format
+            const is24H = await dbGet('settings', 'clockFormat24H');
+            clockFormat24H = is24H !== undefined ? is24H : true;
+
+            // 3. Show Date
+            const sDate = await dbGet('settings', 'showDate');
+            const showDate = sDate !== undefined ? sDate : true;
+            document.getElementById('showDateToggle').checked = showDate;
+            toggleDateDisplay(showDate);
+
+            // 4. Background opacity & media
+            const bgUrl = await dbGet('settings', 'bgMediaUrl') || '';
+            document.getElementById('bgMediaUrl').value = bgUrl;
+
+            const opacity = await dbGet('settings', 'bgOpacity');
+            const realOpacity = opacity !== undefined ? opacity : 20;
+            document.getElementById('bgOpacitySlider').value = realOpacity;
+            document.getElementById('bgOpacityVal').innerText = `${realOpacity}%`;
+
+            // 讀取背景影片播放及聲音偏好設定
+            const videoSound = await dbGet('settings', 'bgVideoPlaySound');
+            bgVideoPlaySound = videoSound !== undefined ? videoSound : false;
+            document.getElementById('bgVideoSoundToggle').checked = bgVideoPlaySound;
+
+            const videoPlayingSetting = await dbGet('settings', 'bgVideoPlaying');
+            bgVideoPlaying = videoPlayingSetting !== undefined ? videoPlayingSetting : true;
+            document.getElementById('bgVideoPlayToggle').checked = bgVideoPlaying;
+
+            await updateBgMedia();
+
+            // 5. Widgets Visibility
+            const wVisible = await dbGet('settings', 'widgetsVisible');
+            widgetsVisible = wVisible !== undefined ? wVisible : true;
+            applyWidgetsVisibility(false);
+
+            // 6. Clock Minimized State
+            const isMin = await dbGet('settings', 'clockMinimized');
+            clockMinimized = isMin !== undefined ? isMin : false;
+            applyClockMinimization(false);
+
+            // 動態載入本地端媒體狀態與選單
+            await updateRingtoneSelector();
+            await updateBgmStatus();
+        }
+
+        // ================= THEME CHANGING =================
+        function changeTheme(themeName, saveToDb = true) {
+            currentTheme = themeName;
+            const body = document.body;
+
+            // 移除原主題樣式
+            body.classList.remove('bg-[#1E3F20]', 'text-[#F5EBE0]', 'bg-zinc-50', 'text-zinc-900', 'bg-[#F5EBE0]', 'text-[#3D2B1F]');
+
+            if (themeName === 'darkgreen') {
+                body.classList.add('bg-[#1E3F20]', 'text-[#F5EBE0]');
+            } else if (themeName === 'white') {
+                body.classList.add('bg-zinc-50', 'text-zinc-900');
+            } else if (themeName === 'lightbrown') {
+                body.classList.add('bg-[#F5EBE0]', 'text-[#3D2B1F]');
+            }
+
+            if (saveToDb) {
+                dbSet('settings', 'theme', themeName);
+                showToast("主題底色變更成功！", "success");
+            }
+        }
+
+        // ================= HIDE/SHOW WIDGETS CONTROL =================
+        function toggleWidgetsVisibility() {
+            widgetsVisible = !widgetsVisible;
+            dbSet('settings', 'widgetsVisible', widgetsVisible);
+            applyWidgetsVisibility(true);
+        }
+
+        function applyWidgetsVisibility(triggerToast = true) {
+            const clockContainer = document.getElementById('clockContainer');
+            const widgetContainer = document.getElementById('widgetContainer');
+            const btn = document.getElementById('toggleWidgetsBtn');
+            const clockSvg = document.getElementById('clockSvg');
+
+            if (widgetsVisible) {
+                // 展開小工具
+                widgetContainer.classList.remove('hidden');
+                clockContainer.className = "lg:col-span-5 flex flex-col gap-6 items-center justify-center bg-black/10 backdrop-blur-md p-8 rounded-2xl border border-white/5 shadow-2xl w-full h-full min-h-[420px] transition-all duration-500";
+                clockSvg.className = "w-48 h-48 md:w-56 md:h-56 transition-all duration-300 transform -rotate-90";
+
+                btn.innerHTML = '<i data-lucide="eye-off" class="w-4 h-4"></i><span id="toggleWidgetsText">隱藏設定區</span>';
+                if (triggerToast) showToast("已展開時鐘設定與小工具面板", "info");
+            } else {
+                // 隱藏小工具，極簡模式
+                widgetContainer.classList.add('hidden');
+                clockContainer.className = "lg:col-span-12 max-w-2xl mx-auto flex flex-col gap-8 items-center justify-center bg-black/15 backdrop-blur-md p-12 rounded-2xl border border-white/5 shadow-2xl w-full min-h-[460px] my-4 transition-all duration-500";
+                clockSvg.className = "w-64 h-64 md:w-72 md:h-72 transition-all duration-300 transform -rotate-90";
+
+                btn.innerHTML = '<i data-lucide="eye" class="w-4 h-4 text-emerald-400"></i><span id="toggleWidgetsText">顯示設定區</span>';
+                if (triggerToast) showToast("已隱藏設定區，呈現極簡極淨時鐘畫面", "success");
+            }
+            lucide.createIcons();
+        }
+
+        // ================= CLOCK MINIMIZE LOGIC =================
+        async function toggleClockMinimization() {
+            clockMinimized = !clockMinimized;
+            await dbSet('settings', 'clockMinimized', clockMinimized);
+            applyClockMinimization(true);
+        }
+
+        function applyClockMinimization(triggerToast = true) {
+            const mainGrid = document.getElementById('mainGrid');
+            const miniClockContainer = document.getElementById('miniClockContainer');
+            const btn = document.getElementById('toggleMinimizeBtn');
+
+            if (clockMinimized) {
+                // 僅隱藏中央 Grid，保留 main 保障跑馬燈在最上下兩側
+                mainGrid.classList.add('hidden');
+                // 在頂部 Header 顯示迷你數字鐘
+                miniClockContainer.classList.remove('hidden');
+                // 修改按鈕狀態
+                btn.innerHTML = '<i data-lucide="maximize-2" class="w-4 h-4 text-emerald-400"></i><span id="toggleMinimizeText">標準時鐘</span>';
+
+                if (triggerToast) showToast("已將時鐘縮小至左上角，極簡沉浸模式啟動", "success");
+            } else {
+                // 還原中央網格
+                mainGrid.classList.remove('hidden');
+                // 隱藏頂部迷你時鐘
+                miniClockContainer.classList.add('hidden');
+                // 還原按鈕狀態
+                btn.innerHTML = '<i data-lucide="minimize-2" class="w-4 h-4"></i><span id="toggleMinimizeText">縮小時鐘</span>';
+
+                if (triggerToast) showToast("已還原標準主面板與時鐘設定", "info");
+            }
+            lucide.createIcons();
+        }
+
+        // ================= FULLSCREEN & GLOBAL DISPLAY =================
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().then(() => {
+                    fullscreenBtn.innerHTML = '<i data-lucide="minimize" class="w-5 h-5"></i>';
+                    lucide.createIcons();
+                }).catch(err => {
+                    showToast(`無法啟用全螢幕: ${err.message}`, "error");
+                });
+            } else {
+                document.exitFullscreen().then(() => {
+                    fullscreenBtn.innerHTML = '<i data-lucide="maximize" class="w-5 h-5"></i>';
+                    lucide.createIcons();
+                });
+            }
+        });
+
+        function toggleDateDisplay(visible) {
+            const el = document.getElementById('headerDate');
+            if (visible) {
+                el.parentElement.parentElement.classList.remove('hidden');
+            } else {
+                el.parentElement.parentElement.classList.add('hidden');
+            }
+            dbSet('settings', 'showDate', visible);
+        }
+
+        function changeBgOpacity(val) {
+            document.getElementById('bgOpacityVal').innerText = `${val}%`;
+            document.getElementById('mediaBgContainer').style.opacity = val / 100;
+            dbSet('settings', 'bgOpacity', parseInt(val));
+        }
+
+        // 更新背景渲染 (支援本機上傳的 Blobs、外部網址與 YouTube 播放控制與音效)
+        async function updateBgMedia() {
+            const container = document.getElementById('mediaBgContainer');
+            container.innerHTML = '';
+
+            // 優先檢測 IndexedDB 中是否有使用者儲存的「本地背景 Blob」
+            const localBlob = await dbGet('settings', 'localBgBlob');
+            const localType = await dbGet('settings', 'localBgType');
+
+            if (localBlob && localType) {
+                const objectUrl = URL.createObjectURL(localBlob);
+                if (localType.startsWith('video/')) {
+                    container.innerHTML = `
+            <video id="bgVideoPlayer" class="w-full h-full object-cover" loop playsinline ${bgVideoPlaySound ? '' : 'muted'}>
+              <source src="${objectUrl}" type="${localType}">
+            </video>
+          `;
+                    const player = document.getElementById('bgVideoPlayer');
+                    if (player) {
+                        if (bgVideoPlaying) {
+                            player.play().catch(e => console.log("自動撥放背景影片受瀏覽器安全性限制：", e));
+                        } else {
+                            player.pause();
+                        }
+                    }
+                } else {
+                    container.innerHTML = `
+            <img class="w-full h-full object-cover" src="${objectUrl}">
+          `;
+                }
+                container.style.opacity = document.getElementById('bgOpacitySlider').value / 100;
+                return;
+            }
+
+            // 其次使用線上背景網址
+            const url = document.getElementById('bgMediaUrl').value.trim();
+            dbSet('settings', 'bgMediaUrl', url);
+
+            if (!url) return;
+
+            // 檢查是否為 Youtube 網址
+            let isYoutube = false;
+            let ytId = '';
+            const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(ytRegex);
+            if (match) {
+                isYoutube = true;
+                ytId = match[1];
+            }
+
+            if (isYoutube) {
+                const autoplayParam = bgVideoPlaying ? 1 : 0;
+                const muteParam = bgVideoPlaySound ? 0 : 1;
+                container.innerHTML = `
+          <iframe id="bgYoutubeIframe" class="w-full h-full scale-125" src="https://www.youtube.com/embed/${ytId}?autoplay=${autoplayParam}&mute=${muteParam}&controls=0&loop=1&playlist=${ytId}&modestbranding=1&rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        `;
+            } else if (url.match(/\.(mp4|webm|ogg)$/i)) {
+                container.innerHTML = `
+          <video id="bgVideoPlayer" class="w-full h-full object-cover" loop playsinline ${bgVideoPlaySound ? '' : 'muted'} onerror="this.style.display='none'">
+            <source src="${url}">
+          </video>
+        `;
+                const player = document.getElementById('bgVideoPlayer');
+                if (player) {
+                    if (bgVideoPlaying) {
+                        player.play().catch(e => console.log("自動撥放背景影片受瀏覽器安全性限制：", e));
+                    } else {
+                        player.pause();
+                    }
+                }
+            } else {
+                container.innerHTML = `
+          <img class="w-full h-full object-cover" src="${url}" onerror="this.style.display='none'">
+        `;
+            }
+            container.style.opacity = document.getElementById('bgOpacitySlider').value / 100;
+        }
+
+        // 背景影片聲音開關處理
+        async function toggleBgVideoSound(enabled) {
+            bgVideoPlaySound = enabled;
+            await dbSet('settings', 'bgVideoPlaySound', enabled);
+
+            const player = document.getElementById('bgVideoPlayer');
+            if (player) {
+                player.muted = !enabled;
+            } else {
+                // 如果是 YouTube 或其他，重新建構 iframe 引入對應的靜音參數
+                await updateBgMedia();
+            }
+            showToast(enabled ? "已啟用背景影片聲音" : "已關閉背景影片聲音 (靜音)", "info");
+        }
+
+        // 背景影片播放暫停控制
+        async function toggleBgVideoPlay(playing) {
+            bgVideoPlaying = playing;
+            await dbSet('settings', 'bgVideoPlaying', playing);
+
+            const player = document.getElementById('bgVideoPlayer');
+            if (player) {
+                if (playing) {
+                    player.play().catch(e => console.log("背景影片撥放失敗：", e));
+                } else {
+                    player.pause();
+                }
+            } else {
+                // 如果是 YouTube，重新載入 iframe 帶入 autoplay=0 參數
+                await updateBgMedia();
+            }
+            showToast(playing ? "背景影片已繼續撥放" : "背景影片已暫停撥放", "info");
+        }
+
+        // ================= 本地背景與音樂上傳/清除 =================
+        async function handleLocalBgUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            try {
+                await dbSet('settings', 'localBgBlob', file);
+                await dbSet('settings', 'localBgType', file.type);
+
+                document.getElementById('bgMediaUrl').value = '';
+                await dbSet('settings', 'bgMediaUrl', '');
+
+                await updateBgMedia();
+                await updateRingtoneSelector();
+                showToast("本地背景影片/圖檔載入並儲存成功！", "success");
+            } catch (e) {
+                showToast("儲存背景檔案失敗：" + e.message, "error");
+            }
+        }
+
+        async function clearLocalBg() {
+            await dbSet('settings', 'localBgBlob', null);
+            await dbSet('settings', 'localBgType', null);
+            await updateBgMedia();
+            await updateRingtoneSelector();
+            showToast("本地背景已清除，回復預設主題外觀", "info");
+        }
+
+        async function handleLocalRingtoneUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            try {
+                await dbSet('settings', 'localRingtoneBlob', file);
+                await dbSet('settings', 'localRingtoneName', file.name);
+
+                await updateRingtoneSelector();
+                showToast("本地鬧鐘音樂檔上傳成功！已將其儲存於 IndexedDB", "success");
+            } catch (e) {
+                showToast("儲存音樂檔失敗：" + e.message, "error");
+            }
+        }
+
+        async function clearLocalRingtone() {
+            await dbSet('settings', 'localRingtoneBlob', null);
+            await dbSet('settings', 'localRingtoneName', null);
+            await updateRingtoneSelector();
+            showToast("本地音樂已清除，回復系統預設和弦", "info");
+        }
+
+        // ================= 背景音樂 (BGM) 控制邏輯 =================
+        async function handleLocalBgmUpload(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            try {
+                await dbSet('settings', 'localBgmBlob', file);
+                await dbSet('settings', 'localBgmName', file.name);
+                await updateBgmStatus();
+                showToast("背景音樂儲存成功！頂部已啟用播放控制鈕", "success");
+            } catch (e) {
+                showToast("儲存背景音樂失敗：" + e.message, "error");
+            }
+        }
+
+        async function clearLocalBgm() {
+            await dbSet('settings', 'localBgmBlob', null);
+            await dbSet('settings', 'localBgmName', null);
+
+            const audioPlayer = document.getElementById('bgMusicAudio');
+            audioPlayer.pause();
+            audioPlayer.removeAttribute('src');
+
+            bgMusicPlaying = false;
+            document.getElementById('bgmBtnText').innerText = "播放背景音樂";
+            document.getElementById('bgmIcon').setAttribute('data-lucide', 'play');
+            document.getElementById('toggleBgmBtn').classList.add('hidden');
+
+            await updateBgmStatus();
+            showToast("背景音樂已清除", "info");
+        }
+
+        async function updateBgmStatus() {
+            const bgmBlob = await dbGet('settings', 'localBgmBlob');
+            const bgmName = await dbGet('settings', 'localBgmName');
+            const bgmBtn = document.getElementById('toggleBgmBtn');
+            const localBgmInfo = document.getElementById('localBgmInfo');
+
+            if (bgmBlob) {
+                bgmBtn.classList.remove('hidden');
+                if (localBgmInfo) {
+                    localBgmInfo.innerText = `目前使用音樂: ${bgmName || '已上傳音樂'} (${(bgmBlob.size / 1024 / 1024).toFixed(1)} MB)`;
+                }
+
+                const audioPlayer = document.getElementById('bgMusicAudio');
+                if (!audioPlayer.src) {
+                    audioPlayer.src = URL.createObjectURL(bgmBlob);
+                    audioPlayer.volume = 0.3; // 預設舒適音樂背景音量
+                }
+            } else {
+                bgmBtn.classList.add('hidden');
+                if (localBgmInfo) {
+                    localBgmInfo.innerText = "目前使用: 無背景音樂";
+                }
+            }
+            lucide.createIcons();
+        }
+
+        function toggleBgmPlayState() {
+            const audioPlayer = document.getElementById('bgMusicAudio');
+            const btnText = document.getElementById('bgmBtnText');
+            const btnIcon = document.getElementById('bgmIcon');
+
+            if (!bgMusicPlaying) {
+                audioPlayer.play().then(() => {
+                    bgMusicPlaying = true;
+                    btnText.innerText = "暫停背景音樂";
+                    btnIcon.setAttribute('data-lucide', 'pause');
+                    lucide.createIcons();
+                    showToast("背景音樂開始播放...", "success");
+                }).catch(err => {
+                    showToast("音樂播放失敗，請點擊畫面任意處再試一次", "error");
+                });
+            } else {
+                audioPlayer.pause();
+                bgMusicPlaying = false;
+                btnText.innerText = "播放背景音樂";
+                btnIcon.setAttribute('data-lucide', 'play');
+                lucide.createIcons();
+                showToast("背景音樂已暫停", "info");
+            }
+        }
+
+        // 動態載入本地端媒體資訊到管理者面板與鬧鐘選單
+        async function updateRingtoneSelector() {
+            const select = document.getElementById('alarmRingtone');
+            const localRingtoneInfo = document.getElementById('localRingtoneInfo');
+            const localBgInfo = document.getElementById('localBgInfo');
+
+            // 1. 背景資訊更新
+            const bgBlob = await dbGet('settings', 'localBgBlob');
+            if (bgBlob) {
+                localBgInfo.innerText = `目前使用本地媒體: ${bgBlob.name} (${(bgBlob.size / 1024 / 1024).toFixed(1)} MB)`;
+            } else {
+                localBgInfo.innerText = "目前使用: 系統預設/線上 URL 背景";
+            }
+
+            // 2. 鈴聲選單與資訊更新
+            const rtBlob = await dbGet('settings', 'localRingtoneBlob');
+            const rtName = await dbGet('settings', 'localRingtoneName');
+
+            // 清除可能已存在的本地選項防止重複
+            const oldLocalOpt = select.querySelector('option[value="local"]');
+            if (oldLocalOpt) oldLocalOpt.remove();
+
+            if (rtBlob) {
+                localRingtoneInfo.innerText = `目前使用音樂: ${rtName || '未命名音訊'} (${(rtBlob.size / 1024 / 1024).toFixed(1)} MB)`;
+
+                // 追加至鬧鐘鈴聲選項
+                const opt = document.createElement('option');
+                opt.value = 'local';
+                opt.innerText = `★ 自訂本地音樂 (${rtName ? rtName.substring(0, 12) + '...' : '已儲存'})`;
+                select.appendChild(opt);
+            } else {
+                localRingtoneInfo.innerText = "目前使用: 預設系統合成音 (Chime / Beep / Siren)";
+            }
+        }
+
+        // ================= SYSTEM CLOCK ENGINGE =================
+        function startSystemClock() {
+            if (systemClockInterval) clearInterval(systemClockInterval);
+
+            systemClockInterval = setInterval(() => {
+                const now = new Date();
+
+                // 1. 頂部日期渲染
+                const optDate = { year: 'numeric', month: 'long', day: 'numeric' };
+                const weekDays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+                const dayName = weekDays[now.getDay()];
+                document.getElementById('headerDate').innerText = `${now.toLocaleDateString('zh-TW', optDate)} ${dayName}`;
+
+                // 2. 指針時鐘更新
+                const sec = now.getSeconds();
+                const min = now.getMinutes();
+                const hour = now.getHours();
+
+                const sAngle = (sec / 60) * 360;
+                const mAngle = (min / 60) * 360 + (sec / 60) * 6;
+                const hAngle = (hour % 12 / 12) * 360 + (min / 60) * 30;
+
+                document.getElementById('secondHand').setAttribute('transform', `rotate(${sAngle} 50 50)`);
+                document.getElementById('minuteHand').setAttribute('transform', `rotate(${mAngle} 50 50)`);
+                document.getElementById('hourHand').setAttribute('transform', `rotate(${hAngle} 50 50)`);
+
+                // 3. 數字時鐘更新
+                let h = hour;
+                let suffix = '';
+                if (!clockFormat24H) {
+                    suffix = h >= 12 ? 'PM' : 'AM';
+                    h = h % 12;
+                    h = h ? h : 12; // 0點轉為12
+                } else {
+                    suffix = '24H制';
+                }
+
+                const formatStr = (val) => String(val).padStart(2, '0');
+                const clockStr = `${formatStr(h)}:${formatStr(min)}:${formatStr(sec)}`;
+
+                // 標準畫面
+                document.getElementById('digitalClock').innerText = clockStr;
+                document.getElementById('clockPeriod').innerText = suffix;
+
+                // 迷你時鐘畫面更新
+                document.getElementById('miniDigitalClock').innerText = clockStr;
+                document.getElementById('miniClockPeriod').innerText = suffix;
+
+                // 4. 觸發鬧鐘監聽
+                checkAlarms(hour, min, sec);
+
+            }, 1000);
+        }
+
+        function renderClockTicks() {
+            const tickGroup = document.getElementById('clockTicks');
+            tickGroup.innerHTML = '';
+            for (let i = 0; i < 12; i++) {
+                const angle = i * 30;
+                const isMajor = i % 3 === 0;
+                const len = isMajor ? 6 : 3;
+                tickGroup.innerHTML += `
+          <line x1="90" y1="50" x2="${90 - len}" y2="50" stroke="currentColor" stroke-width="${isMajor ? 1.5 : 0.8}" transform="rotate(${angle} 50 50)"></line>
+        `;
+            }
+        }
+
+        document.getElementById('toggleFormatBtn').addEventListener('click', () => {
+            clockFormat24H = !clockFormat24H;
+            dbSet('settings', 'clockFormat24H', clockFormat24H);
+            showToast(`切換為 ${clockFormat24H ? '24小時制' : '12小時制'}`, "info");
+        });
+
+
+        // ================= WIDGETS ROUTING =================
+        function switchWidget(target) {
+            document.querySelectorAll('.widget-panel').forEach(p => p.classList.add('hidden'));
+            document.getElementById(`widget-${target}-panel`).classList.remove('hidden');
+
+            document.querySelectorAll('.widget-tab-btn').forEach(b => {
+                b.classList.remove('bg-white/10', 'text-white');
+                b.classList.add('opacity-60');
+            });
+            const actBtn = document.getElementById(`tab-${target}`);
+            actBtn.classList.add('bg-white/10', 'text-white');
+            actBtn.classList.remove('opacity-60');
+        }
+
+        // ================= 跑馬燈渲染 & 核心控制邏輯 =================
+        let allMarquees = [];
+        let currentMarqueeIndexMap = {
+            Top: 0, Bottom: 0, Left: 0, Right: 0
+        };
+        let marqueeIntervalTimer = null;
+        let globalMarqueeHidden = false;
+
+        async function renderAllMarquees() {
+            allMarquees = await dbGetAll('marquees');
+
+            // 每次載入或編輯變更跑馬燈時，清空各軌道的快取 ID 以免阻礙即時重繪
+            ['Top', 'Bottom', 'Left', 'Right'].forEach(pos => {
+                const container = document.getElementById(`marquee${pos}`);
+                if (container) {
+                    container.removeAttribute('data-active-id');
+                }
+            });
+
+            // 先取得全局隱藏設定
+            const isHidden = await dbGet('settings', 'globalMarqueeHidden');
+            globalMarqueeHidden = isHidden !== undefined ? isHidden : false;
+            document.getElementById('globalMarqueeToggle').innerText = globalMarqueeHidden ? "全部顯示" : "全部隱藏";
+            document.getElementById('globalMarqueeToggle').className = globalMarqueeHidden
+                ? "px-3 py-1 bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600/40 rounded text-xs border border-emerald-500/30"
+                : "px-3 py-1 bg-rose-600/20 text-rose-300 hover:bg-rose-600/40 rounded text-xs border border-rose-500/30";
+
+            if (marqueeIntervalTimer) clearInterval(marqueeIntervalTimer);
+
+            if (globalMarqueeHidden) {
+                hideAllMarqueeContainers();
+                return;
+            }
+
+            // 開始時間分片循環渲染
+            runMarqueeScheduler();
+            marqueeIntervalTimer = setInterval(runMarqueeScheduler, 1000);
+        }
+
+        function hideAllMarqueeContainers() {
+            document.getElementById('marqueeTop').classList.add('hidden');
+            document.getElementById('marqueeBottom').classList.add('hidden');
+            document.getElementById('marqueeLeft').classList.add('hidden');
+            document.getElementById('marqueeRight').classList.add('hidden');
+        }
+
+        // 動態調度與輪播跑馬燈內容
+        function runMarqueeScheduler() {
+            const now = new Date();
+            const currentMinStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+            const activeList = allMarquees.filter(m => {
+                if (!m.active) return false;
+                // 如果沒有設定起迄時間，則全天候顯示
+                if (!m.startTime && !m.endTime) return true;
+
+                const start = m.startTime || "00:00";
+                const end = m.endTime || "23:59";
+                return currentMinStr >= start && currentMinStr <= end;
+            });
+
+            // 有效跑馬燈之方位派發
+            const positions = ['Top', 'Bottom', 'Left', 'Right'];
+
+            positions.forEach(pos => {
+                const posKey = `Pos${pos}`;
+                const posList = activeList.filter(m => m.positions && m.positions.includes(posKey));
+
+                const container = document.getElementById(`marquee${pos}`);
+
+                if (posList.length === 0) {
+                    container.classList.add('hidden');
+                    container.innerHTML = '';
+                    return;
+                }
+
+                container.classList.remove('hidden');
+
+                // 計算目前方位應該輪播第幾個
+                const secondsPassed = Math.floor(now.getTime() / 1000);
+                // 使用跑馬燈自己宣告的 interval 或是預設15秒
+                const intervalSec = posList[0].interval || 15;
+                const currentIndex = Math.floor(secondsPassed / intervalSec) % posList.length;
+
+                const targetMq = posList[currentIndex];
+
+                // 檢查是否需要更新 DOM 以免造成重繪效能問題
+                const currentMqId = container.getAttribute('data-active-id');
+                if (currentMqId !== String(targetMq.id)) {
+                    container.setAttribute('data-active-id', targetMq.id);
+                    renderMarqueeDOM(container, pos, targetMq);
+                }
+            });
+        }
+
+        function renderMarqueeDOM(container, position, mq) {
+            container.innerHTML = '';
+
+            // 讀取並轉換背景透明度
+            const opacity = mq.bgOpacity !== undefined ? mq.bgOpacity : 100;
+            container.style.backgroundColor = hexToRgba(mq.bgColor || '#000000', opacity);
+            container.style.color = mq.textColor || '#FFFF00';
+
+            const isVertical = (position === 'Left' || position === 'Right');
+
+            if (isVertical) {
+                container.style.width = `${(parseInt(mq.fontSize) || 24) + 16}px`;
+                container.innerHTML = `
+          <div class="marquee-vertical-up flex py-4 font-bold tracking-widest whitespace-nowrap" style="font-size: ${mq.fontSize || 24}px">
+            ${mq.text}
+          </div>
+        `;
+            } else {
+                container.innerHTML = `
+          <div class="w-full py-2.5 overflow-hidden flex items-center relative">
+            <div class="marquee-horizontal font-bold tracking-wider" style="font-size: ${mq.fontSize || 24}px">
+              ${mq.text}
+            </div>
+          </div>
+        `;
+            }
+        }
+
+        // ================= 管理員模式切換 & 介面控制 =================
+        const toggleAdminBtn = document.getElementById('toggleAdminBtn');
+        toggleAdminBtn.addEventListener('click', () => {
+            if (isAdminUnlocked) {
+                // 已解鎖則直接開啟控制台
+                openAdminPanel();
+            } else {
+                // 未解鎖則開啟密碼對話框
+                openPasswordModal();
+            }
+        });
+
+        function openPasswordModal() {
+            document.getElementById('passwordModal').classList.remove('hidden');
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('passwordError').classList.add('hidden');
+            document.getElementById('adminPasswordInput').focus();
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.add('hidden');
+        }
+
+        async function submitPassword() {
+            const input = document.getElementById('adminPasswordInput').value;
+            const truePwd = await dbGet('settings', 'adminPassword') || '1234';
+
+            if (input === truePwd) {
+                isAdminUnlocked = true;
+                closePasswordModal();
+                applyAdminUIState();
+                openAdminPanel();
+                showToast("管理者登入驗證成功！", "success");
+            } else {
+                document.getElementById('passwordError').classList.remove('hidden');
+            }
+        }
+
+        function applyAdminUIState() {
+            const badge = document.getElementById('adminStatusBadge');
+            const btn = document.getElementById('toggleAdminBtn');
+
+            if (isAdminUnlocked) {
+                badge.innerText = '系統管理者模式';
+                badge.className = 'px-3 py-1 text-xs font-semibold rounded-full bg-emerald-500/20 text-emerald-300 flex items-center gap-1.5 border border-emerald-500/30';
+                btn.innerHTML = '<i data-lucide="unlock" class="w-4 h-4 text-emerald-400"></i><span>控制台</span>';
+            } else {
+                badge.innerText = '一般顯示模式';
+                badge.className = 'px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/20 text-amber-300 flex items-center gap-1.5 border border-amber-500/30';
+                btn.innerHTML = '<i data-lucide="lock" class="w-4 h-4"></i><span>管理設定</span>';
+            }
+            lucide.createIcons();
+        }
+
+        function openAdminPanel() {
+            document.getElementById('adminPanel').classList.remove('translate-x-full');
+            renderAdminMarquees();
+        }
+
+        function closeAdminPanel() {
+            document.getElementById('adminPanel').classList.add('translate-x-full');
+            cancelMarqueeEdit(); // 關閉時順便取消編輯狀態
+        }
+
+        function lockAdminConsole() {
+            isAdminUnlocked = false;
+            closeAdminPanel();
+            applyAdminUIState();
+            showToast("管理者已安全登出", "info");
+        }
+
+        function switchAdminTab(tabName) {
+            document.querySelectorAll('.admin-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`adminSec-${tabName}`).classList.remove('hidden');
+
+            document.querySelectorAll('.admin-tab-btn').forEach(b => {
+                b.classList.remove('border-amber-500', 'font-bold', 'text-amber-400');
+                b.classList.add('border-transparent', 'opacity-60');
+            });
+            const act = document.getElementById(`adminTab-${tabName}`);
+            act.classList.add('border-amber-500', 'font-bold', 'text-amber-400');
+            act.classList.remove('border-transparent', 'opacity-60');
+        }
+
+        // 修改安全密碼
+        async function changeAdminPassword() {
+            const pwd = document.getElementById('newPassword').value.trim();
+            if (!pwd) {
+                showToast("新密碼不可為空！", "error");
+                return;
+            }
+            await dbSet('settings', 'adminPassword', pwd);
+            showToast("管理者密碼變更成功！請牢記您的新密碼。", "success");
+            document.getElementById('newPassword').value = '';
+        }
+
+        // ================= 跑馬燈管理者操作 =================
+        function setMqColorPreset(text, bg) {
+            document.getElementById('mqColorInput').value = text;
+            document.getElementById('mqBgColorInput').value = bg;
+            // 點選推薦色彩組時，將透明度重設為 100% 以防顯示異常
+            document.getElementById('mqBgOpacityInput').value = 100;
+            document.getElementById('mqBgOpacityVal').innerText = '100%';
+        }
+
+        async function toggleMarqueeVisibilityGlobal() {
+            globalMarqueeHidden = !globalMarqueeHidden;
+            await dbSet('settings', 'globalMarqueeHidden', globalMarqueeHidden);
+            await renderAllMarquees();
+            showToast(globalMarqueeHidden ? "已全數隱藏跑馬燈" : "已重新排程顯示跑馬燈", "info");
+        }
+
+        async function addMarquee() {
+            const text = document.getElementById('mqTextInput').value.trim();
+            if (!text) {
+                showToast("請填寫跑馬燈播放內文！", "warning");
+                return;
+            }
+
+            // 取得勾選位置
+            const positions = [];
+            if (document.getElementById('mqPosTop').checked) positions.push('PosTop');
+            if (document.getElementById('mqPosBottom').checked) positions.push('PosBottom');
+            if (document.getElementById('mqPosLeft').checked) positions.push('PosLeft');
+            if (document.getElementById('mqPosRight').checked) positions.push('PosRight');
+
+            if (positions.length === 0) {
+                showToast("請至少選擇一個播放方位！", "warning");
+                return;
+            }
+
+            const item = {
+                text,
+                startTime: document.getElementById('mqStartInput').value || null,
+                endTime: document.getElementById('mqEndInput').value || null,
+                fontSize: parseInt(document.getElementById('mqSizeInput').value) || 24,
+                interval: parseInt(document.getElementById('mqIntervalInput').value) || 15,
+                textColor: document.getElementById('mqColorInput').value,
+                bgColor: document.getElementById('mqBgColorInput').value,
+                bgOpacity: parseInt(document.getElementById('mqBgOpacityInput').value) !== undefined ? parseInt(document.getElementById('mqBgOpacityInput').value) : 100,
+                positions,
+                active: true
+            };
+
+            if (editingMarqueeId !== null) {
+                // 處於編輯狀態
+                item.id = editingMarqueeId;
+                const existing = await dbGet('marquees', editingMarqueeId);
+                if (existing) {
+                    item.active = existing.active; // 保留原啟用狀態
+                }
+                await dbUpdate('marquees', item);
+                showToast("跑馬燈項目更新成功！", "success");
+                cancelMarqueeEdit();
+            } else {
+                // 處於全新新增狀態
+                await dbAdd('marquees', item);
+                showToast("成功建立跑馬燈項目！", "success");
+                document.getElementById('mqTextInput').value = '';
+            }
+
+            // 重新載入，清除暫存屬性並即時重繪
+            await renderAllMarquees();
+            renderAdminMarquees();
+        }
+
+        // 觸發編輯跑馬燈項目
+        async function editMarqueeItem(id) {
+            const m = await dbGet('marquees', id);
+            if (!m) return;
+
+            editingMarqueeId = id;
+
+            // 填入輸入欄位
+            document.getElementById('mqTextInput').value = m.text;
+            document.getElementById('mqStartInput').value = m.startTime || '';
+            document.getElementById('mqEndInput').value = m.endTime || '';
+            document.getElementById('mqSizeInput').value = m.fontSize || 24;
+            document.getElementById('mqIntervalInput').value = m.interval || 15;
+            document.getElementById('mqColorInput').value = m.textColor || '#FFFF00';
+            document.getElementById('mqBgColorInput').value = m.bgColor || '#000000';
+
+            // 讀取透明度
+            const opacityVal = m.bgOpacity !== undefined ? m.bgOpacity : 100;
+            document.getElementById('mqBgOpacityInput').value = opacityVal;
+            document.getElementById('mqBgOpacityVal').innerText = opacityVal + '%';
+
+            // 核取方位
+            document.getElementById('mqPosTop').checked = m.positions.includes('PosTop');
+            document.getElementById('mqPosBottom').checked = m.positions.includes('PosBottom');
+            document.getElementById('mqPosLeft').checked = m.positions.includes('PosLeft');
+            document.getElementById('mqPosRight').checked = m.positions.includes('PosRight');
+
+            // 改變按鈕 UI 狀態
+            document.getElementById('addMqBtn').innerText = "確認更新項目";
+            document.getElementById('cancelMqEditBtn').classList.remove('hidden');
+
+            showToast("已載入跑馬燈至上方編輯區", "info");
+
+            // 滾動回到控制台頂部以便編輯
+            document.getElementById('adminPanel').querySelector('.flex-1').scrollTop = 0;
+        }
+
+        // 取消編輯跑馬燈
+        function cancelMarqueeEdit() {
+            editingMarqueeId = null;
+
+            // 還原欄位預設值
+            document.getElementById('mqTextInput').value = '';
+            document.getElementById('mqStartInput').value = '';
+            document.getElementById('mqEndInput').value = '';
+            document.getElementById('mqSizeInput').value = '24';
+            document.getElementById('mqIntervalInput').value = '15';
+            document.getElementById('mqColorInput').value = '#FFFF00';
+            document.getElementById('mqBgColorInput').value = '#000000';
+            document.getElementById('mqBgOpacityInput').value = '100';
+            document.getElementById('mqBgOpacityVal').innerText = '100%';
+            document.getElementById('mqPosTop').checked = true;
+            document.getElementById('mqPosBottom').checked = false;
+            document.getElementById('mqPosLeft').checked = false;
+            document.getElementById('mqPosRight').checked = false;
+
+            document.getElementById('addMqBtn').innerText = "新增跑馬燈項目";
+            document.getElementById('cancelMqEditBtn').classList.add('hidden');
+        }
+
+        async function renderAdminMarquees() {
+            const list = await dbGetAll('marquees');
+            const container = document.getElementById('adminMarqueeList');
+            container.innerHTML = '';
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="text-xs opacity-40 py-4 text-center">無登錄跑馬燈項目</div>`;
+                return;
+            }
+
+            list.forEach(m => {
+                const timeStr = (m.startTime && m.endTime) ? `${m.startTime}~${m.endTime}` : "全天無限制";
+                const posText = m.positions.map(p => p.replace('Pos', '')).join(', ');
+                const opacityText = m.bgOpacity !== undefined ? m.bgOpacity : 100;
+                container.innerHTML += `
+          <div class="bg-white/5 border border-white/5 rounded-lg p-3 text-xs flex justify-between items-center gap-2">
+            <div class="space-y-1">
+              <p class="font-semibold text-white text-sm line-clamp-1">${m.text}</p>
+              <p class="opacity-60">方位: ${posText} | 尺寸: ${m.fontSize}px</p>
+              <p class="opacity-60">時段: ${timeStr} | 輪播: ${m.interval}s | 透明度: ${opacityText}%</p>
+            </div>
+            <div class="flex items-center gap-1">
+              <button onclick="editMarqueeItem(${m.id})" class="p-1.5 rounded hover:bg-white/10 text-amber-400" title="編輯此條">
+                <i data-lucide="edit-3" class="w-4 h-4"></i>
+              </button>
+              <button onclick="toggleMarqueeItem(${m.id}, ${!m.active})" class="p-1.5 rounded hover:bg-white/10" title="${m.active ? '禁用' : '啟用'}">
+                <i data-lucide="${m.active ? 'eye' : 'eye-off'}" class="w-4 h-4 ${m.active ? 'text-emerald-400' : 'text-gray-400'}"></i>
+              </button>
+              <button onclick="deleteMarqueeItem(${m.id})" class="p-1.5 rounded hover:bg-rose-500/20 text-rose-400" title="刪除">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        `;
+            });
+            lucide.createIcons();
+        }
+
+        async function toggleMarqueeItem(id, state) {
+            const item = await dbGet('marquees', id);
+            if (item) {
+                item.active = state;
+                await dbUpdate('marquees', item);
+                await renderAllMarquees();
+                renderAdminMarquees();
+                showToast(state ? "跑馬燈已啟用" : "跑馬燈已停用", "info");
+            }
+        }
+
+        async function deleteMarqueeItem(id) {
+            await dbDelete('marquees', id);
+            if (editingMarqueeId === id) {
+                cancelMarqueeEdit();
+            }
+            await renderAllMarquees();
+            renderAdminMarquees();
+            showToast("已成功刪除跑馬燈項目", "info");
+        }
+
+        // ================= 鬧鐘核心邏輯 =================
+        let triggeredAlarms = new Set(); // 儲存今日已響起的鬧鐘(避免每秒重複響起)
+
+        async function renderAlarms() {
+            const list = await dbGetAll('alarms');
+            const container = document.getElementById('alarmList');
+            container.innerHTML = '';
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 opacity-40 text-sm">無設定中鬧鐘</div>`;
+                return;
+            }
+
+            // 排序鬧鐘
+            list.sort((a, b) => a.time.localeCompare(b.time));
+
+            list.forEach(item => {
+                // 排程重複星期名稱展示
+                const repeatText = item.days && item.days.length > 0
+                    ? `重複: ${item.days.map(d => ['日', '一', '二', '三', '四', '五', '六'][d]).join(',')}`
+                    : "單次鬧鐘";
+
+                container.innerHTML += `
+          <div class="bg-white/5 hover:bg-white/10 transition border border-white/5 rounded-xl p-3.5 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+              <div class="p-2.5 rounded-lg bg-emerald-500/10 text-emerald-400">
+                <i data-lucide="clock" class="w-5 h-5"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="digital-font text-lg font-bold tracking-wide">${item.time}</span>
+                  <span class="text-xs px-2 py-0.5 rounded-md bg-white/10 opacity-70">${getRingtoneLabel(item.ringtone)}</span>
+                  <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">${repeatText}</span>
+                </div>
+                <p class="text-xs opacity-60 mt-0.5">${item.memo || '無備註事項'}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-1">
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" class="sr-only peer" ${item.active ? 'checked' : ''} onchange="toggleAlarmActive(${item.id}, this.checked)">
+                <div class="w-9 h-5 bg-gray-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+              </label>
+              <button onclick="editAlarmItem(${item.id})" class="p-2 text-amber-400 hover:text-amber-300 hover:bg-white/5 rounded-lg transition" title="編輯鬧鐘">
+                <i data-lucide="edit-2" class="w-4 h-4"></i>
+              </button>
+              <button onclick="deleteAlarm(${item.id})" class="p-2 text-rose-400/80 hover:text-rose-400 hover:bg-white/5 rounded-lg transition" title="刪除">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        `;
+            });
+            lucide.createIcons();
+        }
+
+        function getRingtoneLabel(type) {
+            if (type === 'chime') return "優雅和弦";
+            if (type === 'beep') return "懷舊滴滴";
+            if (type === 'local') return "★ 自訂本地音樂";
+            return "急促警報";
+        }
+
+        function openAddAlarmModal() {
+            editingAlarmId = null;
+            document.getElementById('alarmTime').value = '';
+            document.getElementById('alarmMemo').value = '';
+            document.getElementById('alarmRingtone').value = 'chime';
+            document.getElementById('alarmModalTitle').innerText = "設定新鬧鐘";
+            document.getElementById('saveAlarmBtn').innerText = "儲存鬧鐘設定";
+
+            resetAlarmDaysUI();
+            document.getElementById('alarmModal').classList.remove('hidden');
+        }
+
+        function closeAlarmModal() {
+            document.getElementById('alarmModal').classList.add('hidden');
+        }
+
+        // 星期重複選擇按鈕切換
+        function toggleAlarmDay(day) {
+            const btn = document.getElementById(`alarmDay-${day}`);
+            const idx = tempAlarmDays.indexOf(day);
+            if (idx > -1) {
+                tempAlarmDays.splice(idx, 1);
+                btn.classList.remove('bg-emerald-600', 'text-white', 'border-emerald-500');
+                btn.classList.add('bg-white/5', 'text-white', 'border-white/10');
+            } else {
+                tempAlarmDays.push(day);
+                btn.classList.add('bg-emerald-600', 'text-white', 'border-emerald-500');
+                btn.classList.remove('bg-white/5', 'text-white', 'border-white/10');
+            }
+        }
+
+        function resetAlarmDaysUI() {
+            tempAlarmDays = [];
+            document.querySelectorAll('.alarm-day-btn').forEach(btn => {
+                btn.classList.remove('bg-emerald-600', 'text-white', 'border-emerald-500');
+                btn.classList.add('bg-white/5', 'text-white', 'border-white/10');
+            });
+        }
+
+        // 載入欲編輯鬧鐘資料
+        async function editAlarmItem(id) {
+            const alarm = await dbGet('alarms', id);
+            if (!alarm) return;
+
+            editingAlarmId = id;
+            document.getElementById('alarmTime').value = alarm.time;
+            document.getElementById('alarmMemo').value = alarm.memo || '';
+            document.getElementById('alarmRingtone').value = alarm.ringtone || 'chime';
+
+            // 還原重複星期按鈕狀態
+            resetAlarmDaysUI();
+            if (alarm.days && Array.isArray(alarm.days)) {
+                alarm.days.forEach(day => {
+                    toggleAlarmDay(day);
+                });
+            }
+
+            // 更變彈窗標題為編輯模式
+            document.getElementById('alarmModalTitle').innerText = "修改鬧鐘設定";
+            document.getElementById('saveAlarmBtn').innerText = "更新鬧鐘設定";
+            document.getElementById('alarmModal').classList.remove('hidden');
+        }
+
+        async function saveAlarm() {
+            const time = document.getElementById('alarmTime').value;
+            const memo = document.getElementById('alarmMemo').value.trim();
+            const ringtone = document.getElementById('alarmRingtone').value;
+
+            if (!time) {
+                showToast("請選擇鬧鐘時間", "warning");
+                return;
+            }
+
+            const data = {
+                time,
+                memo,
+                ringtone,
+                days: [...tempAlarmDays],
+                active: true
+            };
+
+            if (editingAlarmId !== null) {
+                data.id = editingAlarmId;
+                const existing = await dbGet('alarms', editingAlarmId);
+                if (existing) {
+                    data.active = existing.active; // 保留原始啟用狀態
+                }
+                await dbUpdate('alarms', data);
+                showToast("鬧鐘修改完成！", "success");
+            } else {
+                await dbAdd('alarms', data);
+                showToast("鬧鐘設定成功！", "success");
+            }
+
+            closeAlarmModal();
+            await renderAlarms();
+        }
+
+        async function deleteAlarm(id) {
+            await dbDelete('alarms', id);
+            await renderAlarms();
+            showToast("鬧鐘已刪除", "info");
+        }
+
+        async function toggleAlarmActive(id, isActive) {
+            const item = await dbGet('alarms', id);
+            if (item) {
+                item.active = isActive;
+                await dbUpdate('alarms', item);
+                showToast(isActive ? "已啟動鬧鐘" : "已關閉鬧鐘", "info");
+            }
+        }
+
+        // 鬧鐘定時檢測核心
+        let activeAlarmItem = null;
+        let alarmSoundTimer = null;
+
+        async function checkAlarms(hour, min, sec) {
+            // 每日午夜清空已響起快取
+            if (hour === 0 && min === 0 && sec === 0) {
+                triggeredAlarms.clear();
+            }
+
+            if (sec !== 0) return; // 鬧鐘判定只在每分鐘的第0秒進行
+
+            const timeStr = `${String(hour).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+            const alarms = await dbGetAll('alarms');
+            const now = new Date();
+            const todayDay = now.getDay(); // 0-6 (週日為0)
+
+            const trigger = alarms.find(a => {
+                if (!a.active || a.time !== timeStr) return false;
+
+                // 檢查排程：如果有選星期重複，需對比今天星期幾
+                if (a.days && a.days.length > 0) {
+                    return a.days.includes(todayDay);
+                }
+                return true;
+            });
+
+            if (trigger && !triggeredAlarms.has(trigger.id)) {
+                triggeredAlarms.add(trigger.id);
+                fireAlarmAlert(trigger);
+
+                // 如果是單次鬧鐘 (沒有設定重複天數)，響完之後將其關閉 active = false
+                if (!trigger.days || trigger.days.length === 0) {
+                    trigger.active = false;
+                    await dbUpdate('alarms', trigger);
+                    await renderAlarms();
+                }
+            }
+        }
+
+        async function fireAlarmAlert(alarm) {
+            activeAlarmItem = alarm;
+            document.getElementById('alertTimeText').innerText = alarm.time;
+            document.getElementById('alertMemoText').innerText = alarm.memo || "提醒時間已到！";
+            document.getElementById('alarmAlertModal').classList.remove('hidden');
+
+            // 播放音樂 (支援本地端音樂播放或預設和弦)
+            await playSound(alarm.ringtone);
+
+            // 合成音效需要重疊定時器，本地端音樂不需要
+            if (alarm.ringtone !== 'local') {
+                alarmSoundTimer = setInterval(() => {
+                    playSynthesizedSound(alarm.ringtone);
+                }, 3000);
+            }
+        }
+
+        function dismissAlarm() {
+            document.getElementById('alarmAlertModal').classList.add('hidden');
+            if (alarmSoundTimer) {
+                clearInterval(alarmSoundTimer);
+                alarmSoundTimer = null;
+            }
+
+            // 安全暫停本地音樂播放器並將進度歸零
+            const audioPlayer = document.getElementById('ringtoneAudio');
+            audioPlayer.pause();
+            audioPlayer.currentTime = 0;
+
+            activeAlarmItem = null;
+            showToast("鬧鐘已解除", "success");
+        }
+
+        // ================= 計時器模組核心 =================
+        async function initTimers() {
+            // 嘗試讀取並還原先前未完狀態
+            const lastLeft = await dbGet('settings', 'timerRemaining');
+            if (lastLeft) {
+                timerRemainingSec = lastLeft;
+                updateTimerDisplay();
+            }
+        }
+
+        function updateTimerDisplay() {
+            const h = Math.floor(timerRemainingSec / 3600);
+            const m = Math.floor((timerRemainingSec % 3600) / 60);
+            const s = timerRemainingSec % 60;
+
+            const pad = (v) => String(v).padStart(2, '0');
+            document.getElementById('timerDisplay').innerText = `${pad(h)}:${pad(m)}:${pad(s)}`;
+
+            // 繪製環狀進度
+            const ring = document.getElementById('timerProgressRing');
+            if (timerTotalSec > 0) {
+                const offset = 283 * (timerRemainingSec / timerTotalSec);
+                ring.style.strokeDashoffset = 283 - offset;
+            } else {
+                ring.style.strokeDashoffset = 0;
+            }
+        }
+
+        function setTimerPreset(seconds) {
+            timerTotalSec = seconds;
+            timerRemainingSec = seconds;
+            updateTimerDisplay();
+            dbSet('settings', 'timerRemaining', timerRemainingSec);
+        }
+
+        document.getElementById('timerPlayBtn').addEventListener('click', () => {
+            // 如果原本沒有時間設定，改讀取自訂輸入
+            if (timerRemainingSec <= 0) {
+                const h = parseInt(document.getElementById('timerHr').value) || 0;
+                const m = parseInt(document.getElementById('timerMin').value) || 0;
+                const s = parseInt(document.getElementById('timerSec').value) || 0;
+
+                const total = h * 3600 + m * 60 + s;
+                if (total <= 0) {
+                    showToast("請設定或點選計時時間！", "warning");
+                    return;
+                }
+                timerTotalSec = total;
+                timerRemainingSec = total;
+            }
+
+            document.getElementById('timerPlayBtn').classList.add('hidden');
+            document.getElementById('timerPauseBtn').classList.remove('hidden');
+
+            countdownTimer = setInterval(() => {
+                timerRemainingSec--;
+                updateTimerDisplay();
+                dbSet('settings', 'timerRemaining', timerRemainingSec);
+
+                if (timerRemainingSec <= 0) {
+                    clearInterval(countdownTimer);
+                    countdownTimer = null;
+                    document.getElementById('timerPlayBtn').classList.remove('hidden');
+                    document.getElementById('timerPauseBtn').classList.add('hidden');
+
+                    // 警報聲
+                    playSynthesizedSound('siren');
+                    showToast("【計時結束】時間到！", "warning");
+                }
+            }, 1000);
+        });
+
+        document.getElementById('timerPauseBtn').addEventListener('click', () => {
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+            document.getElementById('timerPlayBtn').classList.remove('hidden');
+            document.getElementById('timerPauseBtn').classList.add('hidden');
+        });
+
+        document.getElementById('timerResetBtn').addEventListener('click', () => {
+            clearInterval(countdownTimer);
+            countdownTimer = null;
+            timerTotalSec = 0;
+            timerRemainingSec = 0;
+            updateTimerDisplay();
+            dbSet('settings', 'timerRemaining', 0);
+
+            document.getElementById('timerPlayBtn').classList.remove('hidden');
+            document.getElementById('timerPauseBtn').classList.add('hidden');
+
+            document.getElementById('timerHr').value = '';
+            document.getElementById('timerMin').value = '';
+            document.getElementById('timerSec').value = '';
+        });
+
+
+        // ================= 碼表模組核心 =================
+        document.getElementById('swStartBtn').addEventListener('click', () => {
+            document.getElementById('swStartBtn').classList.add('hidden');
+            document.getElementById('swStopBtn').classList.remove('hidden');
+            document.getElementById('swLapBtn').disabled = false;
+
+            swStartTime = Date.now() - swElapsedTime;
+            stopwatchTimer = setInterval(() => {
+                swElapsedTime = Date.now() - swStartTime;
+                renderStopwatch();
+            }, 10);
+        });
+
+        document.getElementById('swStopBtn').addEventListener('click', () => {
+            document.getElementById('swStartBtn').classList.remove('hidden');
+            document.getElementById('swStopBtn').classList.add('hidden');
+            document.getElementById('swLapBtn').disabled = true;
+            clearInterval(stopwatchTimer);
+        });
+
+        document.getElementById('swResetBtn').addEventListener('click', () => {
+            clearInterval(stopwatchTimer);
+            swElapsedTime = 0;
+            swLaps = [];
+            renderStopwatch();
+            renderSwLaps();
+
+            document.getElementById('swStartBtn').classList.remove('hidden');
+            document.getElementById('swStopBtn').classList.add('hidden');
+            document.getElementById('swLapBtn').disabled = true;
+        });
+
+        document.getElementById('swLapBtn').addEventListener('click', () => {
+            swLaps.unshift(swElapsedTime);
+            renderSwLaps();
+        });
+
+        function renderStopwatch() {
+            const totalMs = swElapsedTime;
+            const ms = Math.floor((totalMs % 1000) / 10);
+            const s = Math.floor((totalMs / 1000) % 60);
+            const m = Math.floor((totalMs / 60000) % 60);
+            const h = Math.floor(totalMs / 3600000);
+
+            const pad = (v) => String(v).padStart(2, '0');
+            document.getElementById('stopwatchDisplay').innerText =
+                `${pad(h)}:${pad(m)}:${pad(s)}.${pad(ms)}`;
+        }
+
+        function renderSwLaps() {
+            const container = document.getElementById('swLapList');
+            container.innerHTML = '';
+
+            if (swLaps.length === 0) {
+                container.innerHTML = `<div class="text-xs opacity-40 text-center py-4">無分段紀錄</div>`;
+                return;
+            }
+
+            swLaps.forEach((time, index) => {
+                const displayIndex = swLaps.length - index;
+                const totalMs = time;
+                const ms = Math.floor((totalMs % 1000) / 10);
+                const s = Math.floor((totalMs / 1000) % 60);
+                const m = Math.floor((totalMs / 60000) % 60);
+                const h = Math.floor(totalMs / 3600000);
+                const pad = (v) => String(v).padStart(2, '0');
+
+                container.innerHTML += `
+          <div class="flex justify-between items-center text-xs py-1.5 border-b border-white/5">
+            <span class="opacity-60 font-semibold">分段 ${displayIndex}</span>
+            <span class="digital-font font-bold text-[#EF4444]">${pad(h)}:${pad(m)}:${pad(s)}.${pad(ms)}</span>
+          </div>
+        `;
+            });
+        }
+
+        // ================= 番茄鐘模組核心 =================
+        function renderPomoDisplay() {
+            const m = Math.floor(pomoRemainingSec / 60);
+            const s = pomoRemainingSec % 60;
+            document.getElementById('pomoDisplay').innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            document.getElementById('pomoRound').innerText = `回合 ${pomoCycle}/4`;
+
+            // 圓環比例
+            const total = getPomoDurationForState(pomoState) * 60;
+            const ring = document.getElementById('pomoProgressRing');
+            if (total > 0) {
+                const offset = 283 * (pomoRemainingSec / total);
+                ring.style.strokeDashoffset = 283 - offset;
+            } else {
+                ring.style.strokeDashoffset = 0;
+            }
+        }
+
+        function getPomoDurationForState(state) {
+            if (state === 'work') return parseInt(document.getElementById('pomoWorkDur').value) || 25;
+            if (state === 'short_break') return parseInt(document.getElementById('pomoBreakDur').value) || 5;
+            return parseInt(document.getElementById('pomoLongDur').value) || 15;
+        }
+
+        function setPomoState(state) {
+            pomoState = state;
+            const stateBadge = document.getElementById('pomoState');
+            const ring = document.getElementById('pomoProgressRing');
+
+            if (state === 'work') {
+                stateBadge.innerText = '專注時間';
+                stateBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30';
+                ring.style.stroke = '#F43F5E';
+            } else if (state === 'short_break') {
+                stateBadge.innerText = '短暫休息';
+                stateBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-500/20 text-sky-300 border border-sky-500/30';
+                ring.style.stroke = '#38BDF8';
+            } else {
+                stateBadge.innerText = '長期休息';
+                stateBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+                ring.style.stroke = '#10B981';
+            }
+
+            pomoRemainingSec = getPomoDurationForState(state) * 60;
+            renderPomoDisplay();
+        }
+
+        document.getElementById('pomoPlayBtn').addEventListener('click', () => {
+            document.getElementById('pomoPlayBtn').classList.add('hidden');
+            document.getElementById('pomoPauseBtn').classList.remove('hidden');
+
+            pomodoroTimer = setInterval(() => {
+                pomoRemainingSec--;
+                renderPomoDisplay();
+
+                if (pomoRemainingSec <= 0) {
+                    clearInterval(pomodoroTimer);
+                    pomodoroTimer = null;
+
+                    document.getElementById('pomoPlayBtn').classList.remove('hidden');
+                    document.getElementById('pomoPauseBtn').classList.add('hidden');
+
+                    // 切換階段
+                    if (pomoState === 'work') {
+                        playSound('chime');
+                        if (pomoCycle >= 4) {
+                            pomoCycle = 1;
+                            setPomoState('long_break');
+                            showToast("做得太棒了！進入長期休息模式 🛋️", "success");
+                        } else {
+                            setPomoState('short_break');
+                            showToast("完成一個番茄鐘！休息一下吧 ☕", "success");
+                        }
+                    } else {
+                        // 休息結束
+                        playSound('beep');
+                        pomoCycle = pomoState === 'short_break' ? pomoCycle + 1 : 1;
+                        setPomoState('work');
+                        showToast("休息結束，準備下一輪專注！💪", "info");
+                    }
+                }
+            }, 1000);
+        });
+
+        document.getElementById('pomoPauseBtn').addEventListener('click', () => {
+            clearInterval(pomodoroTimer);
+            pomodoroTimer = null;
+            document.getElementById('pomoPlayBtn').classList.remove('hidden');
+            document.getElementById('pomoPauseBtn').classList.add('hidden');
+        });
+
+        document.getElementById('pomoResetBtn').addEventListener('click', () => {
+            clearInterval(pomodoroTimer);
+            pomodoroTimer = null;
+            pomoCycle = 1;
+            setPomoState('work');
+
+            document.getElementById('pomoPlayBtn').classList.remove('hidden');
+            document.getElementById('pomoPauseBtn').classList.add('hidden');
+        });
+    </script>
+</body>
+
+</html>
