@@ -22,6 +22,21 @@
             font-family: 'Share Tech Mono', monospace;
         }
 
+        /* YouTube cover 完美自適應無黑邊遮罩 */
+        .youtube-cover {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100vw;
+            height: 56.25vw;
+            /* 16:9 比例 */
+            min-height: 100vh;
+            min-width: 177.77vh;
+            /* 16:9 比例 */
+            pointer-events: none;
+        }
+
         /* 垂直跑馬燈效果 */
         .marquee-vertical-up {
             writing-mode: vertical-rl;
@@ -95,9 +110,9 @@
 <body
     class="transition-colors duration-500 min-h-screen flex flex-col justify-between relative bg-[#1E3F20] text-[#F5EBE0]">
 
-    <!-- 背景多媒體渲染層 -->
+    <!-- 背景多媒體渲染層 (fixed 確保頁面滾動或切換時不跑版) -->
     <div id="mediaBgContainer"
-        class="absolute inset-0 w-full h-full pointer-events-none overflow-hidden z-0 transition-opacity duration-500 opacity-20">
+        class="fixed inset-0 w-full h-full pointer-events-none overflow-hidden z-0 transition-opacity duration-500 opacity-20">
     </div>
 
     <!-- 本地端音樂/鈴聲播放器 -->
@@ -179,11 +194,11 @@
     <!-- ================= MAIN LAYOUT ================= -->
     <main class="relative z-10 flex-1 w-full flex flex-col justify-center transition-all duration-500">
 
-        <!-- 中央主要網格容器 (可被隱藏，但 main 依然維持 flex-1 保持上下跑馬燈位置) -->
+        <!-- 中央主要網格容器 -->
         <div id="mainGrid"
             class="w-full max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1 transition-all duration-500">
 
-            <!-- LEFT: 時鐘大心臟 (預設佔據 5 格，隱藏設定時佔滿 12 格) -->
+            <!-- LEFT: 時鐘大心臟 (可獨立隱藏) -->
             <div id="clockContainer"
                 class="lg:col-span-5 flex flex-col gap-6 items-center justify-center bg-black/10 backdrop-blur-md p-8 rounded-2xl border border-white/5 shadow-2xl w-full h-full min-h-[420px] transition-all duration-500">
 
@@ -220,7 +235,7 @@
                 </div>
             </div>
 
-            <!-- RIGHT: 效率小工具切換器 (預設佔據 7 格) -->
+            <!-- RIGHT: 效率小工具切換器 (時鐘縮小時自動填滿版面) -->
             <div id="widgetContainer" class="lg:col-span-7 flex flex-col gap-4 w-full transition-all duration-500">
                 <!-- 標籤導覽列 -->
                 <div class="flex overflow-x-auto gap-2 bg-black/15 p-1.5 rounded-xl border border-white/5">
@@ -1160,6 +1175,9 @@
                 document.getElementById('toggleWidgetsBtn').addEventListener('click', toggleWidgetsVisibility);
                 document.getElementById('toggleMinimizeBtn').addEventListener('click', toggleClockMinimization);
 
+                // 綁定全螢幕切換按鈕監聽
+                document.getElementById('fullscreenBtn').addEventListener('click', toggleFullscreen);
+
                 // 綁定背景音樂開關
                 document.getElementById('toggleBgmBtn').addEventListener('click', toggleBgmPlayState);
             } catch (err) {
@@ -1214,12 +1232,13 @@
             // 5. Widgets Visibility
             const wVisible = await dbGet('settings', 'widgetsVisible');
             widgetsVisible = wVisible !== undefined ? wVisible : true;
-            applyWidgetsVisibility(false);
 
             // 6. Clock Minimized State
             const isMin = await dbGet('settings', 'clockMinimized');
             clockMinimized = isMin !== undefined ? isMin : false;
-            applyClockMinimization(false);
+
+            // 執行整合佈局渲染 (套用獨立時鐘與設定區控制)
+            applyGridLayout(false);
 
             // 動態載入本地端媒體狀態與選單
             await updateRingtoneSelector();
@@ -1248,90 +1267,136 @@
             }
         }
 
+        // ================= BACKGROUND RESIZING (自適應重算機制) =================
+        function resizeBackground() {
+            const container = document.getElementById('mediaBgContainer');
+            if (!container) return;
+
+            // 更新容器尺寸與視界精確對接
+            container.style.height = `${window.innerHeight}px`;
+            container.style.width = `${window.innerWidth}px`;
+
+            // HTML5 影片強制套用完美包覆
+            const video = document.getElementById('bgVideoPlayer');
+            if (video) {
+                video.style.width = '100%';
+                video.style.height = '100%';
+            }
+        }
+
+        // 綁定視窗尺寸變更與全螢幕變更監聽
+        window.addEventListener('resize', resizeBackground);
+
+        // 全螢幕切換功能與狀態監聽
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().then(() => {
+                    showToast("已進入全螢幕模式", "success");
+                }).catch(err => {
+                    showToast(`無法啟用全螢幕: ${err.message}`, "error");
+                });
+            } else {
+                document.exitFullscreen().catch(err => {
+                    console.warn("退出全螢幕失敗：", err);
+                });
+            }
+        }
+
+        // 全局全螢幕狀態監聽 (支援 Esc 鍵退出時自動還原按鈕圖示與重算背景)
+        document.addEventListener('fullscreenchange', () => {
+            const btn = document.getElementById('fullscreenBtn');
+            if (document.fullscreenElement) {
+                if (btn) btn.innerHTML = '<i data-lucide="minimize" class="w-5 h-5"></i>';
+            } else {
+                if (btn) btn.innerHTML = '<i data-lucide="maximize" class="w-5 h-5"></i>';
+            }
+            lucide.createIcons();
+            // 延遲 100 毫秒等待視窗狀態穩定後重算背景，確保比例精準
+            setTimeout(resizeBackground, 100);
+        });
+
+        // ================= INTEGRATED GRID LAYOUT ENGINE (時鐘與設定區獨立顯示) =================
+        function applyGridLayout(triggerToast = true) {
+            const mainGrid = document.getElementById('mainGrid');
+            const clockContainer = document.getElementById('clockContainer');
+            const widgetContainer = document.getElementById('widgetContainer');
+            const miniClockContainer = document.getElementById('miniClockContainer');
+
+            const btnMinimize = document.getElementById('toggleMinimizeBtn');
+            const btnWidgets = document.getElementById('toggleWidgetsBtn');
+            const clockSvg = document.getElementById('clockSvg');
+
+            // 1. 處理頂部 Header 迷你數字鐘的顯示與按鈕文字
+            if (clockMinimized) {
+                miniClockContainer.classList.remove('hidden');
+                miniClockContainer.classList.add('flex');
+                btnMinimize.innerHTML = '<i data-lucide="maximize-2" class="w-4 h-4 text-emerald-400"></i><span id="toggleMinimizeText">標準時鐘</span>';
+            } else {
+                miniClockContainer.classList.add('hidden');
+                miniClockContainer.classList.remove('flex');
+                btnMinimize.innerHTML = '<i data-lucide="minimize-2" class="w-4 h-4"></i><span id="toggleMinimizeText">縮小時鐘</span>';
+            }
+
+            // 2. 處理隱藏小工具按鈕文字與狀態
+            if (widgetsVisible) {
+                btnWidgets.innerHTML = '<i data-lucide="eye-off" class="w-4 h-4"></i><span id="toggleWidgetsText">隱藏設定區</span>';
+            } else {
+                btnWidgets.innerHTML = '<i data-lucide="eye" class="w-4 h-4 text-emerald-400"></i><span id="toggleWidgetsText">顯示設定區</span>';
+            }
+            lucide.createIcons();
+
+            // 3. 多重交叉佈局判斷矩陣 (獨立控制核心)
+            if (clockMinimized && !widgetsVisible) {
+                // 時鐘已縮小且小工具已隱藏 -> 完全隱藏主要網格，呈現無干擾動態環境
+                mainGrid.classList.add('hidden');
+                clockContainer.classList.add('hidden');
+                widgetContainer.classList.add('hidden');
+            } else {
+                mainGrid.classList.remove('hidden');
+
+                if (clockMinimized && widgetsVisible) {
+                    // 時鐘縮小，小工具設定區保持開啟 -> 小工具延展至 100% 滿版
+                    clockContainer.classList.add('hidden');
+                    widgetContainer.classList.remove('hidden');
+                    widgetContainer.className = "lg:col-span-12 w-full transition-all duration-500";
+                }
+                else if (!clockMinimized && !widgetsVisible) {
+                    // 時鐘標準，小工具設定區關閉 -> 時鐘居中並放大顯示比例
+                    clockContainer.classList.remove('hidden');
+                    clockContainer.className = "lg:col-span-12 max-w-2xl mx-auto flex flex-col gap-8 items-center justify-center bg-black/15 backdrop-blur-md p-12 rounded-2xl border border-white/5 shadow-2xl w-full min-h-[460px] my-4 transition-all duration-500";
+                    clockSvg.className = "w-64 h-64 md:w-72 md:h-72 transition-all duration-300 transform -rotate-90";
+                    widgetContainer.classList.add('hidden');
+                }
+                else {
+                    // 兩者皆開啟 (預設標準 5:7 佈局)
+                    clockContainer.classList.remove('hidden');
+                    clockContainer.className = "lg:col-span-5 flex flex-col gap-6 items-center justify-center bg-black/10 backdrop-blur-md p-8 rounded-2xl border border-white/5 shadow-2xl w-full h-full min-h-[420px] transition-all duration-500";
+                    clockSvg.className = "w-48 h-48 md:w-56 md:h-56 transition-all duration-300 transform -rotate-90";
+
+                    widgetContainer.classList.remove('hidden');
+                    widgetContainer.className = "lg:col-span-7 flex flex-col gap-4 w-full transition-all duration-500";
+                }
+            }
+
+            // 觸發視網膜尺寸重算，防止版面伸縮時背景渲染不一致
+            resizeBackground();
+        }
+
         // ================= HIDE/SHOW WIDGETS CONTROL =================
         function toggleWidgetsVisibility() {
             widgetsVisible = !widgetsVisible;
             dbSet('settings', 'widgetsVisible', widgetsVisible);
-            applyWidgetsVisibility(true);
-        }
-
-        function applyWidgetsVisibility(triggerToast = true) {
-            const clockContainer = document.getElementById('clockContainer');
-            const widgetContainer = document.getElementById('widgetContainer');
-            const btn = document.getElementById('toggleWidgetsBtn');
-            const clockSvg = document.getElementById('clockSvg');
-
-            if (widgetsVisible) {
-                // 展開小工具
-                widgetContainer.classList.remove('hidden');
-                clockContainer.className = "lg:col-span-5 flex flex-col gap-6 items-center justify-center bg-black/10 backdrop-blur-md p-8 rounded-2xl border border-white/5 shadow-2xl w-full h-full min-h-[420px] transition-all duration-500";
-                clockSvg.className = "w-48 h-48 md:w-56 md:h-56 transition-all duration-300 transform -rotate-90";
-
-                btn.innerHTML = '<i data-lucide="eye-off" class="w-4 h-4"></i><span id="toggleWidgetsText">隱藏設定區</span>';
-                if (triggerToast) showToast("已展開時鐘設定與小工具面板", "info");
-            } else {
-                // 隱藏小工具，極簡模式
-                widgetContainer.classList.add('hidden');
-                clockContainer.className = "lg:col-span-12 max-w-2xl mx-auto flex flex-col gap-8 items-center justify-center bg-black/15 backdrop-blur-md p-12 rounded-2xl border border-white/5 shadow-2xl w-full min-h-[460px] my-4 transition-all duration-500";
-                clockSvg.className = "w-64 h-64 md:w-72 md:h-72 transition-all duration-300 transform -rotate-90";
-
-                btn.innerHTML = '<i data-lucide="eye" class="w-4 h-4 text-emerald-400"></i><span id="toggleWidgetsText">顯示設定區</span>';
-                if (triggerToast) showToast("已隱藏設定區，呈現極簡極淨時鐘畫面", "success");
-            }
-            lucide.createIcons();
+            applyGridLayout(true);
+            showToast(widgetsVisible ? "已展開小工具設定區" : "已隱藏設定區，時鐘視覺更加專注", "info");
         }
 
         // ================= CLOCK MINIMIZE LOGIC =================
         async function toggleClockMinimization() {
             clockMinimized = !clockMinimized;
             await dbSet('settings', 'clockMinimized', clockMinimized);
-            applyClockMinimization(true);
+            applyGridLayout(true);
+            showToast(clockMinimized ? "已縮小時鐘，啟動沉浸專注模式" : "已還原標準時鐘面板", "success");
         }
-
-        function applyClockMinimization(triggerToast = true) {
-            const mainGrid = document.getElementById('mainGrid');
-            const miniClockContainer = document.getElementById('miniClockContainer');
-            const btn = document.getElementById('toggleMinimizeBtn');
-
-            if (clockMinimized) {
-                // 僅隱藏中央 Grid，保留 main 保障跑馬燈在最上下兩側
-                mainGrid.classList.add('hidden');
-                // 在頂部 Header 顯示迷你數字鐘
-                miniClockContainer.classList.remove('hidden');
-                // 修改按鈕狀態
-                btn.innerHTML = '<i data-lucide="maximize-2" class="w-4 h-4 text-emerald-400"></i><span id="toggleMinimizeText">標準時鐘</span>';
-
-                if (triggerToast) showToast("已將時鐘縮小至左上角，極簡沉浸模式啟動", "success");
-            } else {
-                // 還原中央網格
-                mainGrid.classList.remove('hidden');
-                // 隱藏頂部迷你時鐘
-                miniClockContainer.classList.add('hidden');
-                // 還原按鈕狀態
-                btn.innerHTML = '<i data-lucide="minimize-2" class="w-4 h-4"></i><span id="toggleMinimizeText">縮小時鐘</span>';
-
-                if (triggerToast) showToast("已還原標準主面板與時鐘設定", "info");
-            }
-            lucide.createIcons();
-        }
-
-        // ================= FULLSCREEN & GLOBAL DISPLAY =================
-        const fullscreenBtn = document.getElementById('fullscreenBtn');
-        fullscreenBtn.addEventListener('click', () => {
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().then(() => {
-                    fullscreenBtn.innerHTML = '<i data-lucide="minimize" class="w-5 h-5"></i>';
-                    lucide.createIcons();
-                }).catch(err => {
-                    showToast(`無法啟用全螢幕: ${err.message}`, "error");
-                });
-            } else {
-                document.exitFullscreen().then(() => {
-                    fullscreenBtn.innerHTML = '<i data-lucide="maximize" class="w-5 h-5"></i>';
-                    lucide.createIcons();
-                });
-            }
-        });
 
         function toggleDateDisplay(visible) {
             const el = document.getElementById('headerDate');
@@ -1380,6 +1445,7 @@
           `;
                 }
                 container.style.opacity = document.getElementById('bgOpacitySlider').value / 100;
+                resizeBackground();
                 return;
             }
 
@@ -1402,8 +1468,9 @@
             if (isYoutube) {
                 const autoplayParam = bgVideoPlaying ? 1 : 0;
                 const muteParam = bgVideoPlaySound ? 0 : 1;
+                // 使用 .youtube-cover 完全自適應不變形 class 進行渲染
                 container.innerHTML = `
-          <iframe id="bgYoutubeIframe" class="w-full h-full scale-125" src="https://www.youtube.com/embed/${ytId}?autoplay=${autoplayParam}&mute=${muteParam}&controls=0&loop=1&playlist=${ytId}&modestbranding=1&rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+          <iframe id="bgYoutubeIframe" class="youtube-cover" src="https://www.youtube.com/embed/${ytId}?autoplay=${autoplayParam}&mute=${muteParam}&controls=0&loop=1&playlist=${ytId}&modestbranding=1&rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
         `;
             } else if (url.match(/\.(mp4|webm|ogg)$/i)) {
                 container.innerHTML = `
@@ -1425,6 +1492,7 @@
         `;
             }
             container.style.opacity = document.getElementById('bgOpacitySlider').value / 100;
+            resizeBackground();
         }
 
         // 背景影片聲音開關處理
