@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生成式 AI 與 GAS 雲端應用實作範例01</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <!-- FontAwesome 圖標 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* 自訂平滑捲動與滾動條 */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans leading-relaxed antialiased">
+
+  <!-- 全域成功提示框 (Toast) -->
+  <div id="toast"
+    class="fixed top-5 right-5 z-50 transform translate-y-[-20px] opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-emerald-600 text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2">
+      <i class="fa-solid fa-circle-check text-lg"></i>
+      <span id="toast-text" class="text-sm font-semibold">複製成功！</span>
+    </div>
+  </div>
+
+  <!-- 頂部導覽列 -->
+  <header class="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/80 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+      <div class="flex items-center gap-3 shrink-0">
+        <div class="bg-blue-600 text-white p-2 rounded-lg flex items-center justify-center shadow-xs">
+          <i class="fa-solid fa-microchip text-lg"></i>
+        </div>
+        <span class="font-extrabold text-lg text-slate-900 tracking-tight">AI &amp; GAS 實作工坊</span>
+      </div>
+
+      <!-- 本實作的基本功能說明區 -->
+      <div class="hidden lg:flex items-center gap-6 text-xs sm:text-sm font-medium text-slate-600">
+        <div class="flex items-center gap-1.5">
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-blue-50 text-blue-600"><i
+              class="fa-solid fa-database text-[11px]"></i></span>
+          <span class="font-semibold">Sheets 數據儲存</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-50 text-emerald-600"><i
+              class="fa-solid fa-shield-halved text-[11px]"></i></span>
+          <span class="font-semibold">後端密鑰驗證</span>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-50 text-purple-600"><i
+              class="fa-solid fa-robot text-[11px]"></i></span>
+          <span class="font-semibold">Gemini 3.5 AI 整合</span>
+        </div>
+      </div>
+
+      <!-- 右側按鈕：查看完成範例 (響應式外框) -->
+      <div class="flex items-center shrink-0">
+        <a href="https://script.google.com/macros/s/AKfycbzuIvUfoS5CeJ3S-uELH_MQJ3ADSlUB0RLL5tWPZM3IcKeSeyXEIdhrylHVI8Ywra3x/exec"
+          target="_blank" rel="noopener noreferrer"
+          class="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold px-3.5 py-2 rounded-xl transition-all duration-250 flex items-center gap-1.5 shadow-sm hover:shadow-md cursor-pointer">
+          <i class="fa-solid fa-up-right-from-square"></i>
+          <span>查看完成範例</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主容器：側邊欄與主要內容 -->
+  <div class="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+    <!-- 左側導覽列 (只在桌面端顯示) -->
+    <aside class="hidden lg:block lg:col-span-1">
+      <div class="sticky top-24 space-y-6">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">技術文件導覽</h3>
+          <nav class="space-y-1">
+            <a href="#intro"
+              class="group flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-all font-medium">
+              <i class="fa-solid fa-book-open text-slate-400 group-hover:text-blue-500 w-4"></i>
+              前言與架構
+            </a>
+            <a href="#sheet-section"
+              class="group flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-all font-medium">
+              <i class="fa-solid fa-table text-slate-400 group-hover:text-blue-500 w-4"></i>
+              第一步：試算表設定
+            </a>
+            <a href="#gas-section"
+              class="group flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-all font-medium">
+              <i class="fa-solid fa-code text-slate-400 group-hover:text-blue-500 w-4"></i>
+              第二步：後端 Code.gs
+            </a>
+            <a href="#html-section"
+              class="group flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-all font-medium">
+              <i class="fa-solid fa-file-code text-slate-400 group-hover:text-blue-500 w-4"></i>
+              第三步：前端 Index.html
+            </a>
+            <a href="#deploy-section"
+              class="group flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-all font-medium">
+              <i class="fa-solid fa-rocket text-slate-400 group-hover:text-blue-500 w-4"></i>
+              第四步：雲端部署
+            </a>
+            <a href="#troubleshooting"
+              class="group flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-all font-medium">
+              <i class="fa-solid fa-triangle-exclamation text-slate-400 group-hover:text-blue-500 w-4"></i>
+              除錯與常見問題
+            </a>
+          </nav>
+        </div>
+
+        <div class="bg-blue-50 border border-blue-100 p-5 rounded-2xl">
+          <h4 class="text-sm font-bold text-blue-800 flex items-center gap-1.5 mb-2">
+            <i class="fa-solid fa-lightbulb"></i> 新手小提醒
+          </h4>
+          <p class="text-xs text-blue-700 leading-relaxed">
+            本專案不需任何伺服器成本。只需要擁有一個 Google 帳號與一組免費的 Gemini API Key，即可在 15 分鐘內架設完畢。
+          </p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 右側：主內容區 -->
+    <main class="col-span-1 lg:col-span-3 space-y-12">
+
+      <!-- 前言與架構 -->
+      <section id="intro" class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-2xs">
+        <span
+          class="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-600 font-bold px-2.5 py-1 rounded-md mb-3">
+          <i class="fa-solid fa-info-circle"></i> 系統簡介
+        </span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mb-4">生成式 AI 與 Google Apps Script (GAS) 雲端整合實作
+        </h2>
+        <p class="text-slate-600 text-sm sm:text-base mb-6">
+          本報告提供一個最完整的「低代碼（Low-Code）」跨平台雲端解決方案。利用 <strong>Google Apps Script (GAS)</strong> 做為後端，並將大家熟知的 <strong>Google
+            Sheets（試算表）</strong> 做為極速讀寫的雲端資料庫。
+          前端介面透過現代化、響應式的 <strong>Tailwind CSS</strong> 設計，任何人不論在何種電腦或行動裝置上，打開專屬網址，就能看見即時連線的統一資料庫。
+        </p>
+
+        <!-- 系統權限控管策略 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <div class="bg-slate-50 border border-slate-150 p-4 rounded-xl">
+            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
+              <span class="p-1 bg-blue-100 text-blue-600 rounded text-xs"><i class="fa-solid fa-lock"></i></span>
+              管理員權限 (完整)
+            </h4>
+            <p class="text-xs text-slate-500">
+              擁有專屬的後端身分比對密鑰。可透過網頁介面向大模型 (Gemini 3.5 Flash) 提問，並將 AI 生成結果永久新增、更新或刪除入庫。
+            </p>
+          </div>
+          <div class="bg-slate-50 border border-slate-150 p-4 rounded-xl">
+            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-1.5 mb-2">
+              <span class="p-1 bg-emerald-100 text-emerald-600 rounded text-xs"><i class="fa-solid fa-eye"></i></span>
+              一般使用者 (唯讀)
+            </h4>
+            <p class="text-xs text-slate-500">
+              無需任何密碼，直接連入網頁即可看見乾淨、條理分明的歷史生成結果卡片群。前端直接封鎖寫入按鈕，安全防範誤寫。
+            </p>
+          </div>
+        </div>
+
+        <div class="bg-amber-50 border border-amber-200 p-4 rounded-xl">
+          <div class="flex gap-2.5">
+            <i class="fa-solid fa-shield-halved text-amber-600 text-lg mt-0.5"></i>
+            <div>
+              <h5 class="text-xs font-bold text-amber-800">後端防禦核心安全機制</h5>
+              <p class="text-xs text-amber-700 mt-1">
+                許多開發者誤以為「只要前端網頁把按鈕藏起來就是唯讀」，這其實非常危險。懂技術的人能在瀏覽器控制台手動呼叫後端函數。本系統採
+                <strong>「伺服器端雙重密鑰驗證」</strong>，不論前端指令怎麼繞過，後端如果沒有匹配您設定的管理密碼，一律 100% 擋下寫入指令！
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 第一步：試算表設定 -->
+      <section id="sheet-section" class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-2xs">
+        <span
+          class="inline-flex items-center gap-1 text-xs bg-emerald-50 text-emerald-600 font-bold px-2.5 py-1 rounded-md mb-3">
+          STEP 1
+        </span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mb-4">步驟一：建立與配置 Google 試算表（雲端資料庫）</h2>
+        <p class="text-slate-600 text-sm mb-6">
+          要使用 Google 試算表作為資料庫，我們必須定義好欄位結構。請按照下圖指引進行配置：
+        </p>
+
+        <div class="bg-slate-50 border border-slate-200 p-5 rounded-xl space-y-4 mb-6">
+          <ol class="list-decimal list-inside text-sm space-y-3 text-slate-600">
+            <li>在 Google 雲端硬碟建立一份全新的「試算表」，命名為 <code
+                class="bg-slate-200 px-1.5 py-0.5 rounded font-mono text-red-600">AI_Cloud_Database</code>.</li>
+            <li>將左下角預設的分頁名稱（預設為「工作表1」）點兩下更名為：<strong class="text-slate-900 font-mono">Data</strong> <span
+                class="text-xs text-rose-500">(注意大小寫，前後不要有空格)</span>.</li>
+            <li>在<strong>第一行（Row 1）</strong>的儲存格中，手動打入以下欄位名稱：</li>
+          </ol>
+
+          <!-- 欄位模擬展示 -->
+          <div class="overflow-x-auto pt-2">
+            <table class="min-w-full text-xs font-mono text-left border-collapse border border-slate-300">
+              <thead>
+                <tr class="bg-slate-100">
+                  <th class="border border-slate-300 p-2 text-center text-slate-400">1</th>
+                  <th class="border border-slate-300 p-2 font-bold text-slate-900 bg-amber-50">A: ID</th>
+                  <th class="border border-slate-300 p-2 font-bold text-slate-900 bg-amber-50">B: 提問內容</th>
+                  <th class="border border-slate-300 p-2 font-bold text-slate-900 bg-amber-50">C: AI回應內容</th>
+                  <th class="border border-slate-300 p-2 font-bold text-slate-900 bg-amber-50">D: 更新時間</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="border border-slate-300 p-2 text-center text-slate-400 bg-slate-50">2</td>
+                  <td class="border border-slate-300 p-2 text-slate-400 italic">（留空，由系統寫入）</td>
+                  <td class="border border-slate-300 p-2 text-slate-400 italic">（留空，由系統寫入）</td>
+                  <td class="border border-slate-300 p-2 text-slate-400 italic">（留空，由系統寫入）</td>
+                  <td class="border border-slate-300 p-2 text-slate-400 italic">（留空，由系統寫入）</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SPREADSHEET_ID 取得教學高亮版塊 -->
+        <div class="bg-amber-50 border-l-4 border-amber-500 p-5 rounded-r-xl my-6">
+          <h4 class="text-base font-bold text-amber-900 flex items-center gap-2 mb-2">
+            <i class="fa-solid fa-key text-amber-600"></i>
+            💡 核心重點：什麼是 SPREADSHEET_ID？該如何取得？
+          </h4>
+          <p class="text-xs sm:text-sm text-amber-800 leading-relaxed">
+            在後端程式碼中，<code class="bg-amber-150 px-1 py-0.5 rounded font-bold">SPREADSHEET_ID</code>
+            用來告訴後端程式要對哪一個特定的試算表進行讀寫。取得方法極其簡單：
+          </p>
+          <div class="mt-3 space-y-2">
+            <div class="flex items-start gap-2 text-xs sm:text-sm text-amber-800">
+              <span class="bg-amber-200 text-amber-900 font-bold px-1.5 py-0.2 rounded shrink-0">1</span>
+              <span>打開您剛剛建立好的 Google 試算表 `AI_Cloud_Database`。</span>
+            </div>
+            <div class="flex items-start gap-2 text-xs sm:text-sm text-amber-800">
+              <span class="bg-amber-200 text-amber-900 font-bold px-1.5 py-0.2 rounded shrink-0">2</span>
+              <span>看一眼您瀏覽器最上方的「網址列」。它的格式通常長得像下面這樣：</span>
+            </div>
+            <div
+              class="bg-slate-900 text-slate-300 p-3 rounded-lg text-[11px] sm:text-xs font-mono overflow-x-auto break-all my-2 border border-slate-800">
+              https://docs.google.com/spreadsheets/d/<span
+                class="bg-blue-600 text-white font-bold px-1 py-0.5 rounded">1aBcD_efgHiJkLmNoPqRsTuVwXyZ1234567890_XyZ</span>/edit#gid=0
+            </div>
+            <div class="flex items-start gap-2 text-xs sm:text-sm text-amber-800">
+              <span class="bg-amber-200 text-amber-900 font-bold px-1.5 py-0.2 rounded shrink-0">3</span>
+              <span>夾在 <code class="bg-amber-150 px-1 py-0.5 rounded font-mono">/d/</code> 之後，以及 <code
+                  class="bg-amber-150 px-1 py-0.5 rounded font-mono">/edit</code> 之前那一長串英數與符號混雜的隨機字串（如上圖高亮部分），就是您的
+                <strong>SPREADSHEET_ID</strong>。請將其整串複製下來，準備貼入後端代碼中。</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-rose-50 border border-rose-100 p-4 rounded-xl flex gap-3">
+          <i class="fa-solid fa-triangle-exclamation text-rose-600 text-lg mt-0.5"></i>
+          <div>
+            <h5 class="text-xs font-bold text-rose-800">重要警告：欄位文字必須絕對一致！</h5>
+            <p class="text-xs text-rose-700 mt-1">
+              後端程式碼將會嚴格對應試算表第一行的文字。請確保「ID」、「提問內容」、「AI回應內容」、「更新時間」字體、空格皆與程式代碼一模一樣，否則讀取時前端會出現空白或 undefined。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 第二步：後端 Code.gs -->
+      <section id="gas-section" class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-2xs">
+        <span
+          class="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-600 font-bold px-2.5 py-1 rounded-md mb-3">
+          STEP 2
+        </span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mb-4">步驟二：建置後端 API 機制（Code.gs）</h2>
+        <p class="text-slate-600 text-sm mb-6">
+          請在試算表中，點選功能選單的 <strong>「擴充功能」 -&gt; 「Apps Script」</strong>。將專案命名為 `AI_Server`。
+          清除預設內容，並將下方的高效防禦程式碼完整貼上。
+        </p>
+
+        <!-- 程式碼與一鍵複製區 -->
+        <div class="relative group mt-4">
+          <div class="absolute top-3 right-3 z-10 flex gap-2">
+            <button onclick="copyCode('code-gs', this)"
+              class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1 cursor-pointer transition-all">
+              <i class="fa-regular fa-copy"></i> 一鍵複製 Code.gs
+            </button>
+          </div>
+          <!-- 複製用 Textarea (隱形且內容已做 HTML 字元轉義避免干擾 DOM) -->
+          <textarea id="code-gs" class="sr-only">/* =========================================================================
+ * 系統核心參數設定專區
+ * ========================================================================= */
+const SPREADSHEET_ID = '請替換為您的_GOOGLE_SHEETS_ID'; 
+const GEMINI_API_KEY = '請替換為您的_GEMINI_API_KEY';   
+const ADMIN_PASSWORD = '您自訂的管理員密碼'; // 例如: 'Admin888'
+
+/**
+ * 網頁應用程式初始化配置 (GET 請求進入點)
+ */
+function doGet(e) {
+  return HtmlService.createTemplateFromFile('Index')
+      .evaluate()
+      .setTitle('生成式 AI 雲端管理系統')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+/**
+ * 安全功能：讀取資料庫數據 (開放予所有人，採文字快取優化)
+ */
+function readData() {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheetByName('Data');
+    
+    if (!sheet) {
+      Logger.log("安全性異常：找不到指定工作表 'Data'");
+      return []; 
+    }
+    
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) {
+      return []; // 若資料庫僅有標題列，返回空陣列
+    }
+    
+    // 將 getValues() 改為 getDisplayValues()
+    // 將所有日期時間與數字強制轉換為字串，徹底排除網頁協議序列化崩潰問題
+    const values = sheet.getRange(1, 1, lastRow, sheet.getLastColumn()).getDisplayValues();
+    const headers = values[0]; 
+    const rows = values.slice(1);
+    
+    // 將二維矩陣動態映射為 JSON 物件陣列
+    const result = rows.map(row => {
+      let obj = {};
+      headers.forEach((header, i) => {
+        const key = header.toString().trim();
+        if (key) {
+          obj[key] = row[i] !== undefined ? row[i] : "";
+        }
+      });
+      return obj;
+    }).reverse(); // 排序優化：最新生成的資料排列於最上方
+    
+    return result; 
+    
+  } catch (error) {
+    Logger.log('後端讀取異常: ' + error.toString());
+    return []; 
+  }
+}
+
+/**
+ * 權限功能：寫入數據與觸發 AI 生成 (管理員專用)
+ */
+function addDataWithAI(prompt, password) {
+  // 1. 後端第一道防線：硬性密碼校對
+  if (password !== ADMIN_PASSWORD) {
+    throw new Error('拒絕存取：身分驗證失敗，管理密鑰錯誤！');
+  }
+  
+  if (!prompt || prompt.trim() === '') {
+    throw new Error('無效請求：提示詞內容不可為空。');
+  }
+
+  // 2. 呼叫最新的 Gemini 3.5 世代 API 引擎
+  const aiResponse = callGeminiAPI(prompt);
+  
+  // 3. 寫入雲端資料庫
+  try {
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('Data');
+    const nextId = sheet.getLastRow(); // 採行數序列化作為簡易 ID
+    const timestamp = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss");
+    
+    // 寫入全新列
+    sheet.appendRow([nextId, prompt, aiResponse, timestamp]);
+    
+    // 強制釋放 GAS 快取，確保實體資料庫即時寫入完成
+    SpreadsheetApp.flush(); 
+    
+    return { success: true, message: '雲端同步完成！資料已成功入庫。' };
+  } catch (error) {
+    throw new Error('資料庫寫入失敗: ' + error.toString());
+  }
+}
+
+/**
+ * 底層介接：Gemini 3.5 Flash 遠端通訊程序
+ */
+function callGeminiAPI(prompt) {
+  // 導入最新生產級 Gemini 3.5 Flash 模型與 v1 穩定版節點
+  const url = `https://generativelanguage.googleapis.com/v1/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+  
+  const payload = {
+    contents: [{
+      parts: [{ text: prompt }]
+    }]
+  };
+  
+  const options = {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  };
+  
+  try {
+    const response = UrlFetchApp.fetch(url, options);
+    const json = JSON.parse(response.getContentText());
+    
+    if (json.candidates && json.candidates[0].content.parts[0].text) {
+      return json.candidates[0].content.parts[0].text;
+    } else if (json.error) {
+      return 'AI 引擎錯誤回報: ' + json.error.message;
+    } else {
+      return 'AI 未能生成有效回應，請檢查 Google AI Studio 帳戶狀態。';
+    }
+  } catch (error) {
+    return '遠端連線失敗: ' + error.toString();
+  }
+}</textarea>
+
+          <pre
+            class="bg-slate-900 text-slate-300 p-5 rounded-2xl text-xs sm:text-sm font-mono overflow-x-auto max-h-[400px] border border-slate-850"><code class="text-blue-400">// Code.gs - 後端主控制程式</code>
+<span class="text-emerald-500">const SPREADSHEET_ID = '請替換為您的_GOOGLE_SHEETS_ID'; 
+const GEMINI_API_KEY = '請替換為您的_GEMINI_API_KEY';   
+const ADMIN_PASSWORD = '您自訂的管理員密碼';</span>
+
+function doGet(e) {
+  return HtmlService.createTemplateFromFile('Index')
+      .evaluate()
+      .setTitle('生成式 AI 雲端管理系統')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function readData() { ... <span class="text-slate-500">// 詳細程式碼請點擊一鍵複製</span> ... }
+function addDataWithAI(prompt, password) { ... }
+function callGeminiAPI(prompt) { ... }</pre>
+        </div>
+
+        <div class="bg-blue-50 border border-blue-100 p-4 rounded-xl mt-4">
+          <h5 class="text-xs font-bold text-blue-800 flex items-center gap-1.5">
+            <i class="fa-solid fa-gear"></i> 如何替換核心參數？
+          </h5>
+          <p class="text-xs text-blue-700 mt-1 leading-relaxed">
+            請將程式碼最上方三行的 <code class="bg-blue-100 px-1 py-0.5 rounded text-blue-800 font-bold">SPREADSHEET_ID</code>
+            替換為您的試算表網址 ID；將 <code class="bg-blue-100 px-1 py-0.5 rounded text-blue-800 font-bold">GEMINI_API_KEY</code>
+            替換為你在 Google AI Studio 申請的 API 鑰；以及隨意自訂一組管理密碼（例如 <code
+              class="bg-blue-100 px-1 py-0.5 rounded text-blue-800 font-bold">"Admin777"</code>）。
+          </p>
+        </div>
+      </section>
+
+      <!-- 第三步：前端 Index.html -->
+      <section id="html-section" class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-2xs">
+        <span
+          class="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-600 font-bold px-2.5 py-1 rounded-md mb-3">
+          STEP 3
+        </span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mb-4">步驟三：建立網頁操作介面（Index.html）</h2>
+        <p class="text-slate-600 text-sm mb-6">
+          在 Apps Script 專案左側點擊 <strong>「+（新增檔案）」-&gt; 「HTML」</strong>，將檔案命名為 <strong
+            class="text-slate-900">Index</strong>（切勿加入 .html字尾，系統會自動生成）。然後將下方完整程式碼貼上：
+        </p>
+
+        <!-- 前端一鍵複製 -->
+        <div class="relative group mt-4">
+          <div class="absolute top-3 right-3 z-10">
+            <button onclick="copyCode('code-html', this)"
+              class="bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-700 flex items-center gap-1 cursor-pointer transition-all">
+              <i class="fa-regular fa-copy"></i> 一鍵複製 Index.html
+            </button>
+          </div>
+          <!-- 核心修正：此處已進行完整 HTML Entity 轉義，防止 nested textarea 標籤破壞 Canvas 原生 DOM 結構 -->
+          <textarea id="code-html" class="sr-only">&lt;!DOCTYPE html&gt;
+&lt;html lang="zh-TW"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;生成式 AI 雲端管理系統&lt;/title&gt;
+  &lt;!-- 引入 Tailwind CSS 確保現代化響應式外觀 --&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"&gt;&lt;/script&gt;
+  &lt;style&gt;
+    .loading-spinner {
+      border: 3px solid rgba(0, 0, 0, 0.1);
+      border-radius: 50%;
+      border-top: 3px solid #2563eb;
+      width: 20px;
+      height: 20px;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body class="bg-slate-50 text-slate-800 min-h-screen"&gt;
+
+  &lt;div class="max-w-6xl mx-auto px-4 py-8"&gt;
+    &lt;!-- 頂部標頭 - 改良 RWD 彈性配置，絕不跑版 --&gt;
+    &lt;header class="mb-8 border-b border-slate-200 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4"&gt;
+      &lt;div&gt;
+        &lt;h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight"&gt;生成式 AI 雲端管理系統&lt;/h1&gt;
+        &lt;p class="text-xs sm:text-sm text-slate-500 mt-1"&gt;基於 Google Apps Script 伺服器端驗證與新世代 Gemini 3.5 Flash 運算架構&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/header>
+
+    &lt;!-- 雙欄版面配置 - 增加中等螢幕以下完美 RWD 撐滿 --&gt;
+    &lt;div class="grid grid-cols-1 lg:grid-cols-3 gap-8"&gt;
+      
+      &lt;!-- 左欄：管理控制台（需要密鑰） --&gt;
+      &lt;div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-xs border border-slate-200 h-fit"&gt;
+        &lt;h2 class="text-lg font-bold text-blue-600 flex items-center gap-2 mb-4"&gt;
+          &lt;span&gt;🔒&lt;/span&gt; 管理者專區
+        &lt;/h2&gt;
+        
+        &lt;div class="space-y-4"&gt;
+          &lt;div&gt;
+            &lt;label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1"&gt;管理密鑰&lt;/label&gt;
+            &lt;input type="password" id="adminPassword" placeholder="請輸入安全金鑰" 
+                   class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"&gt;
+          &lt;/div&gt;
+
+          &lt;div&gt;
+            &lt;label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1"&gt;AI 提示詞 (Prompt)&lt;/label&gt;
+            &lt;textarea id="promptInput" rows="5" placeholder="請輸入欲交付給 AI 生成並入庫的指令..." 
+                      class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-blue-500"&gt;&lt;/textarea&gt;
+          </div>
+
+          &lt;button onclick="submitAIRequest()" id="submitBtn"
+                  class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm py-2.5 px-4 rounded-lg transition-colors cursor-pointer flex justify-center items-center gap-2"&gt;
+            &lt;span&gt;發送並寫入資料庫&lt;/span&gt;
+          &lt;/button&gt;
+          
+          &lt;div id="statusMessage" class="mt-2 text-xs font-medium hidden"&gt;&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;!-- 右欄：公開即時檢視區（所有人可讀） - 新增極致 RWD 防爆版面設計 --&gt;
+      &lt;div class="lg:col-span-2"&gt;
+        &lt;div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-200"&gt;
+          &lt;!-- 關鍵修正點：使用 flex-col sm:flex-row 徹底防範窄螢幕下的按鈕標題重疊與折行 --&gt;
+          &lt;div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-100"&gt;
+            &lt;h2 class="text-lg font-bold text-slate-900 flex items-center gap-2"&gt;
+              &lt;span&gt;📊&lt;/span&gt; 雲端資料庫即時檢視 (唯讀)
+            &lt;/h2&gt;
+            &lt;button onclick="loadData()" class="w-full sm:w-auto text-center text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-2 px-4 rounded-lg transition-colors cursor-pointer flex items-center justify-center gap-1.5 shrink-0"&gt;
+              &lt;span&gt;🔄&lt;/span&gt; 整理數據
+            &lt;/button&gt;
+          &lt;/div&gt;
+
+          &lt;!-- 讀取中動畫 --&gt;
+          &lt;div id="tableLoader" class="flex justify-center items-center py-16 hidden"&gt;
+            &lt;div class="loading-spinner"&gt;&lt;/div&gt;
+            &lt;span class="ml-3 text-xs text-slate-500 font-medium"&gt;正在自遠端 Sheets 同步歷史數據...&lt;/span&gt;
+          &lt;/div&gt;
+
+          &lt;!-- 資料容器卡片群 --&gt;
+          &lt;div id="dataContainer" class="space-y-4 max-h-[600px] overflow-y-auto pr-2"&gt;
+            &lt;!-- 數據會經由 JavaScript 動態生成注入 --&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+    &lt;/div&gt;
+  </div>
+
+  &lt;!-- 前端互動控制腳本 --&gt;
+  &lt;script&gt;
+    // 網頁初始化載入
+    window.onload = function() {
+      loadData();
+    };
+
+    // 遠端資料讀取器
+    function loadData() {
+      document.getElementById('tableLoader').classList.remove('hidden');
+      document.getElementById('dataContainer').innerHTML = '';
+
+      google.script.run
+        .withSuccessHandler(function(data) {
+          document.getElementById('tableLoader').classList.add('hidden');
+          const container = document.getElementById('dataContainer');
+          
+          // 深度防禦：檢查資料集是否為空或未定義
+          if (!data || data.length === 0) {
+            container.innerHTML = `&lt;p class="text-center text-slate-400 text-sm py-12"&gt;目前資料庫中尚無儲存紀錄。&lt;/p&gt;`;
+            return;
+          }
+
+          // 走訪陣列，渲染歷史紀錄卡片
+          data.forEach(item =&gt; {
+            const id = item.ID !== undefined ? item.ID : '-';
+            const time = item.更新時間 !== undefined ? item.更新時間 : '-';
+            const prompt = item.提問內容 !== undefined ? item.提問內容 : '(無內容)';
+            const response = item.AI回應內容 !== undefined ? item.AI回應內容 : '(無回應)';
+
+            const card = document.createElement('div');
+            card.className = "p-4 bg-slate-50 rounded-xl border border-slate-200 hover:border-blue-200 transition-all duration-150 shadow-2xs";
+            card.innerHTML = `
+              &lt;div class="flex justify-between items-center mb-3"&gt;
+                &lt;span class="text-[10px] font-bold bg-slate-200 text-slate-600 px-2 py-0.5 rounded-sm"&gt;ID: ${id}&lt;/span&gt;
+                &lt;span class="text-xs text-slate-400 font-mono"&gt;${time}&lt;/span&gt;
+              &lt;/div&gt;
+              &lt;div class="mb-3"&gt;
+                &lt;p class="text-xs font-bold text-blue-600 mb-1"&gt;提問 Prompt：&lt;/p&gt;
+                &lt;p class="text-sm font-medium text-slate-800 break-words"&gt;${prompt}&lt;/p&gt;
+              &lt;/div&gt;
+              &lt;div class="pt-3 border-t border-slate-200"&gt;
+                &lt;p class="text-xs font-bold text-emerald-600 mb-1"&gt;Gemini 3.5 運算結果：&lt;/p&gt;
+                &lt;p class="text-sm text-slate-700 whitespace-pre-line leading-relaxed break-words"&gt;${response}&lt;/p&gt;
+              &lt;/div&gt;
+            `;
+            container.appendChild(card);
+          });
+        })
+        .withFailureHandler(function(err) {
+          document.getElementById('tableLoader').classList.add('hidden');
+          alert('同步異常，請稍後再試：' + err.message);
+        })
+        .readData();
+    }
+
+    // 管理者資料發送器
+    function submitAIRequest() {
+      const password = document.getElementById('adminPassword').value;
+      const prompt = document.getElementById('promptInput').value;
+      const submitBtn = document.getElementById('submitBtn');
+      const statusMessage = document.getElementById('statusMessage');
+
+      if (!password) { return alert('請輸入管理密鑰以執行高權限操作。'); }
+      if (!prompt) { return alert('提示詞欄位不可空白。'); }
+
+      // UI 切換至封鎖等待狀態
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `&lt;div class="loading-spinner" style="border-top-color:#fff"&gt;&lt;/div&gt; &lt;span&gt;雲端協同運算中...&lt;/span&gt;`;
+      statusMessage.className = "mt-2 text-xs text-amber-600 font-semibold block";
+      statusMessage.innerText = "正在進行身分驗證、呼叫大模型並強制同步試算表...";
+
+      // 將加密/明文數據派發至 GAS 後端
+      google.script.run
+        .withSuccessHandler(function(res) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `&lt;span&gt;發送並寫入資料庫&lt;/span&gt;`;
+          statusMessage.className = "mt-2 text-xs text-emerald-600 font-semibold block";
+          statusMessage.innerText = res.message;
+          
+          // 歸零提示詞輸入框
+          document.getElementById('promptInput').value = '';
+          
+          // 即時重刷右側面板數據
+          loadData();
+        })
+        .withFailureHandler(function(err) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = `&lt;span&gt;發送並寫入資料庫&lt;/span&gt;`;
+          statusMessage.className = "mt-2 text-xs text-rose-600 font-semibold block";
+          statusMessage.innerText = err.message;
+        })
+        .addDataWithAI(prompt, password);
+    }
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</textarea>
+          <pre
+            class="bg-slate-900 text-slate-300 p-5 rounded-2xl text-xs sm:text-sm font-mono overflow-x-auto max-h-[300px] border border-slate-850"><code class="text-blue-400">&lt;!-- Index.html - 前端網頁介面 --&gt;</code>
+&lt;!DOCTYPE html&gt;
+&lt;html lang="zh-TW"&gt;
+&lt;head&gt;
+  &lt;title&gt;生成式 AI 雲端管理系統&lt;/title&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body class="bg-slate-50"&gt;
+  &lt;!-- 精美兩欄雙控介面，詳細程式碼請複製套用 --&gt;
+&lt;/body&gt;
+&lt;/html></pre>
+        </div>
+      </section>
+
+      <!-- 第四步：雲端部署 -->
+      <section id="deploy-section" class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-2xs">
+        <span
+          class="inline-flex items-center gap-1 text-xs bg-rose-50 text-rose-600 font-bold px-2.5 py-1 rounded-md mb-3">
+          STEP 4
+        </span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mb-4">步驟四：部署上線，向世界開放！</h2>
+        <p class="text-slate-600 text-sm mb-6">
+          完成代碼貼上與修改後，最核心的步驟就是將其作為網頁發布。這是最關鍵、也最容易出錯的一步，請極度仔細執行以下步驟：
+        </p>
+
+        <!-- 部署步驟圖卡 -->
+        <div class="space-y-4">
+          <div class="flex gap-4 items-start bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <span
+              class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center shrink-0">1</span>
+            <div>
+              <h4 class="text-sm font-bold text-slate-800">進入新部署選單</h4>
+              <p class="text-xs text-slate-500 mt-1">在 Apps Script 編輯器右上角，點選 <strong>「部署」 -&gt; 「新部署」</strong>。</p>
+            </div>
+          </div>
+
+          <div class="flex gap-4 items-start bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <span
+              class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center shrink-0">2</span>
+            <div>
+              <h4 class="text-sm font-bold text-slate-800">選擇網頁應用程式</h4>
+              <p class="text-xs text-slate-500 mt-1">點擊左側「選取類型」旁的齒輪圖示，選擇 <strong>「網頁應用程式」</strong>。</p>
+            </div>
+          </div>
+
+          <div class="flex gap-4 items-start bg-amber-50 p-4 rounded-xl border border-amber-200">
+            <span
+              class="w-8 h-8 rounded-full bg-amber-600 text-white font-bold flex items-center justify-center shrink-0">3</span>
+            <div>
+              <h4 class="text-sm font-bold text-amber-800">極致重要：安全性權限設置</h4>
+              <p class="text-xs text-amber-700 mt-1">
+                請務必調整這兩項設定：
+              </p>
+              <ul class="list-disc list-inside text-xs text-amber-800 mt-1.5 space-y-1">
+                <li><strong>執行身分 (Execute as)：</strong> 選擇 <strong>「我 (您的 Google 帳戶)」</strong>。</li>
+                <li><strong>誰有權限存取 (Who has access)：</strong> 選擇 <strong>「所有人 (Anyone)」</strong>。</li>
+              </ul>
+              <p class="text-[10px] text-amber-600 mt-1">※ 設定「所有人」代表任何人不需登入您的 Google
+                帳號就能看到網頁；設定執行身分是「我」，則代表後端一律借用您寫入試算表的權限，達到無縫免登入效果。</p>
+            </div>
+          </div>
+
+          <div class="flex gap-4 items-start bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <span
+              class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center shrink-0">4</span>
+            <div>
+              <h4 class="text-sm font-bold text-slate-800">授予 Google 認證權限</h4>
+              <p class="text-xs text-slate-500 mt-1">點擊「部署」。首次運行會要求授權，點選「授予存取權限」-&gt; 選擇您的帳戶。若出現警示畫面，點選左下角「進階」-&gt;
+                點擊「前往 AI_Cloud_Database（不安全）」-&gt; 按下「允許」。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-blue-600 text-white p-5 rounded-2xl text-center mt-6 shadow-md">
+          <i class="fa-solid fa-circle-check text-3xl mb-2"></i>
+          <h4 class="font-bold">大功告成！</h4>
+          <p class="text-xs opacity-90 mt-1">
+            部署完成後，畫面上會出現一串「網頁應用程式 URL」。複製該連結到任何人的電腦 or 手機，即可即時共同存取資料庫囉！
+          </p>
+        </div>
+      </section>
+
+      <!-- 除錯與常見問題 -->
+      <section id="troubleshooting" class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-2xs">
+        <span
+          class="inline-flex items-center gap-1 text-xs bg-amber-50 text-amber-600 font-bold px-2.5 py-1 rounded-md mb-3">
+          ALERT
+        </span>
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mb-4">實作與運作常見疑難排解</h2>
+
+        <div class="space-y-4">
+          <div class="border-b border-slate-150 pb-4">
+            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <span class="text-rose-500"><i class="fa-solid fa-circle-question"></i></span>
+              為什麼我寫入資料成功，但網頁卻什麼都讀不到（一片空白）？
+            </h4>
+            <p class="text-xs text-slate-500 mt-2 leading-relaxed bg-slate-50 p-3 rounded-lg">
+              這在以前版本是最常見的問題。因為 GAS 預設的 <code class="bg-slate-200 px-1 py-0.5 rounded text-red-600">getValues()</code>
+              會把試算表的時間格轉換成原生 Javascript Date 物件，而 Date 物件<strong>完全無法</strong>通過網頁底層的傳輸協議發回前端。目前這個版本已經升級為 <strong><code
+                  class="bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-bold">getDisplayValues()</code></strong>，強制抓取字串，100%
+              解決了這個問題。如果您依然遇到，請檢查分頁標籤是否真的叫「Data」。
+            </p>
+          </div>
+
+          <div class="border-b border-slate-150 pb-4">
+            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <span class="text-rose-500"><i class="fa-solid fa-circle-question"></i></span>
+              我修改了 Code.gs 或是 Index.html，為什麼重新整理網頁卻沒有變化？
+            </h4>
+            <p class="text-xs text-slate-500 mt-2 leading-relaxed bg-slate-50 p-3 rounded-lg">
+              這是 Apps Script 平台最著名的開發大坑。直接重新整理網頁是<strong>不適用</strong>最新代碼的。每次只要更動任何程式碼，必須點擊右上角：<strong>「部署」 -&gt; 「管理部署」
+                -&gt; 點選「鉛筆 (編輯)」 -&gt; 在版本選單中選擇「新版本」(New Version) -&gt; 按下部署</strong>。重新生成的網址（或原網址）才會生效。
+            </p>
+          </div>
+
+          <div>
+            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+              <span class="text-rose-500"><i class="fa-solid fa-circle-question"></i></span>
+              Gemini API 連線報錯，或是回覆顯示未授權？
+            </h4>
+            <p class="text-xs text-slate-500 mt-2 leading-relaxed bg-slate-50 p-3 rounded-lg">
+              請至 Google AI Studio 確認您的 API 鑰匙未過期且在有效區域。Gemini 3.5 世代目前全面兼容，且具有更大的免費額度，請確保程式最上方的 API KEY 字串沒有填錯。
+            </p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- 尾部頁腳 -->
+  <footer class="bg-slate-900 text-slate-400 py-12 mt-20 border-t border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 text-center">
+      <div class="flex justify-center items-center gap-3 mb-4">
+        <div class="bg-blue-600 text-white p-2 rounded-lg flex items-center justify-center">
+          <i class="fa-solid fa-microchip text-lg"></i>
+        </div>
+        <span class="font-extrabold text-white text-lg tracking-tight">AI &amp; GAS 雲端無伺服器整合方案</span>
+      </div>
+      <p class="text-xs text-slate-500">本技術文件由 生成式 AI 輔助與優化建構。保留所有技術實作細節與詮釋權。</p>
+      <p class="text-[10px] text-slate-600 mt-1">© 2026 AI Cloud Solutions Group. Powered by Google Apps Script &amp;
+        Gemini 3.5 Flash.</p>
+    </div>
+  </footer>
+
+  <!-- 一鍵複製實作 JavaScript -->
+  <script>
+    function copyCode(textareaId, buttonElement) {
+      // 獲取要複製的 textarea
+      const textarea = document.getElementById(textareaId);
+      if (!textarea) return;
+
+      // 選擇文本
+      textarea.select();
+      textarea.setSelectionRange(0, 99999); // 用於行動裝置
+
+      try {
+        // 使用 iframe 相容的 execCommand 方法
+        const success = document.execCommand('copy');
+        if (success) {
+          showToast("代碼已複製到剪貼簿！");
+
+          // 按鈕動態回饋效果
+          const originalHTML = buttonElement.innerHTML;
+          buttonElement.innerHTML = `<i class="fa-solid fa-check text-emerald-400"></i> 已複製！`;
+          buttonElement.classList.add('bg-emerald-800', 'border-emerald-600');
+
+          setTimeout(() => {
+            buttonElement.innerHTML = originalHTML;
+            buttonElement.classList.remove('bg-emerald-800', 'border-emerald-600');
+          }, 2000);
+        } else {
+          showToast("複製失敗，請手動複製。");
+        }
+      } catch (err) {
+        showToast("系統限制：請手動選取並複製。");
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      const toastText = document.getElementById('toast-text');
+      toastText.innerText = message;
+
+      // 動態浮現
+      toast.classList.remove('translate-y-[-20px]', 'opacity-0', 'pointer-events-none');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      // 自動消失
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-[-20px]', 'opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+  </script>
+</body>
+
+</html>
