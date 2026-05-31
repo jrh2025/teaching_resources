@@ -167,6 +167,16 @@ window.APP_DATA = {
       "link": "time_scrolling.html",
       "icon": "Timer",
       "color": "purple"
+    },
+    {
+      "id": "item_1780206859687",
+      "title": "AI & GAS 實作工坊01",
+      "category": "其他",
+      "description": "生成式 AI 與 Google Apps Script (GAS) 雲端整合實作01--本實作案例提供一個低代碼（Low-Code）的跨平台雲端解決方案。系統以 Google Apps Script (GAS) 為後端架構，並將 Google Sheets 作為資料庫，前端則搭配 Tailwind CSS 設計響應式網頁介面，實現免登入的即時數據同步。\n",
+      "link": "ai_x_gas.html",
+      "icon": "Vegan",
+      "color": "slate",
+      "grade": "其他"
     }
   ]
 };
