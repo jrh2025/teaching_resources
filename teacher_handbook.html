@@ -1,0 +1,2503 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雲端智慧教師手冊 - 零起點安裝部署與使用指南</title>
+    <!-- 引入 Tailwind CSS 確保現代化響應式外觀 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Inter/Noto Sans 閱讀字型 -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+        }
+
+        /* 自訂捲軸美化 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f8fafc;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* 文字框專屬捲軸 */
+        textarea::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        textarea::-webkit-scrollbar-track {
+            background: #1e293b;
+            border-radius: 0 0 16px 0;
+        }
+
+        textarea::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 10px;
+        }
+
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        /* 平滑滾動 */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        textarea {
+            tab-size: 2;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col overflow-x-hidden">
+
+    <!-- 頂部高質感 Banner -->
+    <header
+        class="bg-gradient-to-r from-indigo-900 via-indigo-950 to-slate-900 text-white shadow-md relative py-12 sm:py-16 w-full">
+        <div
+            class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-indigo-500/20 via-transparent to-transparent">
+        </div>
+        <div class="max-w-6xl mx-auto px-4 relative z-10 flex flex-col items-center text-center">
+            <span class="text-5xl sm:text-6xl mb-4 animate-bounce">🎓</span>
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight">雲端智慧教師手冊</h1>
+            <p class="text-xl sm:text-2xl font-bold text-indigo-300 mt-2">✨ 零起點・雲端架構與 AI 部署指引指南 ✨</p>
+            <div class="mt-6 flex flex-wrap justify-center gap-3">
+                <span
+                    class="bg-indigo-800/80 border border-indigo-700/50 text-indigo-100 text-xs font-semibold px-4 py-1.5 rounded-full shadow-inner">
+                    ⚡ 專為「無程式背景」導師設計
+                </span>
+                <span
+                    class="bg-emerald-800/80 border border-emerald-700/50 text-emerald-100 text-xs font-semibold px-4 py-1.5 rounded-full shadow-inner">
+                    🔒 雲端隱私安全保護配置
+                </span>
+                <span
+                    class="bg-amber-800/80 border border-amber-700/50 text-amber-100 text-xs font-semibold px-4 py-1.5 rounded-full shadow-inner">
+                    🤖 Gemini 3.5 Flash 智慧輔導
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要導引區 -->
+    <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-8 sm:py-12 flex flex-col">
+
+        <!-- 前言簡介區 -->
+        <section class="mb-12 bg-white p-6 sm:p-8 rounded-2xl shadow-xs border border-slate-200">
+            <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2 mb-4">
+                <span>💡</span> 親愛的導師，您好！
+            </h2>
+            <p class="text-slate-600 text-base leading-relaxed mb-4">
+                這套系統能幫助您從傳統紙本或繁雜的 Excel
+                中解放。不論是學生的<strong>出缺席狀態（全日/半日）、多科目成績、多項每日作業、平時行規、突發狀況與心理諮商對談</strong>，皆能在手機或電腦上隨時秒級登錄與修改。
+            </p>
+            <p class="text-slate-600 text-base leading-relaxed mb-6">
+                家長僅需憑<strong>「學號 + 專屬 6 位通行密碼」</strong>，就能即時看見其子弟的完整軌跡；系統更能一鍵調研所有在校紀錄，呼叫 Google 最新的 <strong>Gemini 3.5
+                    Flash AI 智慧大腦</strong>，自動編製出溫馨、詳盡且具有親和力的發展輔導建議，並可直接輸出成精美的 A4 PDF 與列印報告！
+            </p>
+            <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded-r-xl">
+                <h4 class="font-bold text-indigo-900 text-sm">部署前的準備清單：</h4>
+                <ul class="list-disc list-inside text-xs text-indigo-700 mt-2 space-y-1">
+                    <li>一個常用的 Google 帳號 (Gmail)</li>
+                    <li>約 5~10 分鐘的專注時間</li>
+                    <li>完全不需要任何網頁程式碼編寫基礎，跟著下方步驟「複製、貼上」即可！</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 步驟快速跳轉盤 -->
+        <nav class="mb-8 grid grid-cols-2 md:grid-cols-4 gap-3 text-center no-print">
+            <a href="#step1"
+                class="p-3 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-xl transition-all shadow-2xs font-semibold text-xs text-slate-700 block">
+                第一步：建立試算表
+            </a>
+            <a href="#step2"
+                class="p-3 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-xl transition-all shadow-2xs font-semibold text-xs text-slate-700 block">
+                第二步：申請 AI 金鑰
+            </a>
+            <a href="#step3"
+                class="p-3 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-xl transition-all shadow-2xs font-semibold text-xs text-slate-700 block">
+                第三步：架設 GAS 網頁
+            </a>
+            <a href="#step4"
+                class="p-3 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 rounded-xl transition-all shadow-2xs font-semibold text-xs text-slate-700 block text-indigo-600 font-bold">
+                📋 獲取完整安裝代碼
+            </a>
+        </nav>
+
+        <!-- ========================================== -->
+        <!-- 第一步：建立 Google 試算表雲端資料庫 -->
+        <!-- ========================================== -->
+        <section id="step1" class="mb-12 bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+            <div class="bg-slate-900 text-white p-5 flex items-center justify-between">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <span
+                        class="bg-indigo-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs">1</span>
+                    <span>建立 Google 試算表雲端資料庫</span>
+                </h3>
+                <span class="text-xs text-slate-400 font-mono">Database Setup</span>
+            </div>
+            <div class="p-6 sm:p-8 space-y-6">
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    我們將使用 Google 試算表做為免費、超快速讀寫且終身備份的個人雲端資料庫。
+                </p>
+                <div class="space-y-4">
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="w-6 h-6 bg-indigo-100 text-indigo-600 text-xs font-bold rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                            A</div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-900">建立全新試算表</p>
+                            <p class="text-xs text-slate-500 mt-0.5">登入您的 Google 雲端硬碟，點選「新增」 -> 「Google 試算表」。</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="w-6 h-6 bg-indigo-100 text-indigo-600 text-xs font-bold rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                            B</div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-900">複製試算表網址識別碼 (Spreadsheet ID)</p>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                打開剛創立的試算表，觀察網址列。在網址中間，會有一串長長的亂碼。這串亂碼就是您的 <strong>SPREADSHEET_ID</strong>，請將它複製備用。
+                            </p>
+                            <div
+                                class="bg-slate-100 p-3 rounded-lg border border-slate-200 mt-2 font-mono text-xs text-slate-700 leading-relaxed select-all">
+                                https://docs.google.com/spreadsheets/d/<span
+                                    class="bg-yellow-100 text-slate-950 font-bold px-1.5 py-0.5 rounded-sm">這一段長長的英數亂碼就是ID</span>/edit#gid=0
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- 第二步：獲取 Google Gemini AI 的 API 金鑰 -->
+        <!-- ========================================== -->
+        <section id="step2" class="mb-12 bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+            <div class="bg-slate-900 text-white p-5 flex items-center justify-between">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <span
+                        class="bg-indigo-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs">2</span>
+                    <span>申請 Google Gemini AI API 金鑰 (大腦設定)</span>
+                </h3>
+                <span class="text-xs text-slate-400 font-mono">Gemini Key Application</span>
+            </div>
+            <div class="p-6 sm:p-8 space-y-6">
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    AI 輔導報告功能是藉由 Google 免費提供給個人與開發者的 API 服務。我們需要申請一把金鑰來驅動大腦。
+                </p>
+                <div class="space-y-4">
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="w-6 h-6 bg-indigo-100 text-indigo-600 text-xs font-bold rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                            A</div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-900">造訪 Google AI Studio</p>
+                            <p class="text-xs text-slate-500 mt-0.5">
+                                使用同一個 Google 帳號，點選此連結前往申請頁面：
+                                <a href="https://aistudio.google.com/" target="_blank"
+                                    class="text-indigo-600 hover:text-indigo-800 font-semibold underline">Google AI
+                                    Studio 官方網站</a>。
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="w-6 h-6 bg-indigo-100 text-indigo-600 text-xs font-bold rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                            B</div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-900">獲取 API 金鑰 (API Key)</p>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                1. 點選左上角藍色的 <strong>"Get API Key"</strong>。<br>
+                                2. 點擊 <strong>"Create API Key"</strong> 並選擇您的新雲端專案，或建立新專案。<br>
+                                3. 生成成功後，會顯示一串以 <strong>AIzaSy...</strong> 開頭的長金鑰，點選 <strong>Copy</strong>
+                                複製，並安全儲存在您個人的記事本中。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- 第三步：開闢 Google Apps Script 網頁專案 -->
+        <!-- ========================================== -->
+        <section id="step3" class="mb-12 bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden">
+            <div class="bg-slate-900 text-white p-5 flex items-center justify-between">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <span
+                        class="bg-indigo-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs">3</span>
+                    <span>架設 Google Apps Script 網頁系統</span>
+                </h3>
+                <span class="text-xs text-slate-400 font-mono">Google Apps Script Web-App</span>
+            </div>
+            <div class="p-6 sm:p-8 space-y-6">
+                <p class="text-slate-600 text-sm leading-relaxed">
+                    Google Apps Script (GAS) 是將試算表轉換為專業網頁應用程式的官方免租金伺服器平台。
+                </p>
+                <div class="space-y-4">
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="w-6 h-6 bg-indigo-100 text-indigo-600 text-xs font-bold rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                            A</div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-900">啟動 Apps Script 編輯面板</p>
+                            <p class="text-xs text-slate-500 mt-0.5">
+                                在您剛剛創立的 Google 試算表中，點選頂部功能列選單的 <strong>「延伸功能」 -> 「Apps Script」</strong>。
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="w-6 h-6 bg-indigo-100 text-indigo-600 text-xs font-bold rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                            B</div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-900">寫入 code.gs 後端主引擎</p>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                將預設的 <code>Code.gs</code> 檔案內容全部刪除清空。接著，在下方 <strong>第四步</strong> 的儲存箱中點擊「📋 複製此代碼」，將
+                                <strong>code.gs</strong> 代碼完整貼入。
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="w-6 h-6 bg-indigo-100 text-indigo-600 text-xs font-bold rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                            C</div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-900">修改核心參數 (關鍵步驟)</p>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                在您貼入的 code.gs 最上方 1~5 行，修改以下參數：<br>
+                                1. <code>SPREADSHEET_ID</code>: 填入剛複製的試算表 ID。若您的 script
+                                與試算表綁定，<strong>亦可保留空字串，系統會自適應取得</strong>。<br>
+                                2. <code>GEMINI_API_KEY</code>: 填入您剛剛複製的 <strong>AIzaSy...</strong> API金鑰。<br>
+                                3. <code>ADMIN_PASSWORD</code>: 教師管理端登入密碼，例如預設的 <code>Admin888</code>，或自行修改。
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="w-6 h-6 bg-indigo-100 text-indigo-600 text-xs font-bold rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                            D</div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-900">新增並編寫 Index.html 前端網頁</p>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                1. 在 Apps Script 左側邊欄檔案清單上方，點擊 <strong>「+」 號（新增檔案）</strong>，並選擇
+                                <strong>「HTML」</strong>。<br>
+                                2. 檔案名稱<strong>務必命名為 <code>Index</code></strong> (大小寫需一致，不要加上 .html)。<br>
+                                3. 將預設內容全部清空，在下方 <strong>第四步</strong> 的儲存箱中點擊「📋 複製此代碼」，將 <strong>Index.html</strong>
+                                代碼完整貼入，隨後點擊上方的 <strong>「儲存」</strong> 圖示。
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="w-6 h-6 bg-indigo-100 text-indigo-600 text-xs font-bold rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                            E</div>
+                        <div>
+                            <p class="font-bold text-sm text-slate-900">正式發佈為網頁應用程式</p>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+                                1. 點擊右上角藍色的 <strong>「網頁部署」 -> 「新增部署」</strong>。<br>
+                                2. 點擊左側「選取類型」齒輪，選取 <strong>「網頁應用程式」</strong>。<br>
+                                3. 「執行身分」設定為：<strong>「您 (您的 Google 帳號)」</strong>。<br>
+                                4. 「誰有權限存取」設定為：<strong>「所有人」</strong>（這樣家長端及學生才能安全登入，不用授權）。<br>
+                                5. 點選 <strong>「部署」</strong>。<br>
+                                <span class="text-rose-600 font-bold">⚠️ 安全性提問：</span>此時 Google 會彈出視窗提示「需要授權」。點擊「授予存取權」
+                                -> 選您的帳號 -> 點選左下方灰色小字 <strong>「進階 (Advanced)」</strong> -> 點選
+                                <strong>「前往『未命名專案』(不安全)」</strong> -> 點選 <strong>「允許 (Allow)」</strong> 即可。<br>
+                                6. 部署成功後，系統會生成一個 <strong>「網頁應用程式 URL」</strong>。<strong>這就是您的專屬系統網址！</strong>
+                                請複製並將其存入書籤，這也是提供給家長登入使用的網址。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- 第四步：一鍵獲取完整安裝代碼 (使用 Textarea 保證不破版) -->
+        <!-- ========================================== -->
+        <section id="step4" class="mb-12 space-y-8 w-full">
+
+            <!-- code.gs 下載複製箱 -->
+            <div class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden w-full flex flex-col">
+                <div
+                    class="bg-indigo-950 text-indigo-100 p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <h3 class="font-bold text-lg flex items-center gap-2 text-white">
+                            <span>⚙️</span>
+                            <span>1. 後端主要引擎 (code.gs) 程式代碼</span>
+                        </h3>
+                        <p class="text-xs text-indigo-300 mt-0.5">建立在 Apps Script 中，替換 Code.gs 所有內容</p>
+                    </div>
+                    <button id="copyGsBtn" onclick="copyCode('codeGsContent', 'copyGsBtn')"
+                        class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
+                        📋 複製此代碼
+                    </button>
+                </div>
+                <!-- 使用 Textarea 徹底避免 flex 容器被撐破 -->
+                <textarea id="codeGsContent" readonly
+                    class="w-full h-96 p-4 bg-slate-900 text-slate-300 font-mono text-[11px] sm:text-xs leading-relaxed border-none resize-none overflow-auto focus:outline-none m-0 block">/* =========================================================================
+ * 系統核心參數設定專區
+ * ========================================================================= */
+const SPREADSHEET_ID = ''; // 請替換為您的 GOOGLE_SHEETS_ID。若綁定此試算表，可留空，系統會自動獲取。
+const GEMINI_API_KEY = '請替換為您的_GEMINI_API_KEY';   
+const ADMIN_PASSWORD = 'Admin888'; // 您自訂的教師/管理員密碼
+
+/**
+ * 網頁應用程式初始化配置 (GET 請求進入點)
+ */
+function doGet(e) {
+  return HtmlService.createTemplateFromFile('Index')
+      .evaluate()
+      .setTitle('雲端智慧教師手冊 & AI 輔導系統')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+/**
+ * 安全獲取實體試算表物件
+ */
+function getSpreadsheet() {
+  if (!SPREADSHEET_ID || SPREADSHEET_ID.trim() === '' || SPREADSHEET_ID.includes('請替換')) {
+    try {
+      return SpreadsheetApp.getActiveSpreadsheet();
+    } catch (e) {
+      throw new Error('未指定有效的 SPREADSHEET_ID，且本指令碼未綁定實體試算表。請在 code.gs 中填寫 SPREADSHEET_ID！');
+    }
+  }
+  return SpreadsheetApp.openById(SPREADSHEET_ID);
+}
+
+/**
+ * 自動初始化 Metadata 工作表，儲存學生名冊與 AI 報告
+ */
+function initMetadataSheet(ss) {
+  let metadataSheet = ss.getSheetByName('Metadata');
+  if (!metadataSheet) {
+    metadataSheet = ss.insertSheet('Metadata');
+    metadataSheet.appendRow(['學號', '姓名', '通行碼', '最新AI報告', 'AI報告更新時間']);
+    metadataSheet.getRange(1, 1, 1, 5)
+      .setBackground('#1e293b')
+      .setFontColor('#ffffff')
+      .setFontWeight('bold');
+    SpreadsheetApp.flush();
+  }
+  return metadataSheet;
+}
+
+/**
+ * 教師功能：獲取學生名冊
+ */
+function getStudentsList(password) {
+  if (password !== ADMIN_PASSWORD) {
+    throw new Error('拒絕存取：權限驗證失敗！');
+  }
+  
+  try {
+    const ss = getSpreadsheet();
+    const metadataSheet = initMetadataSheet(ss);
+    const lastRow = metadataSheet.getLastRow();
+    
+    if (lastRow &lt;= 1) return [];
+    
+    const values = metadataSheet.getRange(2, 1, lastRow - 1, 5).getDisplayValues();
+    return values.map(row =&gt; ({
+      id: row[0],
+      name: row[1],
+      accessCode: row[2],
+      latestReport: row[3] || '',
+      reportTime: row[4] || ''
+    }));
+  } catch (error) {
+    throw new Error('獲取名冊失敗: ' + error.toString());
+  }
+}
+
+/**
+ * 教師功能：新增或修改學生 (並動態為學生建立獨立紀錄工作表)
+ */
+function addOrUpdateStudent(password, studentId, studentName, accessCode) {
+  if (password !== ADMIN_PASSWORD) {
+    throw new Error('拒絕存取：權限驗證失敗！');
+  }
+  if (!studentId || !studentName || !accessCode) {
+    throw new Error('請填寫完整學生資料：學號、姓名、通行碼均為必填！');
+  }
+
+  try {
+    const ss = getSpreadsheet();
+    const metadataSheet = initMetadataSheet(ss);
+    const lastRow = metadataSheet.getLastRow();
+    let foundIndex = -1;
+    let list = [];
+    
+    if (lastRow &gt; 1) {
+      list = metadataSheet.getRange(2, 1, lastRow - 1, 3).getDisplayValues();
+      for (let i = 0; i &lt; list.length; i++) {
+        if (list[i][0] === studentId) {
+          foundIndex = i + 2; 
+          break;
+        }
+      }
+    }
+
+    if (foundIndex !== -1) {
+      metadataSheet.getRange(foundIndex, 2).setValue(studentName);
+      metadataSheet.getRange(foundIndex, 3).setValue(accessCode);
+    } else {
+      metadataSheet.appendRow([studentId, studentName, accessCode, '', '']);
+    }
+
+    const studentSheetName = `${studentId}_${studentName}`;
+    let studentSheet = ss.getSheetByName(studentSheetName);
+    if (!studentSheet) {
+      studentSheet = ss.insertSheet(studentSheetName);
+      studentSheet.appendRow(['日期', '出缺席', '作業繳交', '成績紀錄', '平時在校記錄', '突發狀況', '輔導紀錄']);
+      studentSheet.getRange(1, 1, 1, 7)
+        .setBackground('#0f766e') 
+        .setFontColor('#ffffff')
+        .setFontWeight('bold');
+    }
+    
+    SpreadsheetApp.flush();
+    return { success: true, message: `學生 [${studentName}] 雲端資料庫建置/同步完成！` };
+  } catch (error) {
+    throw new Error('學生建立失敗: ' + error.toString());
+  }
+}
+
+/**
+ * 教師功能：刪除學生
+ */
+function deleteStudent(password, studentId, studentName) {
+  if (password !== ADMIN_PASSWORD) {
+    throw new Error('拒絕存取：權限驗證失敗！');
+  }
+  try {
+    const ss = getSpreadsheet();
+    const metadataSheet = ss.getSheetByName('Metadata');
+    if (metadataSheet) {
+      const lastRow = metadataSheet.getLastRow();
+      if (lastRow &gt; 1) {
+        const ids = metadataSheet.getRange(2, 1, lastRow - 1, 1).getValues().map(r =&gt; r[0].toString());
+        const index = ids.indexOf(studentId.toString());
+        if (index !== -1) {
+          metadataSheet.deleteRow(index + 2);
+        }
+      }
+    }
+    const sheetName = `${studentId}_${studentName}`;
+    const studentSheet = ss.getSheetByName(sheetName);
+    if (studentSheet) {
+      ss.deleteSheet(studentSheet);
+    }
+    SpreadsheetApp.flush();
+    return { success: true, message: `學生 [${studentName}] 工作表及名冊紀錄已徹底移除。` };
+  } catch (error) {
+    throw new Error('刪除學生失敗: ' + error.toString());
+  }
+}
+
+/**
+ * 核心查詢功能：讀取特定學生的所有紀錄 (學號 + 通行碼 驗證登入)
+ */
+function getStudentRecords(identifier, passwordOrAccessCode, isTeacher) {
+  try {
+    const ss = getSpreadsheet();
+    const metadataSheet = initMetadataSheet(ss);
+    const lastRow = metadataSheet.getLastRow();
+    
+    if (lastRow &lt;= 1) {
+      throw new Error('系統目前尚無任何註冊學生資料。');
+    }
+    
+    const studentsData = metadataSheet.getRange(2, 1, lastRow - 1, 5).getDisplayValues();
+    let matchedStudent = null;
+    
+    if (isTeacher) {
+      if (passwordOrAccessCode !== ADMIN_PASSWORD) {
+        throw new Error('權限拒絕：管理金鑰錯誤！');
+      }
+      matchedStudent = studentsData.find(row =&gt; row[0] === identifier || row[1] === identifier);
+    } else {
+      matchedStudent = studentsData.find(row =&gt; row[0] === identifier &amp;&amp; row[2] === passwordOrAccessCode);
+      if (!matchedStudent) {
+        throw new Error('身分驗證失敗：學號或專屬通行碼輸入錯誤！');
+      }
+    }
+    
+    if (!matchedStudent) {
+      throw new Error('找不到該名學生的雲端檔案。');
+    }
+    
+    const studentId = matchedStudent[0];
+    const studentName = matchedStudent[1];
+    const latestAIReport = matchedStudent[3] || '';
+    const reportTime = matchedStudent[4] || '';
+    
+    const studentSheetName = `${studentId}_${studentName}`;
+    const studentSheet = ss.getSheetByName(studentSheetName);
+    
+    let records = [];
+    if (studentSheet) {
+      const sLastRow = studentSheet.getLastRow();
+      if (sLastRow &gt; 1) {
+        const values = studentSheet.getRange(2, 1, sLastRow - 1, 7).getDisplayValues();
+        records = values.map((row, index) =&gt; ({
+          rowIndex: index + 2,
+          date: row[0],
+          attendance: row[1],
+          homework: row[2],
+          grades: row[3],
+          dailyRecord: row[4],
+          incident: row[5],
+          counseling: row[6]
+        })).reverse(); 
+      }
+    }
+    
+    return {
+      success: true,
+      studentId: studentId,
+      studentName: studentName,
+      latestAIReport: latestAIReport,
+      reportTime: reportTime,
+      records: records
+    };
+    
+  } catch (error) {
+    throw new Error(error.toString());
+  }
+}
+
+/**
+ * 教師功能：新增一筆紀錄至指定學生 Sheet
+ */
+function addStudentRecord(password, studentId, studentName, record) {
+  if (password !== ADMIN_PASSWORD) {
+    throw new Error('拒絕存取：權限驗證失敗！');
+  }
+  
+  try {
+    const ss = getSpreadsheet();
+    const sheetName = `${studentId}_${studentName}`;
+    let studentSheet = ss.getSheetByName(sheetName);
+    
+    if (!studentSheet) {
+      throw new Error(`找不到該學生的紀錄工作表: ${sheetName}`);
+    }
+    
+    studentSheet.appendRow([
+      record.date || Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd"),
+      record.attendance || '正常出席(全日)',
+      record.homework || '',
+      record.grades || '',
+      record.dailyRecord || '',
+      record.incident || '',
+      record.counseling || ''
+    ]);
+    
+    SpreadsheetApp.flush();
+    return { success: true, message: '學生成績、作業與生活紀錄已成功同步至雲端試算表。' };
+  } catch (error) {
+    throw new Error('寫入日常紀錄失敗: ' + error.toString());
+  }
+}
+
+/**
+ * 教師功能：重複編輯並「更新」指定索引的日常紀錄 Row
+ */
+function updateStudentRecord(password, studentId, studentName, rowIndex, record) {
+  if (password !== ADMIN_PASSWORD) {
+    throw new Error('拒絕存取：權限驗證失敗！');
+  }
+  
+  try {
+    const ss = getSpreadsheet();
+    const sheetName = `${studentId}_${studentName}`;
+    const studentSheet = ss.getSheetByName(sheetName);
+    if (!studentSheet) throw new Error('找不到指定工作表');
+    
+    const range = studentSheet.getRange(parseInt(rowIndex), 1, 1, 7);
+    range.setValues([[
+      record.date,
+      record.attendance,
+      record.homework,
+      record.grades,
+      record.dailyRecord,
+      record.incident,
+      record.counseling
+    ]]);
+    
+    SpreadsheetApp.flush();
+    return { success: true, message: '學生成績、作業與生活紀錄已成功「更新」至雲端試算表。' };
+  } catch (error) {
+    throw new Error('更新紀錄失敗: ' + error.toString());
+  }
+}
+
+/**
+ * 教師功能：刪除特定學生 Sheet 的某行紀錄
+ */
+function deleteStudentRecord(password, studentId, studentName, rowIndex) {
+  if (password !== ADMIN_PASSWORD) {
+    throw new Error('權限不足！');
+  }
+  try {
+    const ss = getSpreadsheet();
+    const sheetName = `${studentId}_${studentName}`;
+    const studentSheet = ss.getSheetByName(sheetName);
+    if (!studentSheet) throw new Error('找不到指定工作表');
+    
+    studentSheet.deleteRow(parseInt(rowIndex));
+    SpreadsheetApp.flush();
+    return { success: true, message: '紀錄已成功移除！' };
+  } catch (error) {
+    throw new Error('刪除紀錄失敗: ' + error.toString());
+  }
+}
+
+/**
+ * 教師功能：保存手動修改的 AI 智能評估報告
+ */
+function saveAIReport(password, studentId, studentName, reportContent) {
+  if (password !== ADMIN_PASSWORD) {
+    throw new Error('拒絕存取：權限驗證失敗！');
+  }
+  try {
+    const ss = getSpreadsheet();
+    const metadataSheet = initMetadataSheet(ss);
+    const lastRow = metadataSheet.getLastRow();
+    if (lastRow &gt; 1) {
+      const ids = metadataSheet.getRange(2, 1, lastRow - 1, 1).getValues().map(r =&gt; r[0].toString());
+      const index = ids.indexOf(studentId.toString());
+      if (index !== -1) {
+        const targetRow = index + 2;
+        const timestamp = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm");
+        metadataSheet.getRange(targetRow, 4).setValue(reportContent);
+        metadataSheet.getRange(targetRow, 5).setValue(timestamp);
+        SpreadsheetApp.flush();
+        return { success: true, message: 'AI 報告手動修改儲存完成！', time: timestamp };
+      }
+    }
+    throw new Error('找不到該學生的 Metadata 檔案');
+  } catch (error) {
+    throw new Error('儲存報告失敗: ' + error.toString());
+  }
+}
+
+/**
+ * 教師功能：一鍵刪除 AI 智能評估報告
+ */
+function deleteAIReport(password, studentId, studentName) {
+  if (password !== ADMIN_PASSWORD) {
+    throw new Error('拒絕存取：權限驗證失敗！');
+  }
+  try {
+    const ss = getSpreadsheet();
+    const metadataSheet = initMetadataSheet(ss);
+    const lastRow = metadataSheet.getLastRow();
+    if (lastRow &gt; 1) {
+      const ids = metadataSheet.getRange(2, 1, lastRow - 1, 1).getValues().map(r =&gt; r[0].toString());
+      const index = ids.indexOf(studentId.toString());
+      if (index !== -1) {
+        const targetRow = index + 2;
+        metadataSheet.getRange(targetRow, 4).setValue('');
+        metadataSheet.getRange(targetRow, 5).setValue('');
+        SpreadsheetApp.flush();
+        return { success: true, message: 'AI 報告已成功從雲端清除。' };
+      }
+    }
+    throw new Error('找不到該學生的 Metadata 檔案');
+  } catch (error) {
+    throw new Error('刪除報告失敗: ' + error.toString());
+  }
+}
+
+/**
+ * 教師功能：結合字數限制，呼叫最新的 gemini-3.5-flash 模型產生發展報告
+ */
+function generateStudentAIReport(password, studentId, studentName, customPromptFocus, reportLength) {
+  if (password !== ADMIN_PASSWORD) {
+    throw new Error('拒絕存取：權限驗證失敗！');
+  }
+  
+  const dataResult = getStudentRecords(studentId, password, true);
+  const records = dataResult.records;
+  
+  if (!records || records.length === 0) {
+    throw new Error('該學生目前無任何在校紀錄數據，無法進行 AI 分析。');
+  }
+  
+  const recordsSummary = records.map(r =&gt; {
+    return `【日期: ${r.date}】 出缺席: ${r.attendance} | 作業: ${r.homework || '無作業紀錄'} | 成績: ${r.grades || '無成績紀錄'} | 平時記錄: ${r.dailyRecord || '正常'} | 突發狀況: ${r.incident || '無'} | 輔導紀錄: ${r.counseling || '無'}`;
+  }).join('\n');
+  
+  let lengthInstruction = "";
+  if (reportLength === 'short') {
+    lengthInstruction = "請確保報告字數極度精簡，【整體字數嚴格控制在 300 字以內】，直擊重點，適合家長快速閱讀。";
+  } else if (reportLength === 'long') {
+    lengthInstruction = "請確保報告極其詳盡且富含教育導向，【整體字數控制在 800 字以內】，深入剖析生活細節，並給予具體長期的引導對策。";
+  } else {
+    lengthInstruction = "請確保報告結構適中，【整體字數控制在 500 字以內】，兼具廣度與重點，條理清晰。";
+  }
+  
+  const prompt = `您是一位在教育界、心理學以及親師共育領域深耕多年的專家。
+請針對「${studentName}」同學的歷史生活學業數據，撰寫一份客觀、溫馨且極具建設性的綜合發展評估報告。
+
+學生基本資訊：
+- 姓名：${studentName}
+- 學號：${studentId}
+- 老師指定的分析焦點：${customPromptFocus || '全方位綜合表現評估'}
+- 字數長度設定要求：${lengthInstruction}
+
+以下為該學生的在校歷程數據（時序由新到舊）：
+${recordsSummary}
+
+請依據上述數據，產生一篇採用優雅 Markdown 格式的專業分析，並包含以下四大黃金板塊：
+1. 📊 【學習與作業表現綜合評估】：剖析學術成績與作業繳交常規。
+2. 🎒 【課堂行為與群體常規表現】：整合日常常規與人際同儕互動。
+3. 🌱 【身心狀態與關懷引導建議】：依據突發狀況或輔導晤談，給予心理學層面的支持方案。
+4. 💡 【具體教育策略與親師合作指南】：條列老師在校輔導策略，以及家長在家協助方針。
+
+請注意：
+- 嚴格遵守字數長度限制：${lengthInstruction}。
+- 語氣必須溫慢包容、專業且正面，不得含有說教或責怪詞彙。
+- 報告請使用「繁體中文」輸出，不要夾雜任何 HTML、代碼框架或 JSON 格式。`;
+
+  const aiResponse = callGeminiAPI(prompt);
+  
+  try {
+    const ss = getSpreadsheet();
+    const metadataSheet = ss.getSheetByName('Metadata');
+    if (metadataSheet) {
+      const lastRow = metadataSheet.getLastRow();
+      if (lastRow &gt; 1) {
+        const ids = metadataSheet.getRange(2, 1, lastRow - 1, 1).getValues().map(r =&gt; r[0].toString());
+        const index = ids.indexOf(studentId.toString());
+        if (index !== -1) {
+          const targetRow = index + 2;
+          const timestamp = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm");
+          metadataSheet.getRange(targetRow, 4).setValue(aiResponse);
+          metadataSheet.getRange(targetRow, 5).setValue(timestamp);
+          SpreadsheetApp.flush();
+        }
+      }
+    }
+  } catch (saveErr) {
+    Logger.log('AI 報告儲存失敗: ' + saveErr.toString());
+  }
+  
+  return {
+    success: true,
+    report: aiResponse,
+    time: Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm")
+  };
+}
+
+/**
+ * 遠端通訊程序：採用最新的 gemini-3.5-flash 模型
+ */
+function callGeminiAPI(prompt) {
+  const modelName = 'gemini-3.5-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
+  
+  const payload = {
+    contents: [{
+      parts: [{ text: prompt }]
+    }]
+  };
+  
+  const options = {
+    method: 'post',
+    contentType: 'application/json',
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  };
+  
+  let attempts = 0;
+  const maxAttempts = 5;
+  let delay = 1000;
+  
+  while (attempts &lt; maxAttempts) {
+    try {
+      const response = UrlFetchApp.fetch(url, options);
+      const statusCode = response.getResponseCode();
+      const contentText = response.getContentText();
+      const json = JSON.parse(contentText);
+      
+      if (statusCode === 200) {
+        if (json.candidates &amp;&amp; json.candidates[0].content.parts[0].text) {
+          return json.candidates[0].content.parts[0].text;
+        }
+      }
+      
+      if (statusCode === 429 || statusCode &gt;= 500) {
+        attempts++;
+        if (attempts &gt;= maxAttempts) {
+          throw new Error(`AI API 呼叫頻率過載或超時 (${statusCode})。`);
+        }
+        Utilities.sleep(delay);
+        delay *= 2;
+        continue;
+      }
+      
+      if (json.error) {
+        return '【AI 運算發生異常】: ' + json.error.message;
+      }
+      return 'AI 引擎返回空白，請確認您的 API Key 是否正確。';
+    } catch (error) {
+      attempts++;
+      if (attempts &gt;= maxAttempts) {
+        return '【遠端 AI 連線重試失敗】: ' + error.toString();
+      }
+      Utilities.sleep(delay);
+      delay *= 2;
+    }
+  }
+}</textarea>
+            </div>
+
+            <!-- index.html 下載複製箱 -->
+            <div
+                class="bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden w-full flex flex-col mt-8">
+                <div
+                    class="bg-indigo-950 text-indigo-100 p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <div>
+                        <h3 class="font-bold text-lg flex items-center gap-2 text-white">
+                            <span>🖥️</span>
+                            <span>2. 前端網頁介面 (Index.html) 網頁代碼</span>
+                        </h3>
+                        <p class="text-xs text-indigo-300 mt-0.5">建立在 Apps Script 中，命名為 Index，替換其所有代碼</p>
+                    </div>
+                    <button id="copyHtmlBtn" onclick="copyCode('indexHtmlContent', 'copyHtmlBtn')"
+                        class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-sm">
+                        📋 複製此代碼
+                    </button>
+                </div>
+                <!-- 使用 Textarea 徹底避免 flex 容器被撐破 -->
+                <textarea id="indexHtmlContent" readonly
+                    class="w-full h-96 p-4 bg-slate-900 text-slate-300 font-mono text-[11px] sm:text-xs leading-relaxed border-none resize-none overflow-auto focus:outline-none m-0 block">&lt;!DOCTYPE html&gt;
+&lt;html lang="zh-TW"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;title&gt;雲端智慧教師手冊 &amp; AI 輔導系統&lt;/title&gt;
+  &lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;
+  &lt;script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"&gt;&lt;/script&gt;
+  &lt;style&gt;
+    .loading-spinner {
+      border: 3px solid rgba(99, 102, 241, 0.1);
+      border-radius: 50%;
+      border-top: 3px solid #6366f1;
+      width: 24px;
+      height: 24px;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    @media print {
+      body &gt; *:not(#printAreaSandbox) {
+        display: none !important;
+      }
+      #printAreaSandbox {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100% !important;
+        background: white !important;
+        color: black !important;
+        padding: 40px !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans"&gt;
+
+  &lt;header class="bg-indigo-900 text-white shadow-md no-print"&gt;
+    &lt;div class="max-w-7xl mx-auto px-4 py-4 sm:py-5 flex flex-col sm:flex-row justify-between items-center gap-4"&gt;
+      &lt;div class="flex items-center gap-3"&gt;
+        &lt;span class="text-3xl"&gt;🏫&lt;/span&gt;
+        &lt;div&gt;
+          &lt;h1 class="text-xl sm:text-2xl font-extrabold tracking-tight"&gt;雲端智慧教師手冊&lt;/h1&gt;
+          &lt;p class="text-xs text-indigo-200 mt-0.5"&gt;學生日常紀錄重複編輯 &amp; Gemini 3.5 Flash 智慧輔導報告修改系統&lt;/p&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div id="systemModeBadge" class="bg-indigo-800 border border-indigo-700 text-indigo-100 text-xs font-semibold px-3 py-1.5 rounded-full shadow-inner"&gt;
+        🟢 系統狀態：載入中...
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/header&gt;
+
+  &lt;main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 sm:py-8"&gt;
+
+    &lt;section id="portalSelector" class="max-w-4xl mx-auto mt-6 sm:mt-12 no-print"&gt;
+      &lt;h2 class="text-center text-xl sm:text-2xl font-bold text-slate-800 mb-8"&gt;請選擇身分進入系統&lt;/h2&gt;
+      &lt;div class="grid grid-cols-1 md:grid-cols-2 gap-8"&gt;
+        
+        &lt;div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all flex flex-col justify-between"&gt;
+          &lt;div&gt;
+            &lt;div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center text-2xl mb-6"&gt;👩‍🏫&lt;/div&gt;
+            &lt;h3 class="text-xl font-bold text-slate-900 mb-2"&gt;我是教師 (管理權限)&lt;/h3&gt;
+            &lt;p class="text-slate-500 text-sm leading-relaxed mb-6"&gt;可建立與編輯全班學生檔案、即時記錄或重複修改每日表現、調整生成長度，並呼叫 Gemini 3.5 Flash 產生、編輯或清除報告。&lt;/p&gt;
+          &lt;/div&gt;
+          &lt;div&gt;
+            &lt;label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2"&gt;請輸入管理密鑰&lt;/label&gt;
+            &lt;input type="password" id="inputTeacherPassword" placeholder="預設密碼：Admin888" 
+                   class="w-full px-4 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-4"&gt;
+            &lt;button onclick="loginAsTeacher()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors cursor-pointer text-center text-sm shadow-sm"&gt;
+              教師管理端登入
+            &lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:border-emerald-300 hover:shadow-md transition-all flex flex-col justify-between"&gt;
+          &lt;div&gt;
+            &lt;div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center text-2xl mb-6"&gt;👨‍👩‍👦&lt;/div&gt;
+            &lt;h3 class="text-xl font-bold text-slate-900 mb-2"&gt;我是家長/學生 (專屬檢視)&lt;/h3&gt;
+            &lt;p class="text-slate-500 text-sm leading-relaxed mb-6"&gt;憑「班級學號」與導師發配的「安全通行碼」登入，即時閱讀學生成績表現與導師已發佈並微調後的發展建議。&lt;/p&gt;
+          &lt;/div&gt;
+          &lt;div class="space-y-3"&gt;
+            &lt;div&gt;
+              &lt;label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1"&gt;班級學號 (Student ID)&lt;/label&gt;
+              &lt;input type="text" id="inputStudentId" placeholder="例如：101" 
+                     class="w-full px-4 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"&gt;
+            &lt;/div&gt;
+            &lt;div&gt;
+              &lt;label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1"&gt;家長專屬通行碼 (Access Code)&lt;/label&gt;
+              &lt;input type="text" id="inputStudentAccessCode" placeholder="請輸入 6 位安全通行碼" 
+                     class="w-full px-4 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"&gt;
+            &lt;/div&gt;
+            &lt;button onclick="loginAsParent()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-xl transition-colors cursor-pointer text-center text-sm shadow-sm mt-2"&gt;
+              家長/學生登入
+            &lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section id="teacherDashboard" class="hidden no-print"&gt;
+      &lt;div class="flex flex-col lg:flex-row gap-6 sm:gap-8"&gt;
+        
+        &lt;div class="w-full lg:w-80 bg-white p-5 rounded-2xl shadow-xs border border-slate-200 h-fit shrink-0"&gt;
+          &lt;div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-100"&gt;
+            &lt;h3 class="font-bold text-slate-800 flex items-center gap-1.5"&gt;
+              &lt;span&gt;📋&lt;/span&gt; 學生檔案名冊
+            &lt;/h3&gt;
+            &lt;button onclick="toggleAddStudentModal(true)" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold px-2 py-1 rounded-lg transition-colors cursor-pointer"&gt;
+              ＋ 新增學生
+            &lt;/button&gt;
+          &lt;/div&gt;
+
+          &lt;input type="text" id="searchStudentInput" oninput="filterStudents()" placeholder="搜尋學生學號或姓名..." 
+                 class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 mb-3"&gt;
+
+          &lt;div id="studentListContainer" class="space-y-1.5 max-h-[450px] overflow-y-auto pr-1"&gt;
+          &lt;/div&gt;
+          
+          &lt;div class="mt-6 pt-4 border-t border-slate-100 flex gap-2"&gt;
+            &lt;button onclick="logout()" class="w-full text-center text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold py-2 rounded-xl transition-all cursor-pointer"&gt;
+              🚪 安全登出
+            &lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;div class="flex-1"&gt;
+          &lt;div id="noSelectedStudentAlert" class="bg-white border border-dashed border-slate-300 p-12 rounded-2xl flex flex-col justify-center items-center text-center"&gt;
+            &lt;span class="text-5xl mb-4"&gt;👈&lt;/span&gt;
+            &lt;h3 class="text-lg font-bold text-slate-700"&gt;尚未選擇學生&lt;/h3&gt;
+            &lt;p class="text-slate-400 text-sm max-w-md mt-1"&gt;請從左側名冊中點選欲進行日常記錄、重複編輯或評估的學生檔案。&lt;/p&gt;
+          &lt;/div&gt;
+
+          &lt;div id="studentDetailPanel" class="hidden space-y-6"&gt;
+            
+            &lt;div class="bg-gradient-to-r from-indigo-900 to-slate-800 text-white p-6 rounded-2xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"&gt;
+              &lt;div&gt;
+                &lt;div class="flex items-center gap-3"&gt;
+                  &lt;span class="text-3xl"&gt;👤&lt;/span&gt;
+                  &lt;div&gt;
+                    &lt;h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2"&gt;
+                      &lt;span id="detailStudentName"&gt;學生姓名&lt;/span&gt;
+                      &lt;span class="text-xs bg-indigo-700 text-indigo-100 px-2 py-0.5 rounded-md" id="detailStudentId"&gt;學號&lt;/span&gt;
+                    &lt;/h2&gt;
+                    &lt;p class="text-xs text-indigo-200 mt-1"&gt;家長登入通行碼：&lt;span class="font-mono font-bold bg-indigo-950/50 px-2 py-0.5 rounded-sm select-all text-amber-300" id="detailStudentAccessCode"&gt;------&lt;/span&gt;&lt;/p&gt;
+                  &lt;/div&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+              &lt;div class="flex gap-2 shrink-0"&gt;
+                &lt;button onclick="deleteCurrentStudent()" class="bg-rose-700/80 hover:bg-rose-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer"&gt;
+                  🗑️ 刪除學生檔案
+                &lt;/button&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;div class="border-b border-slate-200 flex gap-4 text-sm font-semibold"&gt;
+              &lt;button onclick="switchTeacherTab('logEntry')" id="tabBtn-logEntry" class="py-2.5 px-1 border-b-2 border-indigo-600 text-indigo-600"&gt;✍️ 登錄/修改日常表現&lt;/button&gt;
+              &lt;button onclick="switchTeacherTab('history')" id="tabBtn-history" class="py-2.5 px-1 border-b-2 border-transparent text-slate-500 hover:text-indigo-600"&gt;📊 歷程紀錄與分析&lt;/button&gt;
+              &lt;button onclick="switchTeacherTab('aiReport')" id="tabBtn-aiReport" class="py-2.5 px-1 border-b-2 border-transparent text-slate-500 hover:text-indigo-600"&gt;🔮 AI 智能評估報告&lt;/button&gt;
+            &lt;/div&gt;
+
+            &lt;div id="tabContent-logEntry" class="bg-white p-6 rounded-2xl shadow-xs border border-slate-200 space-y-4"&gt;
+              &lt;div class="flex justify-between items-center"&gt;
+                &lt;h3 id="formModeTitle" class="font-bold text-slate-800 flex items-center gap-1 text-sm sm:text-base"&gt;
+                  &lt;span&gt;📝&lt;/span&gt; 新增在校學習與生活狀態
+                &lt;/h3&gt;
+                &lt;button id="cancelEditBtn" onclick="cancelRecordEditMode()" class="hidden text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold px-3 py-1.5 rounded-lg transition-all cursor-pointer"&gt;
+                  🚫 取消修改 (返回新增模式)
+                &lt;/button&gt;
+              &lt;/div&gt;
+              
+              &lt;div class="grid grid-cols-1 md:grid-cols-3 gap-4"&gt;
+                &lt;div&gt;
+                  &lt;label class="block text-xs font-bold text-slate-600 uppercase mb-1"&gt;記錄日期&lt;/label&gt;
+                  &lt;input type="date" id="recordDate" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500"&gt;
+                &lt;/div&gt;
+                &lt;div&gt;
+                  &lt;label class="block text-xs font-bold text-slate-600 uppercase mb-1"&gt;出缺席狀態&lt;/label&gt;
+                  &lt;select id="recordAttendance" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500"&gt;
+                    &lt;option value="正常出席(全日)" selected&gt;正常出席 (全日)&lt;/option&gt;
+                    &lt;option value="正常出席(0.5日)"&gt;正常出席 (0.5日)&lt;/option&gt;
+                    &lt;option value="事假(全日)"&gt;事假 (全日)&lt;/option&gt;
+                    &lt;option value="事假(0.5日)"&gt;事假 (0.5日)&lt;/option&gt;
+                    &lt;option value="病假(全日)"&gt;病假 (全日)&lt;/option&gt;
+                    &lt;option value="病假(0.5日)"&gt;病假 (0.5日)&lt;/option&gt;
+                    &lt;option value="遲到"&gt;遲到&lt;/option&gt;
+                    &lt;option value="曠課(全日)"&gt;曠課 (全日)&lt;/option&gt;
+                    &lt;option value="曠課(0.5日)"&gt;曠課 (0.5日)&lt;/option&gt;
+                    &lt;option value="公假"&gt;公假&lt;/option&gt;
+                  &lt;/select&gt;
+                &lt;/div&gt;
+                &lt;div class="flex items-end text-slate-400 text-[11px] pb-2 leading-relaxed"&gt;
+                  系統正自動連接實體 Google Sheets 進行全時段備份與重複覆寫驗證。
+                &lt;/div&gt;
+              &lt;/div&gt;
+
+              &lt;div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3"&gt;
+                &lt;span class="text-xs font-bold text-indigo-900 block"&gt;📊 成績測驗項目編輯器 (科目/單元/分數)&lt;/span&gt;
+                &lt;div class="grid grid-cols-1 sm:grid-cols-4 gap-3"&gt;
+                  &lt;input type="text" id="gradeSubject" placeholder="科目 (例: 數學)" class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500"&gt;
+                  &lt;input type="text" id="gradeUnit" placeholder="單元/考試名稱 (例: 複習考)" class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 col-span-1 sm:col-span-2"&gt;
+                  &lt;div class="flex gap-2"&gt;
+                    &lt;input type="number" id="gradeScore" placeholder="分數" min="0" max="100" class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500"&gt;
+                    &lt;button type="button" onclick="addGradeItem()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs cursor-pointer shrink-0"&gt;➕&lt;/button&gt;
+                  &lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div id="gradeItemsContainer" class="flex flex-wrap gap-2 pt-1"&gt;
+                  &lt;span class="text-xs text-slate-400 italic"&gt;尚無手動登錄之學科成績項目&lt;/span&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+
+              &lt;div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3"&gt;
+                &lt;span class="text-xs font-bold text-teal-900 block"&gt;📚 每日作業項目與繳交紀錄 (動態添加)&lt;/span&gt;
+                &lt;div class="grid grid-cols-1 sm:grid-cols-3 gap-3"&gt;
+                  &lt;input type="text" id="homeworkTitle" placeholder="作業項目名稱 (例: 數學習作 P.12)" class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500 sm:col-span-2"&gt;
+                  &lt;div class="flex gap-2"&gt;
+                    &lt;select id="homeworkStatus" class="w-full px-2 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-teal-500"&gt;
+                      &lt;option value="已繳清"&gt;已繳清&lt;/option&gt;
+                      &lt;option value="遲交"&gt;遲交/補交&lt;/option&gt;
+                      &lt;option value="缺交"&gt;缺交&lt;/option&gt;
+                      &lt;option value="部分未完成"&gt;部分未完成&lt;/option&gt;
+                    &lt;/select&gt;
+                    &lt;button type="button" onclick="addHomeworkItem()" class="bg-teal-700 hover:bg-teal-800 text-white font-bold px-3 py-1.5 rounded-lg text-xs cursor-pointer shrink-0"&gt;➕&lt;/button&gt;
+                  &lt;/div&gt;
+                &lt;/div&gt;
+                &lt;div id="homeworkItemsContainer" class="flex flex-wrap gap-2 pt-1"&gt;
+                  &lt;span class="text-xs text-slate-400 italic"&gt;尚無登錄之每日作業細項&lt;/span&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+
+              &lt;div&gt;
+                &lt;label class="block text-xs font-bold text-slate-600 uppercase mb-1"&gt;課堂與平時行為紀實 (選填)&lt;/label&gt;
+                &lt;input type="text" id="recordDaily" placeholder="例如：課堂討論主動積極，表現良好" 
+                       class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500"&gt;
+              &lt;/div&gt;
+
+              &lt;div class="grid grid-cols-1 md:grid-cols-2 gap-4"&gt;
+                &lt;div&gt;
+                  &lt;label class="block text-xs font-bold text-rose-700 uppercase mb-1"&gt;⚠️ 突發/偏差狀況 (選填)&lt;/label&gt;
+                  &lt;textarea id="recordIncident" rows="2" placeholder="例如：下課與同學因爭執發生短暫口角。" 
+                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-rose-500"&gt;&lt;/textarea&gt;
+                &lt;/div&gt;
+                &lt;div&gt;
+                  &lt;label class="block text-xs font-bold text-emerald-700 uppercase mb-1"&gt;🌱 輔導與關懷對談紀錄 (選填)&lt;/label&gt;
+                  &lt;textarea id="recordCounseling" rows="2" placeholder="例如：個別晤談，協助孩子調適課業進度並予以肯定鼓勵。" 
+                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-500"&gt;&lt;/textarea&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+
+              &lt;div class="pt-4 border-t border-slate-100 flex justify-end"&gt;
+                &lt;button onclick="submitNewRecord()" id="submitRecordBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 px-6 rounded-xl transition-colors cursor-pointer shadow-xs"&gt;
+                  💾 確認登錄並同步寫入
+                &lt;/button&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;div id="tabContent-history" class="bg-white p-6 rounded-2xl shadow-xs border border-slate-200 space-y-4 hidden"&gt;
+              &lt;div class="flex justify-between items-center pb-3 border-b border-slate-100"&gt;
+                &lt;h3 class="font-bold text-slate-800 flex items-center gap-1.5"&gt;
+                  &lt;span&gt;📊&lt;/span&gt; 歷史紀錄軌跡
+                &lt;/h3&gt;
+                &lt;span class="text-xs text-slate-400" id="recordCountLabel"&gt;共 0 筆紀錄&lt;/span&gt;
+              &lt;/div&gt;
+
+              &lt;div id="teacherRecordsContainer" class="space-y-4 max-h-[500px] overflow-y-auto pr-1"&gt;
+              &lt;/div&gt;
+            &lt;/div&gt;
+
+            &lt;div id="tabContent-aiReport" class="bg-white p-6 rounded-2xl shadow-xs border border-slate-200 space-y-6 hidden"&gt;
+              &lt;div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex items-start gap-3"&gt;
+                &lt;span class="text-2xl mt-0.5"&gt;🔮&lt;/span&gt;
+                &lt;div&gt;
+                  &lt;h4 class="font-bold text-indigo-950 text-sm"&gt;Gemini 3.5 Flash 智慧輔導評估報告系統&lt;/h4&gt;
+                  &lt;p class="text-indigo-700 text-xs mt-1 leading-relaxed"&gt;
+                    自動分析所有日常生活紀錄，生成高親和力的發展建議。生成後您可以手動修改內容再儲存。
+                  &lt;/p&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+
+              &lt;div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end"&gt;
+                &lt;div class="md:col-span-2 space-y-2"&gt;
+                  &lt;label class="block text-xs font-bold text-slate-600 uppercase tracking-wider"&gt;自訂報告焦點方向 (選填，可留空)&lt;/label&gt;
+                  &lt;input type="text" id="aiCustomPrompt" placeholder="例如：近期日常規矩有明顯進步，請特別予以多鼓勵讚許。" 
+                         class="w-full px-4 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"&gt;
+                &lt;/div&gt;
+                &lt;div class="space-y-2"&gt;
+                  &lt;label class="block text-xs font-bold text-slate-600 uppercase tracking-wider"&gt;選擇報告長度規範&lt;/label&gt;
+                  &lt;select id="aiReportLength" class="w-full px-4 py-2 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"&gt;
+                    &lt;option value="short"&gt;短（300字以內）&lt;/option&gt;
+                    &lt;option value="medium" selected&gt;中（500字以內）&lt;/option&gt;
+                    &lt;option value="long"&gt;長（800字以內）&lt;/option&gt;
+                  &lt;/select&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+
+              &lt;div class="flex flex-col sm:flex-row gap-3"&gt;
+                &lt;button onclick="triggerAIAnalysis()" id="generateAIBtn" class="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold py-3 px-4 rounded-xl transition-all cursor-pointer text-center text-sm shadow-sm flex items-center justify-center gap-2"&gt;
+                  &lt;span&gt;🧠 讀取歷史數據，生成 AI 智能分析報告&lt;/span&gt;
+                &lt;/button&gt;
+              &lt;/div&gt;
+
+              &lt;div id="aiLoadingStatus" class="hidden flex flex-col items-center justify-center py-12 space-y-3"&gt;
+                &lt;div class="loading-spinner"&gt;&lt;/div&gt;
+                &lt;p class="text-xs text-indigo-600 font-bold" id="aiProgressText"&gt;正在分析試算表數據...&lt;/p&gt;
+              &lt;/div&gt;
+
+              &lt;div id="aiReportBox" class="hidden border border-slate-200 rounded-xl p-6 bg-slate-50 relative space-y-4"&gt;
+                &lt;div class="flex flex-wrap justify-between items-center pb-2 border-b border-slate-200 gap-2"&gt;
+                  &lt;div class="bg-emerald-50 border border-emerald-200 text-emerald-800 text-[10px] font-bold px-2.5 py-1 rounded-md" id="aiReportTimeLabel"&gt;
+                    AI 載入中...
+                  &lt;/div&gt;
+                  &lt;div class="flex gap-2"&gt;
+                    &lt;button onclick="toggleEditAIReportMode(true)" id="editAIReportBtn" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-1.5 rounded-lg text-xs cursor-pointer"&gt;
+                      ✍️ 編輯報告 (手動調整)
+                    &lt;/button&gt;
+                    &lt;button onclick="deleteCurrentAIReport()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold px-3 py-1.5 rounded-lg text-xs cursor-pointer"&gt;
+                      🗑️ 刪除報告
+                    &lt;/button&gt;
+                    &lt;button onclick="printAIReport()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-1.5 rounded-lg text-xs border border-slate-200 cursor-pointer"&gt;
+                      🖨️ 匯出 PDF / 列印
+                    &lt;/button&gt;
+                  &lt;/div&gt;
+                &lt;/div&gt;
+
+                &lt;article id="aiReportRendered" class="prose prose-sm max-w-none text-slate-700 leading-relaxed space-y-4"&gt;
+                &lt;/article&gt;
+
+                &lt;div id="aiReportEditorContainer" class="hidden space-y-3"&gt;
+                  &lt;label class="block text-xs font-bold text-slate-600 uppercase"&gt;📝 手動調整 Markdown 報告內容：&lt;/label&gt;
+                  &lt;textarea id="aiReportEditor" class="w-full h-96 p-4 border border-slate-300 rounded-xl font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white" placeholder="在此直接修改報告內容..."&gt;&lt;/textarea&gt;
+                  &lt;div class="flex justify-end gap-2"&gt;
+                    &lt;button onclick="toggleEditAIReportMode(false)" class="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold px-4 py-2 rounded-xl text-xs cursor-pointer"&gt;
+                      取消修改
+                    &lt;/button&gt;
+                    &lt;button onclick="submitEditedAIReport()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-2 rounded-xl text-xs cursor-pointer"&gt;
+                      💾 儲存修改並發佈
+                    &lt;/button&gt;
+                  &lt;/div&gt;
+                &lt;/div&gt;
+              &lt;/div&gt;
+
+            &lt;/div&gt;
+
+          &lt;/div&gt;
+        &lt;/div&gt;
+
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section id="parentDashboard" class="hidden space-y-6"&gt;
+      &lt;div class="bg-gradient-to-r from-emerald-800 to-teal-700 text-white p-6 rounded-2xl shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"&gt;
+        &lt;div&gt;
+          &lt;div class="flex items-center gap-3"&gt;
+            &lt;span class="text-3xl"&gt;👨&zwj;👩&zwj;👦&lt;/span&gt;
+            &lt;div&gt;
+              &lt;h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2"&gt;
+                &lt;span id="parentStudentName"&gt;載入中...&lt;/span&gt;
+                &lt;span class="text-xs bg-emerald-600 text-emerald-100 px-2 py-0.5 rounded-md" id="parentStudentId"&gt;學號&lt;/span&gt;
+              &lt;/h2&gt;
+              &lt;p class="text-xs text-emerald-100 mt-1"&gt;✨ 歡迎，這裏是您的在校歷程與 AI 報告綜合檢視台。&lt;/p&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        &lt;button onclick="logout()" class="no-print bg-teal-900 hover:bg-teal-950 text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors cursor-pointer shrink-0"&gt;
+          🚪 登出系統
+        &lt;/button&gt;
+      &lt;/div&gt;
+
+      &lt;div class="grid grid-cols-1 md:grid-cols-2 gap-6 no-print"&gt;
+        &lt;div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs"&gt;
+          &lt;h4 class="font-bold text-slate-800 text-sm mb-3 flex items-center gap-1.5"&gt;
+            &lt;span&gt;📅&lt;/span&gt; 出席與常規摘要
+          &lt;/h4&gt;
+          &lt;div class="flex items-center justify-between"&gt;
+            &lt;div class="space-y-1"&gt;
+              &lt;p class="text-xs text-slate-400"&gt;出席總計 (依近期紀錄)：&lt;/p&gt;
+              &lt;p class="text-xl font-extrabold text-indigo-600" id="parentAttendanceText"&gt;正常出席率高&lt;/p&gt;
+            &lt;/div&gt;
+            &lt;div class="text-3xl" id="attendanceEmoji"&gt;🌟&lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+        
+        &lt;div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs"&gt;
+          &lt;h4 class="font-bold text-slate-800 text-sm mb-3 flex items-center gap-1.5"&gt;
+            &lt;span&gt;📚&lt;/span&gt; 近期作業狀態
+          &lt;/h4&gt;
+          &lt;div class="flex items-center justify-between"&gt;
+            &lt;div class="space-y-1"&gt;
+              &lt;p class="text-xs text-slate-400"&gt;作業繳交彙整：&lt;/p&gt;
+              &lt;p class="text-xl font-extrabold text-emerald-600" id="parentHomeworkText"&gt;無缺交紀錄&lt;/p&gt;
+            &lt;/div&gt;
+            &lt;div class="text-3xl" id="homeworkEmoji"&gt;📝&lt;/div&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8"&gt;
+        
+        &lt;div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-xs border border-slate-200 space-y-4"&gt;
+          &lt;h3 class="font-bold text-slate-800 flex items-center gap-1.5 pb-3 border-b border-slate-100"&gt;
+            &lt;span&gt;📜&lt;/span&gt; 日常在校學習紀錄 (時序由新到舊)
+          &lt;/h3&gt;
+          &lt;div id="parentRecordsTimeline" class="space-y-4 max-h-[600px] overflow-y-auto pr-1"&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+
+        &lt;div class="lg:col-span-1 bg-white p-6 rounded-2xl shadow-xs border border-slate-200 space-y-4"&gt;
+          &lt;div class="flex justify-between items-center pb-3 border-b border-slate-100"&gt;
+            &lt;h3 class="font-bold text-slate-800 flex items-center gap-1.5"&gt;
+              &lt;span&gt;🔮&lt;/span&gt; 導師發佈的 AI 綜合報告
+            &lt;/h3&gt;
+            &lt;button onclick="printAIReport()" class="no-print text-[11px] font-semibold bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"&gt;
+              🖨️ 匯出 PDF
+            &lt;/button&gt;
+          &lt;/div&gt;
+
+          &lt;div id="parentNoReportAlert" class="bg-slate-50 border border-dashed border-slate-200 p-8 rounded-xl text-center"&gt;
+            &lt;span class="text-3xl mb-2 block"&gt;⏳&lt;/span&gt;
+            &lt;p class="text-slate-500 font-bold text-sm"&gt;目前導師尚未產生或更新您的發展報告。&lt;/p&gt;
+            &lt;p class="text-slate-400 text-xs mt-1"&gt;請配合每日時序紀錄了解在校生活。&lt;/p&gt;
+          &lt;/div&gt;
+
+          &lt;div id="parentReportBox" class="hidden space-y-3"&gt;
+            &lt;div class="text-slate-400 text-[10px] flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100"&gt;
+              &lt;span&gt;🤖 AI 綜合導師報告&lt;/span&gt;
+              &lt;span id="parentReportTime" class="font-semibold text-indigo-600"&gt;更新時間&lt;/span&gt;
+            &lt;/div&gt;
+            &lt;article id="parentReportRendered" class="prose prose-sm text-slate-700 leading-relaxed space-y-4 max-h-[600px] overflow-y-auto lg:max-h-none pr-1"&gt;
+            &lt;/article&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+  &lt;/main&gt;
+
+  &lt;div id="addStudentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden no-print"&gt;
+    &lt;div class="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl space-y-4 relative"&gt;
+      &lt;h3 class="text-lg font-bold text-slate-950 flex items-center gap-1.5"&gt;
+        &lt;span&gt;👤&lt;/span&gt; 新增/修改學生個人檔案
+      &lt;/h3&gt;
+      &lt;p class="text-xs text-slate-500"&gt;
+        建立成功後，系統將自動為該生建立一張與學號姓名對應的專屬雲端獨立工作表。
+      &lt;/p&gt;
+
+      &lt;div class="space-y-3"&gt;
+        &lt;div&gt;
+          &lt;label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1"&gt;班級學號 (ID)&lt;/label&gt;
+          &lt;input type="text" id="modalStudentId" placeholder="例如：101" 
+                 class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono"&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1"&gt;學生姓名 (Name)&lt;/label&gt;
+          &lt;input type="text" id="modalStudentName" placeholder="例如：張小明" 
+                 class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500"&gt;
+        &lt;/div&gt;
+        &lt;div&gt;
+          &lt;label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1"&gt;家長專屬通行碼 (Access Code)&lt;/label&gt;
+          &lt;div class="flex gap-2"&gt;
+            &lt;input type="text" id="modalAccessCode" placeholder="預設隨機產生存取碼" 
+                   class="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 font-mono font-bold text-indigo-700"&gt;
+            &lt;button onclick="generateRandomCode()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 font-bold px-3 py-2 rounded-lg text-xs cursor-pointer"&gt;
+              隨機碼
+            &lt;/button&gt;
+          &lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div class="pt-4 border-t border-slate-100 flex gap-2 justify-end text-sm font-semibold"&gt;
+        &lt;button onclick="toggleAddStudentModal(false)" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl cursor-pointer"&gt;
+          取消
+        &lt;/button&gt;
+        &lt;button onclick="submitNewStudent()" id="saveStudentBtn" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl cursor-pointer"&gt;
+          確認儲存並同步
+        &lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div id="printAreaSandbox" class="hidden"&gt;&lt;/div&gt;
+
+  &lt;footer class="bg-slate-100 border-t border-slate-200 py-4 text-center text-xs text-slate-400 no-print mt-auto"&gt;
+    &lt;div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2"&gt;
+      &lt;p&gt;© 2026 雲端智慧教師手冊. All Rights Reserved.&lt;/p&gt;
+      &lt;p class="text-indigo-600 font-medium"&gt;專屬 PDF 隔離沙盒列印引擎已配置&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/footer&gt;
+
+  &lt;script&gt;
+    let currentRole = null;          
+    let adminPassword = '';          
+    let allStudents = [];            
+    let selectedStudent = null;      
+    let currentTab = 'logEntry';     
+    let isMockMode = false;          
+    let editingRowIndex = null;      
+    let activeGrades = [];
+    let activeHomeworks = [];
+    let parentStudentNameText = "";
+    let parentStudentIdText = "";
+
+    let mockMetadata = [
+      { id: "101", name: "張小明", accessCode: "492813", latestReport: "", reportTime: "" },
+      { id: "102", name: "李小華", accessCode: "827491", latestReport: "", reportTime: "" },
+      { id: "103", name: "王阿寶", accessCode: "305829", latestReport: "", reportTime: "" }
+    ];
+    let mockRecords = {
+      "101_張小明": [
+        { rowIndex: 2, date: "2026-05-28", attendance: "正常出席(全日)", homework: "國語練習單 (已繳清) | 數學習作 P.12 (已繳清)", grades: "國語[聽寫]: 95分 | 數學[第一單元]: 90分", dailyRecord: "課堂互動良好，與組員相處愉快。", incident: "", counseling: "" },
+        { rowIndex: 3, date: "2026-05-29", attendance: "正常出席(0.5日)", homework: "英文作業 (遲交)", grades: "數學[小考]: 72分", dailyRecord: "下午精神略顯不振。", incident: "", counseling: "午休晤談關懷：提醒早點睡覺，小明承諾改進。" },
+        { rowIndex: 4, date: "2026-06-01", attendance: "正常出席(全日)", homework: "生活學習單 (已繳清)", grades: "", dailyRecord: "本日精神飽滿，積極協助老師。", incident: "", counseling: "" }
+      ],
+      "102_李小華": [
+        { rowIndex: 2, date: "2026-06-01", attendance: "事假(全日)", homework: "", grades: "", dailyRecord: "請事假一天。", incident: "", counseling: "" }
+      ]
+    };
+
+    window.onload = function() {
+      detectEnvironment();
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('recordDate').value = today;
+    };
+
+    function detectEnvironment() {
+      const badge = document.getElementById('systemModeBadge');
+      if (typeof google !== 'undefined' &amp;&amp; google.script &amp;&amp; google.script.run) {
+        isMockMode = false;
+        badge.innerHTML = '🟢 雲端模式：已安全連接 Google Sheets 試算表';
+        badge.className = "bg-indigo-800 border border-indigo-700 text-indigo-100 text-xs font-semibold px-3 py-1.5 rounded-full shadow-inner";
+      } else {
+        isMockMode = true;
+        badge.innerHTML = '⚡ 體驗模式：本機虛擬資料庫 (預覽免配置)';
+        badge.className = "bg-amber-800 border border-amber-700 text-amber-100 text-xs font-semibold px-3 py-1.5 rounded-full shadow-inner";
+      }
+    }
+
+    function loginAsTeacher() {
+      const password = document.getElementById('inputTeacherPassword').value;
+      if (!password) return alert('請填寫教師管理密鑰！');
+
+      showFullLoading('正在驗證身分並撈取班級資料庫...');
+
+      if (isMockMode) {
+        setTimeout(() =&gt; {
+          if (password === 'Admin888') {
+            adminPassword = password;
+            currentRole = 'teacher';
+            allStudents = JSON.parse(JSON.stringify(mockMetadata));
+            transitionPortalToDashboard();
+            hideFullLoading();
+          } else {
+            hideFullLoading();
+            alert('密碼錯誤！(體驗模式密碼為: Admin888)');
+          }
+        }, 600);
+      } else {
+        google.script.run
+          .withSuccessHandler(function(data) {
+            hideFullLoading();
+            adminPassword = password;
+            currentRole = 'teacher';
+            allStudents = data;
+            transitionPortalToDashboard();
+          })
+          .withFailureHandler(function(err) {
+            hideFullLoading();
+            alert('驗證失敗: ' + err.message);
+          })
+          .getStudentsList(password);
+      }
+    }
+
+    function loginAsParent() {
+      const studentId = document.getElementById('inputStudentId').value.trim();
+      const accessCode = document.getElementById('inputStudentAccessCode').value.trim();
+
+      if (!studentId || !accessCode) {
+        return alert('請完整填寫學號與專屬通行碼！');
+      }
+
+      showFullLoading('安全通道建置中，正在調閱學生雲端檔案...');
+
+      if (isMockMode) {
+        setTimeout(() =&gt; {
+          const matched = mockMetadata.find(s =&gt; s.id === studentId &amp;&amp; s.accessCode === accessCode);
+          hideFullLoading();
+          if (matched) {
+            currentRole = 'parent';
+            const sheetKey = matched.id + "_" + matched.name;
+            const records = mockRecords[sheetKey] || [];
+            parentStudentNameText = matched.name;
+            parentStudentIdText = matched.id;
+            renderParentDashboard(matched, records);
+          } else {
+            alert('驗證失敗！(體驗模式下可嘗試：學號 101，通行碼 492813)');
+          }
+        }, 600);
+      } else {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            hideFullLoading();
+            currentRole = 'parent';
+            parentStudentNameText = res.studentName || '學生姓名';
+            parentStudentIdText = res.studentId || '學號';
+            renderParentDashboard(res, res.records);
+          })
+          .withFailureHandler(function(err) {
+            hideFullLoading();
+            alert('登入失敗: ' + err.message);
+          })
+          .getStudentRecords(studentId, accessCode, false);
+      }
+    }
+
+    function logout() {
+      currentRole = null;
+      adminPassword = '';
+      selectedStudent = null;
+      allStudents = [];
+      parentStudentNameText = "";
+      parentStudentIdText = "";
+      cancelRecordEditMode();
+      
+      document.getElementById('teacherDashboard').classList.add('hidden');
+      document.getElementById('parentDashboard').classList.add('hidden');
+      document.getElementById('portalSelector').classList.remove('hidden');
+      
+      document.getElementById('inputTeacherPassword').value = '';
+      document.getElementById('inputStudentId').value = '';
+      document.getElementById('inputStudentAccessCode').value = '';
+    }
+
+    function transitionPortalToDashboard() {
+      document.getElementById('portalSelector').classList.add('hidden');
+      if (currentRole === 'teacher') {
+        document.getElementById('teacherDashboard').classList.remove('hidden');
+        renderStudentList();
+      }
+    }
+
+    function addGradeItem() {
+      const subject = document.getElementById('gradeSubject').value.trim();
+      const unit = document.getElementById('gradeUnit').value.trim();
+      const score = document.getElementById('gradeScore').value.trim();
+
+      if (!subject || !score) {
+        return alert('請填寫科目與分數！');
+      }
+
+      activeGrades.push({
+        subject: subject,
+        unit: unit || '無單元',
+        score: score
+      });
+
+      document.getElementById('gradeSubject').value = '';
+      document.getElementById('gradeUnit').value = '';
+      document.getElementById('gradeScore').value = '';
+
+      renderGradeBadges();
+    }
+
+    function removeGradeItem(index) {
+      activeGrades.splice(index, 1);
+      renderGradeBadges();
+    }
+
+    function renderGradeBadges() {
+      const container = document.getElementById('gradeItemsContainer');
+      container.innerHTML = '';
+      
+      if (activeGrades.length === 0) {
+        container.innerHTML = '&lt;span class="text-xs text-slate-400 italic"&gt;尚無手動登錄之學科成績項目&lt;/span&gt;';
+        return;
+      }
+
+      activeGrades.forEach((g, index) =&gt; {
+        const badge = document.createElement('div');
+        badge.className = "flex items-center gap-1.5 bg-indigo-50 border border-indigo-200 text-indigo-900 text-xs px-2.5 py-1 rounded-full font-semibold";
+        badge.innerHTML = '&lt;span&gt;' + g.subject + '[' + g.unit + ']: ' + g.score + '分&lt;/span&gt;&lt;button type="button" onclick="removeGradeItem(' + index + ')" class="text-rose-600 hover:text-rose-800 font-bold ml-1 cursor-pointer"&gt;×&lt;/button&gt;';
+        container.appendChild(badge);
+      });
+    }
+
+    function addHomeworkItem() {
+      const title = document.getElementById('homeworkTitle').value.trim();
+      const status = document.getElementById('homeworkStatus').value;
+
+      if (!title) {
+        return alert('請填寫作業項目名稱！');
+      }
+
+      activeHomeworks.push({
+        title: title,
+        status: status
+      });
+
+      document.getElementById('homeworkTitle').value = '';
+      renderHomeworkBadges();
+    }
+
+    function removeHomeworkItem(index) {
+      activeHomeworks.splice(index, 1);
+      renderHomeworkBadges();
+    }
+
+    function renderHomeworkBadges() {
+      const container = document.getElementById('homeworkItemsContainer');
+      container.innerHTML = '';
+
+      if (activeHomeworks.length === 0) {
+        container.innerHTML = '&lt;span class="text-xs text-slate-400 italic"&gt;尚無登錄之每日作業細項&lt;/span&gt;';
+        return;
+      }
+
+      activeHomeworks.forEach((h, index) =&gt; {
+        const badge = document.createElement('div');
+        
+        let statusClass = "bg-emerald-50 text-emerald-800 border-emerald-200";
+        if (h.status === "缺交") statusClass = "bg-rose-50 text-rose-800 border-rose-200";
+        if (h.status === "遲交") statusClass = "bg-amber-50 text-amber-800 border-amber-200";
+        if (h.status === "部分未完成") statusClass = "bg-blue-50 text-blue-800 border-blue-200";
+
+        badge.className = "flex items-center gap-1.5 border text-xs px-2.5 py-1 rounded-full font-semibold " + statusClass;
+        badge.innerHTML = '&lt;span&gt;' + h.title + ' (' + h.status + ')&lt;/span&gt;&lt;button type="button" onclick="removeHomeworkItem(' + index + ')" class="text-slate-600 hover:text-slate-900 font-bold ml-1 cursor-pointer"&gt;×&lt;/button&gt;';
+        container.appendChild(badge);
+      });
+    }
+
+    function toggleAddStudentModal(show) {
+      const modal = document.getElementById('addStudentModal');
+      if (show) {
+        modal.classList.remove('hidden');
+        document.getElementById('modalStudentId').value = '';
+        document.getElementById('modalStudentName').value = '';
+        generateRandomCode();
+      } else {
+        modal.classList.add('hidden');
+      }
+    }
+
+    function generateRandomCode() {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      document.getElementById('modalAccessCode').value = code;
+    }
+
+    function submitNewStudent() {
+      const id = document.getElementById('modalStudentId').value.trim();
+      const name = document.getElementById('modalStudentName').value.trim();
+      const code = document.getElementById('modalAccessCode').value.trim();
+
+      if (!id || !name || !code) {
+        return alert('請填寫完整學生資料！');
+      }
+
+      showFullLoading('同步建構雲端專屬試算表中...');
+
+      if (isMockMode) {
+        setTimeout(() =&gt; {
+          const idx = mockMetadata.findIndex(s =&gt; s.id === id);
+          if (idx !== -1) {
+            mockMetadata[idx].name = name;
+            mockMetadata[idx].accessCode = code;
+          } else {
+            mockMetadata.push({ id, name, accessCode: code, latestReport: "", reportTime: "" });
+            mockRecords[id + "_" + name] = [];
+          }
+          allStudents = JSON.parse(JSON.stringify(mockMetadata));
+          renderStudentList();
+          hideFullLoading();
+          toggleAddStudentModal(false);
+        }, 600);
+      } else {
+        google.script.run
+          .withSuccessHandler(function() {
+            google.script.run
+              .withSuccessHandler(function(freshList) {
+                allStudents = freshList;
+                renderStudentList();
+                hideFullLoading();
+                toggleAddStudentModal(false);
+              })
+              .getStudentsList(adminPassword);
+          })
+          .withFailureHandler(function(err) {
+            hideFullLoading();
+            alert('同步失敗: ' + err.message);
+          })
+          .addOrUpdateStudent(adminPassword, id, name, code);
+      }
+    }
+
+    function deleteCurrentStudent() {
+      if (!selectedStudent) return;
+      const confirmDelete = confirm('確定徹底刪除 [' + selectedStudent.name + '] 檔案與專屬 Sheets 工作表？此操作無法恢復。');
+      if (!confirmDelete) return;
+
+      showFullLoading('安全移除雲端試算表與索引資料...');
+
+      if (isMockMode) {
+        setTimeout(() =&gt; {
+          const idx = mockMetadata.findIndex(s =&gt; s.id === selectedStudent.id);
+          if (idx !== -1) mockMetadata.splice(idx, 1);
+          delete mockRecords[selectedStudent.id + "_" + selectedStudent.name];
+          allStudents = JSON.parse(JSON.stringify(mockMetadata));
+          selectedStudent = null;
+          document.getElementById('studentDetailPanel').classList.add('hidden');
+          document.getElementById('noSelectedStudentAlert').classList.remove('hidden');
+          renderStudentList();
+          hideFullLoading();
+        }, 600);
+      } else {
+        google.script.run
+          .withSuccessHandler(function() {
+            google.script.run
+              .withSuccessHandler(function(freshList) {
+                allStudents = freshList;
+                selectedStudent = null;
+                document.getElementById('studentDetailPanel').classList.add('hidden');
+                document.getElementById('noSelectedStudentAlert').classList.remove('hidden');
+                renderStudentList();
+                hideFullLoading();
+              })
+              .getStudentsList(adminPassword);
+          })
+          .withFailureHandler(function(err) {
+            hideFullLoading();
+            alert('移除失敗: ' + err.message);
+          })
+          .deleteStudent(adminPassword, selectedStudent.id, selectedStudent.name);
+      }
+    }
+
+    function renderStudentList(filterText = '') {
+      const container = document.getElementById('studentListContainer');
+      container.innerHTML = '';
+      const filtered = allStudents.filter(s =&gt; s.name.includes(filterText) || s.id.toString().includes(filterText));
+
+      if (filtered.length === 0) {
+        container.innerHTML = '&lt;p class="text-center text-slate-400 text-xs py-6"&gt;無對應學生資料&lt;/p&gt;';
+        return;
+      }
+
+      filtered.forEach(s =&gt; {
+        const item = document.createElement('div');
+        const isActive = selectedStudent &amp;&amp; selectedStudent.id === s.id;
+        item.className = "p-3 rounded-xl cursor-pointer transition-all border text-left " + (isActive ? 'bg-indigo-50 border-indigo-200 text-indigo-900 font-semibold shadow-xs' : 'bg-slate-50 border-transparent hover:bg-slate-100 text-slate-700');
+        item.onclick = () =&gt; selectStudent(s);
+        item.innerHTML = '&lt;div class="flex justify-between items-center"&gt;&lt;span class="text-sm font-bold"&gt;' + s.name + '&lt;/span&gt;&lt;span class="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-sm font-mono"&gt;學號: ' + s.id + '&lt;/span&gt;&lt;/div&gt;&lt;p class="text-[10px] text-slate-400 mt-1"&gt;通行碼：&lt;span class="font-mono"&gt;' + s.accessCode + '&lt;/span&gt;&lt;/p&gt;';
+        container.appendChild(item);
+      });
+    }
+
+    function filterStudents() {
+      const text = document.getElementById('searchStudentInput').value.trim();
+      renderStudentList(text);
+    }
+
+    function selectStudent(student) {
+      selectedStudent = student;
+      renderStudentList();
+      cancelRecordEditMode(); 
+      
+      document.getElementById('noSelectedStudentAlert').classList.add('hidden');
+      document.getElementById('studentDetailPanel').classList.remove('hidden');
+      
+      document.getElementById('detailStudentName').innerText = student.name;
+      document.getElementById('detailStudentId').innerText = '學號：' + student.id;
+      document.getElementById('detailStudentAccessCode').innerText = student.accessCode;
+      
+      switchTeacherTab('logEntry');
+      loadSelectedStudentRecords();
+    }
+
+    function loadSelectedStudentRecords() {
+      if (!selectedStudent) return;
+      
+      if (isMockMode) {
+        const sheetKey = selectedStudent.id + "_" + selectedStudent.name;
+        const data = mockRecords[sheetKey] || [];
+        renderTeacherRecords(data);
+        renderAIReportSection(selectedStudent.latestReport, selectedStudent.reportTime);
+      } else {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            renderTeacherRecords(res.records);
+            renderAIReportSection(res.latestAIReport, res.reportTime);
+          })
+          .withFailureHandler(function(err) {
+            alert('讀取雲端歷程失敗: ' + err.message);
+          })
+          .getStudentRecords(selectedStudent.id, adminPassword, true);
+      }
+    }
+
+    function renderTeacherRecords(records) {
+      const container = document.getElementById('teacherRecordsContainer');
+      document.getElementById('recordCountLabel').innerText = '共 ' + records.length + ' 筆紀錄';
+      container.innerHTML = '';
+
+      if (records.length === 0) {
+        container.innerHTML = '&lt;div class="text-center py-12 text-slate-400 text-sm"&gt;&lt;span&gt;📅&lt;/span&gt; 該生目前無任何紀錄軌跡。請於第一分頁登錄！&lt;/div&gt;';
+        return;
+      }
+
+      records.forEach(r =&gt; {
+        const card = document.createElement('div');
+        card.className = "p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3 relative hover:border-indigo-100 transition-all shadow-2xs text-left";
+        
+        let gradesSection = '';
+        if (r.grades) {
+          const arr = r.grades.split(' | ');
+          gradesSection = arr.map(item =&gt; '&lt;span class="bg-indigo-50 border border-indigo-200 text-indigo-800 text-[10px] px-2 py-0.5 rounded-full font-semibold"&gt;' + item + '&lt;/span&gt;').join(' ');
+        }
+
+        let homeworkSection = '';
+        if (r.homework) {
+          const arr = r.homework.split(' | ');
+          homeworkSection = arr.map(item =&gt; {
+            let statusClass = "bg-emerald-50 text-emerald-800 border-emerald-100";
+            if (item.includes("缺交")) statusClass = "bg-rose-50 text-rose-800 border-rose-100";
+            if (item.includes("遲交") || item.includes("補交")) statusClass = "bg-amber-50 text-amber-800 border-amber-100";
+            return '&lt;span class="border text-[10px] px-2 py-0.5 rounded-full font-semibold ' + statusClass + '"&gt;' + item + '&lt;/span&gt;';
+          }).join(' ');
+        }
+
+        const safeRecordStr = encodeURIComponent(JSON.stringify(r));
+
+        card.innerHTML = '&lt;div class="flex justify-between items-start"&gt;&lt;div class="flex flex-wrap items-center gap-2"&gt;&lt;span class="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-sm font-bold font-mono"&gt;' + r.date + '&lt;/span&gt;&lt;span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-sm font-bold"&gt;' + r.attendance + '&lt;/span&gt;&lt;/div&gt;&lt;div class="flex items-center gap-3"&gt;&lt;button onclick="startRecordEditMode(\'' + safeRecordStr + '\')" class="text-indigo-600 hover:text-indigo-800 font-bold text-xs cursor-pointer"&gt;✍️ 編輯&lt;/button&gt;&lt;button onclick="deleteRowRecord(' + r.rowIndex + ')" class="text-rose-600 hover:text-rose-800 font-bold text-xs cursor-pointer"&gt;刪除&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;' + (gradesSection ? '&lt;div class="flex flex-wrap gap-1.5 pt-1"&gt;&lt;strong class="text-xs text-slate-500 mr-1 flex items-center"&gt;成績：&lt;/strong&gt;' + gradesSection + '&lt;/div&gt;' : '') + (homeworkSection ? '&lt;div class="flex flex-wrap gap-1.5 pt-1"&gt;&lt;strong class="text-xs text-slate-500 mr-1 flex items-center"&gt;作業：&lt;/strong&gt;' + homeworkSection + '&lt;/div&gt;' : '') + (r.dailyRecord ? '&lt;div class="text-xs text-slate-700"&gt;&lt;span class="font-bold text-slate-500"&gt;📝 日常紀實：&lt;/span&gt;' + r.dailyRecord + '&lt;/div&gt;' : '') + (r.incident ? '&lt;div class="p-2 bg-rose-50/50 border border-rose-100 rounded-lg text-xs"&gt;&lt;p class="font-bold text-rose-700"&gt;⚠️ 突發/偏差狀況：&lt;/p&gt;&lt;p class="text-slate-700 mt-1 leading-relaxed"&gt;' + r.incident + '&lt;/p&gt;&lt;/div&gt;' : '') + (r.counseling ? '&lt;div class="p-2 bg-emerald-50/50 border border-emerald-100 rounded-lg text-xs"&gt;&lt;p class="font-bold text-emerald-700"&gt;🌱 輔導關懷晤談：&lt;/p&gt;&lt;p class="text-slate-700 mt-1 leading-relaxed"&gt;' + r.counseling + '&lt;/p&gt;&lt;/div&gt;' : '');
+        container.appendChild(card);
+      });
+    }
+
+    function startRecordEditMode(encodedRecordStr) {
+      const record = JSON.parse(decodeURIComponent(encodedRecordStr));
+      editingRowIndex = record.rowIndex;
+
+      document.getElementById('recordDate').value = record.date;
+      document.getElementById('recordAttendance').value = record.attendance;
+      document.getElementById('recordDaily').value = record.dailyRecord || '';
+      document.getElementById('recordIncident').value = record.incident || '';
+      document.getElementById('recordCounseling').value = record.counseling || '';
+
+      activeGrades = [];
+      if (record.grades && record.grades.trim() !== '') {
+        const parts = record.grades.split(' | ');
+        parts.forEach(p =&gt; {
+          const regex = /^(.+?)\[(.+?)\]:\s*(.+?)分$/;
+          const match = p.match(regex);
+          if (match) {
+            activeGrades.push({
+              subject: match[1],
+              unit: match[2],
+              score: match[3]
+            });
+          } else {
+            activeGrades.push({ subject: p, unit: '歷史導入', score: '' });
+          }
+        });
+      }
+      renderGradeBadges();
+
+      activeHomeworks = [];
+      if (record.homework && record.homework.trim() !== '') {
+        const parts = record.homework.split(' | ');
+        parts.forEach(p =&gt; {
+          const regex = /^(.+?)\s*\((.+?)\)$/;
+          const match = p.match(regex);
+          if (match) {
+            activeHomeworks.push({
+              title: match[1],
+              status: match[2]
+            });
+          } else {
+            activeHomeworks.push({ title: p, status: '已繳清' });
+          }
+        });
+      }
+      renderHomeworkBadges();
+
+      document.getElementById('formModeTitle').innerHTML = '&lt;span&gt;✍️ 重複編輯日常紀錄 (目前編輯第 ' + editingRowIndex + ' 行)&lt;/span&gt;';
+      document.getElementById('cancelEditBtn').classList.remove('hidden');
+      document.getElementById('submitRecordBtn').innerText = '💾 儲存修改並同步覆寫';
+      document.getElementById('submitRecordBtn').className = "bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold py-2.5 px-6 rounded-xl transition-colors cursor-pointer shadow-xs";
+
+      switchTeacherTab('logEntry');
+    }
+
+    function cancelRecordEditMode() {
+      editingRowIndex = null;
+      document.getElementById('formModeTitle').innerHTML = '&lt;span&gt;📝 新增在校學習與生活狀態&lt;/span&gt;';
+      document.getElementById('cancelEditBtn').classList.add('hidden');
+      document.getElementById('submitRecordBtn').innerText = '💾 確認登錄並同步寫入';
+      document.getElementById('submitRecordBtn').className = "bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2.5 px-6 rounded-xl transition-colors cursor-pointer shadow-xs";
+      resetRecordForm();
+    }
+
+    function submitNewRecord() {
+      if (!selectedStudent) return;
+
+      const gradesString = activeGrades.map(g =&gt; g.subject + '[' + g.unit + ']: ' + g.score + '分').join(' | ');
+      const homeworkString = activeHomeworks.map(h =&gt; h.title + ' (' + h.status + ')').join(' | ');
+
+      const record = {
+        date: document.getElementById('recordDate').value,
+        attendance: document.getElementById('recordAttendance').value,
+        homework: homeworkString,
+        grades: gradesString,
+        dailyRecord: document.getElementById('recordDaily').value.trim(),
+        incident: document.getElementById('recordIncident').value.trim(),
+        counseling: document.getElementById('recordCounseling').value.trim()
+      };
+
+      if (!record.date) return alert('請選擇記錄日期！');
+
+      const submitBtn = document.getElementById('submitRecordBtn');
+      submitBtn.disabled = true;
+
+      const loadingText = editingRowIndex ? "正在覆寫雲端數據..." : "正在同步儲存至試算表...";
+      submitBtn.innerText = loadingText;
+
+      if (isMockMode) {
+        setTimeout(() =&gt; {
+          const sheetKey = selectedStudent.id + "_" + selectedStudent.name;
+          if (!mockRecords[sheetKey]) mockRecords[sheetKey] = [];
+          
+          if (editingRowIndex !== null) {
+            const idx = mockRecords[sheetKey].findIndex(r =&gt; r.rowIndex === editingRowIndex);
+            if (idx !== -1) {
+              mockRecords[sheetKey][idx] = { rowIndex: editingRowIndex, ...record };
+            }
+          } else {
+            const nextRowIndex = mockRecords[sheetKey].length + 2;
+            mockRecords[sheetKey].push({ rowIndex: nextRowIndex, ...record });
+          }
+          
+          submitBtn.disabled = false;
+          cancelRecordEditMode();
+          loadSelectedStudentRecords();
+          alert('同步成功 (體驗模擬模式)');
+        }, 500);
+      } else {
+        if (editingRowIndex !== null) {
+          google.script.run
+            .withSuccessHandler(function(res) {
+              submitBtn.disabled = false;
+              cancelRecordEditMode();
+              loadSelectedStudentRecords();
+              alert(res.message);
+            })
+            .withFailureHandler(function(err) {
+              submitBtn.disabled = false;
+              submitBtn.innerText = '💾 儲存修改並同步覆寫';
+              alert('覆寫失敗: ' + err.message);
+            })
+            .updateStudentRecord(adminPassword, selectedStudent.id, selectedStudent.name, editingRowIndex, record);
+        } else {
+          google.script.run
+            .withSuccessHandler(function(res) {
+              submitBtn.disabled = false;
+              resetRecordForm();
+              loadSelectedStudentRecords();
+              alert(res.message);
+            })
+            .withFailureHandler(function(err) {
+              submitBtn.disabled = false;
+              submitBtn.innerText = '💾 確認登錄並同步寫入';
+              alert('寫入失敗: ' + err.message);
+            })
+            .addStudentRecord(adminPassword, selectedStudent.id, selectedStudent.name, record);
+        }
+      }
+    }
+
+    function deleteRowRecord(rowIndex) {
+      if (!selectedStudent) return;
+      if (!confirm('您確認刪除此筆日常紀錄嗎？此動作將同步清除試算表中對應列。')) return;
+
+      if (isMockMode) {
+        const sheetKey = selectedStudent.id + "_" + selectedStudent.name;
+        mockRecords[sheetKey] = mockRecords[sheetKey].filter(r =&gt; r.rowIndex !== rowIndex);
+        loadSelectedStudentRecords();
+      } else {
+        showFullLoading('正在從試算表中安全移除欄位...');
+        google.script.run
+          .withSuccessHandler(function() {
+            hideFullLoading();
+            loadSelectedStudentRecords();
+          })
+          .withFailureHandler(function(err) {
+            hideFullLoading();
+            alert('刪除失敗: ' + err.message);
+          })
+          .deleteStudentRecord(adminPassword, selectedStudent.id, selectedStudent.name, rowIndex);
+      }
+    }
+
+    function triggerAIAnalysis() {
+      if (!selectedStudent) return;
+      
+      const customFocus = document.getElementById('aiCustomPrompt').value.trim();
+      const reportLength = document.getElementById('aiReportLength').value; 
+      
+      const btn = document.getElementById('generateAIBtn');
+      const loader = document.getElementById('aiLoadingStatus');
+      const reportBox = document.getElementById('aiReportBox');
+
+      btn.disabled = true;
+      loader.classList.remove('hidden');
+      reportBox.classList.add('hidden');
+      
+      updateAIProgress("1. 正在調取雲端日常時序數據庫...", 800)
+        .then(() =&gt; updateAIProgress("2. 傳遞字數限制條件至 Gemini 3.5 Flash 模型端點...", 800))
+        .then(() =&gt; updateAIProgress("3. 智慧腦深度運算分析中，解構學習曲線與生活關聯...", 1000))
+        .then(() =&gt; {
+          if (isMockMode) {
+            return new Promise(resolve =&gt; {
+              setTimeout(() =&gt; {
+                let sampleMarkdown = "";
+                if (reportLength === "short") {
+                  sampleMarkdown = \`### 學生綜合表現報告 (簡短版)
+- **學業評估**：平時成績良好（如國語 $95$ 分），學科基礎扎實。
+- **生活群體**：課堂互動良好，與組員相處愉快，展現積極的課堂領導潛力。
+- **身心關懷**：曾因作息晚睡導致半日精神不佳，經輔導談話後已迅速恢復。
+- **親師對策**：
+  1. 請家長共同把關平日睡眠，確保至少充足 $8$ 小時。
+  2. 導師將於課堂持續給予正面肯定，穩固其學習成就感。\`;
+                } else if (reportLength === "long") {
+                  sampleMarkdown = \`### 學生深度綜合發展評估報告 (詳盡版)
+
+#### 📊 1. 【學習與作業表現綜合評估】
+根據小明近期的各項考驗歷程（如 5/28 國語聽寫 $95$分、數學 $90$分），展現出極具優異的學科底子與邏輯推理能力，在班上維持極佳的中上游優勢。在作業常規方面，近期作業多能如期「已繳清」，僅於 5/29 曾因個人作息波動而出現作業遲交，此現象屬偶發，整體學術紀律值得高度讚賞。
+
+#### 🎒 2. 【課堂行為與群體常規表現】
+日常生活觀察中，小明「課堂互動良好，與組員相處愉快」，樂意在課堂上擔任小組長職責。在分組合作中展現了良好的溝通彈性，人際氛圍融洽，具有高度的班級群體親和力。
+
+#### 🌱 3. 【身心狀態與關懷引導建議】
+小明為高敏感且自尊心較強的孩子。在 5/29 下午曾因家庭活動晚睡影響到下午上課專注度。經導師於午休進行關懷晤談引導，小明能立即理解日常作息與體力、專注度的連帶關係，並在 6/1 隨即恢復為「精神飽滿、回答精確」的顛峰狀態，對成人的支持給予了非常正向的反饋。
+
+#### 💡 4. 【具體教育策略與親師合作指南】
+* **學校輔導規劃**：
+  1. 持續給予自主任務，例如擔任小老師，激發其學習成就動機。
+  2. 當孩子作息偶有波動時，老師將於前幾堂課透過小暗示協助孩子收攏注意力。
+* **家長共育方案**：
+  1. 請家長協助控管週間就寢時間，建立規律、穩定的生理時鐘。
+  2. 當孩子作業或考卷表現理想時，多針對其「努力過程」而非「結果分數」給予具體鼓勵。\`;
+                } else {
+                  sampleMarkdown = \`### 學生綜合發展評估報告 (適中版)
+
+#### 📊 1. 【學習與作業表現綜合評估】
+小明近期各科成績（國語聽寫 $95$ 分、數學 $90$ 分）穩定。日常作業也都能妥善「已繳清」，整體學習態度積極。唯獨在 5/29 曾出現短暫遲交，推測與其精神狀態有關，但整體表現非常優良。
+
+#### 🎒 2. 【課堂行為與群體常規表現】
+在校表現常規良好，課堂討論主動積極，且能與小組同學愉快協同合作，人際關係良好且樂於助人，深得老師肯定。
+
+#### 🌱 3. 【身心狀態與關懷引導建議】
+近期因家庭活動略微晚睡，在個別關懷晤談後，孩子能立即自我檢討，調整狀態，足見其理解與配合度極高。
+
+#### 💡 4. 【具體教育策略與親師合作指南】
+* **教師輔導**：持續給予課堂展現機會，激勵其多元潛能。
+* **家長協助**：請家長在週間共同建立規律就寢習慣，維持學習能量。\`;
+                }
+                resolve({ success: true, report: sampleMarkdown, time: "2026-06-01 12:00" });
+              }, 1000);
+            });
+          } else {
+            return new Promise((resolve, reject) =&gt; {
+              google.script.run
+                .withSuccessHandler(res =&gt; resolve(res))
+                .withFailureHandler(err =&gt; reject(err))
+                .generateStudentAIReport(adminPassword, selectedStudent.id, selectedStudent.name, customFocus, reportLength);
+            });
+          }
+        })
+        .then(res =&gt; {
+          btn.disabled = false;
+          loader.classList.add('hidden');
+          renderAIReportSection(res.report, res.time);
+          
+          selectedStudent.latestReport = res.report;
+          selectedStudent.reportTime = res.time;
+          const metaIdx = allStudents.findIndex(s =&gt; s.id === selectedStudent.id);
+          if (metaIdx !== -1) {
+            allStudents[metaIdx].latestReport = res.report;
+            allStudents[metaIdx].reportTime = res.time;
+          }
+        })
+        .catch(err =&gt; {
+          btn.disabled = false;
+          loader.classList.add('hidden');
+          alert('AI 生成失敗: ' + err.toString());
+        });
+    }
+
+    function updateAIProgress(text, time) {
+      return new Promise(resolve =&gt; {
+        setTimeout(() =&gt; {
+          document.getElementById('aiProgressText').innerText = text;
+          resolve();
+        }, time);
+      });
+    }
+
+    function renderAIReportSection(markdownContent, timestamp) {
+      const box = document.getElementById('aiReportBox');
+      const renderArea = document.getElementById('aiReportRendered');
+      const timeLabel = document.getElementById('aiReportTimeLabel');
+
+      if (!markdownContent) {
+        box.classList.add('hidden');
+        return;
+      }
+
+      box.classList.remove('hidden');
+      timeLabel.innerText = '最後發佈更新：' + timestamp;
+      renderArea.innerHTML = marked.parse(markdownContent);
+      
+      document.getElementById('aiReportEditor').value = markdownContent;
+      toggleEditAIReportMode(false); 
+    }
+
+    function toggleEditAIReportMode(isEditing) {
+      const rendered = document.getElementById('aiReportRendered');
+      const editorContainer = document.getElementById('aiReportEditorContainer');
+      const editBtn = document.getElementById('editAIReportBtn');
+
+      if (isEditing) {
+        rendered.classList.add('hidden');
+        editorContainer.classList.remove('hidden');
+        editBtn.classList.add('hidden');
+      } else {
+        rendered.classList.remove('hidden');
+        editorContainer.classList.add('hidden');
+        editBtn.classList.remove('hidden');
+      }
+    }
+
+    function submitEditedAIReport() {
+      if (!selectedStudent) return;
+      const editedContent = document.getElementById('aiReportEditor').value.trim();
+
+      if (!editedContent) {
+        return alert('報告內容不可為空白！若要清除報告請點選刪除功能。');
+      }
+
+      showFullLoading('正在同步儲存手動修改的報告...');
+
+      if (isMockMode) {
+        setTimeout(() =&gt; {
+          selectedStudent.latestReport = editedContent;
+          selectedStudent.reportTime = "手動微調於 2026-06-01";
+          
+          const metaIdx = allStudents.findIndex(s =&gt; s.id === selectedStudent.id);
+          if (metaIdx !== -1) {
+            allStudents[metaIdx].latestReport = editedContent;
+            allStudents[metaIdx].reportTime = "手動微調";
+          }
+          
+          hideFullLoading();
+          renderAIReportSection(editedContent, "手動微調於 2026-06-01");
+          alert('報告手動修改儲存完成！');
+        }, 500);
+      } else {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            hideFullLoading();
+            
+            selectedStudent.latestReport = editedContent;
+            selectedStudent.reportTime = res.time;
+            const metaIdx = allStudents.findIndex(s =&gt; s.id === selectedStudent.id);
+            if (metaIdx !== -1) {
+              allStudents[metaIdx].latestReport = editedContent;
+              allStudents[metaIdx].reportTime = res.time;
+            }
+            
+            renderAIReportSection(editedContent, res.time);
+            alert(res.message);
+          })
+          .withFailureHandler(function(err) {
+            hideFullLoading();
+            alert('儲存報告失敗: ' + err.message);
+          })
+          .saveAIReport(adminPassword, selectedStudent.id, selectedStudent.name, editedContent);
+      }
+    }
+
+    function deleteCurrentAIReport() {
+      if (!selectedStudent) return;
+      if (!confirm('您確定要徹底刪除此篇發展評估報告嗎？這將會同步清除家長端的檢視。')) return;
+
+      showFullLoading('正在從雲端清空報告紀錄...');
+
+      if (isMockMode) {
+        setTimeout(() =&gt; {
+          selectedStudent.latestReport = "";
+          selectedStudent.reportTime = "";
+          const metaIdx = allStudents.findIndex(s =&gt; s.id === selectedStudent.id);
+          if (metaIdx !== -1) {
+            allStudents[metaIdx].latestReport = "";
+            allStudents[metaIdx].reportTime = "";
+          }
+          hideFullLoading();
+          renderAIReportSection("", "");
+          alert('報告已清除！');
+        }, 500);
+      } else {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            hideFullLoading();
+            
+            selectedStudent.latestReport = "";
+            selectedStudent.reportTime = "";
+            const metaIdx = allStudents.findIndex(s =&gt; s.id === selectedStudent.id);
+            if (metaIdx !== -1) {
+              allStudents[metaIdx].latestReport = "";
+              allStudents[metaIdx].reportTime = "";
+            }
+            
+            renderAIReportSection("", "");
+            alert(res.message);
+          })
+          .withFailureHandler(function(err) {
+            hideFullLoading();
+            alert('刪除失敗: ' + err.message);
+          })
+          .deleteAIReport(adminPassword, selectedStudent.id, selectedStudent.name);
+      }
+    }
+
+    function renderParentDashboard(studentMeta, records) {
+      document.getElementById('portalSelector').classList.add('hidden');
+      document.getElementById('parentDashboard').classList.remove('hidden');
+
+      const sName = studentMeta.studentName || studentMeta.name || "學生姓名";
+      const sId = studentMeta.studentId || studentMeta.id || "學號";
+
+      document.getElementById('parentStudentName').innerText = sName;
+      document.getElementById('parentStudentId').innerText = '學號：' + sId;
+
+      const attendances = records.map(r =&gt; r.attendance);
+      const normalCount = attendances.filter(a =&gt; a.includes('正常出席') || a.includes('公假')).length;
+      const attText = document.getElementById('parentAttendanceText');
+      const attEmoji = document.getElementById('attendanceEmoji');
+      
+      if (records.length === 0) {
+        attText.innerText = "暫無在校出席數據";
+        attEmoji.innerText = "⏳";
+      } else {
+        const rate = (normalCount / attendances.length) * 100;
+        if (rate &gt;= 90) {
+          attText.innerText = '出席率良好 (' + rate.toFixed(0) + '%)';
+          attEmoji.innerText = "🌟";
+        } else {
+          attText.innerText = '作息需要關注 (' + rate.toFixed(0) + '%)';
+          attEmoji.innerText = "⚠️";
+        }
+      }
+
+      const hws = records.map(r =&gt; r.homework).filter(h =&gt; h &amp;&amp; h.trim() !== "");
+      let totalMissing = 0;
+      hws.forEach(h =&gt; {
+        if (h.includes("缺交") || h.includes("部分未完成")) totalMissing++;
+      });
+      const hwText = document.getElementById('parentHomeworkText');
+      const hwEmoji = document.getElementById('homeworkEmoji');
+
+      if (hws.length === 0) {
+        hwText.innerText = "本期暫無作業紀錄細項";
+        hwEmoji.innerText = "⏳";
+      } else {
+        if (totalMissing === 0) {
+          hwText.innerText = "日常作業繳交常規極佳";
+          hwEmoji.innerText = "💯";
+        } else {
+          hwText.innerText = '近期有 ' + totalMissing + ' 筆未完成/缺交';
+          hwEmoji.innerText = "✏️";
+        }
+      }
+
+      const timeline = document.getElementById('parentRecordsTimeline');
+      timeline.innerHTML = '';
+      if (records.length === 0) {
+        timeline.innerHTML = '&lt;div class="text-center py-16 text-slate-400 text-sm"&gt;🎈 目前導師尚未登錄您今日的學習與在校表現。&lt;/div&gt;';
+      } else {
+        records.forEach(r =&gt; {
+          const item = document.createElement('div');
+          item.className = "flex gap-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-white hover:shadow-2xs transition-all text-left";
+          
+          let gradesSection = '';
+          if (r.grades) {
+            const arr = r.grades.split(' | ');
+            gradesSection = arr.map(i =&gt; '&lt;span class="bg-indigo-50 border border-indigo-200 text-indigo-800 text-[10px] px-2 py-0.5 rounded-full font-semibold"&gt;' + i + '&lt;/span&gt;').join(' ');
+          }
+
+          let homeworkSection = '';
+          if (r.homework) {
+            const arr = r.homework.split(' | ');
+            homeworkSection = arr.map(i =&gt; {
+              let statusClass = "bg-emerald-50 text-emerald-800 border-emerald-100";
+              if (i.includes("缺交")) statusClass = "bg-rose-50 text-rose-800 border-rose-100";
+              if (i.includes("遲交") || i.includes("補交")) statusClass = "bg-amber-50 text-amber-800 border-amber-100";
+              return '&lt;span class="border text-[10px] px-2 py-0.5 rounded-full font-semibold ' + statusClass + '"&gt;' + i + '&lt;/span&gt;';
+            }).join(' ');
+          }
+
+          item.innerHTML = '&lt;div class="w-24 shrink-0 flex flex-col justify-start items-start"&gt;&lt;span class="text-xs font-bold text-slate-400 font-mono"&gt;' + r.date + '&lt;/span&gt;&lt;span class="text-[10px] bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded-sm font-bold mt-1.5"&gt;' + r.attendance + '&lt;/span&gt;&lt;/div&gt;&lt;div class="flex-1 space-y-2"&gt;' + (gradesSection ? '&lt;div class="flex flex-wrap gap-1.5"&gt;&lt;strong class="text-xs text-slate-500 mr-1 flex items-center"&gt;成績：&lt;/strong&gt;' + gradesSection + '&lt;/div&gt;' : '') + (homeworkSection ? '&lt;div class="flex flex-wrap gap-1.5"&gt;&lt;strong class="text-xs text-slate-500 mr-1 flex items-center"&gt;作業：&lt;/strong&gt;' + homeworkSection + '&lt;/div&gt;' : '') + (r.dailyRecord ? '&lt;p class="text-xs text-slate-700 leading-relaxed"&gt;&lt;span class="font-bold text-slate-500"&gt;📝 日常表現：&lt;/span&gt;' + r.dailyRecord + '&lt;/p&gt;' : '') + (r.incident ? '&lt;p class="text-xs text-rose-700 font-medium leading-relaxed"&gt;&lt;span class="font-bold"&gt;⚠️ 突發情況：&lt;/span&gt;' + r.incident + '&lt;/p&gt;' : '') + (r.counseling ? '&lt;p class="text-xs text-teal-700 font-medium leading-relaxed"&gt;&lt;span class="font-bold"&gt;🌱 輔導引導：&lt;/span&gt;' + r.counseling + '&lt;/p&gt;' : '') + '&lt;/div&gt;';
+          timeline.appendChild(item);
+        });
+      }
+
+      const reportBox = document.getElementById('parentReportBox');
+      const noReportAlert = document.getElementById('parentNoReportAlert');
+      const renderArea = document.getElementById('parentReportRendered');
+      const timeLabel = document.getElementById('parentReportTime');
+
+      const reportContent = studentMeta.latestAIReport || studentMeta.latestReport || '';
+      const reportTimeStr = studentMeta.reportTime || '';
+
+      if (!reportContent) {
+        reportBox.classList.add('hidden');
+        noReportAlert.classList.remove('hidden');
+      } else {
+        noReportAlert.classList.add('hidden');
+        reportBox.classList.remove('hidden');
+        timeLabel.innerText = '導師發佈時間：' + reportTimeStr;
+        renderArea.innerHTML = marked.parse(reportContent);
+      }
+    }
+
+    function printAIReport() {
+      let reportHTML = "";
+      let sName = "";
+      let sId = "";
+
+      if (currentRole === 'teacher') {
+        if (!selectedStudent) return;
+        reportHTML = document.getElementById('aiReportRendered').innerHTML;
+        sName = selectedStudent.name;
+        sId = selectedStudent.id;
+      } else {
+        reportHTML = document.getElementById('parentReportRendered').innerHTML;
+        sName = parentStudentNameText;
+        sId = parentStudentIdText;
+      }
+
+      if (!reportHTML || reportHTML.trim() === "") {
+        return alert("目前尚無有效的報告可以列印，請先確保 AI 報告已順利產生。");
+      }
+
+      const sandbox = document.getElementById('printAreaSandbox');
+      sandbox.innerHTML = '&lt;div class="border-b-4 border-double border-slate-300 pb-4 mb-6"&gt;&lt;div class="flex justify-between items-end"&gt;&lt;div&gt;&lt;h1 class="text-2xl font-bold text-indigo-900 m-0"&gt;學生綜合發展評估報告&lt;/h1&gt;&lt;p class="text-[10px] text-slate-500 mt-1"&gt;基於日常在校生活軌跡與新一代大語言模型智慧型時序行為分析&lt;/p&gt;&lt;/div&gt;&lt;div class="text-right text-xs text-slate-700"&gt;&lt;p&gt;&lt;strong&gt;學生姓名：&lt;/strong&gt;' + sName + '&lt;/p&gt;&lt;p&gt;&lt;strong&gt;班級學號：&lt;/strong&gt;' + sId + '&lt;/p&gt;&lt;p&gt;&lt;strong&gt;匯出日期：&lt;/strong&gt;' + new Date().toLocaleDateString('zh-TW') + '&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;article class="prose max-w-none text-slate-800 leading-relaxed space-y-6"&gt;' + reportHTML + '&lt;/article&gt;&lt;div class="mt-16 pt-4 border-t border-dashed border-slate-200 text-center text-[10px] text-slate-400"&gt;本報告係由導師協同生成式 AI 輔助撰寫，內容專供本生家長、輔導室與授課教師親師共育參考，版權與隱私受通訊法及個資法保障。&lt;/div&gt;';
+
+      window.print();
+    }
+
+    function switchTeacherTab(tabName) {
+      currentTab = tabName;
+      const tabs = ['logEntry', 'history', 'aiReport'];
+      tabs.forEach(t =&gt; {
+        const btn = document.getElementById('tabBtn-' + t);
+        const content = document.getElementById('tabContent-' + t);
+        if (t === tabName) {
+          btn.className = "py-2.5 px-1 border-b-2 border-indigo-600 text-indigo-600";
+          content.classList.remove('hidden');
+        } else {
+          btn.className = "py-2.5 px-1 border-b-2 border-transparent text-slate-500 hover:text-indigo-600";
+          content.classList.add('hidden');
+        }
+      });
+    }
+
+    function showFullLoading(text) {
+      let loader = document.getElementById('globalSystemLoader');
+      if (!loader) {
+        loader = document.createElement('div');
+        loader.id = 'globalSystemLoader';
+        loader.className = "fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex flex-col items-center justify-center space-y-4 z-50 text-white";
+        loader.innerHTML = '&lt;div class="loading-spinner" style="width:40px; height:40px; border-top-color:#fff"&gt;&lt;/div&gt;&lt;p class="text-sm font-bold tracking-wider" id="globalSystemLoaderText"&gt;載入中...&lt;/p&gt;';
+        document.body.appendChild(loader);
+      }
+      document.getElementById('globalSystemLoaderText').innerText = text;
+      loader.classList.remove('hidden');
+    }
+
+    function hideFullLoading() {
+      const loader = document.getElementById('globalSystemLoader');
+      if (loader) loader.classList.add('hidden');
+    }
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</textarea>
+            </div>
+        </section>
+
+        <!-- ========================================== -->
+        <!-- 第五步：系統日常使用流程引導 -->
+        <!-- ========================================== -->
+        <section class="mb-12 bg-white rounded-2xl shadow-xs border border-slate-200 overflow-hidden w-full">
+            <div class="bg-slate-900 text-white p-5 flex items-center justify-between">
+                <h3 class="font-bold text-lg flex items-center gap-2">
+                    <span
+                        class="bg-indigo-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-xs">5</span>
+                    <span>手冊日常使用指南</span>
+                </h3>
+                <span class="text-xs text-slate-400 font-mono">Operations Manual</span>
+            </div>
+            <div class="p-6 sm:p-8 space-y-8 text-left">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                    <!-- 導師日常工作流程 -->
+                    <div class="space-y-4">
+                        <h4 class="font-bold text-base text-indigo-900 flex items-center gap-1.5">
+                            <span>👩‍🏫</span> 導師日常管理操作
+                        </h4>
+                        <ol class="list-decimal list-inside text-xs text-slate-600 space-y-2 leading-relaxed">
+                            <li><strong>教師端登入：</strong> 輸入預設密碼 <code>Admin888</code> (或您在 code.gs 設定的密鑰)。</li>
+                            <li><strong>建立學籍名冊：</strong> 點擊「新增學生」，為每位學生設定學號、姓名，並取得系統自動產生的 6 位家長安全通行碼。</li>
+                            <li><strong>登錄與修改紀錄：</strong>
+                                在首頁登錄當天考驗分數（可按科目、單元動態增加）、登記作業狀態、出缺席等。若發現登錄錯誤，至「歷史軌跡」點擊「編輯」即可即時修改並覆寫雲端。</li>
+                            <li><strong>產生 AI 分析：</strong> 當累積一定紀錄時，在「AI 智能評估報告」分頁選擇適合的報告長度，點擊即可生成優雅的 Markdown
+                                行為學業建議，並可隨時手動修改再按儲存！</li>
+                        </ol>
+                    </div>
+
+                    <!-- 家長即時查閱流程 -->
+                    <div class="space-y-4">
+                        <h4 class="font-bold text-base text-emerald-900 flex items-center gap-1.5">
+                            <span>👨‍👩‍👦</span> 家長與學生端查閱
+                        </h4>
+                        <ol class="list-decimal list-inside text-xs text-slate-600 space-y-2 leading-relaxed">
+                            <li><strong>專屬連結登入：</strong> 家長在手機或電腦點擊同一網址（Web-App URL）。</li>
+                            <li><strong>雙重隱私驗證：</strong> 輸入導師配發的「班級學號」與「專屬 6 位通行碼」。由於不以姓名登入，降低了重名出錯率。</li>
+                            <li><strong>閱讀歷程軌跡：</strong> 即時看見學生的出席率與作業狀態統計，並查閱由導師修改發佈後的 AI 智能綜合發展評估，提供家庭陪伴方向。</li>
+                        </ol>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 底部溫馨提示 -->
+    <footer class="bg-indigo-950 text-indigo-300 py-8 border-t border-indigo-900 text-center text-xs font-medium">
+        <div class="max-w-6xl mx-auto px-4 space-y-2">
+            <p>💡 <strong>技術免責與安全宣告：</strong> 本系統所有學生歷程數據皆儲存在您自創的 Google 雲端帳戶下，AI 大腦串接採用安全 HTTPS 高規通訊，第三方絕無權限涉足，安全防護
+                100%。</p>
+            <p>© 2026 雲端智慧教師手冊研發小組. 致力於用 AI 縮短親師共育的最後一哩路。</p>
+        </div>
+    </footer>
+
+    <!-- ========================================================== -->
+    <!-- 核心動態抽取與複製驅動引擎 (Textarea 最佳化相容版本) -->
+    <!-- ========================================================== -->
+    <script>
+        // 安全跨平台剪貼簿複製引擎 (適配 Textarea)
+        function copyCode(elementId, buttonId) {
+            const textArea = document.getElementById(elementId);
+            const button = document.getElementById(buttonId);
+
+            // 選取 Textarea 內容
+            textArea.select();
+            textArea.setSelectionRange(0, 99999); // 支援行動裝置
+
+            try {
+                const successful = document.execCommand("copy");
+                if (successful) {
+                    button.innerHTML = "✅ 已成功複製代碼！";
+                    button.className = "w-full sm:w-auto bg-emerald-600 text-white font-semibold py-2 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-sm";
+
+                    setTimeout(() => {
+                        button.innerHTML = "📋 複製此代碼";
+                        button.className = "w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-xl text-xs transition-colors cursor-pointer flex items-center justify-center gap-1.5 shadow-sm";
+                    }, 3000);
+                } else {
+                    alert("複製失敗，請手動在框內長按並全選複製。");
+                }
+            } catch (err) {
+                alert("複製時發生異常，請手動在框內複製程式碼。");
+            }
+
+            // 清除反白
+            window.getSelection().removeAllRanges();
+        }
+    </script>
+</body>
+
+</html>
