@@ -177,6 +177,15 @@ window.APP_DATA = {
       "icon": "Vegan",
       "color": "slate",
       "grade": "其他"
+    },
+    {
+      "id": "item_1780298295112",
+      "title": "AI & GAS 實作工坊02-雲端教師手冊",
+      "category": "班級經營",
+      "description": "透過 AI & GAS 實作雲端教師手冊。在手機或電腦上隨時秒級登錄與修改學生狀況。\n家長可憑「學號 + 專屬 6 位通行密碼」，就能即時看見其子弟的完整軌跡；系統更能一鍵調研所有在校紀錄，呼叫 Google 最新的 Gemini 3.5 Flash AI 智慧大腦，自動編製出溫馨、詳盡且具有親和力的發展輔導建議，並可直接輸出成精美的 A4 PDF 與列印報告！",
+      "link": "teacher_handbook.html",
+      "icon": "BookOpen",
+      "color": "rose"
     }
   ]
 };
