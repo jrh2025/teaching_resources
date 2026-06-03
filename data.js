@@ -186,6 +186,16 @@ window.APP_DATA = {
       "link": "teacher_handbook.html",
       "icon": "BookOpen",
       "color": "rose"
+    },
+    {
+      "id": "item_1780468613049",
+      "title": "VisionPrompt AI - 圖像提示詞結構化分析工具",
+      "category": "小程式",
+      "description": "VisionPrompt AI 是一款專為圖像解析與生成生圖提示詞所設計的專業工具。本工具基於最新的多模態 Gemini 引擎架構，旨在協助使用者深度解構圖像，進而編譯出高品質的繪圖提示詞。",
+      "link": "vision_prompt.html",
+      "icon": "ImageMinus",
+      "color": "green",
+      "grade": "小程式"
     }
   ]
 };
