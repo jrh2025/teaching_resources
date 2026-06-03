@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VisionPrompt AI - 圖像提示詞結構化分析工具</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81',
+                        },
+                        darkBg: '#0b0f19',
+                        darkCard: '#151b2c',
+                        darkBorder: '#222d44'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght=300;400;500;600;700&family=Noto+Sans+TC:wght=300;400;500;700&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', 'Noto Sans TC', sans-serif;
+            background-color: #0b0f19;
+            background-image:
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.12) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        /* 隱藏滾動條但保持功能 */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #222d44;
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #4f46e5;
+        }
+
+        /* 骨架屏動畫 */
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        .shimmer-effect {
+            background: linear-gradient(90deg, #151b2c 25%, #1d263f 50%, #151b2c 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+    </style>
+</head>
+
+<body class="text-slate-100 min-h-screen flex flex-col custom-scrollbar">
+
+    <!-- 頂部導覽列 -->
+    <header class="sticky top-0 z-40 backdrop-blur-md bg-darkBg/80 border-b border-darkBorder px-6 py-4">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div
+                    class="p-2.5 bg-gradient-to-tr from-indigo-500 to-purple-600 rounded-xl shadow-lg shadow-indigo-500/20">
+                    <!-- SVG Logo -->
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1
+                        class="text-2xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">
+                        VisionPrompt AI</h1>
+                    <p class="text-sm text-slate-400 font-medium">結構化圖像解析與 Midjourney / SD 提示詞專家</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <!-- API 狀態指示燈 -->
+                <div id="apiKeyBadge"
+                    class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-semibold">
+                    <span class="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                    系統預設金鑰啟動中
+                </div>
+                <button onclick="toggleApiKeyModal()"
+                    class="flex items-center gap-2 px-4 py-2 rounded-lg bg-darkBorder border border-slate-700 hover:border-indigo-500 hover:bg-slate-800 transition text-sm font-medium">
+                    <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 7a2 2 0 012 2m-3 4h.02M12 17h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    金鑰設定
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主內容區 -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        <!-- 左側控制面板：圖片上傳、模型選擇、歷史紀錄 (黏性貼合，防推擠) -->
+        <section class="lg:col-span-4 flex flex-col gap-6 lg:sticky lg:top-24 self-start">
+
+            <!-- 1. 模型與引擎配置 -->
+            <div class="bg-darkCard border border-darkBorder rounded-2xl p-5 shadow-xl">
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    AI 模型配置
+                </h3>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-400 mb-1.5">選擇 AI 解析模型</label>
+                        <select id="modelSelector" onchange="handleModelChange()"
+                            class="w-full bg-darkBg border border-darkBorder rounded-xl px-3 py-2.5 text-base text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition cursor-pointer">
+                            <option value="gemini-3.5-flash" selected>gemini-3.5-flash (推薦最新旗艦)</option>
+                            <option value="gemini-2.5-flash-preview-09-2025">gemini-2.5-flash-preview (預覽版)</option>
+                            <option value="gemini-2.5-flash">gemini-2.5-flash (生產版)</option>
+                            <option value="gemini-2.5-pro">gemini-2.5-pro (生產版高階)</option>
+                            <option value="custom">自定義模型名稱...</option>
+                        </select>
+                    </div>
+
+                    <!-- 自定義模型輸入框 -->
+                    <div id="customModelWrapper" class="hidden animate-fade-in">
+                        <label class="block text-sm font-semibold text-amber-400 mb-1.5">輸入自定義模型標識符 (ID)</label>
+                        <input type="text" id="customModelInput" placeholder="例如: gemini-3.5-pro"
+                            class="w-full bg-darkBg border border-amber-500/30 rounded-xl px-3 py-2 text-base text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 transition placeholder-slate-600">
+                        <p class="text-xs text-slate-500 mt-1">請填入 Google AI Studio 的完整模型標識代碼。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 圖片上傳區 -->
+            <div class="bg-darkCard border border-darkBorder rounded-2xl p-5 shadow-xl flex flex-col gap-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        上傳來源照片
+                    </h3>
+
+                    <!-- 拖曳上傳控制項 -->
+                    <div id="dropZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)"
+                        ondrop="handleDrop(event)" onclick="triggerFileInput()"
+                        class="border-2 border-dashed border-darkBorder hover:border-indigo-500/60 bg-darkBg/50 hover:bg-indigo-500/[0.02] rounded-xl p-6 text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[200px]">
+                        <input type="file" id="fileInput" accept="image/*" class="hidden"
+                            onchange="handleFileSelect(event)">
+
+                        <div id="uploadPrompt" class="space-y-3">
+                            <div
+                                class="mx-auto w-12 h-12 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-400">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-base font-semibold text-slate-200">點擊上傳 或 拖曳相片至此</p>
+                                <p class="text-xs text-slate-500 mt-1">支援 PNG, JPG, WEBP, HEIC</p>
+                            </div>
+                        </div>
+
+                        <!-- 預覽縮圖 -->
+                        <div id="imagePreviewContainer"
+                            class="hidden w-full h-full relative flex flex-col items-center">
+                            <img id="imagePreview"
+                                class="max-h-[180px] w-auto rounded-lg object-contain border border-darkBorder shadow-inner"
+                                src="" alt="上傳的圖片">
+                            <button onclick="clearImage(event)"
+                                class="absolute -top-2 -right-2 p-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-full transition shadow-lg focus:outline-none">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                            <p id="imageFileInfo" class="text-xs text-slate-400 mt-2 truncate max-w-full"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <button id="generateBtn" onclick="analyzeImage()" disabled
+                        class="w-full py-3.5 px-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed rounded-xl font-bold tracking-wider text-base transition-all transform active:scale-95 flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/15">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                        <span>開始生成結構化提示詞</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. 解析歷史專案清單 (已連接至 IndexedDB，含搜尋功能) -->
+            <div class="bg-darkCard border border-darkBorder rounded-2xl p-5 shadow-xl flex flex-col gap-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                        專案存檔庫 (IndexedDB)
+                    </h3>
+                    <button onclick="clearHistory()"
+                        class="text-xs text-rose-400 hover:text-rose-300 transition">清空全部</button>
+                </div>
+
+                <!-- 搜尋輸入框 -->
+                <div class="relative">
+                    <input type="text" id="projectSearchInput" oninput="filterHistory()" placeholder="搜尋專案名稱..."
+                        class="w-full bg-darkBg border border-darkBorder rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition placeholder-slate-600">
+                    <svg class="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+
+                <div id="historyList" class="space-y-2 max-h-[220px] overflow-y-auto custom-scrollbar pr-1">
+                    <!-- 歷史項目會動態從 IndexedDB 載入 -->
+                    <p class="text-xs text-slate-500 text-center py-4">無歷史解析紀錄</p>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- 右側主工作區：結構化提示編輯器 (佔 8 欄) -->
+        <section class="lg:col-span-8 flex flex-col gap-6">
+
+            <!-- A. 未上傳解析時的預設引導介面 -->
+            <div id="blankSlate"
+                class="bg-darkCard/40 border border-darkBorder border-dashed rounded-3xl p-12 text-center flex flex-col items-center justify-center min-h-[500px]">
+                <div class="w-16 h-16 rounded-full bg-slate-800/50 flex items-center justify-center mb-6">
+                    <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9.663 17h4.673M12 3v1m6.364 .364l-.707 .707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-200">等待分析圖像</h2>
+                <p class="text-base text-slate-400 mt-2 max-w-lg mx-auto leading-relaxed">請在左側面板上傳任何具有人物、景物或插畫風格的照片，並填入
+                    Gemini API 金鑰，AI 將在此處生成深度結構化的多維度專業級提示詞。</p>
+                <div class="grid grid-cols-3 gap-6 w-full max-w-2xl mt-8 text-left">
+                    <div class="p-5 rounded-2xl bg-darkCard border border-darkBorder">
+                        <span class="text-indigo-400 text-sm font-bold block mb-1.5">01. 配置 API Key</span>
+                        <p class="text-xs text-slate-500 leading-relaxed">儲存於瀏覽器 IndexedDB 中，安全無虞。</p>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-darkCard border border-darkBorder">
+                        <span class="text-indigo-400 text-sm font-bold block mb-1.5">02. 深度分析</span>
+                        <p class="text-xs text-slate-500 leading-relaxed">AI 將解構主體（人物細緻化）、構圖、文字排版與風格等七大維度。</p>
+                    </div>
+                    <div class="p-5 rounded-2xl bg-darkCard border border-darkBorder">
+                        <span class="text-indigo-400 text-sm font-bold block mb-1.5">03. 標籤調校</span>
+                        <p class="text-xs text-slate-500 leading-relaxed">運用雙語標籤庫與 AI 多模態雙向翻譯快速編譯出完美提示詞。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- B. 解析進行中的骨架/進度動畫 -->
+            <div id="loaderState" class="hidden bg-darkCard border border-darkBorder rounded-3xl p-8 space-y-6">
+                <div class="flex items-center gap-4 border-b border-darkBorder pb-5">
+                    <div class="w-12 h-12 rounded-xl shimmer-effect"></div>
+                    <div class="flex-grow space-y-2">
+                        <div class="h-5 w-40 rounded-md shimmer-effect"></div>
+                        <div class="h-3 w-64 rounded-md shimmer-effect"></div>
+                    </div>
+                </div>
+                <!-- 載入進度提示 -->
+                <div class="bg-indigo-500/5 border border-indigo-500/10 rounded-2xl p-4 flex items-center gap-4">
+                    <svg class="animate-spin h-5 w-5 text-indigo-400" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                        </path>
+                    </svg>
+                    <div class="text-sm">
+                        <p class="font-medium text-slate-200" id="loadingStep">正在解讀圖像圖像矩陣與排版...</p>
+                        <p class="text-xs text-slate-500">正在透過 <span id="loadingModelName"
+                                class="text-indigo-400 font-semibold"></span> 模型建立安全的多模態結構鏈...</p>
+                    </div>
+                </div>
+                <!-- 結構卡片骨架 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="h-44 rounded-2xl shimmer-effect"></div>
+                    <div class="h-44 rounded-2xl shimmer-effect"></div>
+                    <div class="h-44 rounded-2xl shimmer-effect"></div>
+                    <div class="h-44 rounded-2xl shimmer-effect"></div>
+                </div>
+            </div>
+
+            <!-- C. 提示詞結構化深度編輯器 (主要內容區) -->
+            <div id="editorWorkspace" class="hidden space-y-6">
+
+                <!-- 控制面板頂部 header -->
+                <div
+                    class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-darkCard border border-darkBorder rounded-2xl p-4 shadow-lg">
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span
+                            class="px-2.5 py-1 bg-indigo-500/10 text-indigo-400 text-xs font-bold rounded border border-indigo-500/20 uppercase animate-pulse"
+                            id="activeModelBadge">gemini-3.5-flash</span>
+                        <!-- 專案命名輸入 -->
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-slate-400 whitespace-nowrap font-semibold">專案名稱:</span>
+                            <input type="text" id="projectNameInput"
+                                class="bg-darkBg border border-darkBorder rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 w-44 md:w-64 font-semibold"
+                                placeholder="未命名專案">
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="saveCurrentProjectEdits()"
+                            class="px-3.5 py-2 text-xs text-emerald-400 border border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 rounded-lg transition flex items-center gap-1.5 font-semibold">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                            </svg>
+                            儲存編輯變更
+                        </button>
+                        <button onclick="restoreInitialResponse()"
+                            class="px-3.5 py-2 text-xs text-slate-400 border border-slate-700 bg-slate-800/30 hover:bg-slate-800/60 rounded-lg transition flex items-center gap-1.5">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 15H15M9 11l3-3m0 0l3 3m-3-3v8" />
+                            </svg>
+                            還原
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 編輯面板區域 (七大維度結構) -->
+                <div class="grid grid-cols-1 gap-6" id="dimensionsGrid">
+                    <!-- 卡片 template 會在 JavaScript 中渲染，以確保能注入豐富的標籤、雙語對照和 AI 翻譯同步功能 -->
+                </div>
+
+                <!-- 最終整合終端機 (Compiled Output Panel) -->
+                <div class="bg-darkCard border border-darkBorder rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+                    <div
+                        class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none">
+                    </div>
+
+                    <div
+                        class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-darkBorder pb-4 mb-5">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="flex h-2.5 w-2.5 relative">
+                                    <span
+                                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                                </span>
+                                <h3 class="text-lg font-bold text-white">繪圖提示詞終端 (Compiled Prompt Output)</h3>
+                            </div>
+                            <p class="text-sm text-slate-400 mt-1">此處為結合各維度後的即時編譯結果。將隨您在上方的編輯、標籤點擊即時同步更新。</p>
+                        </div>
+
+                        <!-- 快速參數快捷列 -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            <!-- 比例 -->
+                            <div
+                                class="flex items-center gap-1.5 bg-darkBg border border-darkBorder rounded-lg px-2 py-1">
+                                <span class="text-xs text-slate-500">比例</span>
+                                <select id="arParam" onchange="buildCompiledPrompt()"
+                                    class="bg-transparent text-xs text-indigo-400 focus:outline-none cursor-pointer">
+                                    <option value="" class="bg-darkCard text-slate-300">無</option>
+                                    <option value=" --ar 16:9" class="bg-darkCard text-slate-300" selected>16:9 (橫版)
+                                    </option>
+                                    <option value=" --ar 9:16" class="bg-darkCard text-slate-300">9:16 (直版)</option>
+                                    <option value=" --ar 1:1" class="bg-darkCard text-slate-300">1:1 (正方)</option>
+                                    <option value=" --ar 4:5" class="bg-darkCard text-slate-300">4:5 (社群)</option>
+                                    <option value=" --ar 2:3" class="bg-darkCard text-slate-300">2:3 (經典)</option>
+                                </select>
+                            </div>
+                            <!-- 版本 -->
+                            <div
+                                class="flex items-center gap-1.5 bg-darkBg border border-darkBorder rounded-lg px-2 py-1">
+                                <span class="text-xs text-slate-500">引擎</span>
+                                <select id="versionParam" onchange="buildCompiledPrompt()"
+                                    class="bg-transparent text-xs text-indigo-400 focus:outline-none cursor-pointer">
+                                    <option value=" --v 6.0" class="bg-darkCard text-slate-300" selected>MJ v6.0
+                                    </option>
+                                    <option value=" --v 5.2" class="bg-darkCard text-slate-300">MJ v5.2</option>
+                                    <option value=" --niji 6" class="bg-darkCard text-slate-300">Niji 6 (動漫)</option>
+                                    <option value="" class="bg-darkCard text-slate-300">無</option>
+                                </select>
+                            </div>
+                            <!-- 風格調性 (Stylize) -->
+                            <div
+                                class="flex items-center gap-1.5 bg-darkBg border border-darkBorder rounded-lg px-2 py-1">
+                                <span class="text-xs text-slate-500">美化度</span>
+                                <select id="stylizeParam" onchange="buildCompiledPrompt()"
+                                    class="bg-transparent text-xs text-indigo-400 focus:outline-none cursor-pointer">
+                                    <option value="" class="bg-darkCard text-slate-300">預設</option>
+                                    <option value=" --s 100" class="bg-darkCard text-slate-300">--s 100</option>
+                                    <option value=" --s 250" class="bg-darkCard text-slate-300">--s 250</option>
+                                    <option value=" --s 750" class="bg-darkCard text-slate-300">--s 750</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 人物特徵/圖像參考設定 -->
+                    <div
+                        class="bg-darkBg/60 border border-darkBorder rounded-2xl p-4 mb-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" id="imgRefCheck" onchange="buildCompiledPrompt()"
+                                class="h-5 w-5 rounded border-darkBorder text-indigo-600 focus:ring-indigo-500 bg-darkBg cursor-pointer">
+                            <div>
+                                <label for="imgRefCheck"
+                                    class="text-sm font-semibold text-slate-200 block select-none cursor-pointer">
+                                    啟用圖像特徵保留 / 角色臉部一致性 (Image / Character Reference)
+                                </label>
+                                <p class="text-xs text-slate-400">啟用後將智慧附加 face-preservation 修飾，並預留占位符連結。</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 w-full md:w-auto">
+                            <span class="text-sm text-slate-500 whitespace-nowrap">參考模式</span>
+                            <select id="imgRefType" onchange="buildCompiledPrompt()"
+                                class="w-full md:w-auto bg-darkCard border border-darkBorder text-xs text-indigo-400 rounded-lg px-2.5 py-1.5 focus:outline-none cursor-pointer">
+                                <option value="cref" selected>--cref (角色臉部與特徵一致性)</option>
+                                <option value="sref">--sref (風格與美學樣式參考)</option>
+                                <option value="image_prompt">圖片提示 (置於 prompt 最前方)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 提示詞文字呈現終端 -->
+                    <div class="space-y-4">
+                        <div
+                            class="relative bg-darkBg/80 border border-darkBorder rounded-xl p-5 font-mono text-base text-slate-300 leading-relaxed shadow-inner">
+                            <span
+                                class="absolute top-2.5 left-4 text-xs font-bold text-indigo-500/70 tracking-widest uppercase">MJ/SD
+                                PROMPT</span>
+                            <div class="pt-4 min-h-[90px]" id="compiledPromptText" contenteditable="true"
+                                oninput="handleManualCompiledPromptChange()"></div>
+                        </div>
+
+                        <!-- 操作按鈕組 -->
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <button onclick="copyPromptToClipboard()"
+                                class="py-3 px-4 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white font-semibold rounded-xl text-sm transition transform active:scale-[0.98] flex items-center justify-center gap-1.5 shadow-md">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                                複製英文提示詞
+                            </button>
+                            <button onclick="downloadPrompt()"
+                                class="py-3 px-4 bg-darkBg border border-darkBorder hover:border-slate-600 text-slate-300 font-medium rounded-xl text-sm transition flex items-center justify-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                匯出 TXT 提示檔
+                            </button>
+                            <button onclick="downloadJsonFormat()"
+                                class="py-3 px-4 bg-darkBg border border-darkBorder hover:border-indigo-500 hover:text-indigo-400 text-slate-300 font-medium rounded-xl text-sm transition flex items-center justify-center gap-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                                匯出 JSON 結構檔
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- 頁腳 -->
+    <footer class="mt-auto border-t border-darkBorder bg-darkBg/60 py-6 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <p>© 2026 VisionPrompt AI. 基於最新的多模態 Gemini 3.5 Flash 引擎架構</p>
+            <p>提示：優質的提示詞能深度還原人物精微表情與肌理特徵</p>
+        </div>
+    </footer>
+
+    <!-- 彈窗：金鑰管理器 (API Key Manager) -->
+    <div id="apiKeyModal" class="hidden fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog"
+        aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- 背景遮罩 -->
+            <div onclick="toggleApiKeyModal()" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity"
+                aria-hidden="true"></div>
+            <!-- 置中對齊輔助元 -->
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            <!-- 彈窗主體 -->
+            <div
+                class="inline-block align-bottom bg-darkCard border border-darkBorder rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full">
+                <div class="p-6">
+                    <div class="flex justify-between items-center pb-4 border-b border-darkBorder">
+                        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                            <svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 7a2 2 0 012 2m-3 4h.02M12 17h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            管理 Gemini API 金鑰
+                        </h3>
+                        <button onclick="toggleApiKeyModal()" class="text-slate-400 hover:text-slate-200 transition">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- 密鑰輸入與本地 IndexedDB 說明 -->
+                    <div class="mt-4 space-y-4">
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            為了確保您的資料安全，此處的 API Key 將完全<strong class="text-indigo-400">儲存在您當前瀏覽器的本地 IndexedDB</strong>
+                            中。API 請求是由您的瀏覽器直接向 Google 端點發送，我們不會且無法記錄您的任何憑證與隱私。
+                        </p>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-300 mb-1.5">Gemini API Key</label>
+                            <div class="relative">
+                                <input type="password" id="apiKeyInput" placeholder="輸入 AIzaSy 開頭的 API 金鑰"
+                                    class="w-full bg-darkBg border border-darkBorder rounded-xl pl-3 pr-10 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition placeholder-slate-600">
+                                <button onclick="togglePasswordVisibility()"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200">
+                                    <svg id="eyeIcon" class="w-4 h-4" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 狀態提示 -->
+                        <div id="modalStatusMsg" class="hidden text-xs py-2 px-3 rounded-lg"></div>
+
+                        <!-- 憑證選項 -->
+                        <div class="flex items-center">
+                            <input id="rememberKeyCheck" type="checkbox" checked
+                                class="h-4.5 w-4.5 rounded border-darkBorder text-indigo-600 focus:ring-indigo-500 bg-darkBg cursor-pointer">
+                            <label for="rememberKeyCheck"
+                                class="ml-2 block text-sm text-slate-400 select-none cursor-pointer">
+                                自動記住金鑰 (儲存在本機安全資料庫)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- 操作群組 -->
+                    <div class="mt-6 flex gap-3">
+                        <button onclick="saveApiKey()"
+                            class="flex-grow py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-sm transition">
+                            儲存金鑰
+                        </button>
+                        <button onclick="deleteApiKey()"
+                            class="py-2.5 px-4 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 font-semibold rounded-xl text-sm transition border border-rose-500/20">
+                            清除金鑰
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 自定義 Toast 通告 -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- JavaScript 邏輯引擎 -->
+    <script>
+        // --- Sandbox API Key 規範變數宣告 ---
+        // 遵守系統安全託管規範，在此宣告空金鑰以供沙箱於執行階段動態自動注入。
+        const apiKey = "";
+
+        // --- IndexedDB 初始化與模組 ---
+        const dbName = 'VisionPromptDB';
+        const dbVersion = 1;
+        let db = null;
+        let savedApiKey = ''; // 記憶在記憶體中的密鑰
+        let loadedProjects = []; // 暫存所有讀出的專案列表，供即時搜尋過濾
+
+        function initDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(dbName, dbVersion);
+
+                request.onerror = (event) => {
+                    console.error('IndexedDB 載入失敗', event);
+                    reject(event);
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+                    // 1. 配置設定 Table (金鑰等)
+                    if (!database.objectStoreNames.contains('config')) {
+                        database.createObjectStore('config', { keyPath: 'key' });
+                    }
+                    // 2. 歷史專案與提示詞 Table
+                    if (!database.objectStoreNames.contains('projects')) {
+                        database.createObjectStore('projects', { keyPath: 'id' });
+                    }
+                    // 3. 自定義標籤 Table
+                    if (!database.objectStoreNames.contains('custom_pills')) {
+                        database.createObjectStore('custom_pills', { keyPath: 'dimensionId' });
+                    }
+                };
+            });
+        }
+
+        // --- IndexedDB 核心讀寫工具 ---
+        function getFromDB(storeName, key) {
+            return new Promise((resolve) => {
+                if (!db) { resolve(null); return; }
+                try {
+                    const transaction = db.transaction(storeName, 'readonly');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.get(key);
+                    request.onsuccess = () => resolve(request.result ? request.result.value : null);
+                    request.onerror = () => resolve(null);
+                } catch (err) {
+                    resolve(null);
+                }
+            });
+        }
+
+        function saveToDB(storeName, key, value) {
+            return new Promise((resolve) => {
+                if (!db) { resolve(); return; }
+                try {
+                    const transaction = db.transaction(storeName, 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.put({ key, value });
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => resolve();
+                } catch (err) {
+                    resolve();
+                }
+            });
+        }
+
+        function deleteFromDB(storeName, key) {
+            return new Promise((resolve) => {
+                if (!db) { resolve(); return; }
+                try {
+                    const transaction = db.transaction(storeName, 'readwrite');
+                    const store = transaction.objectStore(storeName);
+                    const request = store.delete(key);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => resolve();
+                } catch (err) {
+                    resolve();
+                }
+            });
+        }
+
+        // 讀取所有歷史專案
+        function getAllProjectsFromDB() {
+            return new Promise((resolve) => {
+                if (!db) { resolve([]); return; }
+                try {
+                    const transaction = db.transaction('projects', 'readonly');
+                    const store = transaction.objectStore('projects');
+                    const request = store.getAll();
+                    request.onsuccess = () => {
+                        const items = request.result || [];
+                        resolve(items);
+                    };
+                    request.onerror = () => resolve([]);
+                } catch (err) {
+                    resolve([]);
+                }
+            });
+        }
+
+        function saveProjectToDB(project) {
+            return new Promise((resolve) => {
+                if (!db) { resolve(); return; }
+                try {
+                    const transaction = db.transaction('projects', 'readwrite');
+                    const store = transaction.objectStore('projects');
+                    const request = store.put(project); // project 包含 id, name, timestamp, createdAt, data, imageBase64, imageMimeType
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => resolve();
+                } catch (err) {
+                    resolve();
+                }
+            });
+        }
+
+        function deleteProjectFromDB(id) {
+            return new Promise((resolve) => {
+                if (!db) { resolve(); return; }
+                try {
+                    const transaction = db.transaction('projects', 'readwrite');
+                    const store = transaction.objectStore('projects');
+                    const request = store.delete(id);
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => resolve();
+                } catch (err) {
+                    resolve();
+                }
+            });
+        }
+
+        function clearAllProjectsFromDB() {
+            return new Promise((resolve) => {
+                if (!db) { resolve(); return; }
+                try {
+                    const transaction = db.transaction('projects', 'readwrite');
+                    const store = transaction.objectStore('projects');
+                    const request = store.clear();
+                    request.onsuccess = () => resolve();
+                    request.onerror = () => resolve();
+                } catch (err) {
+                    resolve();
+                }
+            });
+        }
+
+
+        // --- 狀態定義 ---
+        let currentImageBase64 = '';
+        let currentImageMimeType = '';
+        // 預設與主要使用最先進之 gemini-3.5-flash 模型
+        let activeModel = 'gemini-3.5-flash';
+        let apiResponseData = null; // 暫存 AI 原始解析範本
+        let activeProjectId = null; // 當前加載的專案 ID (用於更新變更)
+
+        // 含有中英對照標籤的維度配置陣列 (共七大維度，修正圖示為標準寬高)
+        let dimensionsList = [
+            {
+                id: 'subject',
+                title: '主體與角色刻畫 (Subject & Character)',
+                icon: `<svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>`,
+                placeholderEn: 'Character features, garments, facial expressions...',
+                pills: [
+                    { en: 'highly detailed skin texture', zh: '細緻肌膚紋理' },
+                    { en: 'hyperrealistic hair details', zh: '超逼真髮絲細節' },
+                    { en: 'expressive face', zh: '生動面部表情' },
+                    { en: 'sharp detailed eyes', zh: '深邃明亮雙眸' },
+                    { en: 'cinematic portrait photography', zh: '電影肖像攝影' },
+                    { en: 'masterpiece skin rendering', zh: '神級皮膚彩繪' },
+                    { en: 'intricate traditional costume', zh: '細緻傳統服飾' },
+                    { en: 'futuristic cyberpunk apparel', zh: '未來感龐克服裝' },
+                    { en: 'candid casual look', zh: '自然隨興神態' }
+                ]
+            },
+            {
+                id: 'details',
+                title: '微小裝飾與細節 (Intricate Details)',
+                icon: `<svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>`,
+                placeholderEn: 'Small textures, tiny objects, surface structures...',
+                pills: [
+                    { en: 'hyperrealistic details', zh: '超寫實精密細節' },
+                    { en: 'extremely intricate textures', zh: '極繁複細微紋理' },
+                    { en: 'photorealistic weave pattern', zh: '寫實編織樣式' },
+                    { en: 'subtle metallic luster', zh: '細微金屬質感' },
+                    { en: 'detailed embroidery', zh: '精美刺繡花紋' },
+                    { en: 'weathered wood texture', zh: '斑駁木頭痕跡' },
+                    { en: 'dust motes floating in sunlight', zh: '光中飛舞的微塵' },
+                    { en: '4k resolution clarity', zh: '4K 清晰度' }
+                ]
+            },
+            {
+                id: 'text',
+                title: '圖片文字與排版 (Extracted Text & Typography)',
+                icon: `<svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>`,
+                placeholderEn: 'Extracted text, letters layout, font styles...',
+                pills: [
+                    { en: 'bold sans-serif typography', zh: '無襯線粗體排版' },
+                    { en: 'vintage neon sign text', zh: '復古霓虹燈字體' },
+                    { en: 'elegant script lettering', zh: '優雅草書藝術字' },
+                    { en: 'holographic tech font', zh: '科幻全像字體' },
+                    { en: 'embedded watermark effect', zh: '浮水印融入設計' },
+                    { en: 'minimalist branding layout', zh: '極簡文字留白排版' }
+                ]
+            },
+            {
+                id: 'environment',
+                title: '環境場景與氛圍 (Environment & Background)',
+                icon: `<svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 002 2h2.945M11.025 21.975A10.037 10.037 0 012.23 15M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`,
+                placeholderEn: 'Background scenery, atmosphere, locations...',
+                pills: [
+                    { en: 'cozy Parisian cafe background', zh: '溫馨巴黎咖啡館' },
+                    { en: 'misty ancient pine forest', zh: '薄霧古松森林' },
+                    { en: 'glowing neon cyberpunk street', zh: '霓虹夜色街區' },
+                    { en: 'modern minimalist studio back', 'zh': '簡約攝影棚背景' },
+                    { en: 'ethereal fantasy temple ruins', zh: '縹緲神殿遺跡' },
+                    { en: 'cinematic city street bokeh', zh: '電影街景大光圈' },
+                    { en: 'vast sci-fi spaceship hangar', zh: '太空戰艦停機坪' }
+                ]
+            },
+            {
+                id: 'style',
+                title: '藝術風格與載體 (Artistic Style)',
+                icon: `<svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>`,
+                placeholderEn: 'Artist style, digital engine, material medium...',
+                pills: [
+                    { en: 'cinematic studio photography', zh: '電影美學棚拍' },
+                    { en: 'raw photography', zh: '無修飾寫實攝影' },
+                    { en: 'editorial fashion shoot', zh: '雜誌封面大片' },
+                    { en: 'concept art illustration', zh: '概念原畫插圖' },
+                    { en: 'Studio Ghibli aesthetic', zh: '吉卜力手繪質感' },
+                    { en: 'watercolor oil masterpiece', zh: '水彩油畫大師風' },
+                    { en: '85mm commercial lens f1.4', zh: '85鏡頭黃金肖像' },
+                    { en: 'analog vintage film grain', zh: '膠卷底片細顆粒' }
+                ]
+            },
+            {
+                id: 'lighting',
+                title: '光影調控 (Lighting)',
+                icon: `<svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707.707M12 8a4 4 0 100 8 4 4 0 000-8z" /></svg>`,
+                placeholderEn: 'Light direction, shadow contrast, coloring tone...',
+                pills: [
+                    { en: 'volumetric lighting', zh: '束光/耶穌光特寫' },
+                    { en: 'warm golden hour glow', zh: '暖和落日餘暉' },
+                    { en: 'rembrandt portrait lighting', zh: '三角側面陰影光' },
+                    { en: 'intense dramatic rim light', zh: '強烈邊緣輪廓光' },
+                    { en: 'cyberpunk blue neon backlight', zh: '賽博藍霓虹背光' },
+                    { en: 'soft diffused overcast light', zh: '陰天漫射柔和光' },
+                    { en: 'moody shadows and high contrast', zh: '情緒性高反差暗調' }
+                ]
+            },
+            {
+                id: 'composition',
+                title: '畫面構圖與視角 (Composition & Framing)',
+                icon: `<svg class="w-6 h-6 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 4v16M15 4v16" /></svg>`,
+                placeholderEn: 'Shot type, camera angle, rule of thirds...',
+                pills: [
+                    { en: 'cinematic wide angle shot', zh: '電影感廣角景深' },
+                    { en: 'extreme close-up detail', zh: '極微距特寫細部' },
+                    { en: 'symmetrical eye-level portrait', zh: '對稱視角平視像' },
+                    { en: 'rule of thirds composition', zh: '經典三分法構圖' },
+                    { en: 'low-angle heroic composition', zh: '仰角英雄史詩感' },
+                    { en: 'shallow depth of field with bokeh', zh: '極限迷人背景虛化' },
+                    { en: 'dynamic overhead shot', zh: '動態高空鳥瞰視角' }
+                ]
+            }
+        ];
+
+        // 記憶體中的自定義標籤快取
+        let customPillsMap = {};
+
+        // --- 初始化頁面 ---
+        window.addEventListener('DOMContentLoaded', async () => {
+            // 優先加載 IndexedDB
+            await initDB();
+            await loadSavedApiKey();
+            await loadHistory();
+            await loadCustomPills();
+            handleModelChange();
+        });
+
+        // 載入自定義 Pills
+        async function loadCustomPills() {
+            customPillsMap = await getFromDB('custom_pills', 'all_custom_pills') || {};
+        }
+
+        // --- 金鑰管理系統 (IndexedDB 儲存) ---
+        async function loadSavedApiKey() {
+            const key = await getFromDB('config', 'gemini_vision_prompt_api_key');
+            const badge = document.getElementById('apiKeyBadge');
+
+            if (key) {
+                savedApiKey = key;
+                document.getElementById('apiKeyInput').value = key;
+                badge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm font-semibold";
+                badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>本機金鑰已設定`;
+            } else {
+                savedApiKey = '';
+                // 預覽運行沙箱中，即使沒有手動填入 Key 也能順暢運作
+                badge.className = "flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-sm font-semibold";
+                badge.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-pulse"></span>系統預設金鑰啟動中`;
+            }
+        }
+
+        async function saveApiKey() {
+            const keyInput = document.getElementById('apiKeyInput').value.trim();
+            const rememberCheck = document.getElementById('rememberKeyCheck').checked;
+
+            if (!keyInput) {
+                showModalError('請輸入有效的 Gemini API Key');
+                return;
+            }
+
+            if (rememberCheck) {
+                await saveToDB('config', 'gemini_vision_prompt_api_key', keyInput);
+            } else {
+                await deleteFromDB('config', 'gemini_vision_prompt_api_key');
+            }
+            // 同步記憶體快取
+            savedApiKey = keyInput;
+
+            await loadSavedApiKey();
+            showModalSuccess('API Key 儲存成功！');
+            setTimeout(() => {
+                toggleApiKeyModal();
+                validateGenerateButton();
+            }, 1000);
+        }
+
+        async function deleteApiKey() {
+            await deleteFromDB('config', 'gemini_vision_prompt_api_key');
+            savedApiKey = '';
+            document.getElementById('apiKeyInput').value = '';
+
+            await loadSavedApiKey();
+            showModalSuccess('已成功清除金鑰紀錄');
+            validateGenerateButton();
+        }
+
+        function showModalError(msg) {
+            const statusMsg = document.getElementById('modalStatusMsg');
+            statusMsg.className = "text-xs py-2 px-3 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400";
+            statusMsg.textContent = msg;
+            statusMsg.classList.remove('hidden');
+        }
+
+        function showModalSuccess(msg) {
+            const statusMsg = document.getElementById('modalStatusMsg');
+            statusMsg.className = "text-xs py-2 px-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400";
+            statusMsg.textContent = msg;
+            statusMsg.classList.remove('hidden');
+        }
+
+        function toggleApiKeyModal() {
+            const modal = document.getElementById('apiKeyModal');
+            modal.classList.toggle('hidden');
+            if (!modal.classList.contains('hidden')) {
+                document.getElementById('modalStatusMsg').classList.add('hidden');
+                document.getElementById('apiKeyInput').value = savedApiKey;
+            }
+        }
+
+        function togglePasswordVisibility() {
+            const input = document.getElementById('apiKeyInput');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />`;
+            } else {
+                input.type = 'password';
+                icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />`;
+            }
+        }
+
+        // --- 模型配置選擇異動 ---
+        function handleModelChange() {
+            const selector = document.getElementById('modelSelector');
+            const customWrapper = document.getElementById('customModelWrapper');
+
+            if (selector.value === 'custom') {
+                customWrapper.classList.remove('hidden');
+                activeModel = document.getElementById('customModelInput').value.trim() || 'gemini-3.5-flash';
+            } else {
+                customWrapper.classList.add('hidden');
+                activeModel = selector.value;
+            }
+        }
+
+        // 監聽自定義輸入框
+        document.getElementById('customModelInput').addEventListener('input', (e) => {
+            if (document.getElementById('modelSelector').value === 'custom') {
+                activeModel = e.target.value.trim() || 'gemini-3.5-flash';
+            }
+        });
+
+        // --- 拖曳與上傳相片處理 ---
+        function triggerFileInput() {
+            if (currentImageBase64) return;
+            document.getElementById('fileInput').click();
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            if (currentImageBase64) return;
+            document.getElementById('dropZone').classList.add('border-indigo-500', 'bg-indigo-500/[0.04]');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            document.getElementById('dropZone').classList.remove('border-indigo-500', 'bg-indigo-500/[0.04]');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('dropZone').classList.remove('border-indigo-500', 'bg-indigo-500/[0.04]');
+            if (currentImageBase64) return;
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        function processFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showToast('請上傳正確的圖檔格式。', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const dataUrl = e.target.result;
+                const parsed = parseDataUrl(dataUrl);
+
+                if (parsed) {
+                    currentImageBase64 = parsed.base64Data;
+                    currentImageMimeType = parsed.mimeType;
+
+                    // 更新 UI 預覽
+                    document.getElementById('uploadPrompt').classList.add('hidden');
+                    document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                    document.getElementById('imagePreview').src = dataUrl;
+                    document.getElementById('imageFileInfo').textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+
+                    showToast('照片成功載入！');
+                    validateGenerateButton();
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 優化剖析 DataURL 函數以防止分割異常
+        function parseDataUrl(dataUrl) {
+            try {
+                const parts = dataUrl.split(',');
+                if (parts.length < 2) return null;
+                const mimeMatch = parts[0].match(/:(.*?);/);
+                const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
+                const base64Data = parts[1];
+                return { mimeType, base64Data };
+            } catch (err) {
+                return null;
+            }
+        }
+
+        function clearImage(e) {
+            if (e) e.stopPropagation();
+            currentImageBase64 = '';
+            currentImageMimeType = '';
+            document.getElementById('fileInput').value = '';
+            document.getElementById('imagePreview').src = '';
+            document.getElementById('uploadPrompt').classList.remove('hidden');
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+
+            // 同步移除暫留在編輯工作區與專案載入的內容，使畫面恢復清爽
+            activeProjectId = null;
+            apiResponseData = null;
+            document.getElementById('editorWorkspace').classList.add('hidden');
+            document.getElementById('loaderState').classList.add('hidden');
+            document.getElementById('blankSlate').classList.remove('hidden');
+
+            validateGenerateButton();
+            showToast('已移除圖片並重設工作區。');
+        }
+
+        // 解除 Key 阻擋驗證，只要有圖檔就允許生成（使 sandbox 託管金鑰發揮作用）
+        function validateGenerateButton() {
+            const btn = document.getElementById('generateBtn');
+            if (currentImageBase64) {
+                btn.removeAttribute('disabled');
+            } else {
+                btn.setAttribute('disabled', 'true');
+            }
+        }
+
+        // --- 核心 API 回退重試機制與多模態分析 ---
+        async function fetchWithRetry(url, options, maxRetries = 5) {
+            let delay = 1000;
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.ok) {
+                        return await response.json();
+                    }
+                    if (response.status === 429 || response.status >= 500) {
+                        if (i === maxRetries - 1) throw new Error(`HTTP 異常狀態 ${response.status}: ${response.statusText}`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2;
+                        continue;
+                    }
+                    const errorData = await response.json().catch(() => ({}));
+                    const errMsg = errorData.error?.message || response.statusText;
+                    throw new Error(`API 請求拒絕 (${response.status}): ${errMsg}`);
+                } catch (error) {
+                    if (i === maxRetries - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    delay *= 2;
+                }
+            }
+        }
+
+        async function analyzeImage() {
+            // 讀取 IndexedDB 的 Key 或者是運行時由 Canvas 託管注入的 API 金鑰
+            const dbKey = await getFromDB('config', 'gemini_vision_prompt_api_key');
+            const finalApiKey = dbKey || apiKey;
+
+            // 更新 UI 狀態至 Loadings
+            document.getElementById('blankSlate').classList.add('hidden');
+            document.getElementById('editorWorkspace').classList.add('hidden');
+            document.getElementById('loaderState').classList.remove('hidden');
+            document.getElementById('loadingModelName').textContent = activeModel;
+
+            const steps = [
+                '正在初始化多模態連線矩陣...',
+                '解析照片色彩、空間結構與文字軌跡...',
+                '刻劃主體核心特徵與人物臉部微表情...',
+                '描繪光影方向、背景環境氛圍與文字版面...',
+                '正在拼裝結構化 JSON 容器數據...'
+            ];
+
+            let stepIndex = 0;
+            const stepInterval = setInterval(() => {
+                if (stepIndex < steps.length) {
+                    document.getElementById('loadingStep').textContent = steps[stepIndex];
+                    stepIndex++;
+                }
+            }, 1500);
+
+            // 組合包含 OCR 文字提取與深度人物刻劃的結構化提示詞
+            const systemPrompt = `你是一位專業的 Midjourney 與 Stable Diffusion 提示詞大師。
+請根據上傳的照片，解構成多維度的提示詞，並輸出詳細且完整的 JSON 結構。
+
+**特別注意 - 人物細緻刻畫**：
+如果照片中有人物，你必須極度仔細地刻畫他/她。包含面部特徵、眼睛（眼神、色彩）、膚質（如細緻皮膚紋理、毛孔、水潤感）、髮絲紋理、表情、肢體姿態、服裝材質、飾品細節等。必須提供高擬真的英文與對應的中文。
+
+**特別注意 - 圖片內嵌文字與排版 (OCR 解析)**：
+如果照片中包含任何文字（如商店招牌、海報標題、衣服文字、標籤或浮水印等），你必須將這些文字內容準確提取出來，並描述其字體、樣式、顏色與排版布局。若完全無文字，請在 zh 回應 "無文字"，在 en 回應 "no text"。
+
+JSON 必須嚴格符合以下結構：
+{
+  "subject": { "zh": "主體與人物深度描繪中文", "en": "Subject & highly detailed character depiction English tags" },
+  "details": { "zh": "畫面微小細節物件中文描述", "en": "Small details, subtle accessories, clothing textures English tags" },
+  "text": { "zh": "提取出的文字內容、排版樣式、字體與顏色特點中文描述", "en": "Extracted text content, font family style, typographic layout, and design characteristics English tags" },
+  "environment": { "zh": "背景、場所與環境氛圍中文", "en": "Location, background scene, climate, background depth English tags" },
+  "style": { "zh": "藝術風格、相機鏡頭或繪畫媒介中文", "en": "Artistic style, camera, shot style, renderer style English tags" },
+  "lighting": { "zh": "光線色彩、方向、對比強度中文", "en": "Lighting direction, soft glow, shadow settings, color tones English" },
+  "composition": { "zh": "鏡頭透視、比例、主體定位中文", "en": "Composition framing, bokeh, focal length, layout rules English" }
+}
+
+你的英文輸出應該是以詞組（tags） or 短句形式呈現，並優化以適合繪圖模型讀取。中文則為對應翻譯。
+請只回傳 JSON 數據，不要有任何 Markdown triple backticks 開頭。`;
+
+            // 組裝 Payload
+            const payload = {
+                contents: [
+                    {
+                        parts: [
+                            { text: systemPrompt },
+                            {
+                                inlineData: {
+                                    mimeType: currentImageMimeType,
+                                    data: currentImageBase64
+                                }
+                            }
+                        ]
+                    }
+                ],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            subject: {
+                                type: "OBJECT",
+                                properties: { zh: { type: "STRING" }, en: { type: "STRING" } },
+                                required: ["zh", "en"]
+                            },
+                            details: {
+                                type: "OBJECT",
+                                properties: { zh: { type: "STRING" }, en: { type: "STRING" } },
+                                required: ["zh", "en"]
+                            },
+                            text: {
+                                type: "OBJECT",
+                                properties: { zh: { type: "STRING" }, en: { type: "STRING" } },
+                                required: ["zh", "en"]
+                            },
+                            environment: {
+                                type: "OBJECT",
+                                properties: { zh: { type: "STRING" }, en: { type: "STRING" } },
+                                required: ["zh", "en"]
+                            },
+                            style: {
+                                type: "OBJECT",
+                                properties: { zh: { type: "STRING" }, en: { type: "STRING" } },
+                                required: ["zh", "en"]
+                            },
+                            lighting: {
+                                type: "OBJECT",
+                                properties: { zh: { type: "STRING" }, en: { type: "STRING" } },
+                                required: ["zh", "en"]
+                            },
+                            composition: {
+                                type: "OBJECT",
+                                properties: { zh: { type: "STRING" }, en: { type: "STRING" } },
+                                required: ["zh", "en"]
+                            }
+                        },
+                        required: ["subject", "details", "text", "environment", "style", "lighting", "composition"]
+                    }
+                }
+            };
+
+            const endpointUrl = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${finalApiKey}`;
+
+            try {
+                const data = await fetchWithRetry(endpointUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                clearInterval(stepInterval);
+
+                const rawJsonText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!rawJsonText) {
+                    throw new Error('模型未能產生正確的結構化資料');
+                }
+
+                // 剖析回傳 JSON
+                apiResponseData = JSON.parse(rawJsonText);
+
+                // 重設目前編輯的歷史專案 ID 為全新
+                activeProjectId = crypto.randomUUID();
+
+                // 預設將主體前20字當作預設專案名稱
+                const defaultProjName = (apiResponseData.subject?.zh || '新解析專案').substring(0, 15);
+                document.getElementById('projectNameInput').value = `${defaultProjName} (${new Date().toLocaleDateString()})`;
+
+                // 【修正】：必須先渲染編輯器，以便 DOM 元素生成後，saveActiveProjectToDB 才能正確抓取並儲存完整的數據！
+                renderEditor(apiResponseData);
+
+                // 儲存此全新專案到 IndexedDB（傳入 apiResponseData，確保初始存檔絕對不為空）
+                await saveActiveProjectToDB(apiResponseData);
+
+                showToast('AI 結構化提示詞解析成功！已建立新專案。');
+
+            } catch (err) {
+                clearInterval(stepInterval);
+                document.getElementById('loaderState').classList.add('hidden');
+                document.getElementById('blankSlate').classList.remove('hidden');
+                showToast(`解析失敗: ${err.message}`, 'error');
+            }
+        }
+
+        // --- 結構化編輯面板渲染 ---
+        function renderEditor(data) {
+            document.getElementById('loaderState').classList.add('hidden');
+            document.getElementById('editorWorkspace').classList.remove('hidden');
+            document.getElementById('activeModelBadge').textContent = activeModel;
+
+            const grid = document.getElementById('dimensionsGrid');
+            grid.innerHTML = ''; // 清空既有
+
+            dimensionsList.forEach(dim => {
+                const itemData = data[dim.id] || { zh: '', en: '' };
+                const customPills = customPillsMap[dim.id] || [];
+
+                const card = document.createElement('div');
+                card.className = "bg-darkCard border border-darkBorder rounded-2xl p-6 shadow-lg space-y-4 hover:border-slate-700/60 transition duration-300";
+                card.innerHTML = `
+                    <div class="flex items-center justify-between border-b border-darkBorder pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="p-1.5 rounded-lg bg-indigo-500/10 flex items-center justify-center">
+                                ${dim.icon}
+                            </span>
+                            <span class="text-base font-bold text-white">${dim.title}</span>
+                        </div>
+                        <span class="text-xs text-slate-500 font-mono select-none uppercase">${dim.id}</span>
+                    </div>
+
+                    <!-- 雙語編輯與即時 AI 翻譯同步工具 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-xs font-bold tracking-wider uppercase text-indigo-400 block">英 提示詞段落 (English Tags)</label>
+                                <button onclick="aiTranslateSync('${dim.id}', 'en-to-zh')" id="btn-trans-en-${dim.id}" class="text-xs text-indigo-400 hover:text-indigo-300 flex items-center gap-1 transition px-2 py-1 rounded bg-indigo-500/5 hover:bg-indigo-500/10 active:scale-95 border border-indigo-500/10">
+                                    <span id="label-trans-en-${dim.id}">AI 翻譯為中文 ↙</span>
+                                </button>
+                            </div>
+                            <textarea id="textarea-en-${dim.id}" oninput="buildCompiledPrompt()" placeholder="${dim.placeholderEn}" class="w-full h-28 bg-darkBg border border-darkBorder rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition custom-scrollbar font-mono leading-relaxed">${itemData.en}</textarea>
+                        </div>
+                        <div class="space-y-1.5">
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="text-xs font-bold tracking-wider uppercase text-slate-400 block">中 提示解說 (Chinese Reference)</label>
+                                <button onclick="aiTranslateSync('${dim.id}', 'zh-to-en')" id="btn-trans-zh-${dim.id}" class="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition px-2 py-1 rounded bg-emerald-500/5 hover:bg-emerald-500/10 active:scale-95 border border-emerald-500/10">
+                                    <span id="label-trans-zh-${dim.id}">AI 翻譯為英文 ↗</span>
+                                </button>
+                            </div>
+                            <textarea id="textarea-zh-${dim.id}" oninput="buildCompiledPrompt()" placeholder="中文對照細節..." class="w-full h-28 bg-darkBg/60 border border-darkBorder rounded-xl p-3 text-sm text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition custom-scrollbar leading-relaxed">${itemData.zh}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- 快捷建議標籤 Pills Area (雙語展示對照) -->
+                    <div class="space-y-2 pt-2">
+                        <span class="text-xs font-bold tracking-wider uppercase text-slate-500 block">中英對照快捷標籤 (點擊直接追加英文詞)</span>
+                        <div class="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto custom-scrollbar" id="pills-container-${dim.id}">
+                            ${dim.pills.map(pill => `
+                                <button onclick="appendPill('${dim.id}', '${pill.en}')" class="text-xs px-2.5 py-1.5 bg-darkBg hover:bg-indigo-500/20 text-slate-300 hover:text-indigo-300 rounded-full border border-darkBorder hover:border-indigo-500/30 transition duration-150 transform active:scale-95 text-left flex items-center gap-1">
+                                    <span class="font-semibold text-slate-200">+ ${pill.en}</span>
+                                    <span class="text-slate-500 font-normal">(${pill.zh})</span>
+                                </button>
+                            `).join('')}
+                            
+                            <!-- 自訂追加 -->
+                            ${customPills.map(pill => `
+                                <button onclick="appendPill('${dim.id}', '${pill}')" class="text-xs px-2.5 py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 hover:text-amber-300 rounded-full border border-amber-500/20 hover:border-amber-500/30 transition duration-150 transform active:scale-95">
+                                    + ${pill}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <!-- 添加自建標籤區 -->
+                    <div class="flex items-center gap-2 pt-1 border-t border-darkBorder/40">
+                        <input type="text" id="add-pill-input-${dim.id}" placeholder="新增自訂標籤 (英文)" class="flex-grow max-w-xs bg-darkBg border border-darkBorder rounded-lg px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+                        <button onclick="createCustomPill('${dim.id}')" class="px-4 py-1.5 bg-darkBorder hover:bg-indigo-600 hover:text-white text-slate-300 rounded-lg text-xs transition font-semibold">添加</button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            // 編譯出最終總文字
+            buildCompiledPrompt();
+        }
+
+        // --- 核心 AI 翻譯同步功能 (利用 Gemini 進行雙語同步) ---
+        async function aiTranslateSync(dimId, direction) {
+            const dbKey = await getFromDB('config', 'gemini_vision_prompt_api_key');
+            const finalApiKey = dbKey || apiKey;
+
+            const sourceArea = document.getElementById(direction === 'zh-to-en' ? `textarea-zh-${dimId}` : `textarea-en-${dimId}`);
+            const targetArea = document.getElementById(direction === 'zh-to-en' ? `textarea-en-${dimId}` : `textarea-zh-${dimId}`);
+            const btnLabel = document.getElementById(direction === 'zh-to-en' ? `label-trans-zh-${dimId}` : `label-trans-en-${dimId}`);
+
+            const textToTranslate = sourceArea.value.trim();
+            if (!textToTranslate) {
+                showToast('請先在源輸入框中填入文字再進行翻譯！', 'error');
+                return;
+            }
+
+            // 更新按鈕載入狀態
+            const origLabel = btnLabel.innerHTML;
+            btnLabel.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-1.5 h-3 w-3 text-current inline" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>翻譯同步中...
+            `;
+
+            let systemInstruction = "";
+            if (direction === 'zh-to-en') {
+                systemInstruction = `你是一位專業的圖像生成提示詞工程專家（Midjourney / Stable Diffusion）。
+請把輸入的中文「主體描述或風格註解」翻譯或轉譯成適合繪圖模型讀取的「英文短語、標籤、修飾詞（comma-separated tags）」。
+不要輸出任何中文解釋、不要引號、不要 Markdown 包裝，只輸出乾淨的英文 comma-separated tags。`;
+            } else {
+                systemInstruction = `請將輸入的英文繪圖提示詞（Prompts/Tags）翻譯成通順流暢、富有畫面感、易於理解的中文描述。
+僅輸出翻譯後的中文，不要有任何前言 or 多餘註解。`;
+            }
+
+            const payload = {
+                contents: [{ parts: [{ text: textToTranslate }] }],
+                systemInstruction: { parts: [{ text: systemInstruction }] }
+            };
+
+            const endpointUrl = `https://generativelanguage.googleapis.com/v1beta/models/${activeModel}:generateContent?key=${finalApiKey}`;
+
+            try {
+                const data = await fetchWithRetry(endpointUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (resultText) {
+                    targetArea.value = resultText.trim();
+                    showToast('中英雙向 AI 翻譯同步成功！', 'success');
+                    buildCompiledPrompt();
+                } else {
+                    throw new Error('翻譯結果返回空白');
+                }
+            } catch (err) {
+                showToast(`翻譯失敗: ${err.message}`, 'error');
+            } finally {
+                btnLabel.innerHTML = origLabel;
+            }
+        }
+
+        // --- 標籤操作與管理 ---
+        function appendPill(dimId, text) {
+            const textarea = document.getElementById(`textarea-en-${dimId}`);
+            let currentVal = textarea.value.trim();
+
+            // 若為 'no text' 或 '无文字'，在手動追加標籤時予以清空以利輸入
+            if (currentVal.toLowerCase() === 'no text' || currentVal === '無文字') {
+                currentVal = '';
+            }
+
+            if (currentVal) {
+                if (!currentVal.endsWith(',')) {
+                    currentVal += ',';
+                }
+                textarea.value = `${currentVal} ${text}`;
+            } else {
+                textarea.value = text;
+            }
+
+            // 閃爍效果提示已追加
+            textarea.classList.add('ring-1', 'ring-indigo-500');
+            setTimeout(() => textarea.classList.remove('ring-1', 'ring-indigo-500'), 400);
+
+            buildCompiledPrompt();
+        }
+
+        async function createCustomPill(dimId) {
+            const input = document.getElementById(`add-pill-input-${dimId}`);
+            const val = input.value.trim();
+            if (!val) return;
+
+            if (!customPillsMap[dimId]) {
+                customPillsMap[dimId] = [];
+            }
+
+            // 防止重複
+            if (!customPillsMap[dimId].includes(val)) {
+                customPillsMap[dimId].push(val);
+                // 儲存至 IndexedDB
+                await saveToDB('custom_pills', 'all_custom_pills', customPillsMap);
+                showToast(`已成功添加自訂標籤: ${val}`);
+            }
+
+            // 清空輸入框
+            input.value = '';
+
+            // 重新渲染當下 card
+            renderEditor(getCurrentEditorState());
+        }
+
+        // 讀取當前編輯器中的即時值
+        function getCurrentEditorState() {
+            const state = {};
+            dimensionsList.forEach(dim => {
+                const enVal = document.getElementById(`textarea-en-${dim.id}`)?.value || '';
+                const zhVal = document.getElementById(`textarea-zh-${dim.id}`)?.value || '';
+                state[dim.id] = { zh: zhVal, en: enVal };
+            });
+            return state;
+        }
+
+        function restoreInitialResponse() {
+            if (apiResponseData) {
+                renderEditor(apiResponseData);
+                showToast('已恢復至原始 AI 產生結果');
+            }
+        }
+
+        // --- 拼裝最終的 Compiled Prompt ---
+        function buildCompiledPrompt() {
+            let compiled = '';
+            const ar = document.getElementById('arParam').value;
+            const version = document.getElementById('versionParam').value;
+            const stylize = document.getElementById('stylizeParam').value;
+
+            // 圖像參考特徵選項
+            const imgRefCheck = document.getElementById('imgRefCheck').checked;
+            const imgRefType = document.getElementById('imgRefType').value;
+
+            // 1. 若開啟「置前」標準圖像提示，拼裝於最前端
+            if (imgRefCheck && imgRefType === 'image_prompt') {
+                compiled += '[IMAGE_URL] ';
+            }
+
+            // 2. 收集並串接各個維度
+            let tags = [];
+            dimensionsList.forEach(dim => {
+                const textarea = document.getElementById(`textarea-en-${dim.id}`);
+                if (textarea) {
+                    const text = textarea.value.trim();
+                    // 過濾無效文字與空標籤
+                    if (text && text.toLowerCase() !== 'no text' && text !== '無文字') {
+                        tags.push(text);
+                    }
+                }
+            });
+
+            // 如果勾選了「圖像特徵保留」，添加指定的特徵保留修飾詞
+            if (imgRefCheck) {
+                tags.push("Preserve facial features from uploaded images.");
+            }
+
+            compiled += tags.join(', ');
+
+            // 移除多餘的首尾空白與末梢逗號
+            compiled = compiled.trim().replace(/,\s*$/, "");
+
+            // 3. 加上 Midjourney 引擎參數後綴
+            compiled += `${ar}${version}${stylize}`;
+
+            // 4. 若開啟「置後」圖像特徵一致性 (--cref / --sref)，拼裝於尾端
+            if (imgRefCheck) {
+                if (imgRefType === 'cref') {
+                    compiled += ' --cref [IMAGE_URL]';
+                } else if (imgRefType === 'sref') {
+                    compiled += ' --sref [IMAGE_URL]';
+                }
+            }
+
+            // 寫入終端展示區
+            document.getElementById('compiledPromptText').textContent = compiled;
+        }
+
+        // 手動編輯編譯後的提示詞時
+        function handleManualCompiledPromptChange() {
+            // 這部分只更改最終總輸出，不反向影響主結構欄位，以維持提示鏈的獨立性
+        }
+
+        // --- 輔助功能: 複製 & 導出 ---
+        function copyPromptToClipboard() {
+            const text = document.getElementById('compiledPromptText').textContent.trim();
+            if (!text) return;
+
+            const temp = document.createElement('textarea');
+            temp.value = text;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+
+            showToast('提示詞成功複製到剪貼簿！', 'success');
+        }
+
+        // 匯出 TXT 格式
+        function downloadPrompt() {
+            const text = document.getElementById('compiledPromptText').textContent.trim();
+            if (!text) return;
+
+            const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'visionprompt-compiled.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('已成功匯出 TXT 文字檔。', 'success');
+        }
+
+        // 匯出 JSON 結構檔案格式
+        function downloadJsonFormat() {
+            const state = getCurrentEditorState();
+            if (Object.keys(state).length === 0 || !state.subject) {
+                showToast('無有效的編輯數據可以匯出', 'error');
+                return;
+            }
+            const jsonStr = JSON.stringify(state, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'visionprompt-structured.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('已成功匯出 JSON 結構檔案。', 'success');
+        }
+
+        // --- 歷史紀錄專案管理 (與 IndexedDB 同步) ---
+        // 【修正】：允許直接傳入 dataToSave。如果傳入了生成完畢的 AI 結果，則直接以此持久化，不必強迫去 DOM 抓取空值
+        async function saveActiveProjectToDB(dataToSave = null) {
+            if (!apiResponseData && !dataToSave) return;
+            const projNameInput = document.getElementById('projectNameInput');
+            const projName = projNameInput ? (projNameInput.value.trim() || '未命名專案') : '未命名專案';
+
+            const currentEditorData = dataToSave || getCurrentEditorState();
+
+            // 結構優化：將數值化時間戳 createdAt、圖檔與 MIME 類型寫入專案物件
+            const project = {
+                id: activeProjectId || crypto.randomUUID(),
+                name: projName,
+                timestamp: new Date().toLocaleString(),
+                createdAt: Date.now(), // 用於精確的排序
+                data: currentEditorData,
+                imageBase64: currentImageBase64, // 保存原始圖檔 Base64 數據
+                imageMimeType: currentImageMimeType // 保存原始圖檔的 Mime 類型
+            };
+
+            await saveProjectToDB(project);
+            await loadHistory();
+        }
+
+        // 儲存當前專案編輯變更
+        async function saveCurrentProjectEdits() {
+            if (!activeProjectId) {
+                showToast('尚未建立任何進行中的專案，請先建立新專案！', 'error');
+                return;
+            }
+            await saveActiveProjectToDB();
+            showToast('專案變更已成功存檔至 IndexedDB！', 'success');
+        }
+
+        // 加載所有歷史記錄並依照時間由新到舊排序
+        async function loadHistory() {
+            const history = await getAllProjectsFromDB();
+            // 以數值時間戳 createdAt 為基準進行排序（最新的在最上方）
+            history.sort((a, b) => {
+                const timeA = a.createdAt || 0;
+                const timeB = b.createdAt || 0;
+                return timeB - timeA;
+            });
+            loadedProjects = history; // 緩存用於搜尋過濾
+            renderHistoryList(loadedProjects);
+        }
+
+        // 渲染過濾後的歷史列表
+        function renderHistoryList(projectsList) {
+            const container = document.getElementById('historyList');
+            container.innerHTML = '';
+
+            if (projectsList.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">無相符的歷史專案</p>`;
+                return;
+            }
+
+            projectsList.forEach(item => {
+                const title = item.name || '未命名專案';
+                const hasImageRef = item.imageBase64 ? '📷 ' : '';
+
+                const wrapper = document.createElement('div');
+                wrapper.className = "group w-full flex items-center justify-between p-3 rounded-lg bg-darkBg border border-darkBorder hover:border-indigo-500/40 text-sm transition gap-2";
+
+                wrapper.innerHTML = `
+                    <button class="flex-grow text-left flex flex-col justify-between gap-1 overflow-hidden" onclick="loadProjectFromHistory('${item.id}')">
+                        <span class="text-slate-300 font-semibold group-hover:text-indigo-400 truncate w-full text-sm">${hasImageRef}${title}</span>
+                        <span class="text-[11px] text-slate-500">${item.timestamp}</span>
+                    </button>
+                    <button onclick="deleteSingleProject(event, '${item.id}')" class="p-1 text-slate-500 hover:text-rose-400 rounded opacity-0 group-hover:opacity-100 transition focus:outline-none" title="刪除此存檔">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+                `;
+                container.appendChild(wrapper);
+            });
+        }
+
+        // 搜尋歷史記錄過濾函數
+        function filterHistory() {
+            const query = document.getElementById('projectSearchInput').value.trim().toLowerCase();
+            const filtered = loadedProjects.filter(p => p.name.toLowerCase().includes(query));
+            renderHistoryList(filtered);
+        }
+
+        // 載入專案並恢復其上傳參考圖檔
+        async function loadProjectFromHistory(id) {
+            const history = await getAllProjectsFromDB();
+            const project = history.find(p => p.id === id);
+            if (project) {
+                activeProjectId = project.id;
+                apiResponseData = project.data; // 更新還原底稿
+
+                // 恢復當初專案儲存時的上傳圖檔
+                if (project.imageBase64 && project.imageMimeType) {
+                    currentImageBase64 = project.imageBase64;
+                    currentImageMimeType = project.imageMimeType;
+
+                    document.getElementById('uploadPrompt').classList.add('hidden');
+                    document.getElementById('imagePreviewContainer').classList.remove('hidden');
+                    document.getElementById('imagePreview').src = `data:${currentImageMimeType};base64,${currentImageBase64}`;
+                    document.getElementById('imageFileInfo').textContent = `[專案參考圖檔] (載入自 IndexedDB)`;
+                } else {
+                    // 若該專案無圖檔紀錄則清空圖片預覽區
+                    currentImageBase64 = '';
+                    currentImageMimeType = '';
+                    document.getElementById('fileInput').value = '';
+                    document.getElementById('imagePreview').src = '';
+                    document.getElementById('uploadPrompt').classList.remove('hidden');
+                    document.getElementById('imagePreviewContainer').classList.add('hidden');
+                }
+
+                // 渲染編輯器與專案名稱
+                document.getElementById('projectNameInput').value = project.name;
+                renderEditor(project.data);
+
+                document.getElementById('blankSlate').classList.add('hidden');
+                validateGenerateButton();
+                showToast(`專案「${project.name}」已順利加載！`);
+            }
+        }
+
+        async function deleteSingleProject(e, id) {
+            e.stopPropagation(); // 阻止按鈕氣泡事件觸發載入
+            if (activeProjectId === id) {
+                activeProjectId = null;
+                document.getElementById('editorWorkspace').classList.add('hidden');
+                document.getElementById('blankSlate').classList.remove('hidden');
+                clearImage(null);
+            }
+            await deleteProjectFromDB(id);
+            await loadHistory();
+            showToast('專案已成功自資料庫中刪除！', 'success');
+        }
+
+        async function clearHistory() {
+            await clearAllProjectsFromDB();
+            activeProjectId = null;
+            document.getElementById('editorWorkspace').classList.add('hidden');
+            document.getElementById('blankSlate').classList.remove('hidden');
+            clearImage(null);
+            await loadHistory();
+            showToast('所有歷史專案已清空。');
+        }
+
+        // --- 通用自訂美觀 UI 通知 Toast ---
+        function showToast(message, type = 'default') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+
+            let bgClass = 'bg-slate-900 border-indigo-500/30 text-slate-100';
+            let iconSvg = `<svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+
+            if (type === 'error') {
+                bgClass = 'bg-rose-950/90 border-rose-500/30 text-rose-200';
+                iconSvg = `<svg class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+            } else if (type === 'success') {
+                bgClass = 'bg-emerald-950/90 border-emerald-500/30 text-emerald-200';
+                iconSvg = `<svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>`;
+            }
+
+            toast.className = `flex items-center gap-3 px-4 py-3 rounded-xl border ${bgClass} shadow-2xl transition duration-300 transform translate-y-2 opacity-0 pointer-events-auto max-w-sm`;
+            toast.innerHTML = `
+                <div class="flex-shrink-0">${iconSvg}</div>
+                <div class="text-xs font-semibold leading-normal">${message}</div>
+            `;
+
+            container.appendChild(toast);
+
+            // 進場動畫
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 50);
+
+            // 3秒後退場
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'scale-95');
+                setTimeout(() => {
+                    container.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+
+</html>
