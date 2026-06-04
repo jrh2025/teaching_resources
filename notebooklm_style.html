@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NotebookLM 簡報風格提示詞收集管理盒</title>
+
+    <!-- 讀取外部的 Styles 資料庫檔案 (上傳到網站時請確保有此檔案) -->
+    <script src="notebooklm_style.js"></script>
+
+    <!-- 導入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['System-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif']
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+                        'scale-up': 'scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(8px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        scaleUp: {
+                            '0%': { transform: 'scale(0.97)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- 導入 Phosphor Icons 圖示庫 -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- 引入 React 與 Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+
+<body
+    class="min-h-screen bg-slate-50/60 text-slate-800 font-sans selection:bg-indigo-100 selection:text-indigo-900 leading-relaxed">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo, useRef } = React;
+
+        // ==========================================
+        // 13 種深度轉譯為 NotebookLM 格式的官方預設風格
+        // ==========================================
+        const defaultStyleDatabase = [
+            {
+                id: 'style-01',
+                tag: '活力數位',
+                name: '💥 數位普普風格 (Digital Pop)',
+                description: '採用有機形狀與高彩度配色，消除科技冰冷感，極具社群親和力。',
+                applicable: '年輕族群行銷提案、創意發想會議、新創募資簡報、教育培訓',
+                instructions: `# ==========================================
+# NotebookLM 簡報風格配置文件：數位普普風格 (Digital Pop)
+# ==========================================
+
+style_config:
+  theme_name: "Digital Pop Style"
+  version: "2026.1"
+
+# 🛠️ 1. 簡報基本資訊
+presentation_info:
+  title: "{{THEME_TITLE}}"
+  target_pages: "{{TARGET_PAGES}}"
+  language: "zh-TW"
+
+# 🎨 2. 簡報視覺佈局約束 (Layout Constraints)
+visual_constraints:
+  geometry:
+    organic_shapes: true
+    avoid_perfect_shapes: "嚴禁使用完美的正方形、長方形或正圓形色塊"
+    key_elements: ["變形蟲（Amoeba）", "不規則雲朵", "帶有微小手繪抖動感（Hand-drawn Jittery）的粗線條"]
+  styling:
+    border_rules: "所有文字框、圖片容器與卡片邊緣，必須加上 2px - 3px 的粗黑色實線邊框"
+    shadow_effect: "啟用重影黑影（Hard Drop Shadows），使視覺元件呈現如同復古貼紙堆疊的物理感"
+    vibes: "模擬 Instagram 限時動態、手寫便利貼（Post-it）與拼貼塗鴉，營造親切、不妥協、活力充沛的氛圍"
+  color_palette:
+    primary: "高彩度糖果色 (High-Chroma Candy Colors)"
+    accent: "螢光黃 (Fluorescent Yellow)、酸橙綠 (Lime Green)"
+    neutral: "米白底色搭配碳黑框線，拒絕死板純白"
+
+# ✍️ 3. 內容精簡與文案規則 (Text Rules)
+content_rules:
+  word_count_limit_per_slide: 40
+  prohibited_elements: ["長篇大論", "學術官腔", "冰冷硬直的數據羅列"]
+  writing_style: "口語化、具高度煽動力與情緒渲染力的對話感。句首與關鍵處必須適度穿插 Emoji（例如：💥, 🎨, 🚀, 👀）"
+
+# 📑 4. 簡報推進邏輯 (Slide Flow)
+flow_logic:
+  sequence:
+    - "1. 痛點大吐槽：用幽默好笑的例子切入目前市面上的不合理現狀"
+    - "2. 創意點子大爆發：一頁展示一個顛覆傳統的瘋狂好點子"
+    - "3. 成果與未來願景：用高彩度圖形模組展示我們對未來的想像"
+    - "4. 行動呼籲：給觀眾一個極具社群感的 Call to Action（CTA）"`
+            },
+            {
+                id: 'style-02',
+                tag: '活力數位',
+                name: '⚡ 運動能量風格 (Sports Energy)',
+                description: '利用傾斜幾何與強烈高能對比色，創造極致的速度感與視覺張力。',
+                applicable: '業務團隊目標大會、競爭對手分析、健身/遊戲/科技新品提案',
+                instructions: `# ==========================================
+# NotebookLM 簡報風格配置文件：運動能量風格 (Sports Energy)
+# ==========================================
+
+style_config:
+  theme_name: "Sports Energy Style"
+  version: "2026.1"
+
+# 🛠️ 1. 簡報基本資訊
+presentation_info:
+  title: "{{THEME_TITLE}}"
+  target_pages: "{{TARGET_PAGES}}"
+  language: "zh-TW"
+
+# 🎨 2. 簡報視覺佈局約束 (Layout Constraints)
+visual_constraints:
+  geometry:
+    dynamic_shapes: true
+    tilted_angle: "所有色塊、圖片容器與裝飾元素必須強制右傾斜 15 度，或使用平行四邊形（Parallelogram）"
+    split_lines: "使用粗獷、銳利的斜向分割線（Slashed Cuts）來區分各個資訊欄位"
+  styling:
+    motion_blur: "背景與點綴條紋需呈現動態條紋感，引導觀眾視線向前延伸"
+    vibes: "運動跑道、賽車場上的瞬息萬變，強烈激發團隊成員的戰鬥力與危機意識"
+  color_palette:
+    primary: "極速黃 (Speed Yellow)、火焰橙 (Blaze Orange)"
+    background: "碳黑 (Carbon Black) 或 深邃灰 (Deep Charcoal)，營造暗色系的高級競技感"
+
+# ✍️ 3. 內容精簡與文案規則 (Text Rules)
+content_rules:
+  word_count_limit_per_slide: 40
+  prohibited_elements: ["被動句式", "冗長鋪陳", "委婉推託之詞"]
+  writing_style: "高能量、爆發式文案。大量使用高強度、指向明確的主動動詞（例如：擊碎、突破、超越、碾壓、狂飆）。避免多餘的助詞"
+
+# 📑 4. 簡報推進邏輯 (Slide Flow)
+flow_logic:
+  sequence:
+    - "1. 危機/目標宣告：指出不得不突破的燃眉之急與絕對死線"
+    - "2. 戰術解鎖：一頁一戰術，以強烈的傾斜卡片展示核心突圍手段"
+    - "3. 競爭力對決：使用高對比雙欄，一針見血對抗主要競爭對手"
+    - "4. 全力衝刺：終極目標數據的具象化，號召團隊全員全速前進"`
+            },
+            {
+                id: 'style-03',
+                tag: '活力數位',
+                name: '🏛️ 古典普普風格 (Classical Pop)',
+                description: '將希臘羅馬古典藝術與現代消費符號強制碰撞，形成高記憶點的違和趣味。',
+                applicable: '廣告創意提案、Z 世代趨勢報告、新舊融合主題、尾牙/競賽開場',
+                instructions: `# ==========================================
+# NotebookLM 簡報風格配置文件：古典普普風格 (Classical Pop)
+# ==========================================
+
+style_config:
+  theme_name: "Classical Pop Style"
+  version: "2026.1"
+
+# 🛠️ 1. 簡報基本資訊
+presentation_info:
+  title: "{{THEME_TITLE}}"
+  target_pages: "{{TARGET_PAGES}}"
+  language: "zh-TW"
+
+# 🎨 2. 簡報視覺佈局約束 (Layout Constraints)
+visual_constraints:
+  geometry:
+    collage_style: "極限違和感拼貼 (Anachronistic Collage)"
+    visual_clash: "將莊嚴優雅的希臘羅馬大理石雕像、文藝復興名畫，強行搭配現代叛逆消費符號（如：墨鏡、泡泡糖、玩自拍、喝汽水）"
+  styling:
+    background_patterns: "使用半調網點（Halftone Dots）或孟菲斯（Memphis）幾何圖案作為點綴底紋"
+    vibes: "藝術感與荒謬惡搞並存，利用高級藝術與街頭文化的強烈反差，營造過目難忘的視覺幽默與前衛美感"
+  color_palette:
+    primary: "古典大理石灰 (Statue Grey)"
+    accent: "螢光桃紅 (Shocking Pink)、酸性藍 (Acid Blue)"
+
+# ✍️ 3. 內容精簡與文案規則 (Text Rules)
+content_rules:
+  word_count_limit_per_slide: 45
+  prohibited_elements: ["死板的純技術說明", "照本宣科的簡報"]
+  writing_style: "『一本正經地講幹話』。標題必須顯得極為莊嚴宏大、富含歷史感；但內文與數據說明卻要直白、辛辣、富含 Z 世代的自嘲與幽默"
+
+# 📑 4. 簡報推進邏輯 (Slide Flow)
+flow_logic:
+  sequence:
+    - "1. 古老包袱：列出傳統思維中沉重、令人昏昏欲睡的古板現狀"
+    - "2. 荒謬吐槽：揭露當前痛點在現代人眼中有多麼荒謬可笑"
+    - "3. 顛覆性創新解法：將新技術/新創意包裝為『新古典啟蒙』展示"
+    - "4. 破圈宣言：呼籲大膽打破框架，跨界狂歡"`
+            },
+            {
+                id: 'style-04',
+                tag: '文青質感',
+                name: '📖 現代雜誌風格 (Modern Magazine)',
+                description: '模擬高級生活雜誌排版，捨棄一切多餘邊框，以高雅留白與精美比例取勝。',
+                applicable: '品牌形象手冊、香氛家居行銷企劃、人資文化手冊、藝術展覽導覽',
+                instructions: `# ==========================================
+# NotebookLM 簡報風格配置文件：現代雜誌風格 (Modern Magazine)
+# ==========================================
+
+style_config:
+  theme_name: "Modern Magazine Style"
+  version: "2026.1"
+
+# 🛠️ 1. 簡報基本資訊
+presentation_info:
+  title: "{{THEME_TITLE}}"
+  target_pages: "{{TARGET_PAGES}}"
+  language: "zh-TW"
+
+# 🎨 2. 簡報視覺佈局約束 (Layout Constraints)
+visual_constraints:
+  geometry:
+    layout_type: "極簡無邊框 (Editorial Sans-Border)"
+    whitespace_ratio: "幻燈片四周保留至少 15%-20% 的『呼吸留白』，嚴禁使用任何實線邊框或明顯的表格隔線"
+  styling:
+    typography_contrast: "完全依靠超大字體（模擬雜誌頭條）與極小註解文字的強烈比例對比，來引導閱讀視線"
+    vibes: "散發類似《Vogue》、《Kinfolk》或《Cereal》的高端實體印刷品氛圍，強調高級感、慢步調、從容不迫"
+  color_palette:
+    background: "暖乳白色 (Warm Milk)、純淨燕麥色 (Oatmeal)"
+    primary: "深炭灰 (Charcoal Black)"
+    accent: "柔和鼠尾草綠 (Sage Green) 或 乾枯玫瑰粉 (Dusty Rose)"
+
+# ✍️ 3. 內容精簡與文案規則 (Text Rules)
+content_rules:
+  word_count_limit_per_slide: 35
+  prohibited_elements: ["硬性推銷文句", "過度飽和的圖表", "重複堆砌的條列句"]
+  writing_style: "優雅、克制、極具生活品味。用字遣詞需溫和知性，多用描繪生活型態或品牌哲學的詞彙，少用冰冷硬實的推銷字眼"
+
+# 📑 4. 簡報推進邏輯 (Slide Flow)
+flow_logic:
+  sequence:
+    - "1. 哲學導入：以一句富含詩意與生活啟發的話作為前言，勾勒願景"
+    - "2. 經典剖析：用極簡的『一頁一核心』，展示產品/方案的最美細節"
+    - "3. 空間/生活型態：將方案融入日常，展示其在實際情境中的鬆弛美感"
+    - "4. 溫和致謝：以簡約留白和優雅文句收尾"`
+            },
+            {
+                id: 'style-05',
+                tag: '文青質感',
+                name: '🧱 材質風格 (Texture Style)',
+                description: '強調厚重觸覺美感，融入清水模、磨砂玻璃與金屬壓鑄刻痕。',
+                applicable: '建築室內設計作品集、房產開發案介紹、高階硬體發表、高階財管服務',
+                instructions: `# ==========================================
+# NotebookLM 簡報風格配置文件：材質風格 (Texture Style)
+# ==========================================
+
+style_config:
+  theme_name: "Texture Style"
+  version: "2026.1"
+
+# 🛠️ 1. 簡報基本資訊
+presentation_info:
+  title: "{{THEME_TITLE}}"
+  target_pages: "{{TARGET_PAGES}}"
+  language: "zh-TW"
+
+# 🎨 2. 簡報視覺佈局約束 (Layout Constraints)
+visual_constraints:
+  geometry:
+    grid: "穩重、結構化的對稱格線系統，傳達嚴謹與安定感"
+  styling:
+    tactile_textures: "背景絕非單純平塗，必須帶有『清水模（Exposed Concrete）』、『細沙磨砂玻璃』或『拉絲金屬（Brushed Metal）』的微米級實體質感"
+    depth_effect: "文字與卡片物件需融入微弱的內陰影（Inner Shadows），營造出彷彿在石材、鋼板上『深雕拓印』或『金屬壓鑄』的立體凹陷層次"
+    vibes: "沉穩、不輕浮、具備匠人手作的實體物理分量，令人聯想到高級美術館建築或頂奢工藝品"
+  color_palette:
+    background: "清水模深灰 (Concrete Grey) 或 礦物暖灰 (Mineral Grey)"
+    text: "蝕刻古銅金 (Etched Bronze) 或 鋼琴烤漆黑"
+
+# ✍️ 3. 內容精簡與文案規則 (Text Rules)
+content_rules:
+  word_count_limit_per_slide: 45
+  prohibited_elements: ["華而不實的修飾", "情緒化的驚嘆號", "跳躍的口俗俚語"]
+  writing_style: "專業、理性、權威。語氣需散發著無懈可擊的信任感與頂級工程學美感，用字精確洗鍊，直接用結構化陳述來說服觀眾"
+
+# 📑 4. 簡報推進邏輯 (Slide Flow)
+flow_logic:
+  sequence:
+    - "1. 基石起源：介紹堅不可摧的核心基礎、初心與歷史脈絡"
+    - "2. 硬核工藝細節：一頁專注剖析一個關鍵材質、結構 or 技術指標"
+    - "3. 物理/商業實證：用穩健的大方塊展示經得起考驗的數據成果"
+    - "4. 永恆承諾：重申對品質、安全與長期耐用性的無上追求"`
+            },
+            {
+                id: 'style-06',
+                tag: '文青質感',
+                name: '🖌️ 一筆畫水彩風格 (One-Line Art Watercolor)',
+                description: '極簡連續鋼筆線條與低飽和度莫蘭迪色系結合，展現成熟知性美。',
+                applicable: '保養香氛品牌、瑜伽身心靈課程、心理諮商教育、優雅知性女性向主題',
+                instructions: `# ==========================================
+# NotebookLM 簡報風格配置文件：一筆畫水彩風格 (One-Line Art Watercolor)
+# ==========================================
+
+style_config:
+  theme_name: "One-Line Art Watercolor Style"
+  version: "2026.1"
+
+# 🛠️ 1. 簡報基本資訊
+presentation_info:
+  title: "{{THEME_TITLE}}"
+  target_pages: "{{TARGET_PAGES}}"
+  language: "zh-TW"
+
+# 🎨 2. 簡報視覺佈局約束 (Layout Constraints)
+visual_constraints:
+  geometry:
+    lines: "所有裝飾性圖示、人物輪廓或邊框，僅能使用單一連續、不中斷的細黑色鋼筆線（One-Line Art）勾勒"
+  styling:
+    watercolor_wash: "背景或卡片底色點綴低飽和度、半透明、邊緣帶有暈染水漬效果的水彩塊（Watercolor Wash）"
+    vibes: "無任何侵略性與生硬直角，極度溫柔、安靜、知性。散發成熟大人的生活美學與內在自我沉澱氛圍"
+  color_palette:
+    background: "微透粉的象牙白"
+    watercolor: "莫蘭迪粉 (Dusty Pink)、溫潤灰綠 (Sage)、薄霧藍 (Mist Blue)"
+    strokes: "極細木炭灰線"
+
+# ✍️ 3. 內容精簡與文案規則 (Text Rules)
+content_rules:
+  word_count_limit_per_slide: 40
+  prohibited_elements: ["生硬冷僻的IT黑話", "侵略性的業務話術", "咆哮式的標題"]
+  writing_style: "溫暖、具備同理心與情感共鳴。文案要像一篇輕柔的手寫信，注重人性的溫度，循序漸進地引導與撫慰讀者"
+
+# 📑 4. 簡報推進邏輯 (Slide Flow)
+flow_logic:
+  sequence:
+    - "1. 溫柔傾聽：點出我們內心深處被忽視的疲憊、痛點或渴望"
+    - "2. 療癒之光：引入能夠帶來舒緩、轉機或優雅提升的核心概念"
+    - "3. 漸進改變：用柔和的水彩塊承載步驟，輕柔地說明改善流程"
+    - "4. 平靜歸處：以優雅平靜的一句話，邀請觀眾共同踏上旅程"`
+            },
+            {
+                id: 'style-07',
+                tag: '文青質感',
+                name: '🌸 日式和風風格 (Traditional Japanese)',
+                description: '傳統和紙金箔質感，打破對稱西洋格網，營造枯山水般的不對稱流動。',
+                applicable: '觀光旅遊、日式餐飲行銷、地方創生專案、跨國商務文化交流',
+                instructions: `# ==========================================
+# NotebookLM 簡報風格配置文件：日式和風風格 (Traditional Japanese)
+# ==========================================
+
+style_config:
+  theme_name: "Traditional Japanese Style"
+  version: "2026.1"
+
+# 🛠️ 1. 簡報基本資訊
+presentation_info:
+  title: "{{THEME_TITLE}}"
+  target_pages: "{{TARGET_PAGES}}"
+  language: "zh-TW"
+
+# 🎨 2. 簡報視覺佈局約束 (Layout Constraints)
+visual_constraints:
+  geometry:
+    assymmetry: "打破歐美教條式的絕對對稱與網格，採用『枯山水』般的不對稱美學，刻意保留空白角落"
+    flow: "排版引導線條應如和服衣褶、隨風飄散的櫻花，或流水般柔美不規則的『流動感』"
+  styling:
+    textures: "背景與物件卡片必須融入『手作和紙（Washi）』、偶爾穿插象徵尊貴的『金箔（Gold Leaf）』與『友禪染布料』細緻紋理"
+    vibes: "內斂、富有禪意、對細節懷有極致職人精神。大自然與人文歷史的和諧共生"
+  color_palette:
+    background: "極淡米和紙白"
+    accents: "緋紅 (Scarlet Red)、靛青 (Indigo Blue)、微亮箔金"
+
+# ✍️ 3. 內容精簡與文案規則 (Text Rules)
+content_rules:
+  word_count_limit_per_slide: 40
+  prohibited_elements: ["王婆賣瓜的自我吹噓", "毫無意境的字眼", "雜亂無章的英文縮寫"]
+  writing_style: "謙遜、優雅、富有哲理深度。話不說滿，利用『留白美學（Ma）』讓讀者在字裡行間自行品味、感受產品或文化的厚度"
+
+# 📑 4. 簡報推進邏輯 (Slide Flow)
+flow_logic:
+  sequence:
+    - "1. 緣起/致禮：謙和地帶出歷史由來、文化傳承或事物美好的緣起"
+    - "2. 職人造物：聚焦單一產品/方案，極致細膩地訴說背後的打磨工序"
+    - "3. 自然交融：展示本方案如何為使用者帶來和諧、平衡與心靈滿足"
+    - "4. 餘韻悠長：以一句充滿東方智慧或感謝之詞，留下不盡的餘韻"`
+            },
+            {
+                id: 'style-08',
+                tag: '商務科技',
+                name: '👾 霓虹拼貼風格 (Neon Collage)',
+                description: '懷舊稿紙溫暖底色撞擊極現代螢光幾何圖形，呈現超現實未來科技感。',
+                applicable: 'AI與區塊鏈技術白皮書發表、時尚趨勢預測、前衛學術演講(TED Talk)',
+                instructions: `# ==========================================
+# NotebookLM 簡報風格配置文件：霓虹拼貼風格 (Neon Collage)
+# ==========================================
+
+style_config:
+  theme_name: "Neon Collage Style"
+  version: "2026.1"
+
+# 🛠️ 1. 簡報基本資訊
+presentation_info:
+  title: "{{THEME_TITLE}}"
+  target_pages: "{{TARGET_PAGES}}"
+  language: "zh-TW"
+
+# 🎨 2. 簡報視覺佈局約束 (Layout Constraints)
+visual_constraints:
+  geometry:
+    contrast: "強烈的新舊材質、復古未來碰撞 (Retro-futuristic Clash)"
+  styling:
+    clash_pattern: "最底層背景使用溫暖、微泛黃的『懷舊米色九宮格稿紙』或『老報紙/牛皮紙底紋』，但上方物件與標記必須使用高亮度、刺眼的『螢光霓虹色幾何色塊與指示箭頭』"
+    vibes: "傳達『立足於深厚經典智慧，大膽進行顛覆性科技創新』的超現實賽博朋克美學"
+  color_palette:
+    background: "復古稿紙黃 (Warm Paper Beige)"
+    neon: "螢光黃 (Fluorescent Neon Yellow)、電子藍 (Cyber Blue)"
+
+# ✍️ 3. 內容精簡與文案規則 (Text Rules)
+content_rules:
+  word_count_limit_per_slide: 45
+  prohibited_elements: ["無趣的平庸文案", "保守中庸的商業套話"]
+  writing_style: "前衛、實驗性、極富科技洞察力。語氣冷峻而自信，敢於宣告新時代的到來，使用富有技術張力、思想領袖感的詞彙"
+
+# 📑 4. 簡報推進邏輯 (Slide Flow)
+flow_logic:
+  sequence:
+    - "1. 智慧基石：引述經典傳統理論、手稿 or 歷史悠久的難題作為基石"
+    - "2. 科技變異：一頁介紹霓虹前沿技術如何粗暴而完美地打破上述瓶頸"
+    - "3. 數位拼貼藍圖：展示大數據、複雜演算法交融後生成的超現實新藍圖"
+    - "4. 未來啟航：號召敢於冒險的人共同進入下一個霓虹數位世代"`
+            },
+            {
+                id: 'style-09',
+                tag: '商務科技',
+                name: '📱 裝置模型風格 (Device Mockup)',
+                description: '數位硬體視角置頂，純白或純黑背景，極限突出 App/SaaS 的 UI/UX 設計。',
+                applicable: 'SaaS產品發表會、UI/UX設計師作品集、科技新創募資、數位行銷工具介紹',
+                instructions: `# ==========================================
+# NotebookLM 簡報風格配置文件：裝置模型風格 (Device Mockup)
+# ==========================================
+
+style_config:
+  theme_name: "Device Mockup Style"
+  version: "2026.1"
+
+# 🛠️ 1. 簡報基本資訊
+presentation_info:
+  title: "{{THEME_TITLE}}"
+  target_pages: "{{TARGET_PAGES}}"
+  language: "zh-TW"
+
+# 🎨 2. 簡報視覺佈局約束 (Layout Constraints)
+visual_constraints:
+  geometry:
+    device_ratio: "幻燈片核心必須有數位硬體（如：iPhone, iPad, MacBook, Apple Watch）的極致高精密度邊框模型，裝置畫面必須佔據版面 70% ~ 80%"
+  styling:
+    backdrop: "背景限定為極致乾淨的『無暇影棚白 (Studio White)』或『暗室無光黑 (Studio Black)』"
+    focus: "徹底消除一切不必要的裝飾、斑點或多餘線條。讓觀眾的視線完全聚焦於硬體螢幕中所呈現的 UI 界面細節與流暢操作"
+    vibes: "宛如 Apple 新品發表會的 Keynote 投影片，強調絕對的專注、科技工藝的無瑕與純粹"
+  color_palette:
+    background: "極致灰白 (Studio Grey-White)"
+    accent: "深沉科技黑"
+
+# ✍️ 3. 內容精簡與文案規則 (Text Rules)
+content_rules:
+  word_count_limit_per_slide: 40
+  prohibited_elements: ["不著邊際的空泛修飾", "大段落文字", "花俏無意義的裝飾貼圖"]
+  writing_style: "產品與功能導向。極其乾淨利落，使用指引式的文案。多使用『點擊、一鍵流轉、無縫串接、即時呈現』等指向具體操作的詞語"
+
+# 📑 4. 簡報推進邏輯 (Slide Flow)
+flow_logic:
+  sequence:
+    - "1. 舞台開口：裝置首頁震撼呈現，展示主介面美學與產品的核心價值主張"
+    - "2. 核心功能卡：將畫面聚焦在 iPhone/Mac 內部核心 UI，展示最亮眼的功能"
+    - "3. 無縫工作流：連續展示用戶從步驟 A ➜ 步驟 B 的絲滑無縫操作體驗"
+    - "4. 極致數據：在大螢幕裝置中顯示最終的轉換率、效率飆升指標"`
+            },
+            {
+                id: 'style-10',
+                tag: '商務科技',
+                name: '🏙️ 3D 數位城市風格 (3D Digital Urban)',
+                description: '等角 45 度立體微縮模型，將抽象的物聯網與智慧系統轉化為精密數位孿生。',
+                applicable: '物聯網(IoT)解決方案、物流供應鏈管理、大型軟體系統架構、智慧城市開發',
+                instructions: `# ==========================================
+# NotebookLM 簡報風格配置文件：3D 數位城市風格 (3D Digital Urban)
+# ==========================================
+
+style_config:
+  theme_name: "3D Digital Urban Style"
+  version: "2026.1"
+
+# 🛠️ 1. 簡報基本資訊
+presentation_info:
+  title: "{{THEME_TITLE}}"
+  target_pages: "{{TARGET_PAGES}}"
+  language: "zh-TW"
+
+# 🎨 2. 簡報視覺佈局約束 (Layout Constraints)
+visual_constraints:
+  geometry:
+    perspective: "強制採用 3D 等角投影視圖（Isometric 45-degree Perspective），使版面具備高度立體空間感"
+    components: "將抽象數據、伺服器節點、物流通道具象化為精緻、發光的『3D 微縮建築積木』、並使用立體連線（Neon Cables）相互連結"
+  styling:
+    glow: "暗色背景下，線條與節點自帶微弱的霓虹發光效果（Cyber Glow）"
+    vibes: "宛如經典遊戲《SimCity（模擬城市）》高科技版或頂級 3D CAD 建模系統，展現數位孿生（Digital Twin）的精準、複雜系統與掌控感"
+  color_palette:
+    background: "極深幽邃藍 (Midnight Blue)"
+    glowing: "螢光綠 (Fluorescent Green)、電光藍 (Electric Blue)"
+
+# ✍️ 3. 內容精簡與文案規則 (Text Rules)
+content_rules:
+  word_count_limit_per_slide: 45
+  prohibited_elements: ["雜亂的生活化口語", "過於感性的修飾", "大塊毫無結構的長句"]
+  writing_style: "宏觀、客觀、系統化。專注於闡述『節點、網絡、傳輸、反饋、同步、優化』。用字遣詞需充滿架構師、系統分析師的宏觀與精確"
+
+# 📑 4. 簡報推進邏輯 (Slide Flow)
+flow_logic:
+  sequence:
+    - "1. 全域沙盤：展示城市/系統的 3D 全景等角視圖，定義宏觀框架與核心規模"
+    - "2. 骨幹網絡分解：剖析底層物理管線與數據中心『核心』，指出目前的瓶頸"
+    - "3. 智慧調度引擎：聚焦介紹智慧演算法/新系統接入後的運作變化"
+    - "4. 高效運轉實證：展示全面互聯、即時反饋後的系統高效率、低能耗數據"`
+            },
+            {
+                id: 'style-11',
+                tag: '麥肯錫高階',
+                name: '🔺 高階顧問風 (The Minto Pyramid Principle)',
+                description: '金字塔原理結論先行，強制完整句子行動標題，呈現專業理性的戰略諮詢高數據密度排版。',
+                applicable: '2026年度營運策略、市場擴展方案、高階主管決策匯報、投資人回報',
+                instructions: `# ==========================================
+# NotebookLM 簡報風格配置文件：高階顧問風 (The Minto Pyramid Principle)
+# ==========================================
+
+style_config:
+  theme_name: "Minto Pyramid Strategy"
+  version: "2026.1"
+
+# 🛠️ 1. 簡報基本資訊
+presentation_info:
+  title: "{{THEME_TITLE}}"
+  target_pages: "{{TARGET_PAGES}}"
+  language: "zh-TW"
+
+# 🎯 2. 金字塔原理與行動標題約束 (Logic & Headers)
+logic_constraints:
+  top_down_approach: "每頁資訊架構必須遵循結論先行。先給出最核心決策結論，再條列支持該結論的關鍵子論據，遵循 MECE（相互獨立，完全窮盡）原則"
+  action_titles: "【強制要求】每張幻燈片的大標題『必須是一個完整、帶有動作或因果關係的句子』，直接陳述該頁的核心洞察或決策依據，嚴禁使用無意義的單純名詞。"
+  examples:
+    correct: "因供應鏈中斷，導致第二季市佔率下滑 5%，需啟動本土替代方案"
+    incorrect: "第二季市佔率分析與探討"
+
+# 📊 3. 顧問式佈局與高數據密度 (Layout & Alignment)
+layout_constraints:
+  layout_type: "結構化對齊 (Structured Layout)，版面必須極致整潔，體現專業理性"
+  grid: "優先採用『左側文字核心邏輯，右側關鍵數據/圖表指標』或『三欄式戰略對策對比（方案一/方案二/方案三）』的並排結構"
+  alignment: "所有內文清單一律靠左對齊，絕不居中。每頁內容底部請務必預留空間，以 [資料來源：來源文件名稱] 的格式嚴格標示數據出處"
+  tags:
+    key_insight: "[關鍵洞察]"
+    risk_indicator: "[風險提示]"
+
+# ✍️ 4. 文字精煉與專業語氣 (Text & Tone Constraints)
+text_rules:
+  word_count_limit_per_slide: 60
+  prohibited_elements: ["任何感性敘述", "故事性鋪陳", "非必要的裝飾性文句"]
+  tone: "語氣必須如同手術刀般冷靜精確、高度理性、決策導向。多使用『優化、提升、減緩、轉型、驅動、重組』等高階經理人商務語彙"`
+            },
+            {
+                id: 'style-12',
+                tag: '麥肯錫高階',
+                name: '🧊 2.5D 立體風 (The Digital Sandbox)',
+                description: '積木模組化玩具精密感，極高留白與低密度文字，適合展現分層流向。',
+                applicable: '智慧城市物流網格架構、系統流程優化、複雜數據依賴關係展示',
+                instructions: `# ==========================================
+# NotebookLM 簡報風格配置文件：2.5D 立體風 (The Digital Sandbox)
+# ==========================================
+
+style_config:
+  theme_name: "Digital Sandbox Style"
+  version: "2026.1"
+
+# 🛠️ 1. 簡報基本資訊
+presentation_info:
+  title: "{{THEME_TITLE}}"
+  target_pages: "{{TARGET_PAGES}}"
+  language: "zh-TW"
+
+# 🧱 2. 簡報視覺佈局約束 (Layout Constraints)
+visual_constraints:
+  modular_components: "請將每個系統物件、節點或步驟，視為一個獨立的『積木零件』。每一頁幻燈片必須有清晰的幾何邊界感，資訊區塊要像方塊般整齊排列，拒絕雜亂無章的任意排版"
+  layered_pipeline: "本風格極度適合呈現流程與架構。在展示系統時，請依照『由上至下（Top-Down 層次）』或『由左至右（Pipeline 流向）』的邏輯推進，讓觀眾一眼能看出各部件之間的依賴與串聯關係"
+  environmental_labels:
+    core_path: "[核心]"
+    success_path: "[成功]"
+    risk_point: "[警示]"
+
+# 🎯 3. 內容精簡與精確度規則 (Precision Text Rules)
+content_rules:
+  word_count_limit_per_slide: 40
+  prohibited_elements: ["長篇大論的複雜長句", "非結構化的段落", "故事化敘述"]
+  layout_density: "如同精緻的 3D 模型零件，文字必須極度精煉，留出大量空間以營造空間深度感。說明必須拆解成『短句』或『精準的步驟節點（例如：步驟 1 ➜ 步驟 2 ➜ 步驟 3）』"
+  copywriting_style: "文案語氣需具備工程、科技與結構感。標題應具備空間與元件質感（例如：使用『全域物流網格節點』而非傳統的『物流配送流程介紹』）"
+
+# 📐 4. 簡報推進邏輯 (Slide Flow)
+flow_logic:
+  sequence:
+    - "1. 全域視角首頁 (Global Overview)：精煉的標題與一句話定義的系統架構核心"
+    - "2. 底層痛點 (Infrastructure Flaws)：條列式列出目前架構、流程或物流存在的瓶頸點 [警示]"
+    - "3. 分層解析 (Layer-by-Layer Modules)：每一頁只專注介紹一個核心層次（如：基礎硬體層 ➜ 數據傳輸層 ➜ 應用表現層）或一個流程節點"
+    - "4. 流暢運行效益 (Optimized Flow)：以具備對比性的精準短句，呈現優化後的流暢路徑 [成功]"`
+            },
+            {
+                id: 'style-13',
+                tag: '麥肯錫高階',
+                name: '🗂️ 軟體服務風 (Soft UI / Card-Based)',
+                description: '極致留白的App介面質感，儀表板式雙欄佈局，操作導向的介面化文案。',
+                applicable: '企業內部簽核系統優化方案、CRM與管理後台升級展示、SaaS平台功能介紹',
+                instructions: `# ==========================================
+# NotebookLM 簡報風格配置文件：軟體服務風 (Soft UI / Card-Based)
+# ==========================================
+
+style_config:
+  theme_name: "Soft UI Card System"
+  version: "2026.1"
+
+# 🛠️ 1. 簡報基本資訊
+presentation_info:
+  title: "{{THEME_TITLE}}"
+  target_pages: "{{TARGET_PAGES}}"
+  language: "zh-TW"
+
+# 🎨 2. 簡報視覺佈局約束 (Layout Constraints)
+visual_constraints:
+  card_based_structure: "請將每張幻燈片視為一個乾淨的 App 介面。資訊必須『模組化』拆解，一個區塊只講一件事情，各區塊之間要保持明顯的留白（Whitespace），視覺上絕不擁擠"
+  dashboard_layout: "在展示功能或流程時，優先採用『左側核心標題/短句，右側核心數據或條列組件』的左右雙欄結構，來模擬現代 SaaS 軟體後台的層次感"
+  pill_labels: "若遇到重要關鍵字、步驟狀態（如：高效、安全、全新上線、已完成），請一律使用 [標籤：文字] 的格式獨立標示"
+
+# ✍️ 3. 內容精簡與文案規則 (Text Rules)
+content_rules:
+  word_count_limit_per_slide: 50
+  prohibited_elements: ["長篇段落", "感性的故事鋪陳", "起承轉合的虛言"]
+  text_density: "每張幻燈片的總字數請嚴格控制在 40 到 50 字以內。過多的文字會破壞軟體介面的秩序感。所有說明必須拆解成精簡的『短句』或『條列式清單（Bullet Points）』"
+  copywriting_style: "標題與內文請使用現代軟體服務的精準、操作導向語氣。例如：使用『全方位數據監測』而非傳統的『系統監控功能介紹』"
+
+# 📑 4. 簡報推進邏輯 (Slide Flow)
+flow_logic:
+  sequence:
+    - "1. 產品/方案首頁 (Dashboard Home)：精煉的標題與核心一句話價值主張"
+    - "2. 核心痛點 (System Issues)：條列式列出目前面臨的問題或系統痛點"
+    - "3. 功能與流程展示 (Features & Modules)：每一頁只專注介紹一個核心功能卡片或流程節點"
+    - "4. 預期效益 (Metrics Dashboard)：以具備對比性的短句呈現優化後的數據 or 效益"`
+            }
+        ];
+
+        // ==========================================
+        // 主應用程式 App
+        // ==========================================
+        function App() {
+            const [styles, setStyles] = useState([]);
+            const [activeId, setActiveId] = useState('');
+            const [searchQuery, setSearchQuery] = useState('');
+            const [selectedTag, setSelectedTag] = useState('All');
+            const [toast, setToast] = useState('');
+
+            // 使用者輸入參數 (預設大字體可讀)
+            const [userTitle, setUserTitle] = useState('AI 轉型與組織效率優化');
+            const [userPages, setUserPages] = useState('8');
+
+            // 編輯狀態 (?edit=1 決定權限)
+            const [isEditMode, setIsEditMode] = useState(false);
+            const [isEditing, setIsEditing] = useState(false);
+            const [editForm, setEditForm] = useState(null);
+
+            // 用於觸發檔案讀取的 input ref
+            const fileInputRef = useRef(null);
+
+            // 當前選中的簡報風格
+            const activeStyle = useMemo(() => {
+                return styles.find(s => s.id === activeId) || null;
+            }, [styles, activeId]);
+
+            // 自動替換變數後的提示詞輸出
+            const generatedPrompt = useMemo(() => {
+                if (!activeStyle) return '';
+                return activeStyle.instructions
+                    .replace(/\{\{THEME_TITLE\}\}/g, userTitle || '[未命名簡報主題]')
+                    .replace(/\{\{TARGET_PAGES\}\}/g, userPages || '8');
+            }, [activeStyle, userTitle, userPages]);
+
+            // 1. 初始化權限狀態：網址包含 ?edit=1 則啟動編輯功能
+            useEffect(() => {
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('edit') === '1') {
+                    setIsEditMode(true);
+                }
+            }, []);
+
+            // 2. 資料讀取序列優先序：
+            //    (1) 若處於編輯模式，先試試 LocalStorage 草稿
+            //    (2) 網頁最頂層載入的 notebooklm_style.js 全域變數 window.notebookStylesData
+            //    (3) fallback 的內建 13 種經典風格
+            useEffect(() => {
+                let initialData = null;
+
+                const params = new URLSearchParams(window.location.search);
+                const editParamActive = params.get('edit') === '1';
+
+                if (editParamActive) {
+                    const savedDraft = localStorage.getItem('notebooklm_styles_draft_local');
+                    if (savedDraft) {
+                        try {
+                            initialData = JSON.parse(savedDraft);
+                        } catch (e) {
+                            console.error("解析本機草稿錯誤", e);
+                        }
+                    }
+                }
+
+                if (!initialData) {
+                    if (typeof window.notebookStylesData !== 'undefined' && Array.isArray(window.notebookStylesData)) {
+                        initialData = window.notebookStylesData;
+                    } else {
+                        initialData = defaultStyleDatabase;
+                    }
+                }
+
+                setStyles(initialData);
+                if (initialData.length > 0) {
+                    setActiveId(initialData[0].id);
+                }
+            }, []);
+
+            // 3. 只要風格清單有異動，且為編輯模式，同步寫入本機備份
+            const updateStylesList = (newStyles) => {
+                setStyles(newStyles);
+                if (isEditMode) {
+                    localStorage.setItem('notebooklm_styles_draft_local', JSON.stringify(newStyles));
+                }
+            };
+
+            const showToast = (msg) => {
+                setToast(msg);
+                setTimeout(() => setToast(''), 3000);
+            };
+
+            // 相容 iframe 剪貼簿複製
+            const handleCopyText = (text) => {
+                if (!text) return;
+                try {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = text;
+                    textArea.style.position = "fixed";
+                    document.body.appendChild(textArea);
+                    textArea.focus();
+                    textArea.select();
+                    const successful = document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    if (successful) {
+                        showToast('✨ 專屬簡報風格提示詞已成功複製到剪貼簿！');
+                    } else {
+                        throw new Error('Copy failed');
+                    }
+                } catch (err) {
+                    showToast('⚠️ 複製失敗，請手動圈選複製文字。');
+                }
+            };
+
+            // 搜尋與標籤分類過濾
+            const filteredStyles = useMemo(() => {
+                return styles.filter(item => {
+                    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                        item.applicable.toLowerCase().includes(searchQuery.toLowerCase());
+                    const matchesTag = selectedTag === 'All' || item.tag === selectedTag;
+                    return matchesSearch && matchesTag;
+                });
+            }, [styles, searchQuery, selectedTag]);
+
+            // ==========================================
+            // CRUD 核心邏輯
+            // ==========================================
+            const handleAdd = () => {
+                const newStyle = {
+                    id: 'style-' + Date.now(),
+                    tag: '商務科技',
+                    name: '🆕 自訂簡報風格',
+                    description: '簡單敘述您的風格美學調性與適合的主題場域。',
+                    applicable: '科技新創提案、季度業務進度匯報',
+                    instructions: `# ==========================================\n# 自訂風格提示詞\n# ==========================================\n\n# 🛠️ 1. 簡報基本資訊\npresentation_info:\n  title: "{{THEME_TITLE}}"\n  target_pages: "{{TARGET_PAGES}}"\n\n# 🎨 2. 簡報視覺佈局約束\nvisual_constraints:\n  vibes: "請輸入視覺限制"\n\n# ✍️ 3. 內容精簡與文案規則\ncontent_rules:\n  word_count_limit_per_slide: 45\n\n# 📑 4. 簡報推進邏輯\nflow_logic:\n  sequence:\n    - "步驟 1"\n    - "步驟 2"`
+                };
+                const updated = [...styles, newStyle];
+                updateStylesList(updated);
+                setActiveId(newStyle.id);
+                setEditForm({ ...newStyle });
+                setIsEditing(true);
+            };
+
+            const handleEdit = () => {
+                setEditForm({ ...activeStyle });
+                setIsEditing(true);
+            };
+
+            const handleSave = () => {
+                if (!editForm.name.trim()) {
+                    showToast('⚠️ 請輸入風格名稱！');
+                    return;
+                }
+                const updated = styles.map(s => s.id === editForm.id ? editForm : s);
+                updateStylesList(updated);
+                setIsEditing(false);
+                showToast('💾 變更成功！請記得匯出 JS 檔覆蓋原檔案。');
+            };
+
+            const handleDelete = (id) => {
+                const updated = styles.filter(s => s.id !== id);
+                updateStylesList(updated);
+                if (activeId === id) {
+                    setActiveId(updated[0]?.id || '');
+                }
+                setIsEditing(false);
+                showToast('🗑️ 簡報風格已順利刪除。');
+            };
+
+            // ==========================================
+            // 匯出 / 匯入核心邏輯
+            // ==========================================
+            const handleExportJS = () => {
+                // 生成含有 global 變數定義的 js 檔案內容
+                const dataStr = `window.notebookStylesData = ${JSON.stringify(styles, null, 4)};`;
+                const blob = new Blob([dataStr], { type: "application/javascript;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = "notebooklm_style.js";
+                link.click();
+                URL.revokeObjectURL(url);
+                showToast('📦 notebooklm_style.js 匯出成功！請將此檔覆蓋網頁目錄。');
+            };
+
+            const handleExportJSON = () => {
+                // 僅備份單純的 JSON 陣列，方便分享或部分載入
+                const dataStr = JSON.stringify(styles, null, 4);
+                const blob = new Blob([dataStr], { type: "application/json;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = "notebook_styles_backup.json";
+                link.click();
+                URL.revokeObjectURL(url);
+                showToast('📥 JSON 備份檔案已成功下載！');
+            };
+
+            const handleImportClick = () => {
+                fileInputRef.current?.click();
+            };
+
+            const handleImportFile = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        let content = event.target.result.trim();
+
+                        // 處理相容：使用者如果直接上傳含有 window.notebookStylesData 的 JS 檔案
+                        if (content.includes('window.notebookStylesData')) {
+                            const startIndex = content.indexOf('[');
+                            const endIndex = content.lastIndexOf(']');
+                            if (startIndex !== -1 && endIndex !== -1) {
+                                content = content.slice(startIndex, endIndex + 1);
+                            }
+                        }
+
+                        const parsed = JSON.parse(content);
+                        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].instructions) {
+                            updateStylesList(parsed);
+                            setActiveId(parsed[0].id);
+                            setIsEditing(false);
+                            showToast(`📥 成功匯入 ${parsed.length} 個簡報風格！`);
+                        } else {
+                            showToast('⚠️ 格式不合規：未偵測到正確的簡報風格陣列！');
+                        }
+                    } catch (err) {
+                        showToast('⚠️ 檔案解析失敗：請確定為正確的 .json 或 .js 備份檔！');
+                    }
+                };
+                reader.readAsText(file);
+                // 重置 file input
+                e.target.value = '';
+            };
+
+            const handleResetDefault = () => {
+                if (confirm('確定要將風格資料還原為初始 13 種官方美學風格嗎？自訂風格將會遺失。')) {
+                    updateStylesList(defaultStyleDatabase);
+                    setActiveId(defaultStyleDatabase[0].id);
+                    setIsEditing(false);
+                    showToast('🔄 已重新加載官方 13 款簡報風格！');
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col bg-slate-50/70">
+                    {/* 全域提示框 */}
+                    {toast && (
+                        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100] bg-indigo-600 text-white px-8 py-4 rounded-2xl shadow-xl shadow-indigo-100 font-bold flex items-center gap-3 animate-fade-in text-base border border-indigo-500">
+                            <i className="ph-fill ph-check-circle text-2xl"></i>
+                            {toast}
+                        </div>
+                    )}
+
+                    {/* 隱藏的檔案上傳點 */}
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleImportFile}
+                        accept=".js,.json"
+                        className="hidden"
+                    />
+
+                    {/* 頂部維護模式橫幅：只有在網址後綴加上 ?edit=1 才會低調且富有設計感地亮起 */}
+                    {isEditMode && (
+                        <div className="bg-emerald-500 text-white px-6 py-2.5 flex flex-col sm:flex-row items-center justify-between text-xs sm:text-sm font-semibold tracking-wide border-b border-emerald-600 shadow-sm animate-fade-in">
+                            <div className="flex items-center gap-2.5">
+                                <span className="flex h-2.5 w-2.5 relative">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span>
+                                </span>
+                                <span><strong>系統維護與編輯模式已啟用</strong>：現在可任意新增、修改或刪除，變更會即時保存在本機與檔案中。</span>
+                            </div>
+                            <div className="flex gap-4 mt-2 sm:mt-0">
+                                <button onClick={handleResetDefault} className="hover:underline flex items-center gap-1">
+                                    <i className="ph-bold ph-arrow-counter-clockwise"></i> 還原官方預設
+                                </button>
+                                <button onClick={handleImportClick} className="hover:underline flex items-center gap-1">
+                                    <i className="ph-bold ph-file-arrow-up"></i> 匯入設定檔
+                                </button>
+                                <button onClick={handleExportJSON} className="hover:underline flex items-center gap-1">
+                                    <i className="ph-bold ph-file-arrow-down"></i> 匯出備份 (JSON)
+                                </button>
+                                <button onClick={handleExportJS} className="bg-white text-emerald-700 px-3 py-1 rounded-lg font-bold shadow-sm hover:bg-emerald-50 transition-colors flex items-center gap-1">
+                                    <i className="ph-bold ph-export"></i> 匯出為 notebooklm_style.js
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 清爽明亮的現代風導航列 */}
+                    <nav className="bg-white border-b border-indigo-50 shadow-sm sticky top-0 z-40">
+                        <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col md:flex-row items-center justify-between gap-5">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-indigo-50 rounded-2xl text-indigo-600">
+                                    <i className="ph-fill ph-presentation-chart text-3xl"></i>
+                                </div>
+                                <div>
+                                    <h1 className="font-extrabold text-slate-900 text-2xl tracking-tight flex items-center gap-2">
+                                        NotebookLM 簡報風格實驗室
+                                        <span className="text-xs font-semibold px-2.5 py-1 bg-indigo-50 text-indigo-600 rounded-full">
+                                            v2026.1
+                                        </span>
+                                    </h1>
+                                    <p className="text-xs text-slate-400 font-medium mt-1">
+                                        為 NotebookLM 簡報生成深度優化的 YAML 美學控制面板
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* 年輕活潑的馬卡龍過濾器 */}
+                            <div className="flex flex-wrap bg-slate-100 p-1 rounded-2xl border border-slate-200/50">
+                                {['All', '活力數位', '文青質感', '商務科技', '麥肯錫高階'].map((tag) => (
+                                    <button
+                                        key={tag}
+                                        onClick={() => setSelectedTag(tag)}
+                                        className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${selectedTag === tag
+                                                ? 'bg-white text-indigo-600 shadow-sm'
+                                                : 'text-slate-500 hover:text-slate-800'
+                                            }`}
+                                    >
+                                        {tag === 'All' ? '全部風格' : tag}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </nav>
+
+                    {/* 主版面區塊 */}
+                    <main className="flex-1 max-w-7xl w-full mx-auto px-6 py-8 flex flex-col lg:flex-row gap-8">
+
+                        {/* 左側欄：搜尋與風格滾動卡片清單 (字體及介面全面大尺寸化) */}
+                        <div className="w-full lg:w-[420px] flex flex-col gap-5 shrink-0">
+
+                            {/* 搜尋卡 */}
+                            <div className="bg-white p-5 rounded-[1.8rem] border border-indigo-50 shadow-sm flex flex-col gap-4">
+                                <div className="relative">
+                                    <i className="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+                                    <input
+                                        type="text"
+                                        placeholder="搜尋簡報風格、適用主題..."
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200/80 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all font-medium"
+                                    />
+                                </div>
+
+                                <div className="flex items-center justify-between text-xs sm:text-sm text-slate-500 font-bold px-1">
+                                    <span>共篩選出 {filteredStyles.length} 款設計美學</span>
+                                    {isEditMode && (
+                                        <button
+                                            onClick={handleAdd}
+                                            className="px-3.5 py-1.5 bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white rounded-xl transition-all flex items-center gap-1.5 font-extrabold text-xs"
+                                        >
+                                            <i className="ph-bold ph-plus-circle"></i> 新增自訂風格
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* 風格滾動清單 */}
+                            <div className="bg-white/60 rounded-[2rem] border border-indigo-50 p-3 max-h-[550px] lg:max-h-[750px] overflow-y-auto space-y-2.5">
+                                {filteredStyles.length === 0 ? (
+                                    <div className="text-center py-16 text-slate-400">
+                                        <i className="ph-fill ph-mask-happy text-5xl mb-3 opacity-35"></i>
+                                        <p className="text-sm font-bold">找不到相符的風格美學</p>
+                                    </div>
+                                ) : (
+                                    filteredStyles.map((item) => (
+                                        <button
+                                            key={item.id}
+                                            onClick={() => { setActiveId(item.id); setIsEditing(false); }}
+                                            className={`w-full text-left p-4.5 rounded-2xl transition-all flex flex-col gap-2 border-2 ${activeId === item.id && !isEditing
+                                                    ? 'bg-indigo-50/50 border-indigo-400 shadow-sm translate-x-1'
+                                                    : 'bg-white text-slate-600 hover:bg-indigo-50/10 border-transparent shadow-sm hover:border-slate-200/50'
+                                                }`}
+                                        >
+                                            <div className="flex items-center justify-between w-full">
+                                                <span className={`text-base font-extrabold ${activeId === item.id ? 'text-indigo-700' : 'text-slate-800'}`}>
+                                                    {item.name}
+                                                </span>
+                                                <span className={`text-[10px] px-2.5 py-1 rounded-lg font-bold font-mono ${item.tag === '麥肯錫高階' ? 'bg-rose-50 text-rose-600' :
+                                                        item.tag === '商務科技' ? 'bg-cyan-50 text-cyan-600' :
+                                                            item.tag === '文青質感' ? 'bg-teal-50 text-teal-600' : 'bg-purple-50 text-purple-600'
+                                                    }`}>
+                                                    {item.tag}
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">
+                                                {item.description}
+                                            </p>
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+                        </div>
+
+                        {/* 右側欄：主展示/編輯面板 (字體全面放大以利閱讀) */}
+                        <div className="flex-1 min-w-0 bg-white rounded-[2.5rem] border border-indigo-50 p-6 md:p-10 flex flex-col shadow-sm">
+                            {(!activeStyle && !isEditing) ? (
+                                <div className="flex-1 flex flex-col items-center justify-center text-slate-400 py-32">
+                                    <i className="ph-fill ph-magic-wand text-7xl mb-4 opacity-25 text-indigo-400"></i>
+                                    <p className="text-base font-bold">請從左側點選一款您要套用至 NotebookLM 的簡報風格</p>
+                                </div>
+                            ) : isEditing ? (
+                                // --- 編輯模式介面 ---
+                                <div className="h-full flex flex-col gap-6 animate-scale-up">
+                                    <div className="flex items-center justify-between pb-5 border-b border-slate-100">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100">
+                                                <i className="ph-fill ph-pencil-simple text-2xl"></i>
+                                            </div>
+                                            <div>
+                                                <h2 className="text-xl font-extrabold text-slate-800">編輯簡報風格提示詞</h2>
+                                                <p className="text-xs text-slate-400 mt-1">此配置會暫存於網頁記憶體與瀏覽器快取中</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                        <div>
+                                            <label className="block text-xs font-extrabold text-slate-500 mb-2">🎨 風格名稱</label>
+                                            <input
+                                                type="text"
+                                                value={editForm.name}
+                                                onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                                                placeholder="例: 💥 新創能量風格"
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-extrabold text-slate-500 mb-2">🏷️ 分類標籤</label>
+                                            <select
+                                                value={editForm.tag}
+                                                onChange={e => setEditForm({ ...editForm, tag: e.target.value })}
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                                            >
+                                                <option value="活力數位">活力數位</option>
+                                                <option value="文青質感">文青質感</option>
+                                                <option value="商務科技">商務科技</option>
+                                                <option value="麥肯錫高階">麥肯錫高階</option>
+                                            </select>
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-xs font-extrabold text-slate-500 mb-2">📝 視覺細節簡介</label>
+                                            <input
+                                                type="text"
+                                                value={editForm.description}
+                                                onChange={e => setEditForm({ ...editForm, description: e.target.value })}
+                                                placeholder="一句話描述該美學特徵..."
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none"
+                                            />
+                                        </div>
+                                        <div className="md:col-span-2">
+                                            <label className="block text-xs font-extrabold text-slate-500 mb-2">🎯 適用報告類型 (以頓號隔開)</label>
+                                            <input
+                                                type="text"
+                                                value={editForm.applicable}
+                                                onChange={e => setEditForm({ ...editForm, applicable: e.target.value })}
+                                                placeholder="例如: 行銷企劃、產品發表"
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex-1 flex flex-col min-h-[300px]">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <label className="text-xs font-extrabold text-slate-500 flex items-center gap-1">
+                                                <i className="ph-bold ph-terminal-window text-indigo-500"></i>
+                                                NotebookLM YAML 提示詞原始碼
+                                            </label>
+                                            <span className="text-[11px] text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded-md">
+                                                支援變數: {"{{THEME_TITLE}}"} 與 {"{{TARGET_PAGES}}"}
+                                            </span>
+                                        </div>
+                                        <textarea
+                                            value={editForm.instructions}
+                                            onChange={e => setEditForm({ ...editForm, instructions: e.target.value })}
+                                            placeholder="請輸入完整的 NotebookLM 控制指令內容..."
+                                            className="w-full flex-1 p-5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-mono text-slate-700 leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-100 resize-none overflow-y-auto"
+                                        ></textarea>
+                                    </div>
+
+                                    <div className="pt-5 border-t border-slate-100 flex justify-between items-center">
+                                        <button
+                                            onClick={() => handleDelete(editForm.id)}
+                                            className="px-4.5 py-2.5 bg-rose-50 hover:bg-rose-600 text-rose-600 hover:text-white rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5"
+                                        >
+                                            <i className="ph-bold ph-trash"></i> 刪除此風格
+                                        </button>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={() => setIsEditing(false)}
+                                                className="px-6 py-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 text-xs sm:text-sm font-bold transition-colors"
+                                            >
+                                                取消
+                                            </button>
+                                            <button
+                                                onClick={handleSave}
+                                                className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs sm:text-sm font-bold transition-colors shadow-md shadow-indigo-100 flex items-center gap-1.5"
+                                            >
+                                                <i className="ph-bold ph-floppy-disk"></i> 暫存修改
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                // --- 檢視模式與即時客製化面板 ---
+                                <div className="h-full flex flex-col animate-scale-up gap-6">
+
+                                    {/* 頂部風格資料與編輯開關 */}
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100">
+                                        <div>
+                                            <div className="flex items-center gap-3">
+                                                <h2 className="text-2xl sm:text-3xl font-black text-slate-900 leading-tight">
+                                                    {activeStyle.name}
+                                                </h2>
+                                                <span className="text-xs px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-600 font-extrabold whitespace-nowrap">
+                                                    {activeStyle.tag}
+                                                </span>
+                                            </div>
+                                            <p className="text-sm sm:text-base text-slate-500 mt-2 font-medium">
+                                                {activeStyle.description}
+                                            </p>
+                                        </div>
+
+                                        {isEditMode && (
+                                            <button
+                                                onClick={handleEdit}
+                                                className="px-4 py-2.5 bg-slate-100 text-slate-600 hover:bg-indigo-600 hover:text-white rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 self-start whitespace-nowrap"
+                                            >
+                                                <i className="ph-fill ph-pencil-simple text-base"></i> 編輯風格設定
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* 適合對象小標籤 */}
+                                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                                        <span className="text-slate-400 font-bold mr-1 flex items-center gap-1">
+                                            <i className="ph-bold ph-crosshair text-indigo-500"></i> 適合報告場景:
+                                        </span>
+                                        {activeStyle.applicable.split('、').map((app, idx) => (
+                                            <span key={idx} className="bg-slate-100 text-slate-600 px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-bold border border-slate-200/50">
+                                                {app}
+                                            </span>
+                                        ))}
+                                    </div>
+
+                                    {/* 即時注入變數客製盒 (清爽卡片設計) */}
+                                    <div className="bg-indigo-50/20 rounded-[1.8rem] border border-indigo-100/60 p-6 grid grid-cols-1 md:grid-cols-3 gap-5 shadow-inner">
+                                        <div className="md:col-span-2">
+                                            <label className="block text-xs sm:text-sm font-extrabold text-slate-600 mb-2 flex items-center gap-1.5">
+                                                <i className="ph-bold ph-cursor-text text-indigo-500"></i> 1. 請填入您的簡報主題
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={userTitle}
+                                                onChange={(e) => setUserTitle(e.target.value)}
+                                                placeholder="例如: 2026年永續發展計畫藍圖"
+                                                className="w-full px-4.5 py-3 bg-white border border-indigo-100 rounded-xl text-sm font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all shadow-sm"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs sm:text-sm font-extrabold text-slate-600 mb-2 flex items-center gap-1.5">
+                                                <i className="ph-bold ph-copy-simple text-indigo-500"></i> 2. 預計生成頁數
+                                            </label>
+                                            <input
+                                                type="number"
+                                                value={userPages}
+                                                onChange={(e) => setUserPages(e.target.value)}
+                                                min="1"
+                                                max="40"
+                                                className="w-full px-4 py-3 bg-white border border-indigo-100 rounded-xl text-sm font-bold font-mono text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-100 focus:border-indigo-500 transition-all shadow-sm"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* 生成的 YAML 預覽輸出區 (加大字體，亮色排版極具細節) */}
+                                    <div className="flex-1 flex flex-col bg-slate-50 border border-indigo-50 rounded-3xl overflow-hidden relative group shadow-inner">
+                                        <div className="bg-indigo-50/40 px-5 sm:px-6 py-4 flex items-center justify-between border-b border-indigo-100">
+                                            <span className="text-xs sm:text-sm font-extrabold text-slate-600 flex items-center gap-2">
+                                                <span className="h-2.5 w-2.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                                                客製化後的 NotebookLM 格式提示詞
+                                            </span>
+                                            <button
+                                                onClick={() => handleCopyText(generatedPrompt)}
+                                                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-md hover:shadow-indigo-200/50 font-extrabold text-xs sm:text-sm flex items-center gap-2 transition-all"
+                                            >
+                                                <i className="ph-bold ph-copy text-base"></i> 一鍵複製提示詞
+                                            </button>
+                                        </div>
+
+                                        {/* 大字體、高閱讀舒適性之提示碼預覽區 */}
+                                        <div className="flex-1 p-6 font-mono text-sm sm:text-base text-slate-700 leading-relaxed overflow-y-auto whitespace-pre-wrap max-h-[380px] bg-white">
+                                            {generatedPrompt}
+                                        </div>
+                                    </div>
+
+                                    {/* 年輕化小插圖風格步驟引導 */}
+                                    <div className="p-5 bg-gradient-to-br from-indigo-50/40 to-purple-50/40 rounded-[1.8rem] border border-indigo-100/50">
+                                        <h4 className="text-sm font-black text-indigo-900 mb-2.5 flex items-center gap-2">
+                                            <i className="ph-bold ph-rocket-launch text-lg text-indigo-500"></i>
+                                            如何套用至 NotebookLM？
+                                        </h4>
+                                        <ol className="list-decimal list-inside text-xs sm:text-sm text-slate-600 space-y-1.5 leading-relaxed font-medium">
+                                            <li>點擊上方 <strong className="text-indigo-600">「一鍵複製風格提示詞」</strong>。</li>
+                                            <li>開啟您在 NotebookLM 的筆記，點擊「簡報生成」選項右方的 <strong>✏️ (編輯) 鉛筆符號</strong>。</li>
+                                            <li>在彈出的 <strong>「說明欄 (Instructions)」</strong> 中直接貼上此提示詞，立刻生成高美學簡報！</li>
+                                        </ol>
+                                    </div>
+
+                                </div>
+                            )}
+                        </div>
+                    </main>
+
+                    {/* 清爽頁尾 */}
+                    <footer className="text-center text-slate-400 text-xs sm:text-sm py-8 mt-auto border-t border-indigo-50">
+                        NotebookLM Prompt Box &copy; 2026. Made for Presentation Designers and AI Copilots.
+                    </footer>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>
