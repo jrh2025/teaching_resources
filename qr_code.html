@@ -1,0 +1,2313 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="h-full">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR 智慧產生與活動報到管理系統</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- QR Code Styling CDN -->
+    <script src="https://unpkg.com/qr-code-styling@1.5.0/lib/qr-code-styling.js"></script>
+    <!-- HTML5 QR Code Scanner CDN -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <!-- Chart.js CDN (用於報到統計數據視覺化) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* 漸層動態背景與自訂滾動條 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3b82f6;
+        }
+
+        .active-tab {
+            background-color: #1e293b;
+            border-left: 4px solid #3b82f6;
+            color: #3b82f6;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 font-sans h-full flex flex-col overflow-hidden">
+
+    <!-- 頂部導航欄 -->
+    <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-wrap justify-between items-center z-10">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-blue-500 to-indigo-600 p-2.5 rounded-xl shadow-lg">
+                <i data-lucide="qr-code" class="w-6 h-6 text-white animate-pulse"></i>
+            </div>
+            <div>
+                <h1
+                    class="text-xl font-black bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent">
+                    QR Studio Pro</h1>
+                <p class="text-xs text-slate-400">極速離線產生器 & 智慧報到管理系統</p>
+            </div>
+        </div>
+
+        <!-- 隱私宣告 -->
+        <div
+            class="flex items-center gap-2 bg-emerald-950/40 border border-emerald-800/60 text-emerald-400 px-3 py-1.5 rounded-full text-xs mt-2 sm:mt-0">
+            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+            <span>安全保證：所有生成與數據儲存（IndexedDB）皆在您的瀏覽器本機完成，無資料外洩風險。</span>
+        </div>
+    </header>
+
+    <!-- 主區塊 -->
+    <div class="flex-1 flex overflow-hidden">
+        <!-- 側邊欄（選單導航） -->
+        <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between hidden md:flex">
+            <div class="p-4 space-y-2">
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mb-2">主要功能</p>
+                <button onclick="switchTab('tab-generator')" id="btn-tab-generator"
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition duration-200 text-left hover:bg-slate-800 text-slate-300 active-tab">
+                    <i data-lucide="wand-2" class="w-5 h-5"></i>
+                    <span>QR Code 產生器</span>
+                </button>
+
+                <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mt-6 mb-2">智慧活動 (進階服務)</p>
+                <button onclick="switchTab('tab-events')" id="btn-tab-events"
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition duration-200 text-left hover:bg-slate-800 text-slate-300">
+                    <i data-lucide="calendar" class="w-5 h-5"></i>
+                    <span>活動與報名管理</span>
+                </button>
+                <button onclick="switchTab('tab-scanner')" id="btn-tab-scanner"
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition duration-200 text-left hover:bg-slate-800 text-slate-300">
+                    <i data-lucide="scan-line" class="w-5 h-5"></i>
+                    <span>掃描器與報到管理</span>
+                </button>
+                <button onclick="switchTab('tab-notifications')" id="btn-tab-notifications"
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition duration-200 text-left hover:bg-slate-800 text-slate-300">
+                    <i data-lucide="bell-ring" class="w-5 h-5"></i>
+                    <span>通知範本與日誌</span>
+                </button>
+            </div>
+
+            <!-- 底部版本資訊 -->
+            <div class="p-4 border-t border-slate-800 text-xs text-slate-500 text-center">
+                <p>版本 2.3 (優化社群分享語句版)</p>
+                <p class="mt-1">Powered by HTML5 & Canvas</p>
+            </div>
+        </aside>
+
+        <!-- 移動端底部導航 (隱藏於桌面端) -->
+        <div
+            class="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 flex justify-around py-2 z-50">
+            <button onclick="switchTab('tab-generator')" id="m-btn-tab-generator"
+                class="flex flex-col items-center text-blue-500 text-xs py-1">
+                <i data-lucide="wand-2" class="w-5 h-5"></i>
+                <span>產生器</span>
+            </button>
+            <button onclick="switchTab('tab-events')" id="m-btn-tab-events"
+                class="flex flex-col items-center text-slate-400 text-xs py-1">
+                <i data-lucide="calendar" class="w-5 h-5"></i>
+                <span>活動</span>
+            </button>
+            <button onclick="switchTab('tab-scanner')" id="m-btn-tab-scanner"
+                class="flex flex-col items-center text-slate-400 text-xs py-1">
+                <i data-lucide="scan-line" class="w-5 h-5"></i>
+                <span>簽到</span>
+            </button>
+            <button onclick="switchTab('tab-notifications')" id="m-btn-tab-notifications"
+                class="flex flex-col items-center text-slate-400 text-xs py-1">
+                <i data-lucide="bell-ring" class="w-5 h-5"></i>
+                <span>通知</span>
+            </button>
+        </div>
+
+        <!-- 主顯示區域 -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
+
+            <!--================ Tab 1: QR Code Generator ================-->
+            <div id="tab-generator" class="tab-content space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                    <!-- 左側：設定控制面板 -->
+                    <div class="lg:col-span-7 space-y-6">
+
+                        <!-- 1. 內容輸入 -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                            <div class="flex items-center gap-2 mb-4 text-blue-400 font-semibold text-base">
+                                <i data-lucide="text-quote" class="w-5 h-5"></i>
+                                <h2>1. 輸入網址或文字內容</h2>
+                            </div>
+                            <textarea id="qr-data"
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                rows="3" placeholder="請輸入您想轉換成 QR Code 的網址 (e.g., https://...) 或自訂文字..."></textarea>
+                        </div>
+
+                        <!-- 2. 設計與配色樣式 -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                            <div class="flex items-center gap-2 mb-4 text-indigo-400 font-semibold text-base">
+                                <i data-lucide="palette" class="w-5 h-5"></i>
+                                <h2>2. 自訂設計與配色樣式</h2>
+                            </div>
+
+                            <div class="space-y-4">
+                                <!-- 碼眼與碼點設計樣式 -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-400 mb-2">QR Code
+                                            碼點樣式</label>
+                                        <select id="qr-dots-type"
+                                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                            <option value="square">經典方形 (Square)</option>
+                                            <option value="rounded" selected>現代圓角 (Rounded)</option>
+                                            <option value="dots">精緻圓點 (Dots)</option>
+                                            <option value="classy">流線優雅 (Classy)</option>
+                                            <option value="classy-rounded">優雅圓潤 (Classy Rounded)</option>
+                                            <option value="extra-rounded">極致圓角 (Extra Rounded)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-400 mb-2">定位角 (碼眼)
+                                            外框</label>
+                                        <select id="qr-corners-type"
+                                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                            <option value="square">方形眼框</option>
+                                            <option value="dot" selected>圓角眼框</option>
+                                            <option value="extra-rounded">極限圓角眼框</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- 色彩控制 -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-400 mb-2">QR Code
+                                            前景色彩模式</label>
+                                        <select id="qr-color-mode" onchange="toggleColorMode()"
+                                            class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                            <option value="single">單一色彩 (Solid Color)</option>
+                                            <option value="gradient">漸層色彩 (Gradient)</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- 背景色 -->
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-400 mb-2">背景色彩</label>
+                                        <div class="flex gap-2">
+                                            <input type="color" id="qr-bg-color" value="#ffffff"
+                                                class="w-10 h-10 rounded border-0 cursor-pointer bg-transparent">
+                                            <input type="text" id="qr-bg-color-hex" value="#ffffff"
+                                                class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-300 text-sm focus:outline-none uppercase">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- 單一色彩 vs 漸層色 控制盤 -->
+                                <div id="single-color-wrapper"
+                                    class="p-3 bg-slate-950/60 rounded-xl border border-slate-800/80">
+                                    <label class="block text-xs font-semibold text-slate-400 mb-2">前景色選擇</label>
+                                    <div class="flex gap-2">
+                                        <input type="color" id="qr-fg-color" value="#000000"
+                                            class="w-10 h-10 rounded border-0 cursor-pointer bg-transparent">
+                                        <input type="text" id="qr-fg-color-hex" value="#000000"
+                                            class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-300 text-sm focus:outline-none uppercase">
+                                    </div>
+                                </div>
+
+                                <div id="gradient-color-wrapper"
+                                    class="hidden p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 space-y-3">
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-400 mb-1">漸層起點色</label>
+                                            <div class="flex gap-2">
+                                                <input type="color" id="qr-grad-start" value="#1e3a8a"
+                                                    class="w-8 h-8 rounded border-0 cursor-pointer bg-transparent">
+                                                <input type="text" id="qr-grad-start-hex" value="#1e3a8a"
+                                                    class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-slate-300 text-xs focus:outline-none uppercase">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-400 mb-1">漸層終點色</label>
+                                            <div class="flex gap-2">
+                                                <input type="color" id="qr-grad-end" value="#7c3aed"
+                                                    class="w-8 h-8 rounded border-0 cursor-pointer bg-transparent">
+                                                <input type="text" id="qr-grad-end-hex" value="#7c3aed"
+                                                    class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-slate-300 text-xs focus:outline-none uppercase">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-semibold text-slate-400 mb-1">漸層方向類型</label>
+                                        <select id="qr-grad-type"
+                                            class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-slate-300 text-xs focus:outline-none">
+                                            <option value="linear" selected>線性漸層 (Linear)</option>
+                                            <option value="radial">放射漸層 (Radial)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- 錯誤修正等級（重要，尤其是要加入 Logo 時） -->
+                                <div>
+                                    <div class="flex items-center justify-between mb-1">
+                                        <label class="block text-xs font-semibold text-slate-400">容錯能力 (Error
+                                            Correction)</label>
+                                        <span id="err-desc" class="text-xs text-slate-500">標準 L (約 7% 損毀容忍)</span>
+                                    </div>
+                                    <select id="qr-error-level" onchange="updateErrorLevelDesc()"
+                                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                        <option value="L">L - 容錯率小 (適合純網址，條碼最精細)</option>
+                                        <option value="M">M - 中度容錯 (約 15% 容忍)</option>
+                                        <option value="Q">Q - 高度容錯 (約 25% 容忍)</option>
+                                        <option value="H" selected>H - 極高容錯 (約 30% 容忍，建議包含 LOGO 時使用)</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. 中央 Logo 置入 -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center gap-2 text-purple-400 font-semibold text-base">
+                                    <i data-lucide="image" class="w-5 h-5"></i>
+                                    <h2>3. 置入中央 Logo 標誌</h2>
+                                </div>
+                                <button onclick="clearLogo()" id="btn-clear-logo"
+                                    class="hidden text-xs text-rose-400 hover:text-rose-300 border border-rose-800/40 bg-rose-950/20 px-2 py-1 rounded transition">清除
+                                    LOGO</button>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                                <div class="md:col-span-5">
+                                    <label
+                                        class="w-full flex flex-col items-center justify-center border-2 border-dashed border-slate-800 hover:border-slate-700 bg-slate-950/40 rounded-xl py-6 cursor-pointer group transition">
+                                        <i data-lucide="upload-cloud"
+                                            class="w-8 h-8 text-slate-500 group-hover:text-blue-400 transition mb-2"></i>
+                                        <span
+                                            class="text-xs text-slate-400 group-hover:text-slate-300 transition">上傳自訂標誌</span>
+                                        <input type="file" id="logo-input" accept="image/*" class="hidden"
+                                            onchange="handleLogoUpload(this)">
+                                    </label>
+                                </div>
+                                <div class="md:col-span-7 space-y-3">
+                                    <div>
+                                        <label
+                                            class="block text-xs font-semibold text-slate-400 mb-1">預設經典品牌圖案快速載入</label>
+                                        <div class="flex flex-wrap gap-2">
+                                            <button onclick="loadSampleLogo('line')"
+                                                class="bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 px-2.5 py-1.5 rounded-lg border border-slate-700/50 transition">LINE</button>
+                                            <button onclick="loadSampleLogo('fb')"
+                                                class="bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 px-2.5 py-1.5 rounded-lg border border-slate-700/50 transition">Facebook</button>
+                                            <button onclick="loadSampleLogo('x')"
+                                                class="bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 px-2.5 py-1.5 rounded-lg border border-slate-700/50 transition">X
+                                                (Twitter)</button>
+                                            <button onclick="loadSampleLogo('mail')"
+                                                class="bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 px-2.5 py-1.5 rounded-lg border border-slate-700/50 transition">Email
+                                                信箱</button>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between text-xs text-slate-400 mb-1">
+                                            <span>標誌大小比例 (相對大小)</span>
+                                            <span id="logo-size-val">15%</span>
+                                        </div>
+                                        <input type="range" id="logo-size-slider" min="5" max="35" value="15"
+                                            oninput="updateLogoSizeText()"
+                                            class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- 右側：即時預覽與導出分享 -->
+                    <div class="lg:col-span-5 space-y-6">
+
+                        <div
+                            class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl sticky top-4 flex flex-col items-center">
+                            <h3 class="text-sm font-bold text-slate-400 self-start mb-4">即時預覽 (Live Preview)</h3>
+
+                            <!-- QR Code 預覽框 -->
+                            <div class="relative bg-white p-6 rounded-2xl shadow-inner-lg flex items-center justify-center border border-slate-800"
+                                style="min-height: 280px; width: 100%; max-width: 320px;">
+                                <div id="qr-preview" class="transition-transform duration-300 hover:scale-[1.02]"></div>
+                            </div>
+
+                            <!-- 4. 尺寸設定 (拉桿 + 快速按鈕) -->
+                            <div class="w-full mt-6 space-y-4">
+                                <div class="border-t border-slate-800 pt-4">
+                                    <div class="flex justify-between items-center mb-2">
+                                        <label class="block text-xs font-semibold text-slate-400">輸出尺寸調整 (像素 px)</label>
+                                        <div class="flex items-center gap-1.5">
+                                            <input type="number" id="qr-size-input" value="500" min="100" max="4000"
+                                                class="w-16 bg-slate-950 border border-slate-800 rounded px-2 py-0.5 text-center text-xs text-slate-200 focus:outline-none">
+                                            <span class="text-xs text-slate-400">px</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- 快捷按鈕 -->
+                                    <div class="grid grid-cols-4 gap-1.5 mb-2">
+                                        <button onclick="changeSize(300)"
+                                            class="bg-slate-800 hover:bg-slate-700 active:bg-blue-600 text-xs text-slate-300 py-1 rounded transition">300px</button>
+                                        <button onclick="changeSize(500)"
+                                            class="bg-slate-800 hover:bg-slate-700 active:bg-blue-600 text-xs text-slate-300 py-1 rounded transition">500px</button>
+                                        <button onclick="changeSize(1000)"
+                                            class="bg-slate-800 hover:bg-slate-700 active:bg-blue-600 text-xs text-slate-300 py-1 rounded transition">1K
+                                            px</button>
+                                        <button onclick="changeSize(2000)"
+                                            class="bg-slate-800 hover:bg-slate-700 active:bg-blue-600 text-xs text-slate-300 py-1 rounded transition">2K
+                                            px</button>
+                                    </div>
+                                    <input type="range" id="qr-size-slider" min="150" max="3000" step="50" value="500"
+                                        oninput="syncSize(this.value)"
+                                        class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-blue-500">
+                                </div>
+
+                                <!-- 附加輸入文字選項 -->
+                                <div
+                                    class="flex items-center gap-2.5 bg-slate-950/60 p-3.5 rounded-xl border border-slate-800/80">
+                                    <input type="checkbox" id="qr-include-text"
+                                        class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-blue-500 focus:ring-blue-500 focus:ring-offset-slate-900 cursor-pointer">
+                                    <label for="qr-include-text"
+                                        class="text-xs font-semibold text-slate-300 cursor-pointer select-none">
+                                        下載時在 QR 碼下方附加輸入內容文字
+                                    </label>
+                                </div>
+
+                                <!-- 格式導出 -->
+                                <div class="space-y-2">
+                                    <span class="block text-xs font-semibold text-slate-400">下載格式類型</span>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button onclick="downloadQR('png')"
+                                            class="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-2.5 px-4 rounded-xl shadow-lg transition duration-200">
+                                            <i data-lucide="download" class="w-4 h-4"></i>
+                                            <span>下載 PNG</span>
+                                        </button>
+                                        <button onclick="downloadQR('jpeg')"
+                                            class="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 px-4 rounded-xl border border-slate-700 transition duration-200">
+                                            <span>下載 JPEG</span>
+                                        </button>
+                                        <button onclick="downloadQR('webp')"
+                                            class="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 px-4 rounded-xl border border-slate-700 transition duration-200">
+                                            <span>下載 WEBP</span>
+                                        </button>
+                                        <button onclick="downloadQR('svg')"
+                                            class="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 px-4 rounded-xl border border-slate-700 transition duration-200">
+                                            <span>下載 SVG (向量)</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- 社群分享面板 -->
+                                <div class="border-t border-slate-800 pt-4 space-y-2">
+                                    <span class="block text-xs font-semibold text-slate-400">一鍵分享目前內容</span>
+                                    <div class="grid grid-cols-4 gap-2">
+                                        <button onclick="shareSocial('line')"
+                                            class="flex flex-col items-center justify-center py-2 bg-emerald-950/20 border border-emerald-800/40 text-emerald-400 hover:bg-emerald-950/40 rounded-xl transition">
+                                            <i data-lucide="message-square" class="w-5 h-5 mb-1"></i>
+                                            <span class="text-[10px]">LINE</span>
+                                        </button>
+                                        <button onclick="shareSocial('fb')"
+                                            class="flex flex-col items-center justify-center py-2 bg-blue-950/20 border border-blue-800/40 text-blue-400 hover:bg-blue-950/40 rounded-xl transition">
+                                            <i data-lucide="facebook" class="w-5 h-5 mb-1"></i>
+                                            <span class="text-[10px]">Facebook</span>
+                                        </button>
+                                        <button onclick="shareSocial('x')"
+                                            class="flex flex-col items-center justify-center py-2 bg-slate-850 border border-slate-700 text-slate-300 hover:bg-slate-800 rounded-xl transition">
+                                            <i
+                                                class="w-5 h-5 mb-1 font-bold flex items-center justify-center not-italic">𝕏</i>
+                                            <span class="text-[10px]">X / Twitter</span>
+                                        </button>
+                                        <button onclick="copyContent()"
+                                            class="flex flex-col items-center justify-center py-2 bg-purple-950/20 border border-purple-800/40 text-purple-400 hover:bg-purple-950/40 rounded-xl transition">
+                                            <i data-lucide="copy" class="w-5 h-5 mb-1"></i>
+                                            <span class="text-[10px]">複製內容</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!--================ Tab 2: Event Registration & Builder ================-->
+            <div id="tab-events" class="tab-content space-y-6 hidden">
+                <div
+                    class="flex flex-wrap items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                    <div>
+                        <h2 class="text-xl font-bold flex items-center gap-2 text-blue-400">
+                            <i data-lucide="calendar-plus" class="w-6 h-6"></i>
+                            活動建立與表單管理
+                        </h2>
+                        <p class="text-sm text-slate-400 mt-1">自主管理活動，透過自訂報名欄位在本地生成專屬活動頁，並追蹤報名狀態。</p>
+                    </div>
+                    <button onclick="showCreateEventModal()"
+                        class="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl font-bold shadow-lg transition">
+                        <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                        <span>建立新活動</span>
+                    </button>
+                </div>
+
+                <!-- 活動清單 -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6" id="events-container">
+                    <!-- 活動卡片動態載入區 -->
+                </div>
+
+                <!-- 報名名單管理 (點擊活動後顯示) -->
+                <div id="registrants-section"
+                    class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-4">
+                        <div>
+                            <span
+                                class="text-xs font-semibold bg-blue-900/40 text-blue-400 border border-blue-800/60 px-2 py-0.5 rounded"
+                                id="viewing-event-tag">當前活動</span>
+                            <h3 class="text-lg font-bold text-slate-200 mt-1" id="viewing-event-title">活動名稱</h3>
+                            <p class="text-xs text-slate-400" id="viewing-event-desc">活動說明</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="simulateMockRegister()"
+                                class="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm px-3 py-2 rounded-xl transition">
+                                <i data-lucide="user-plus" class="w-4 h-4 text-slate-400"></i>
+                                <span>模擬一般大眾報名</span>
+                            </button>
+                            <button onclick="closeRegistrantsSection()"
+                                class="text-slate-400 hover:text-slate-300 bg-slate-950 p-2 rounded-xl transition">
+                                <i data-lucide="x" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 搜尋與過濾 -->
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        <div class="relative flex-1">
+                            <i data-lucide="search" class="absolute left-3 top-2.5 w-5 h-5 text-slate-500"></i>
+                            <input type="text" id="search-registrants" oninput="filterRegistrants()"
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-slate-200 placeholder-slate-500 focus:outline-none"
+                                placeholder="搜尋報名者姓名、信箱或電話...">
+                        </div>
+                        <select id="filter-status" onchange="filterRegistrants()"
+                            class="bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-slate-300 focus:outline-none">
+                            <option value="all">所有狀態</option>
+                            <option value="registered">已報名 / 未報到</option>
+                            <option value="checked">已簽到 / 已完成</option>
+                        </select>
+                    </div>
+
+                    <!-- 名單表格 -->
+                    <div class="overflow-x-auto rounded-xl border border-slate-800">
+                        <table class="w-full text-left text-sm text-slate-300">
+                            <thead class="bg-slate-950 text-slate-400 uppercase text-xs border-b border-slate-800">
+                                <tr>
+                                    <th class="px-6 py-3">姓名</th>
+                                    <th class="px-6 py-3">聯絡電子郵件</th>
+                                    <th class="px-6 py-3">電話號碼</th>
+                                    <th class="px-6 py-3">報名日期</th>
+                                    <th class="px-6 py-3 text-center">報到狀態</th>
+                                    <th class="px-6 py-3 text-right">管理操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="registrants-list-body" class="divide-y divide-slate-800/50">
+                                <!-- 報名人資料動態載入 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <p id="no-registrants-msg" class="text-center py-8 text-slate-500 text-sm">此活動目前無報名名單資料。</p>
+                </div>
+
+            </div>
+
+            <!--================ Tab 3: Scanner & Tracker (Attendance) ================-->
+            <div id="tab-scanner" class="tab-content space-y-6 hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                    <!-- 左側：QR Code 掃描控制 -->
+                    <div class="lg:col-span-5 space-y-6">
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                            <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+                                <i data-lucide="scan-face" class="w-5 h-5 text-indigo-400"></i>
+                                <h2 class="text-lg font-bold">現場快速掃描報到</h2>
+                            </div>
+
+                            <!-- 選擇活動 -->
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-400 mb-2">請先選擇欲報到的活動名稱</label>
+                                <select id="scanner-event-selector" onchange="onScannerEventChange()"
+                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-200 focus:outline-none">
+                                    <option value="">-- 請選擇一個活動 --</option>
+                                    <!-- 動態載入活動選單 -->
+                                </select>
+                            </div>
+
+                            <!-- 相機視窗 -->
+                            <div
+                                class="relative bg-slate-950 rounded-xl overflow-hidden aspect-video border border-slate-800 flex items-center justify-center">
+                                <!-- 覆蓋提示 -->
+                                <div id="scanner-placeholder"
+                                    class="absolute inset-0 flex flex-col items-center justify-center text-center p-4 bg-slate-950/95 z-10 transition">
+                                    <i data-lucide="aperture" class="w-12 h-12 text-slate-600 animate-spin mb-3"></i>
+                                    <p class="text-sm text-slate-400 font-semibold">請選擇活動並啟動相機</p>
+                                    <p class="text-xs text-slate-500 mt-1">需在支援相機的裝置上運作，或可使用檔案上傳解析功能。</p>
+                                </div>
+
+                                <div id="reader" class="w-full h-full"></div>
+                            </div>
+
+                            <!-- 按鈕 -->
+                            <div class="grid grid-cols-2 gap-3">
+                                <button onclick="startScanning()" id="btn-start-scanner"
+                                    class="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-2.5 rounded-xl shadow-lg transition">
+                                    <i data-lucide="video" class="w-4 h-4"></i>
+                                    <span>啟動鏡頭</span>
+                                </button>
+                                <button onclick="stopScanning()" id="btn-stop-scanner" disabled
+                                    class="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-300 font-bold py-2.5 rounded-xl border border-slate-700 transition">
+                                    <i data-lucide="video-off" class="w-4 h-4"></i>
+                                    <span>關閉鏡頭</span>
+                                </button>
+                            </div>
+
+                            <!-- 手動或檔案上傳解析 (相機無法正常運作時的備案) -->
+                            <div class="border-t border-slate-800 pt-4 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-semibold text-slate-400">無法啟動鏡頭？上傳圖片或手動報到</span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <label
+                                        class="flex items-center justify-center gap-2 bg-slate-950 border border-slate-800 hover:bg-slate-900 text-xs text-slate-300 py-2 px-3 rounded-lg cursor-pointer transition">
+                                        <i data-lucide="image-plus" class="w-4 h-4"></i>
+                                        <span>讀取報到碼圖片</span>
+                                        <input type="file" accept="image/*" class="hidden"
+                                            onchange="scanLocalFile(this)">
+                                    </label>
+                                    <button onclick="showManualCheckInModal()"
+                                        class="flex items-center justify-center gap-2 bg-slate-950 border border-slate-800 hover:bg-slate-900 text-xs text-slate-300 py-2 px-3 rounded-lg transition">
+                                        <i data-lucide="keyboard" class="w-4 h-4"></i>
+                                        <span>手動輸入代碼報到</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- 右側：掃描結果與簽到統計 -->
+                    <div class="lg:col-span-7 space-y-6">
+
+                        <!-- 即時掃描回傳結果區 -->
+                        <div id="scan-result-card"
+                            class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl min-h-[160px] flex flex-col justify-between">
+                            <div class="flex items-start justify-between">
+                                <div>
+                                    <h3 class="text-sm font-semibold text-slate-400">最近報到掃描狀態</h3>
+                                    <p class="text-xs text-slate-500 mt-0.5">即時狀態更新</p>
+                                </div>
+                                <div id="status-pill"
+                                    class="bg-slate-800 text-slate-400 border border-slate-700 text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 font-bold">
+                                    <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+                                    <span>等待掃描中</span>
+                                </div>
+                            </div>
+
+                            <!-- 顯示掃描到的使用者詳細資訊 -->
+                            <div id="scan-result-details"
+                                class="my-4 p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-3">
+                                <p class="text-sm text-slate-400 text-center py-3">尚未讀取到有效的簽到憑證，請將票券 QR Code 對準鏡頭。</p>
+                            </div>
+
+                            <div
+                                class="text-[10px] text-slate-500 flex justify-between items-center border-t border-slate-800/60 pt-3">
+                                <span>自動核銷防重刷系統啟動中</span>
+                                <span id="scan-timestamp">--:--:--</span>
+                            </div>
+                        </div>
+
+                        <!-- 活動報到人數統計 Dashboard -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="trending-up" class="w-5 h-5 text-emerald-400"></i>
+                                    <h2 class="text-lg font-bold">目前活動數據視覺化</h2>
+                                </div>
+                                <span class="text-xs text-slate-400" id="stats-update-time">剛剛更新</span>
+                            </div>
+
+                            <!-- 數字指標 -->
+                            <div class="grid grid-cols-3 gap-4">
+                                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                                    <p class="text-xs text-slate-400">總報名人數</p>
+                                    <p class="text-2xl font-black text-slate-200 mt-1" id="stat-total">0</p>
+                                </div>
+                                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                                    <p class="text-xs text-slate-400">已報到人數</p>
+                                    <p class="text-2xl font-black text-emerald-400 mt-1" id="stat-checked">0</p>
+                                </div>
+                                <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                                    <p class="text-xs text-slate-400">報到出席率</p>
+                                    <p class="text-2xl font-black text-blue-400 mt-1" id="stat-percent">0%</p>
+                                </div>
+                            </div>
+
+                            <!-- 圓餅圖/長條圖繪製容器 -->
+                            <div
+                                class="h-48 flex items-center justify-center bg-slate-950/30 rounded-xl border border-slate-800 p-2 relative">
+                                <canvas id="statsChart" class="max-w-[280px] max-h-[170px]"></canvas>
+                                <div id="chart-no-data"
+                                    class="absolute inset-0 bg-slate-950 flex items-center justify-center text-slate-500 text-sm rounded-xl">
+                                    尚無報到數據，請選擇活動並開始簽到</div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!--================ Tab 4: Notifications (Templates & SMS/Email Simulation Logs) ================-->
+            <div id="tab-notifications" class="tab-content space-y-6 hidden">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+                    <!-- 左側：發送範本設定區 -->
+                    <div class="lg:col-span-5 space-y-6">
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
+                            <div class="flex items-center gap-2 border-b border-slate-800 pb-3 text-blue-400">
+                                <i data-lucide="mail-warning" class="w-5 h-5"></i>
+                                <h2 class="text-lg font-bold">Email & 簡訊自動發送範本設定</h2>
+                            </div>
+                            <p class="text-xs text-slate-400">自訂發送通知的標題與範本。可使用以下預設參數填入動態內容：<br><code
+                                    class="text-blue-300">{name}</code> (姓名)、<code class="text-blue-300">{event}</code>
+                                (活動名稱)、<code class="text-blue-300">{code}</code> (簽到代碼)</p>
+
+                            <!-- 註冊成功範本 -->
+                            <div class="space-y-3">
+                                <span
+                                    class="block text-sm font-bold text-slate-300 border-l-2 border-indigo-500 pl-2">註冊報名成功通知</span>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">Email 信件主旨</label>
+                                    <input type="text" id="tpl-reg-subject" value="【報名成功通知】您已成功報名 {event}！"
+                                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 text-sm focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">簡訊或 Email 信件內容</label>
+                                    <textarea id="tpl-reg-body"
+                                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 text-sm focus:outline-none"
+                                        rows="3">親愛的 {name} 您好：感謝您報名「{event}」！以下是您的報到驗證憑證代碼：{code}，期待您的蒞臨。</textarea>
+                                </div>
+                            </div>
+
+                            <!-- 報到簽到成功範本 -->
+                            <div class="space-y-3 pt-4 border-t border-slate-800">
+                                <span
+                                    class="block text-sm font-bold text-slate-300 border-l-2 border-emerald-500 pl-2">簽到報到成功通知</span>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">Email 信件主旨</label>
+                                    <input type="text" id="tpl-check-subject" value="【報到完成】歡迎蒞臨 {event}！"
+                                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 text-sm focus:outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-xs text-slate-400 mb-1">簡訊或 Email 信件內容</label>
+                                    <textarea id="tpl-check-body"
+                                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 text-sm focus:outline-none"
+                                        rows="3">親愛的 {name}：您已於現場完成「{event}」的簽到報到手續，感謝您的參與！</textarea>
+                                </div>
+                            </div>
+
+                            <button onclick="saveNotificationTemplates()"
+                                class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-xl text-sm transition">儲存範本設定</button>
+                        </div>
+                    </div>
+
+                    <!-- 右側：發送模擬主控台 (Simulation Logs Console) -->
+                    <div class="lg:col-span-7 space-y-6">
+                        <div
+                            class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between h-full min-h-[500px]">
+                            <div>
+                                <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                                    <div class="flex items-center gap-2">
+                                        <i data-lucide="terminal" class="w-5 h-5 text-indigo-400 animate-pulse"></i>
+                                        <h2 class="text-lg font-bold text-slate-200">Email & 簡訊雲端發送模擬系統</h2>
+                                    </div>
+                                    <button onclick="clearNotificationLogs()"
+                                        class="text-xs text-slate-400 hover:text-slate-300 border border-slate-800 px-2 py-1 rounded hover:bg-slate-800">清除歷史模擬紀錄</button>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-2">當使用者在活動表單中「完成報名」或管理員「完成報到」時，此處會即時輸出雲端 Email/SMS
+                                    發送排程與串接模擬。適合用於測試自動化流程。</p>
+                            </div>
+
+                            <!-- 主控台終端機 -->
+                            <div class="flex-1 bg-black border border-slate-800 rounded-xl p-4 my-4 font-mono text-xs overflow-y-auto space-y-3 min-h-[300px] max-h-[400px]"
+                                id="logs-terminal">
+                                <!-- 預設測試日誌 -->
+                                <p class="text-slate-500">[2026-06-10 16:00:00] [SYSTEM] 智慧通知自動化代理伺服器已就緒。</p>
+                                <p class="text-slate-500">[2026-06-10 16:00:01] [GATEWAY] 虛擬簡訊網關與 Email (SMTP)
+                                    連線測試：SUCCESS。</p>
+                            </div>
+
+                            <div
+                                class="bg-slate-950/80 p-3 rounded-lg text-[11px] text-slate-400 border border-slate-800/80">
+                                <p>💡 <strong class="text-slate-300">流程串接說明：</strong>此模組模擬了與 Amazon SES、SendGrid 及
+                                    Twilio 簡訊服務之第三方 Webhook API 接軌，使企業用戶不需依賴傳統後端，即可進行完整的營運工作流整合測試。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!--================================ MODALS (彈出視窗) ================================-->
+
+    <!-- 建立活動 Modal -->
+    <div id="modal-create-event"
+        class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-lg font-bold text-slate-200">建立全新的推廣活動</h3>
+                <button onclick="closeCreateEventModal()" class="text-slate-400 hover:text-slate-300">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">活動主題/名稱 *</label>
+                    <input type="text" id="ev-title" placeholder="例如：2026 全球科技與設計年度論壇"
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-400 mb-1">活動說明/細節</label>
+                    <textarea id="ev-desc" placeholder="輸入活動的時間、地點、議程摘要等相關資訊..." rows="3"
+                        class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none"></textarea>
+                </div>
+
+                <!-- 自訂表單欄位設定 -->
+                <div class="border-t border-slate-800 pt-3">
+                    <span class="block text-xs font-semibold text-slate-400 mb-2">設定開放給報名者之必填欄位</span>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="field-email" checked disabled
+                                class="rounded bg-slate-950 border-slate-800 text-blue-500">
+                            <span class="text-xs text-slate-300">電子郵件 (Email) <span
+                                    class="text-slate-500">(預設且必填)</span></span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="field-phone" checked
+                                class="rounded bg-slate-950 border-slate-800 text-blue-500">
+                            <span class="text-xs text-slate-300">行動電話號碼 (Phone)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                <button onclick="closeCreateEventModal()"
+                    class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-sm font-semibold">取消</button>
+                <button onclick="submitCreateEvent()"
+                    class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-lg">確認建立活動</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 模擬外部大眾註冊報名表單 Modal -->
+    <div id="modal-mock-register"
+        class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div>
+                    <span class="text-[10px] uppercase font-bold text-blue-400 tracking-wider">大眾報名模擬頁面</span>
+                    <h3 class="text-base font-bold text-slate-200" id="reg-form-event-title">活動表單</h3>
+                </div>
+                <button onclick="closeMockRegisterModal()" class="text-slate-400 hover:text-slate-300">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4" id="mock-form-fields-container">
+                <!-- 動態欄位 -->
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                <button onclick="closeMockRegisterModal()"
+                    class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-sm font-semibold">取消</button>
+                <button onclick="submitMockRegister()"
+                    class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-5 py-2 rounded-xl text-sm font-semibold shadow-lg">提交活動報名</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 報名成功並生成 QR Code 票券 Modal -->
+    <div id="modal-ticket"
+        class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-4">
+        <div
+            class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl flex flex-col items-center space-y-4">
+            <div
+                class="w-12 h-12 bg-emerald-950 border border-emerald-800 rounded-full flex items-center justify-center text-emerald-400 mb-2">
+                <i data-lucide="check-circle2" class="w-6 h-6"></i>
+            </div>
+
+            <div class="text-center">
+                <h3 class="text-lg font-bold text-slate-200">恭喜！報名成功</h3>
+                <p class="text-xs text-slate-400 mt-1">我們已將您的專屬報到 QR Code 票卡製作完畢</p>
+            </div>
+
+            <!-- 票卡 QR 容器 -->
+            <div class="bg-white p-4 rounded-xl border-4 border-slate-800/20 shadow-inner flex flex-col items-center">
+                <div id="ticket-qr-container" class="mb-3"></div>
+                <span class="text-[10px] font-mono text-slate-500 uppercase tracking-widest" id="ticket-id-display">ID:
+                    00000</span>
+            </div>
+
+            <div class="text-center space-y-1 w-full bg-slate-950 p-3 rounded-xl border border-slate-800">
+                <p class="text-xs text-slate-400 font-semibold" id="ticket-holder-name">姓名：讀取中...</p>
+                <p class="text-[11px] text-slate-500" id="ticket-event-title">活動：讀取中...</p>
+            </div>
+
+            <div class="flex gap-2 w-full pt-3">
+                <button onclick="downloadTicketQR()"
+                    class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-xl text-xs font-bold transition">下載我的報到碼</button>
+                <button onclick="closeTicketModal()"
+                    class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-xl text-xs font-bold transition">關閉本票券</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 手動簽到輸入 Modal -->
+    <div id="modal-manual-checkin"
+        class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-slate-200">手動輸入代碼報到</h3>
+                <button onclick="closeManualCheckInModal()" class="text-slate-400 hover:text-slate-300">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-slate-400 mb-1">請輸入報名者之電子票卡 ID 憑證代碼</label>
+                <input type="text" id="manual-ticket-id" placeholder="請貼上或輸入註冊生成的憑證 UUID..."
+                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none text-xs font-mono">
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t border-slate-800">
+                <button onclick="closeManualCheckInModal()"
+                    class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold">取消</button>
+                <button onclick="submitManualCheckIn()"
+                    class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-semibold">驗證核銷並簽到</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 自訂提示 Toast 系統 (不使用 Browser Alert) -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+    <!-- 音效產生模組 (免依賴 Web Audio API) -->
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playBeep(success) {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (success) {
+                // 報到成功：雙音高短音
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.1);
+                setTimeout(() => {
+                    const osc2 = audioCtx.createOscillator();
+                    const gain2 = audioCtx.createGain();
+                    osc2.connect(gain2);
+                    gain2.connect(audioCtx.destination);
+                    osc2.frequency.setValueAtTime(1200, audioCtx.currentTime);
+                    gain2.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    osc2.start();
+                    osc2.stop(audioCtx.currentTime + 0.15);
+                }, 120);
+            } else {
+                // 報到失敗：低沉警告音
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+    </script>
+
+    <!-- ==================== MAIN SCRIPT & APP LOGIC ==================== -->
+    <script>
+        // 初始化 Lucide 圖標
+        lucide.createIcons();
+
+        // 狀態追蹤
+        let currentLogoBase64 = null;
+        let qrGeneratorInstance = null;
+        let html5QrcodeScanner = null;
+        let statsChartInstance = null;
+        let currentViewingEventId = null; // 當前活動細節/名單
+        let selectedScannerEventId = null; // 當前簽到掃描活動
+
+        // IndexedDB 全域資料庫宣告
+        let db = null;
+        const DB_NAME = "QRStudioProDB";
+        const DB_VERSION = 2;
+
+        //Toast 提示
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `flex items-center gap-2 px-4 py-3 rounded-xl shadow-2xl border text-sm transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto ${type === 'success' ? 'bg-emerald-950 border-emerald-800 text-emerald-400' :
+                    type === 'error' ? 'bg-rose-950 border-rose-800 text-rose-400' :
+                        'bg-slate-900 border-slate-800 text-slate-300'
+                }`;
+
+            const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'alert-triangle' : 'info';
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 shrink-0"></i> <span>${message}</span>`;
+            toastContainer.appendChild(toast);
+            lucide.createIcons();
+
+            // 動畫顯現
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 50);
+
+            // 移除
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // ================== INDEXEDDB 基礎核心 ==================
+        function initDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    // 活動 Table
+                    if (!db.objectStoreNames.contains('events')) {
+                        db.createObjectStore('events', { keyPath: 'id' });
+                    }
+                    // 報名人 Table
+                    if (!db.objectStoreNames.contains('registrants')) {
+                        const regStore = db.createObjectStore('registrants', { keyPath: 'id' });
+                        regStore.createIndex('eventId', 'eventId', { unique: false });
+                    }
+                    // 系統通知範本與發送歷史 Table
+                    if (!db.objectStoreNames.contains('notificationTemplates')) {
+                        db.createObjectStore('notificationTemplates', { keyPath: 'id' });
+                    }
+                };
+
+                request.onsuccess = (e) => {
+                    db = e.target.result;
+                    resolve(db);
+                };
+
+                request.onerror = (e) => {
+                    reject(e);
+                };
+            });
+        }
+
+        // 寫入/更新 IndexedDB
+        function putData(storeName, data) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.put(data);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = (e) => reject(e);
+            });
+        }
+
+        // 取得單筆資料
+        function getData(storeName, key) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.get(key);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = (e) => reject(e);
+            });
+        }
+
+        // 取得所有資料
+        function getAllData(storeName) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = (e) => reject(e);
+            });
+        }
+
+        // 透過索引取得部分資料
+        function getDataByIdx(storeName, indexName, value) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readonly');
+                const store = transaction.objectStore(storeName);
+                const index = store.index(indexName);
+                const request = index.getAll(value);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = (e) => reject(e);
+            });
+        }
+
+        // 刪除單筆資料
+        function deleteData(storeName, key) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([storeName], 'readwrite');
+                const store = transaction.objectStore(storeName);
+                const request = store.delete(key);
+                request.onsuccess = () => resolve();
+                request.onerror = (e) => reject(e);
+            });
+        }
+
+        // ================== TAB 導航邏輯 ==================
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+
+            // 更新側邊欄按鈕狀態
+            document.querySelectorAll('aside button').forEach(btn => {
+                btn.classList.remove('active-tab');
+            });
+            const activeBtn = document.getElementById(`btn-${tabId}`);
+            if (activeBtn) activeBtn.classList.add('active-tab');
+
+            // 更新移動端底部導航狀態
+            document.querySelectorAll('[id^="m-btn-tab"]').forEach(btn => {
+                btn.classList.remove('text-blue-500');
+                btn.classList.add('text-slate-400');
+            });
+            const mActiveBtn = document.getElementById(`m-btn-${tabId}`);
+            if (mActiveBtn) {
+                mActiveBtn.classList.remove('text-slate-400');
+                mActiveBtn.classList.add('text-blue-500');
+            }
+
+            // 如果切換到活動/報到簽到模組，重新載入資料庫關聯選單
+            if (tabId === 'tab-events') {
+                renderEventsList();
+            } else if (tabId === 'tab-scanner') {
+                populateScannerEvents();
+            }
+        }
+
+        // ================== 核心功能 1: QR CODE 產生與樣式 ==================
+
+        // 初始化產生器並進行基本繪製
+        function initQRGenerator() {
+            const dataText = document.getElementById('qr-data').value || "https://example.com";
+            const sizeValue = parseInt(document.getElementById('qr-size-input').value) || 500;
+
+            qrGeneratorInstance = new QRCodeStyling(getQRConfig(dataText, sizeValue));
+            const previewContainer = document.getElementById('qr-preview');
+            previewContainer.innerHTML = "";
+            qrGeneratorInstance.append(previewContainer);
+        }
+
+        // 取得目前的 QR Code 設定
+        function getQRConfig(text, sizeValue) {
+            const dotsType = document.getElementById('qr-dots-type').value;
+            const cornersType = document.getElementById('qr-corners-type').value;
+            const bgColor = document.getElementById('qr-bg-color').value;
+            const errorLevel = document.getElementById('qr-error-level').value;
+            const colorMode = document.getElementById('qr-color-mode').value;
+            const logoSize = parseFloat(document.getElementById('logo-size-slider').value) / 100;
+
+            let dotsOptions = {
+                type: dotsType
+            };
+
+            if (colorMode === 'single') {
+                dotsOptions.color = document.getElementById('qr-fg-color').value;
+            } else {
+                // 漸層色
+                dotsOptions.gradient = {
+                    type: document.getElementById('qr-grad-type').value,
+                    colorStops: [
+                        { offset: 0, color: document.getElementById('qr-grad-start').value },
+                        { offset: 1, color: document.getElementById('qr-grad-end').value }
+                    ]
+                };
+            }
+
+            const config = {
+                width: 280, // 預覽尺寸維持在 280px 以符合 CSS
+                height: 280,
+                type: "svg",
+                data: text,
+                image: currentLogoBase64 || "",
+                dotsOptions: dotsOptions,
+                backgroundOptions: {
+                    color: bgColor,
+                },
+                cornersSquareOptions: {
+                    type: cornersType,
+                },
+                imageOptions: {
+                    crossOrigin: "anonymous",
+                    margin: 6,
+                    imageSizeFactor: logoSize
+                },
+                qrOptions: {
+                    errorCorrectionLevel: errorLevel
+                }
+            };
+
+            return config;
+        }
+
+        // 更新現有的 QR Code 樣式
+        function updateQR() {
+            if (!qrGeneratorInstance) return;
+            const dataText = document.getElementById('qr-data').value || "https://example.com";
+            const sizeValue = parseInt(document.getElementById('qr-size-input').value) || 500;
+
+            // 更新預覽
+            qrGeneratorInstance.update(getQRConfig(dataText, sizeValue));
+        }
+
+        // 監聽並綁定欄位輸入事件，實現即時預覽更新
+        const liveUpdateInputs = [
+            'qr-data', 'qr-dots-type', 'qr-corners-type', 'qr-error-level', 'qr-bg-color',
+            'qr-fg-color', 'qr-grad-start', 'qr-grad-end', 'qr-grad-type', 'logo-size-slider'
+        ];
+        liveUpdateInputs.forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                // 同步 Hex 代碼與色彩盤顏色
+                if (id === 'qr-bg-color') document.getElementById('qr-bg-color-hex').value = document.getElementById('qr-bg-color').value;
+                if (id === 'qr-fg-color') document.getElementById('qr-fg-color-hex').value = document.getElementById('qr-fg-color').value;
+                if (id === 'qr-grad-start') document.getElementById('qr-grad-start-hex').value = document.getElementById('qr-grad-start').value;
+                if (id === 'qr-grad-end') document.getElementById('qr-grad-end-hex').value = document.getElementById('qr-grad-end').value;
+                updateQR();
+            });
+        });
+
+        // 綁定 Hex 輸入框手動輸入
+        const hexColorInputs = ['qr-bg-color-hex', 'qr-fg-color-hex', 'qr-grad-start-hex', 'qr-grad-end-hex'];
+        hexColorInputs.forEach(id => {
+            document.getElementById(id).addEventListener('change', (e) => {
+                let val = e.target.value;
+                if (!val.startsWith('#')) val = '#' + val;
+                // 簡單 Hex 正規表示式驗證
+                if (/^#[0-9A-F]{6}$/i.test(val)) {
+                    const pickerId = id.replace('-hex', '');
+                    document.getElementById(pickerId).value = val;
+                    updateQR();
+                } else {
+                    showToast('不正確的 Hex 色彩格式', 'error');
+                }
+            });
+        });
+
+        // 切換色彩模式 (單一色 / 漸層色)
+        function toggleColorMode() {
+            const mode = document.getElementById('qr-color-mode').value;
+            if (mode === 'single') {
+                document.getElementById('single-color-wrapper').classList.remove('hidden');
+                document.getElementById('gradient-color-wrapper').classList.add('hidden');
+            } else {
+                document.getElementById('single-color-wrapper').classList.add('hidden');
+                document.getElementById('gradient-color-wrapper').classList.remove('hidden');
+            }
+            updateQR();
+        }
+
+        // 容錯機制解說文字更新
+        function updateErrorLevelDesc() {
+            const level = document.getElementById('qr-error-level').value;
+            const descSpan = document.getElementById('err-desc');
+            if (level === 'L') descSpan.innerText = '標準 L (約 7% 損毀容忍)';
+            if (level === 'M') descSpan.innerText = '中度 M (約 15% 損毀容忍)';
+            if (level === 'Q') descSpan.innerText = '高度 Q (約 25% 損毀容忍)';
+            if (level === 'H') descSpan.innerText = '極高 H (約 30% 損毀容忍，置入 Logo 時推薦)';
+            updateQR();
+        }
+
+        // 處理自訂 Logo 上傳並轉為 Base64
+        function handleLogoUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    currentLogoBase64 = e.target.result;
+                    document.getElementById('btn-clear-logo').classList.remove('hidden');
+                    updateQR();
+                    showToast('成功上傳自訂 Logo 標誌', 'success');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // 清除 Logo
+        function clearLogo() {
+            currentLogoBase64 = null;
+            document.getElementById('logo-input').value = "";
+            document.getElementById('btn-clear-logo').classList.add('hidden');
+            updateQR();
+            showToast('Logo 已移除');
+        }
+
+        // 快速載入預設樣板標誌
+        function loadSampleLogo(brand) {
+            const samples = {
+                line: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2306C755'><path d='M24 10.3c0-5.7-5.4-10.3-12-10.3S0 4.6 0 10.3c0 5.1 4.3 9.3 10 10.1.4.1.9.3 1 .6l.1 2.3c0 .3.2.4.4.3l2.8-2.5c2.4-.6 4.7-1.9 6.2-4.1 2.3-2.3 3.5-4.4 3.5-7z'/></svg>",
+                fb: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231877F2'><path d='M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z'/></svg>",
+                x: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000000'><path d='M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z'/></svg>",
+                mail: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ea4335'><path d='M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z'/></svg>"
+            };
+
+            currentLogoBase64 = samples[brand];
+            document.getElementById('btn-clear-logo').classList.remove('hidden');
+            updateQR();
+            showToast(`成功載入預設 ${brand.toUpperCase()} 標誌`);
+        }
+
+        // 更新 Logo 尺寸文字
+        function updateLogoSizeText() {
+            const val = document.getElementById('logo-size-slider').value;
+            document.getElementById('logo-size-val').innerText = `${val}%`;
+            updateQR();
+        }
+
+        // 同步尺寸輸入與 Slider
+        function changeSize(size) {
+            document.getElementById('qr-size-input').value = size;
+            document.getElementById('qr-size-slider').value = size;
+            updateQR();
+        }
+
+        // 同步尺寸 Slider 與數值輸入
+        function syncSize(val) {
+            document.getElementById('qr-size-input').value = val;
+            updateQR();
+        }
+
+        // 下載最終 QR Code 的功能 (包含是否附加文字邏輯)
+        function downloadQR(format) {
+            const dataText = document.getElementById('qr-data').value || "https://example.com";
+            const sizeValue = parseInt(document.getElementById('qr-size-input').value) || 500;
+            const includeText = document.getElementById('qr-include-text').checked;
+
+            // 建立高解析度輸出專用的臨時產生器，避免受預覽尺寸影響
+            const downloadConfig = Object.assign({}, getQRConfig(dataText, sizeValue), {
+                width: sizeValue,
+                height: sizeValue
+            });
+
+            // 如果沒有勾選附帶文字，採用標準下載方式
+            if (!includeText) {
+                const exporter = new QRCodeStyling(downloadConfig);
+                exporter.download({
+                    name: "qrcode_" + Date.now(),
+                    extension: format
+                }).then(() => {
+                    showToast(`成功下載 ${format.toUpperCase()} 圖片`, 'success');
+                }).catch(err => {
+                    showToast('下載失敗，請重試', 'error');
+                });
+                return;
+            }
+
+            // 如果有勾選附加文字
+            try {
+                const tempDiv = document.createElement('div');
+                tempDiv.style.display = 'none';
+                document.body.appendChild(tempDiv);
+
+                const isSvg = format === 'svg';
+                const renderType = isSvg ? 'svg' : 'canvas';
+                const exporter = new QRCodeStyling(Object.assign({}, downloadConfig, { type: renderType }));
+                exporter.append(tempDiv);
+
+                // 稍微等待一些時間，讓可能存在的 Logo 圖片載入完成後進行繪製
+                setTimeout(() => {
+                    if (isSvg) {
+                        const svgElement = tempDiv.querySelector('svg');
+                        if (svgElement) {
+                            const originalWidth = sizeValue;
+                            const originalHeight = sizeValue;
+                            const fontSize = Math.max(12, Math.round(sizeValue * 0.04));
+                            const textMargin = Math.round(sizeValue * 0.08);
+                            const extraHeight = fontSize + textMargin * 2;
+                            const newHeight = originalHeight + extraHeight;
+
+                            // 調整 SVG 視圖大小
+                            svgElement.setAttribute('height', newHeight);
+                            svgElement.setAttribute('viewBox', `0 0 ${originalWidth} ${newHeight}`);
+
+                            // 建立文字節點
+                            const textNode = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                            textNode.setAttribute('x', originalWidth / 2);
+                            textNode.setAttribute('y', originalHeight + textMargin);
+                            textNode.setAttribute('text-anchor', 'middle');
+                            textNode.setAttribute('font-family', 'sans-serif');
+                            textNode.setAttribute('font-weight', 'bold');
+                            textNode.setAttribute('font-size', fontSize);
+                            textNode.setAttribute('fill', downloadConfig.dotsOptions.color || '#000000');
+
+                            // 超出長度則進行字串截斷
+                            let displayText = dataText;
+                            if (displayText.length > 55) {
+                                displayText = displayText.substring(0, 52) + "...";
+                            }
+                            textNode.textContent = displayText;
+                            svgElement.appendChild(textNode);
+
+                            // 導出 SVG
+                            const svgString = new XMLSerializer().serializeToString(svgElement);
+                            const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+                            const url = URL.createObjectURL(blob);
+                            triggerDownload(url, `qrcode_${Date.now()}.svg`);
+                            URL.revokeObjectURL(url);
+                            showToast(`成功下載 SVG 圖片 (含文字)`, 'success');
+                        }
+                    } else {
+                        const qrCanvas = tempDiv.querySelector('canvas');
+                        if (qrCanvas) {
+                            const combinedCanvas = document.createElement('canvas');
+                            const ctx = combinedCanvas.getContext('2d');
+
+                            const originalWidth = qrCanvas.width;
+                            const originalHeight = qrCanvas.height;
+                            const fontSize = Math.max(12, Math.round(sizeValue * 0.04));
+                            const textMargin = Math.round(sizeValue * 0.08);
+                            const extraHeight = fontSize + textMargin * 2;
+
+                            combinedCanvas.width = originalWidth;
+                            combinedCanvas.height = originalHeight + extraHeight;
+
+                            // 填充與 QR Code 相同的底色背景
+                            ctx.fillStyle = downloadConfig.backgroundOptions.color || '#ffffff';
+                            ctx.fillRect(0, 0, combinedCanvas.width, combinedCanvas.height);
+
+                            // 繪製原 QR Code Canvas
+                            ctx.drawImage(qrCanvas, 0, 0);
+
+                            // 繪製下方附加文字
+                            ctx.fillStyle = downloadConfig.dotsOptions.color || '#000000';
+                            ctx.font = `bold ${fontSize}px sans-serif`;
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'top';
+
+                            let displayText = dataText;
+                            if (displayText.length > 55) {
+                                displayText = displayText.substring(0, 52) + "...";
+                            }
+                            ctx.fillText(displayText, originalWidth / 2, originalHeight + textMargin / 2);
+
+                            // 導出對應影像格式
+                            let mimeType = 'image/png';
+                            if (format === 'jpeg' || format === 'jpg') mimeType = 'image/jpeg';
+                            if (format === 'webp') mimeType = 'image/webp';
+
+                            const dataUrl = combinedCanvas.toDataURL(mimeType, 0.95);
+                            triggerDownload(dataUrl, `qrcode_${Date.now()}.${format}`);
+                            showToast(`成功下載 ${format.toUpperCase()} 圖片 (含文字)`, 'success');
+                        }
+                    }
+                    document.body.removeChild(tempDiv);
+                }, 400);
+            } catch (err) {
+                console.error("文字合併繪製失敗，改用標準模式下載: ", err);
+                showToast('附帶文字下載失敗，改用標準方式下載', 'error');
+                const exporter = new QRCodeStyling(downloadConfig);
+                exporter.download({
+                    name: "qrcode_" + Date.now(),
+                    extension: format
+                });
+            }
+        }
+
+        // 觸發虛擬點擊下載
+        function triggerDownload(url, filename) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        // 社群分享控制 (優化分享文字與分享意圖)
+        function shareSocial(platform) {
+            const content = document.getElementById('qr-data').value || "(尚未輸入內容)";
+            const toolUrl = window.location.href; // 取得工具的目前網址
+
+            // 修飾完整且分享意圖明確的推廣與分享訊息
+            const shareText = `【分享一個超好用的 QR Code 產生與活動報到管理工具！】\n\n我剛剛用它產生了這個內容：\n👉 ${content}\n\n這款免費工具支援自訂精美漸層配色、碼點外觀，還能一鍵加上品牌 Logo 標誌，更棒的是支持在下載圖檔時直接附加內容文字！100% 瀏覽器本機端生成，保障資料隱私。推薦給您，快點擊連結體驗吧：\n🔗 ${toolUrl}`;
+            const encodedText = encodeURIComponent(shareText);
+            const encodedUrl = encodeURIComponent(toolUrl);
+
+            let shareUrl = "";
+
+            switch (platform) {
+                case 'line':
+                    shareUrl = `https://line.me/R/msg/text/?${encodedText}`;
+                    break;
+                case 'fb':
+                    // Facebook 主要依賴 u 參數傳遞網址，並可使用 quote 參數在特定裝置帶入分享引言
+                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}&quote=${encodedText}`;
+                    break;
+                case 'x':
+                    shareUrl = `https://twitter.com/intent/tweet?text=${encodedText}`;
+                    break;
+            }
+            window.open(shareUrl, '_blank');
+        }
+
+        // 複製內容
+        function copyContent() {
+            const content = document.getElementById('qr-data').value;
+            if (!content) {
+                showToast('輸入框中無任何內容可供複製！', 'error');
+                return;
+            }
+
+            const el = document.createElement('textarea');
+            el.value = content;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast('內容已成功複製至剪貼簿！', 'success');
+        }
+
+        // ================== 進階服務 2: 活動與大眾報名 (INDEXEDDB) ==================
+
+        // 開啟/關閉建立活動彈窗
+        function showCreateEventModal() {
+            document.getElementById('modal-create-event').classList.remove('hidden');
+        }
+        function closeCreateEventModal() {
+            document.getElementById('modal-create-event').classList.add('hidden');
+            // 清空
+            document.getElementById('ev-title').value = "";
+            document.getElementById('ev-desc').value = "";
+        }
+
+        // 提交建立活動
+        async function submitCreateEvent() {
+            const title = document.getElementById('ev-title').value.trim();
+            const desc = document.getElementById('ev-desc').value.trim();
+            const phoneRequired = document.getElementById('field-phone').checked;
+
+            if (!title) {
+                showToast('活動名稱為必填欄位！', 'error');
+                return;
+            }
+
+            const eventId = "evt_" + crypto.randomUUID().substring(0, 8);
+            const newEvent = {
+                id: eventId,
+                title: title,
+                description: desc,
+                fields: {
+                    email: true, // 預設必填
+                    phone: phoneRequired
+                },
+                createdAt: Date.now()
+            };
+
+            try {
+                await putData('events', newEvent);
+                showToast('成功建立活動！已同步至瀏覽器 IndexedDB。', 'success');
+                closeCreateEventModal();
+                renderEventsList();
+            } catch (err) {
+                showToast('活動存入資料庫失敗，請確認容量。', 'error');
+            }
+        }
+
+        // 渲染活動清單卡片
+        async function renderEventsList() {
+            const eventsContainer = document.getElementById('events-container');
+            eventsContainer.innerHTML = "";
+
+            const events = await getAllData('events');
+            if (events.length === 0) {
+                eventsContainer.innerHTML = `
+          <div class="col-span-full bg-slate-900/40 border border-dashed border-slate-800 p-8 rounded-2xl text-center space-y-2">
+            <i data-lucide="calendar-range" class="w-10 h-10 text-slate-600 mx-auto"></i>
+            <p class="text-sm text-slate-400">目前尚無舉辦任何活動。現在就點擊右上角「建立新活動」按鈕開始體驗！</p>
+          </div>
+        `;
+                lucide.createIcons();
+                return;
+            }
+
+            // 排序，最新優先
+            events.sort((a, b) => b.createdAt - a.createdAt);
+
+            for (const ev of events) {
+                // 計算報名與簽到數
+                const registrants = await getDataByIdx('registrants', 'eventId', ev.id);
+                const totalReg = registrants.length;
+                const checkedInCount = registrants.filter(r => r.checkedIn).length;
+
+                const card = document.createElement('div');
+                card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition flex flex-col justify-between space-y-4";
+                card.innerHTML = `
+          <div class="space-y-2">
+            <div class="flex items-start justify-between">
+              <span class="text-[10px] bg-indigo-950/60 border border-indigo-800/50 text-indigo-400 px-2.5 py-0.5 rounded-full font-mono">${ev.id}</span>
+              <button onclick="deleteEvent('${ev.id}')" class="text-slate-500 hover:text-rose-400 transition" title="刪除本活動及名單">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+            <h3 class="font-bold text-base text-slate-200 line-clamp-1">${ev.title}</h3>
+            <p class="text-xs text-slate-400 line-clamp-2 h-8">${ev.description || "尚無詳細介紹描述"}</p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80 text-center">
+            <div>
+              <p class="text-[10px] text-slate-500">已報名人數</p>
+              <p class="text-base font-black text-slate-300 mt-0.5">${totalReg}</p>
+            </div>
+            <div>
+              <p class="text-[10px] text-slate-500">出席/已簽到</p>
+              <p class="text-base font-black text-emerald-400 mt-0.5">${checkedInCount}</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="viewRegistrants('${ev.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold py-2 px-3 rounded-lg border border-slate-700/60 transition flex items-center justify-center gap-1">
+              <i data-lucide="users" class="w-3.5 h-3.5"></i>
+              <span>查看名單</span>
+            </button>
+            <button onclick="openMockRegister('${ev.id}')" class="bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-800/50 text-xs font-semibold py-2 px-3 rounded-lg transition flex items-center justify-center gap-1">
+              <i data-lucide="link-2" class="w-3.5 h-3.5"></i>
+              <span>報名入口</span>
+            </button>
+          </div>
+        `;
+                eventsContainer.appendChild(card);
+            }
+            lucide.createIcons();
+        }
+
+        // 刪除活動
+        async function deleteEvent(id) {
+            const confirmDelete = await new Promise(resolve => {
+                // 使用自訂互動彈窗模擬
+                const res = confirm("⚠️ 注意！此操作將永久刪除此活動及該活動項下的所有報到人員名單，且無法復原。是否確認刪除？");
+                resolve(res);
+            });
+
+            if (confirmDelete) {
+                await deleteData('events', id);
+                // 連帶刪除對應的報到人
+                const regs = await getDataByIdx('registrants', 'eventId', id);
+                for (const r of regs) {
+                    await deleteData('registrants', r.id);
+                }
+                showToast('活動已刪除！');
+                renderEventsList();
+
+                if (currentViewingEventId === id) {
+                    closeRegistrantsSection();
+                }
+            }
+        }
+
+        // 查看特定的活動名單
+        async function viewRegistrants(eventId) {
+            currentViewingEventId = eventId;
+            const ev = await getData('events', eventId);
+            if (!ev) return;
+
+            document.getElementById('registrants-section').classList.remove('hidden');
+            document.getElementById('viewing-event-title').innerText = ev.title;
+            document.getElementById('viewing-event-desc').innerText = ev.description || "暫無活動說明。";
+
+            // 錨點滑動
+            document.getElementById('registrants-section').scrollIntoView({ behavior: 'smooth' });
+
+            renderRegistrantsTable();
+        }
+
+        function closeRegistrantsSection() {
+            document.getElementById('registrants-section').classList.add('hidden');
+            currentViewingEventId = null;
+        }
+
+        // 渲染名單表格
+        async function renderRegistrantsTable() {
+            if (!currentViewingEventId) return;
+
+            const listBody = document.getElementById('registrants-list-body');
+            listBody.innerHTML = "";
+
+            const list = await getDataByIdx('registrants', 'eventId', currentViewingEventId);
+            const searchKeyword = document.getElementById('search-registrants').value.trim().toLowerCase();
+            const statusFilter = document.getElementById('filter-status').value;
+
+            // 過濾
+            const filtered = list.filter(item => {
+                const matchesSearch = item.name.toLowerCase().includes(searchKeyword) ||
+                    item.email.toLowerCase().includes(searchKeyword) ||
+                    (item.phone && item.phone.includes(searchKeyword));
+
+                let matchesStatus = true;
+                if (statusFilter === 'registered') matchesStatus = !item.checkedIn;
+                if (statusFilter === 'checked') matchesStatus = item.checkedIn;
+
+                return matchesSearch && matchesStatus;
+            });
+
+            if (filtered.length === 0) {
+                document.getElementById('no-registrants-msg').classList.remove('hidden');
+            } else {
+                document.getElementById('no-registrants-msg').classList.add('hidden');
+            }
+
+            // 按照註冊日期新到舊排序
+            filtered.sort((a, b) => b.registeredAt - a.registeredAt);
+
+            filtered.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/30 transition text-xs";
+                tr.innerHTML = `
+          <td class="px-6 py-4 font-bold text-slate-200">${item.name}</td>
+          <td class="px-6 py-4 font-mono">${item.email}</td>
+          <td class="px-6 py-4 font-mono text-slate-400">${item.phone || '--'}</td>
+          <td class="px-6 py-4 text-slate-500">${new Date(item.registeredAt).toLocaleString()}</td>
+          <td class="px-6 py-4 text-center">
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full font-bold border text-[10px] ${item.checkedIn ? 'bg-emerald-950/50 border-emerald-800 text-emerald-400' : 'bg-slate-950/50 border-slate-800 text-slate-400'
+                    }">
+              <span class="w-1.5 h-1.5 rounded-full ${item.checkedIn ? 'bg-emerald-400' : 'bg-slate-500'}"></span>
+              <span>${item.checkedIn ? '已報到簽到' : '未報到'}</span>
+            </span>
+          </td>
+          <td class="px-6 py-4 text-right flex justify-end gap-2">
+            <button onclick="toggleAttendanceStatus('${item.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2 py-1 rounded transition border border-slate-700/60" title="手動切換報到狀態">
+              ${item.checkedIn ? '設為未報到' : '核銷簽到'}
+            </button>
+            <button onclick="viewUserTicket('${item.id}')" class="text-indigo-400 hover:text-indigo-300 border border-indigo-950 bg-indigo-950/20 px-2 py-1 rounded transition" title="查閱門票 QR Code">
+              票卡 QR
+            </button>
+          </td>
+        `;
+                listBody.appendChild(tr);
+            });
+        }
+
+        // 過濾報名名單
+        function filterRegistrants() {
+            renderRegistrantsTable();
+        }
+
+        // 外部大眾註冊表單模擬器
+        async function openMockRegister(eventId) {
+            const ev = await getData('events', eventId);
+            if (!ev) return;
+
+            const container = document.getElementById('mock-form-fields-container');
+            container.innerHTML = "";
+
+            // 儲存目前正在報名的活動 ID 到 Modal 的 dataset 中
+            document.getElementById('modal-mock-register').dataset.eventId = eventId;
+            document.getElementById('reg-form-event-title').innerText = `【報名表】${ev.title}`;
+
+            // 基本欄位：姓名
+            const nameDiv = document.createElement('div');
+            nameDiv.innerHTML = `
+        <label class="block text-xs font-semibold text-slate-400 mb-1">您的姓名 *</label>
+        <input type="text" id="reg-name" placeholder="請輸入姓名" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 text-sm focus:outline-none">
+      `;
+            container.appendChild(nameDiv);
+
+            // Email 欄位
+            const emailDiv = document.createElement('div');
+            emailDiv.innerHTML = `
+        <label class="block text-xs font-semibold text-slate-400 mb-1">電子郵件信箱 *</label>
+        <input type="email" id="reg-email" placeholder="name@domain.com" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 text-sm focus:outline-none">
+      `;
+            container.appendChild(emailDiv);
+
+            // 手機號碼欄位 (若活動開啟)
+            if (ev.fields.phone) {
+                const phoneDiv = document.createElement('div');
+                phoneDiv.innerHTML = `
+          <label class="block text-xs font-semibold text-slate-400 mb-1">行動電話號碼 *</label>
+          <input type="tel" id="reg-phone" placeholder="0900123456" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 text-sm focus:outline-none">
+        `;
+                container.appendChild(phoneDiv);
+            }
+
+            document.getElementById('modal-mock-register').classList.remove('hidden');
+        }
+
+        function closeMockRegisterModal() {
+            document.getElementById('modal-mock-register').classList.add('hidden');
+        }
+
+        // 提交大眾模擬報名
+        async function submitMockRegister() {
+            const modal = document.getElementById('modal-mock-register');
+            const eventId = modal.dataset.eventId;
+            const ev = await getData('events', eventId);
+            if (!ev) return;
+
+            const name = document.getElementById('reg-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            let phone = "";
+
+            if (!name || !email) {
+                showToast('請填寫必填欄位 (*)', 'error');
+                return;
+            }
+
+            if (ev.fields.phone) {
+                phone = document.getElementById('reg-phone').value.trim();
+                if (!phone) {
+                    showToast('請填寫行動電話欄位', 'error');
+                    return;
+                }
+            }
+
+            const registrantId = "reg_" + crypto.randomUUID().substring(0, 8);
+            const newReg = {
+                id: registrantId,
+                eventId: eventId,
+                name: name,
+                email: email,
+                phone: phone,
+                registeredAt: Date.now(),
+                checkedIn: false,
+                checkedInAt: null
+            };
+
+            await putData('registrants', newReg);
+            closeMockRegisterModal();
+
+            // 更新管理清單
+            renderEventsList();
+            if (currentViewingEventId === eventId) {
+                renderRegistrantsTable();
+            }
+
+            // 觸發模擬雲端通知
+            logNotificationSimulation('register', newReg, ev.title);
+
+            // 展示生成的專屬 Ticket
+            showTicket(newReg, ev.title);
+        }
+
+        // 模擬一般大眾一鍵快速報名 (為了提供極速測試流程)
+        function simulateMockRegister() {
+            if (!currentViewingEventId) return;
+            openMockRegister(currentViewingEventId);
+
+            // 自動填入隨機測試資料，省去測試輸入的時間
+            setTimeout(() => {
+                const rand = Math.floor(Math.random() * 1000);
+                document.getElementById('reg-name').value = `測試君_${rand}`;
+                document.getElementById('reg-email').value = `testuser_${rand}@testmail.com`;
+                const phoneField = document.getElementById('reg-phone');
+                if (phoneField) phoneField.value = `0988000${String(rand).padStart(3, '0')}`;
+            }, 100);
+        }
+
+        // ================== 展示與下載個人 Ticket QR ==================
+        let ticketQRInstance = null;
+
+        function showTicket(regData, eventTitle) {
+            document.getElementById('modal-ticket').classList.remove('hidden');
+            document.getElementById('ticket-holder-name').innerText = `姓名：${regData.name}`;
+            document.getElementById('ticket-event-title').innerText = `活動：${eventTitle}`;
+            document.getElementById('ticket-id-display').innerText = `憑證碼: ${regData.id}`;
+            document.getElementById('modal-ticket').dataset.regId = regData.id;
+
+            // 製作簽到票卡的 QR (內容為其 registrant 唯一 ID)
+            const container = document.getElementById('ticket-qr-container');
+            container.innerHTML = "";
+
+            ticketQRInstance = new QRCodeStyling({
+                width: 200,
+                height: 200,
+                type: "svg",
+                data: regData.id,
+                dotsOptions: {
+                    color: "#1e1b4b", // 深藍底色確保相機鏡頭高對比
+                    type: "square"
+                },
+                backgroundOptions: {
+                    color: "#ffffff"
+                },
+                qrOptions: {
+                    errorCorrectionLevel: "H"
+                }
+            });
+            ticketQRInstance.append(container);
+        }
+
+        function closeTicketModal() {
+            document.getElementById('modal-ticket').classList.add('hidden');
+        }
+
+        // 供管理員直接在表格上查看報名者的 Ticket
+        async function viewUserTicket(regId) {
+            const reg = await getData('registrants', regId);
+            if (!reg) return;
+            const ev = await getData('events', reg.eventId);
+            showTicket(reg, ev ? ev.title : "未知活動");
+        }
+
+        // 下載生成的個人車票 QR
+        function downloadTicketQR() {
+            if (!ticketQRInstance) return;
+            ticketQRInstance.download({
+                name: "ticket_" + document.getElementById('modal-ticket').dataset.regId,
+                extension: "png"
+            }).then(() => {
+                showToast('票卡報到碼已下載！', 'success');
+            });
+        }
+
+        // 手動核銷簽到 / 切換狀態 (後台名單使用)
+        async function toggleAttendanceStatus(regId) {
+            const reg = await getData('registrants', regId);
+            if (!reg) return;
+
+            reg.checkedIn = !reg.checkedIn;
+            reg.checkedInAt = reg.checkedIn ? Date.now() : null;
+
+            await putData('registrants', reg);
+            renderRegistrantsTable();
+            renderEventsList();
+
+            if (reg.checkedIn) {
+                showToast(`已手動為 ${reg.name} 簽到成功！`, 'success');
+                const ev = await getData('events', reg.eventId);
+                logNotificationSimulation('checkin', reg, ev ? ev.title : "未知活動");
+            } else {
+                showToast(`已取消 ${reg.name} 的簽到狀態`);
+            }
+        }
+
+        // ================== 進階服務 3: QR CODE 現場掃描器與報到 ==================
+
+        // 初始化掃描介面的活動下拉清單
+        async function populateScannerEvents() {
+            const selector = document.getElementById('scanner-event-selector');
+            // 保留第一項
+            selector.innerHTML = '<option value="">-- 請選擇一個活動 --</option>';
+
+            const events = await getAllData('events');
+            events.sort((a, b) => b.createdAt - a.createdAt);
+
+            events.forEach(ev => {
+                const opt = document.createElement('option');
+                opt.value = ev.id;
+                opt.innerText = ev.title;
+                if (ev.id === selectedScannerEventId) {
+                    opt.selected = true;
+                }
+                selector.appendChild(opt);
+            });
+        }
+
+        // 活動切換事件
+        function onScannerEventChange() {
+            selectedScannerEventId = document.getElementById('scanner-event-selector').value;
+            updateScannerDashboard();
+        }
+
+        // 啟動鏡頭掃描
+        function startScanning() {
+            if (!selectedScannerEventId) {
+                showToast('請先選擇一個欲簽到報到的活動！', 'error');
+                return;
+            }
+
+            document.getElementById('scanner-placeholder').classList.add('opacity-0');
+            setTimeout(() => {
+                document.getElementById('scanner-placeholder').classList.add('hidden');
+            }, 300);
+
+            html5QrcodeScanner = new Html5Qrcode("reader");
+
+            const config = { fps: 15, qrbox: { width: 220, height: 220 } };
+
+            html5QrcodeScanner.start(
+                { facingMode: "environment" },
+                config,
+                onScanSuccess,
+                onScanFailure
+            ).then(() => {
+                document.getElementById('btn-start-scanner').disabled = true;
+                document.getElementById('btn-stop-scanner').disabled = false;
+                showToast('相機啟動成功，請對準報到碼 QR Code！', 'success');
+            }).catch(err => {
+                document.getElementById('scanner-placeholder').classList.remove('hidden', 'opacity-0');
+                showToast('無法取得相機權限，請確認是否允許存取、或是否已有其他應用程式佔用鏡頭。', 'error');
+            });
+        }
+
+        // 停止鏡頭掃描
+        function stopScanning() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    document.getElementById('btn-start-scanner').disabled = false;
+                    document.getElementById('btn-stop-scanner').disabled = true;
+                    document.getElementById('scanner-placeholder').classList.remove('hidden', 'opacity-0');
+                    showToast('相機鏡頭已成功關閉');
+                }).catch(err => {
+                    console.error("無法停止鏡頭: ", err);
+                });
+            }
+        }
+
+        // 鏡頭成功掃描解析出結果
+        function onScanSuccess(decodedText, decodedResult) {
+            // 一旦成功掃到，為了防止短時間連續核銷與警報音干擾，我們進行幾秒鐘的限流
+            processScannedCode(decodedText);
+        }
+
+        // 鏡頭解析失敗 (通常是在尋找，此方法會頻繁回傳，因此不需中斷或主動跳出 Alert)
+        function onScanFailure(error) {
+            // 靜默處理
+        }
+
+        // 處理與比對掃描到的簽到碼
+        async function processScannedCode(scannedId) {
+            const timestamp = new Date().toLocaleTimeString();
+            document.getElementById('scan-timestamp').innerText = timestamp;
+
+            const resultDetails = document.getElementById('scan-result-details');
+            const statusPill = document.getElementById('status-pill');
+
+            if (!selectedScannerEventId) {
+                playBeep(false);
+                showToast('請確認已選擇核銷活動！', 'error');
+                return;
+            }
+
+            // 開始匹配 registrant 
+            const reg = await getData('registrants', scannedId);
+
+            // 驗證 1: 是否存在該報到碼
+            if (!reg) {
+                playBeep(false);
+                statusPill.className = "bg-rose-950 text-rose-400 border border-rose-800 text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 font-bold";
+                statusPill.innerHTML = `<span class="w-2 h-2 rounded-full bg-rose-500"></span><span>此代碼無效</span>`;
+
+                resultDetails.innerHTML = `
+          <div class="space-y-1 text-center">
+            <p class="text-rose-400 font-bold">❌ 查無此票券代碼</p>
+            <p class="text-xs text-slate-400">讀取到的代碼：<span class="font-mono text-slate-300 break-all">${scannedId}</span></p>
+            <p class="text-[11px] text-slate-500">此條碼不屬於本系統之任何活動。請重新掃描。</p>
+          </div>
+        `;
+                showToast('查無此報到代碼，核銷無效！', 'error');
+                return;
+            }
+
+            // 驗證 2: 該簽到人員是否屬於目前選擇核銷的活動
+            if (reg.eventId !== selectedScannerEventId) {
+                playBeep(false);
+                statusPill.className = "bg-amber-950 text-amber-400 border border-amber-800 text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 font-bold";
+                statusPill.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span><span>活動別不符合</span>`;
+
+                const targetEv = await getData('events', reg.eventId);
+                resultDetails.innerHTML = `
+          <div class="space-y-1">
+            <p class="text-amber-400 font-bold text-center">⚠️ 報名活動別與本區不同</p>
+            <p class="text-xs text-slate-300">報名人：<strong>${reg.name}</strong></p>
+            <p class="text-xs text-slate-400">其所報活動：${targetEv ? targetEv.title : '未知'}</p>
+            <p class="text-[11px] text-slate-500">此人持有有效的票券，但非當前選擇的核銷活動。請先在下拉選單切換至該活動。</p>
+          </div>
+        `;
+                showToast('該人員非此活動的報名者！', 'error');
+                return;
+            }
+
+            // 驗證 3: 是否重複刷條碼簽到
+            if (reg.checkedIn) {
+                playBeep(false);
+                statusPill.className = "bg-amber-950 text-amber-400 border border-amber-800 text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 font-bold";
+                statusPill.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-500"></span><span>重刷警告</span>`;
+
+                resultDetails.innerHTML = `
+          <div class="space-y-1">
+            <p class="text-amber-400 font-bold text-center">⚠️ 此電子票卡已完成報到</p>
+            <p class="text-xs text-slate-300">報到對象：<strong>${reg.name}</strong> (${reg.email})</p>
+            <p class="text-xs text-slate-400">先前報到時間：${new Date(reg.checkedInAt).toLocaleTimeString()}</p>
+            <p class="text-[11px] text-slate-500 text-center text-rose-400 mt-2">請勿重複核銷，以防一票多用舞弊行為。</p>
+          </div>
+        `;
+                showToast('此票券已被使用，請勿重複簽到！', 'error');
+                return;
+            }
+
+            // 順利通過驗證，執行簽到報到寫入
+            reg.checkedIn = true;
+            reg.checkedInAt = Date.now();
+            await putData('registrants', reg);
+
+            playBeep(true);
+            statusPill.className = "bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs px-2.5 py-1 rounded-full flex items-center gap-1.5 font-bold";
+            statusPill.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span><span>簽到完成</span>`;
+
+            resultDetails.innerHTML = `
+        <div class="space-y-2">
+          <p class="text-emerald-400 font-bold text-sm text-center">🎉 報到成功！歡迎入場</p>
+          <div class="grid grid-cols-2 gap-2 text-xs pt-1.5">
+            <div><span class="text-slate-400">貴賓姓名:</span> <strong class="text-slate-200 text-sm">${reg.name}</strong></div>
+            <div><span class="text-slate-400">連絡電話:</span> <span class="text-slate-300 font-mono">${reg.phone || '無'}</span></div>
+            <div class="col-span-2"><span class="text-slate-400">信箱:</span> <span class="text-slate-300 font-mono">${reg.email}</span></div>
+          </div>
+          <p class="text-[10px] text-indigo-400 text-center border-t border-slate-800/80 pt-2">雲端模擬系統已排程發送「報到成功確認通知」</p>
+        </div>
+      `;
+
+            showToast(`【${reg.name}】已成功簽到！`, 'success');
+
+            // 更新統計
+            updateScannerDashboard();
+
+            // 觸發雲端 Email/SMS 發送模擬
+            const ev = await getData('events', reg.eventId);
+            logNotificationSimulation('checkin', reg, ev ? ev.title : "當前活動");
+        }
+
+        // 當裝置無相機可用時，使用本機檔案上傳進行 QR 條碼讀取
+        function scanLocalFile(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const localScanner = new Html5Qrcode("reader");
+
+                localScanner.scanFile(file, true)
+                    .then(decodedText => {
+                        processScannedCode(decodedText);
+                        input.value = ""; // 清空
+                    })
+                    .catch(err => {
+                        showToast('無法從此圖片中辨識出 QR Code 條碼，請確認圖片清晰度。', 'error');
+                        input.value = "";
+                    });
+            }
+        }
+
+        // 開啟手動輸入彈窗
+        function showManualCheckInModal() {
+            if (!selectedScannerEventId) {
+                showToast('請先選擇欲報到的活動名稱！', 'error');
+                return;
+            }
+            document.getElementById('modal-manual-checkin').classList.remove('hidden');
+        }
+        function closeManualCheckInModal() {
+            document.getElementById('modal-manual-checkin').classList.add('hidden');
+            document.getElementById('manual-ticket-id').value = "";
+        }
+
+        // 手動代碼報到提交
+        function submitManualCheckIn() {
+            const code = document.getElementById('manual-ticket-id').value.trim();
+            if (!code) {
+                showToast('請輸入代碼！', 'error');
+                return;
+            }
+            processScannedCode(code);
+            closeManualCheckInModal();
+        }
+
+        // ================== 即時 Dashboard 統計與圖表繪製 ==================
+        async function updateScannerDashboard() {
+            if (!selectedScannerEventId) {
+                document.getElementById('stat-total').innerText = '0';
+                document.getElementById('stat-checked').innerText = '0';
+                document.getElementById('stat-percent').innerText = '0%';
+                document.getElementById('chart-no-data').classList.remove('hidden');
+                return;
+            }
+
+            const list = await getDataByIdx('registrants', 'eventId', selectedScannerEventId);
+            const total = list.length;
+            const checked = list.filter(item => item.checkedIn).length;
+            const unchecked = total - checked;
+            const rate = total > 0 ? Math.round((checked / total) * 100) : 0;
+
+            document.getElementById('stat-total').innerText = total;
+            document.getElementById('stat-checked').innerText = checked;
+            document.getElementById('stat-percent').innerText = `${rate}%`;
+            document.getElementById('stats-update-time').innerText = "剛剛: " + new Date().toLocaleTimeString();
+
+            if (total === 0) {
+                document.getElementById('chart-no-data').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('chart-no-data').classList.add('hidden');
+
+            // 使用 Chart.js 畫出圓餅圖
+            const ctx = document.getElementById('statsChart').getContext('2d');
+            if (statsChartInstance) {
+                statsChartInstance.destroy();
+            }
+
+            statsChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['已報到人數', '未到場人數'],
+                    datasets: [{
+                        data: [checked, unchecked],
+                        backgroundColor: ['#10b981', '#334155'],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'right',
+                            labels: {
+                                color: '#94a3b8',
+                                font: { size: 10 }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        // ================== 進階服務 4: 智慧通知與發送模擬器 ==================
+
+        // 儲存範本至資料庫中
+        async function saveNotificationTemplates() {
+            const templates = {
+                id: "active_templates",
+                regSubject: document.getElementById('tpl-reg-subject').value,
+                regBody: document.getElementById('tpl-reg-body').value,
+                checkSubject: document.getElementById('tpl-check-subject').value,
+                checkBody: document.getElementById('tpl-check-body').value
+            };
+
+            await putData('notificationTemplates', templates);
+            showToast('簡訊與信件發送範本更新成功！', 'success');
+        }
+
+        // 載入儲存的範本
+        async function loadNotificationTemplates() {
+            const templates = await getData('notificationTemplates', "active_templates");
+            if (templates) {
+                document.getElementById('tpl-reg-subject').value = templates.regSubject;
+                document.getElementById('tpl-reg-body').value = templates.regBody;
+                document.getElementById('tpl-check-subject').value = templates.checkSubject;
+                document.getElementById('tpl-check-body').value = templates.checkBody;
+            }
+        }
+
+        // 清除主控台
+        function clearNotificationLogs() {
+            const term = document.getElementById('logs-terminal');
+            term.innerHTML = `
+        <p class="text-slate-500">[${new Date().toLocaleString()}] [SYSTEM] 主控台日誌已被使用者手動清空。</p>
+      `;
+        }
+
+        // 模擬實際往 AWS SES / Twilio API 雲端拋對接日誌輸出
+        async function logNotificationSimulation(type, userData, eventTitle) {
+            // 讀取目前的範本，進行正則表達替換
+            const templates = await getData('notificationTemplates', "active_templates") || {
+                regSubject: "【報名成功通知】您已成功報名 {event}！",
+                regBody: "親愛的 {name} 您好：感謝您報名「{event}」！以下是您的報到驗證憑證代碼：{code}，期待您的蒞臨。",
+                checkSubject: "【報到完成】歡迎蒞臨 {event}！",
+                checkBody: "親愛的 {name}：您已於現場完成「{event}」的簽到報到手續，感謝您的參與！"
+            };
+
+            let subjectTpl = "";
+            let bodyTpl = "";
+
+            if (type === 'register') {
+                subjectTpl = templates.regSubject;
+                bodyTpl = templates.regBody;
+            } else {
+                subjectTpl = templates.checkSubject;
+                bodyTpl = templates.checkBody;
+            }
+
+            // 置換特殊常數
+            const formatString = (str) => {
+                return str
+                    .replace(/{name}/g, userData.name)
+                    .replace(/{event}/g, eventTitle)
+                    .replace(/{code}/g, userData.id);
+            };
+
+            const finalSubject = formatString(subjectTpl);
+            const finalBody = formatString(bodyTpl);
+            const currentTime = new Date().toLocaleString();
+
+            const term = document.getElementById('logs-terminal');
+
+            // 模擬發送：渲染終端機日誌
+            const logs = [
+                `<span class="text-blue-400">[${currentTime}] [ROUTING]</span> 檢測到系統觸發事件：活動「${eventTitle}」-> 人員「${userData.name}」已完成 ${type === 'register' ? '註冊報名' : '簽到核銷'}。`,
+                `<span class="text-indigo-400">[${currentTime}] [SMTP-SES]</span> 正在透過虛擬 AWS SES 發送電子郵件至: <span class="text-emerald-400">${userData.email}</span>`,
+                `<span class="text-slate-400">　 ↳ [SUBJECT]</span> <span class="text-slate-300 font-bold">${finalSubject}</span>`,
+                `<span class="text-slate-400">　 ↳ [BODY]</span> <span class="text-slate-300 italic">"${finalBody}"</span>`,
+                `<span class="text-purple-400">[${currentTime}] [TWILIO-GATEWAY]</span> 正在透過 Twilio 伺服器傳送即時 SMS 簡訊至: <span class="text-emerald-400">${userData.phone || '無(已略過簡訊)'}</span>`,
+                `<span class="text-emerald-500">[${currentTime}] [DELIVERY-REPORT]</span> ✔️ 電子郵件與簡訊排程皆已在 250ms 內投遞成功。狀態碼: 200 OK。`
+            ];
+
+            logs.forEach(logLine => {
+                const p = document.createElement('p');
+                p.className = "leading-relaxed border-l-2 border-slate-800 pl-2 py-0.5";
+                p.innerHTML = logLine;
+                term.appendChild(p);
+            });
+
+            // 自動捲動到最下層
+            term.scrollTop = term.scrollHeight;
+        }
+
+        // ================== 應用程式生命週期初始化 ==================
+        window.onload = async function () {
+            // 1. 初始化本地 IndexedDB
+            try {
+                await initDatabase();
+                showToast('IndexedDB 本地資料庫連接成功，保障 100% 隱私安全性。', 'success');
+            } catch (err) {
+                showToast('IndexedDB 初始化失敗，活動功能可能受損。請確認您的瀏覽器是否支援或開啟隱私模式。', 'error');
+            }
+
+            // 2. 初始化 QR 碼生成器
+            initQRGenerator();
+
+            // 3. 載入儲存的通知設定
+            await loadNotificationTemplates();
+        };
+
+    </script>
+</body>
+
+</html>
