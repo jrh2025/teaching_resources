@@ -206,6 +206,16 @@ window.APP_DATA = {
       "icon": "Sliders",
       "color": "purple",
       "grade": "其他"
+    },
+    {
+      "id": "item_1781097537416",
+      "title": "QR Code 產生器",
+      "category": "小程式",
+      "description": "一款專注於極致視覺設計、高度資訊自訂與 A4 批量 PDF 拼圖排版的獨立網頁程式（Single Page Application）。本系統旨在解決傳統 QR Code 樣式單調、缺乏品牌識別度，以及在實體部署（如店家 WiFi 告示、商品標籤、桌卡）時缺乏「備註文字說明」與「批量排版列印」等問題。\n",
+      "link": "qr_code.html",
+      "icon": "QrCode",
+      "color": "sky",
+      "grade": "小程式"
     }
   ]
 };
