@@ -402,10 +402,13 @@
 
                 <div class="space-y-2">
                     <label class="text-sm font-bold text-adaptive">選擇 AI 模型</label>
-                    <select id="select-ai-model"
+                    <select id="select-ai-model" onchange="handleModelChange()"
                         class="w-full text-base p-3 border-2 border-adaptive rounded-xl bg-adaptive-muted focus:outline-none focus:border-blue-500 text-adaptive font-medium transition-all">
-                        <optgroup label="Gemini 2.5 (最新一代)">
-                            <option value="gemini-2.5-flash">Gemini 2.5 Flash (推薦：綜合效能最佳)</option>
+                        <optgroup label="Gemini 3.5 (最新一代)">
+                            <option value="gemini-3.5-flash">Gemini 3.5 Flash (預設推薦：效能最佳)</option>
+                        </optgroup>
+                        <optgroup label="Gemini 2.5">
+                            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                             <option value="gemini-2.5-pro">Gemini 2.5 Pro (進階：複雜推理與深度分析)</option>
                         </optgroup>
                         <optgroup label="Gemini 2.0">
@@ -417,7 +420,20 @@
                             <option value="gemini-1.5-flash-8b">Gemini 1.5 Flash-8B (低延遲、高吞吐)</option>
                             <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
                         </optgroup>
+                        <optgroup label="手動輸入">
+                            <option value="custom">✍️ 自訂模型 (手動輸入模型代碼)</option>
+                        </optgroup>
                     </select>
+                </div>
+
+                <!-- 動態自訂模型輸入框 -->
+                <div class="space-y-2 hidden" id="custom-model-container">
+                    <label class="text-sm font-bold text-adaptive flex justify-between">
+                        <span>自訂模型識別碼 <span class="text-red-500">*</span></span>
+                        <span class="text-xs text-muted">例如：gemini-3.5-pro</span>
+                    </label>
+                    <input type="text" id="input-custom-model" placeholder="請輸入模型識別碼，如 gemini-3.5-pro"
+                        class="w-full text-base p-3 border-2 border-adaptive rounded-xl bg-adaptive-muted focus:outline-none focus:border-blue-500 text-adaptive font-mono transition-all">
                 </div>
 
                 <div class="space-y-2 pt-2 border-t border-adaptive">
@@ -598,8 +614,8 @@
                         <ol class="list-decimal list-outside space-y-1.5 ml-5 font-medium text-adaptive">
                             <li>點擊網頁右上角的「<i class="fa-solid fa-gear text-muted"></i> <strong>API 設定</strong>」。</li>
                             <li>把剛剛複製的密碼（API Key）貼到指定的框框裡。</li>
-                            <li><strong>選擇 AI 腦袋：</strong> 預設的 <strong>Gemini 2.5 Flash</strong>
-                                就像是反應快又聰明的助教，建議直接用這個就好囉！</li>
+                            <li><strong>選擇 AI 腦袋：</strong> 預設的 <strong>Gemini 3.5 Flash</strong>
+                                就像是反應快又聰明的助教，建議直接用這個，或是您也可以手動輸入其他自訂的模型識別碼以維持長久使用哦！</li>
                             <li>確認「<strong>啟用本地端資料庫</strong>」有打開（開關是藍色的），這樣等一下寫好的評語才能存檔。</li>
                             <li>點擊「<strong>儲存設定</strong>」，搞定！</li>
                         </ol>
@@ -624,7 +640,8 @@
                             </li>
                         </ol>
                         <p class="mt-3 text-sm text-orange-600 font-bold bg-orange-50 p-2 rounded-lg inline-block">(💡
-                            <strong>小提醒：</strong> 為了讓 AI 有足夠的靈感幫您寫文章，請至少點選並評分 <strong>3 個以上</strong>的項目哦！)</p>
+                            <strong>小提醒：</strong> 為了讓 AI 有足夠的靈感幫您寫文章，請至少點選並評分 <strong>3 個以上</strong>的項目哦！)
+                        </p>
                     </div>
 
                     <div class="bg-adaptive-muted p-5 rounded-2xl border border-adaptive">
@@ -659,7 +676,7 @@
                             class="fa-solid fa-lightbulb"></i> 給老師的小建議</h3>
                     <p class="font-medium leading-relaxed text-adaptive mb-3">雖然 AI 寫得又快又好，但最了解學生的還是您！</p>
                     <p class="font-medium leading-relaxed text-adaptive mb-3">建議老師們可以把 AI
-                        寫出來的「客觀分析型」和「溫暖激勵型」混合著用。點擊「複製」按鈕，把文字貼到 Word
+                        寫出來的「客觀分析型」和「溫慢激勵型」混合著用。點擊「複製」按鈕，把文字貼到 Word
                         或是校務系統裡，然後<strong>在開頭或結尾，親手加上一兩句專屬這位學生的小故事或期許</strong>。</p>
                     <p class="font-medium leading-relaxed text-adaptive">讓 AI
                         幫您處理掉最花時間的排版和想詞彙，您只需要加上畫龍點睛的人情味，就能輕鬆完成一份份完美又專業的期末評語了！祝您期末順利！</p>
@@ -731,7 +748,7 @@
                     { name: "公共服務參與", desc: "主動承擔公共勞務，對於維護公共環境或事務有高度使命感。" },
                     { name: "多元文化包容", desc: "尊重不同背景、身分或習慣的人士，不存偏見且樂於交流。" },
                     { name: "媒體資訊素養", desc: "能辨識假訊息與網路標題黨，不隨意散播未經證實的言論。" },
-                    { name: "網路公民禮儀", desc: "在網路互動中維持禮貌，理解數位足跡的重要性，遠離網路霸凌。" },
+                    { name: "網路公民禮儀", desc: "在網路互動中維持禮貌，理解數位足跡的重要性，遠離網路霸戀。" },
                     { name: "感恩與謙虛心", desc: "能看見他人的付出並表達謝意，對成就保持謙和，不驕傲自滿。" },
                     { name: "是非辨別分析", desc: "面對誘惑或同儕壓力能冷靜判斷對錯，有堅定的道德底線。" },
                     { name: "權威理性對話", desc: "對長輩或制度有疑問時，能採取理性有禮的方式溝通與爭取權益。" },
@@ -761,7 +778,7 @@
         let selectedGrade = localStorage.getItem('teacher_pref_grade') || "國小低年級";
         let currentTheme = localStorage.getItem('teacher_pref_theme') || "day";
         let userApiKey = localStorage.getItem('teacher_api_key') || "";
-        let selectedModel = localStorage.getItem('teacher_api_model') || "gemini-2.5-flash";
+        let selectedModel = localStorage.getItem('teacher_api_model') || "gemini-3.5-flash"; // 設定預設為 gemini-3.5-flash
         let dbEnabled = localStorage.getItem('teacher_db_enabled') !== 'false'; // default true
         let autoResetEnabled = localStorage.getItem('teacher_auto_reset') === 'true'; // default false
 
@@ -898,13 +915,41 @@
         // API 與系統設定功能
         function openSettings() {
             document.getElementById('input-api-key').value = userApiKey;
-            document.getElementById('select-ai-model').value = selectedModel;
             document.getElementById('toggle-db').checked = dbEnabled;
             document.getElementById('settings-status').innerText = '';
+
+            const selectEl = document.getElementById('select-ai-model');
+            const customModelContainer = document.getElementById('custom-model-container');
+            const customModelInput = document.getElementById('input-custom-model');
+
+            // 檢查當前的 selectedModel 是否在 dropdown 的預設選項中
+            const hasOption = Array.from(selectEl.options).some(opt => opt.value === selectedModel);
+            if (hasOption && selectedModel !== 'custom') {
+                selectEl.value = selectedModel;
+                customModelContainer.classList.add('hidden');
+                customModelInput.value = '';
+            } else {
+                selectEl.value = "custom";
+                customModelInput.value = selectedModel;
+                customModelContainer.classList.remove('hidden');
+            }
+
             document.getElementById('settings-modal').classList.remove('hidden');
         }
 
         function closeSettings() { document.getElementById('settings-modal').classList.add('hidden'); }
+
+        function handleModelChange() {
+            const selectEl = document.getElementById('select-ai-model');
+            const customModelContainer = document.getElementById('custom-model-container');
+            if (selectEl.value === 'custom') {
+                customModelContainer.classList.remove('hidden');
+                document.getElementById('input-custom-model').value = '';
+                document.getElementById('input-custom-model').focus();
+            } else {
+                customModelContainer.classList.add('hidden');
+            }
+        }
 
         function toggleApiKeyVisibility() {
             const input = document.getElementById('input-api-key');
@@ -918,8 +963,18 @@
 
         function saveSettings() {
             const key = document.getElementById('input-api-key').value.trim();
-            const model = document.getElementById('select-ai-model').value;
+            const selectEl = document.getElementById('select-ai-model');
+            let model = selectEl.value;
             const dbToggled = document.getElementById('toggle-db').checked;
+
+            if (model === 'custom') {
+                const customInput = document.getElementById('input-custom-model').value.trim();
+                if (!customInput) {
+                    showSettingsStatus('⚠️ 請輸入自訂模型代碼', 'text-red-500');
+                    return;
+                }
+                model = customInput;
+            }
 
             if (!key) { showSettingsStatus('⚠️ API Key 不能為空', 'text-red-500'); return; }
 
@@ -944,9 +999,12 @@
         function clearSettings() {
             localStorage.removeItem('teacher_api_key');
             localStorage.removeItem('teacher_api_model');
-            userApiKey = ""; selectedModel = "gemini-2.5-flash";
+            userApiKey = "";
+            selectedModel = "gemini-3.5-flash"; // updated default to gemini-3.5-flash
             document.getElementById('input-api-key').value = '';
-            document.getElementById('select-ai-model').value = 'gemini-2.5-flash';
+            document.getElementById('select-ai-model').value = 'gemini-3.5-flash';
+            document.getElementById('custom-model-container').classList.add('hidden');
+            document.getElementById('input-custom-model').value = '';
             showSettingsStatus('🗑️ 紀錄已清除', 'text-red-500');
         }
 
@@ -1111,7 +1169,7 @@
                     })
                 });
 
-                if (!res.ok) { const errData = await res.json().catch(() => ({})); throw new Error(`API 請求失敗 (${res.status}): ${errData.error?.message || '請確認 API Key'}`); }
+                if (!res.ok) { const errData = await res.json().catch(() => ({})); throw new Error(`API 請求失敗 (${res.status}): ${errData.error?.message || '請確認 API Key 與模型設定'}`); }
                 const responseData = await res.json();
                 const resultText = responseData.candidates?.[0]?.content?.parts?.[0]?.text;
                 if (!resultText) throw new Error("AI 回傳內容為空");
