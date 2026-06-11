@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系統設計理念與使用者說明手冊</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts - Noto Sans TC & Inter -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans TC', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Dynamic highlighting for search */
+        .highlight {
+            background-color: #fef08a;
+            color: #854d0e;
+            padding: 0 4px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col custom-scrollbar">
+
+    <!-- Header Banner -->
+    <header
+        class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 text-white shadow-md border-b border-slate-700/50 sticky top-0 z-40">
+        <div
+            class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-3 bg-emerald-600 rounded-xl shadow-lg shadow-emerald-900/30">
+                    <i data-lucide="book-open" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                        系統設計理念與使用者說明手冊
+                        <span
+                            class="text-xs px-2.5 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full font-normal">官方操作指引</span>
+                    </h1>
+                    <p class="text-sm text-slate-300 mt-1">食登數據轉檔與智慧分析檢核系統 · 離線去中心化架構</p>
+                </div>
+            </div>
+
+            <!-- Interactive Doc Search -->
+            <div class="relative w-full md:w-80">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3.5 text-slate-400"></i>
+                <input type="text" id="docSearch" placeholder="在手冊中搜尋關鍵字..."
+                    class="w-full pl-9 pr-4 py-2.5 bg-white/10 border border-slate-600 rounded-xl text-sm text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white focus:text-slate-900 focus:placeholder-slate-500 transition-all">
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
+
+        <!-- Sidebar Navigation (Desktop) / Sticky Header (Mobile) -->
+        <aside
+            class="w-full lg:w-64 flex-shrink-0 lg:sticky lg:top-28 h-fit max-h-[calc(100vh-8rem)] overflow-y-auto custom-scrollbar bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+            <div class="space-y-6">
+                <div>
+                    <h3
+                        class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                        <i data-lucide="compass" class="w-3.5 h-3.5"></i>
+                        目錄導覽
+                    </h3>
+                    <nav class="space-y-1">
+                        <a href="#section-philosophy"
+                            class="toc-link block px-3 py-2 text-sm font-semibold text-slate-600 hover:text-emerald-600 hover:bg-slate-50 rounded-lg transition-all border-l-2 border-transparent">壹、系統設計理念</a>
+                        <div class="pl-4 space-y-1 border-l border-slate-100 ml-3">
+                            <a href="#sub-privacy"
+                                class="toc-link block px-2 py-1 text-xs text-slate-500 hover:text-emerald-600 transition-colors">一、純前端隱私安全</a>
+                            <a href="#sub-engine"
+                                class="toc-link block px-2 py-1 text-xs text-slate-500 hover:text-emerald-600 transition-colors">二、智慧欄位映射</a>
+                            <a href="#sub-classification"
+                                class="toc-link block px-2 py-1 text-xs text-slate-500 hover:text-emerald-600 transition-colors">三、加工品判定分類</a>
+                            <a href="#sub-binding"
+                                class="toc-link block px-2 py-1 text-xs text-slate-500 hover:text-emerald-600 transition-colors">四、資料綁定與連動</a>
+                        </div>
+
+                        <a href="#section-manual"
+                            class="toc-link block px-3 py-2 text-sm font-semibold text-slate-600 hover:text-emerald-600 hover:bg-slate-50 rounded-lg transition-all border-l-2 border-transparent mt-4">貳、使用者說明手冊</a>
+                        <div class="pl-4 space-y-1 border-l border-slate-100 ml-3">
+                            <a href="#sub-layout"
+                                class="toc-link block px-2 py-1 text-xs text-slate-500 hover:text-emerald-600 transition-colors">一、主畫面配置導覽</a>
+                            <a href="#sub-steps"
+                                class="toc-link block px-2 py-1 text-xs text-slate-500 hover:text-emerald-600 transition-colors">二、核心步驟引導</a>
+                        </div>
+
+                        <a href="#section-faq"
+                            class="toc-link block px-3 py-2 text-sm font-semibold text-slate-600 hover:text-emerald-600 hover:bg-slate-50 rounded-lg transition-all border-l-2 border-transparent mt-4">參、常見問答與排除</a>
+                    </nav>
+                </div>
+
+                <div class="border-t border-slate-100 pt-4 text-center">
+                    <p class="text-xs text-slate-400 font-medium">手冊更新時間：2026年6月</p>
+                    <p class="text-xs text-slate-400 mt-0.5">Version 2.5 (Stable)</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-grow space-y-12">
+
+            <!-- Section 1: Philosophy -->
+            <section id="section-philosophy"
+                class="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-8 scroll-mt-28">
+                <div class="border-b border-slate-100 pb-4">
+                    <div class="flex items-center gap-2 text-emerald-600 mb-1">
+                        <i data-lucide="activity" class="w-5 h-5"></i>
+                        <span class="text-xs font-bold uppercase tracking-wider">Concept</span>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-900">壹、 系統設計理念 (Design Philosophy)</h2>
+                </div>
+
+                <p class="text-base sm:text-lg text-slate-600 leading-relaxed">
+                    在現行的學校營養午餐管理與「校園食材登錄平台」申報實務中，第一線行政人員與營養師面臨著多重挑戰：原始配膳試算表（如單餐日記、出貨單等）格式極易因學期、合約商或系統更新而產生結構性偏移；同時，大量繁瑣的申報欄位（如西元日期標準化、加工品智慧判定、溯源履歷等）往往需耗費大量人工進行二次校對與補登。
+                </p>
+
+                <!-- Visual Flow Diagram -->
+                <div class="bg-slate-900 text-white p-6 rounded-xl border border-slate-800 shadow-inner space-y-6">
+                    <h4 class="text-sm font-bold text-slate-400 uppercase tracking-widest text-center">系統核心數據處理流向圖</h4>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+
+                        <!-- Step 1 -->
+                        <div class="bg-slate-800 p-5 rounded-lg border border-slate-700 text-center space-y-3">
+                            <div
+                                class="w-9 h-9 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-sm font-bold">
+                                1</div>
+                            <h5 class="text-sm sm:text-base font-bold text-white">輸入原始試算表</h5>
+                            <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">上傳任何 6 欄或 11 欄 XLSX/CSV
+                                配膳日記，自動解析首列資訊</p>
+                        </div>
+
+                        <!-- Connector (Desktop: right arrow, Mobile: down arrow) -->
+                        <div class="hidden md:flex justify-center text-emerald-500">
+                            <i data-lucide="arrow-right-circle" class="w-7 h-7"></i>
+                        </div>
+                        <div class="md:hidden flex justify-center text-emerald-500">
+                            <i data-lucide="arrow-down-circle" class="w-7 h-7"></i>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="bg-slate-800 p-5 rounded-lg border border-slate-700 text-center space-y-3">
+                            <div
+                                class="w-9 h-9 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-sm font-bold">
+                                2</div>
+                            <h5 class="text-sm sm:text-base font-bold text-white">智慧映射與轉換</h5>
+                            <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
+                                民國年自動換算西元，狀態機深度掃描，比對中文字彙特徵判定加工屬性</p>
+                        </div>
+
+                        <!-- Connector -->
+                        <div class="hidden md:flex justify-center text-emerald-500">
+                            <i data-lucide="arrow-right-circle" class="w-7 h-7"></i>
+                        </div>
+                        <div class="md:hidden flex justify-center text-emerald-500">
+                            <i data-lucide="arrow-down-circle" class="w-7 h-7"></i>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="bg-slate-800 p-5 rounded-lg border border-slate-700 text-center space-y-3">
+                            <div
+                                class="w-9 h-9 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-xs font-bold">
+                                3</div>
+                            <h5 class="text-sm sm:text-base font-bold text-white">輸出 2-in-1 標準格式</h5>
+                            <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">一鍵匯出食登食材（18欄）與菜單（26欄）整合活頁簿</p>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Pillar Details -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+
+                    <!-- Sub 1 -->
+                    <div id="sub-privacy"
+                        class="p-6 rounded-xl border border-slate-100 bg-slate-50/50 space-y-3 scroll-mt-28">
+                        <div class="flex items-center gap-2 text-slate-900">
+                            <div class="p-2 bg-emerald-100 text-emerald-700 rounded-lg"><i data-lucide="shield-check"
+                                    class="w-5 h-5"></i></div>
+                            <h4 class="text-base sm:text-lg font-bold">一、 純前端隱私安全架構</h4>
+                        </div>
+                        <p class="text-sm text-slate-600 leading-relaxed">
+                            學校午餐配膳量與供餐人數等涉及校務及合作廠商之商業機敏資訊。本平台採取「去中心化、零傳輸」設計，所有轉換均在使用者本機端執行。無後端資料庫，100% 杜絕伺服器被駭、外洩或合規風險。
+                        </p>
+                    </div>
+
+                    <!-- Sub 2 -->
+                    <div id="sub-engine"
+                        class="p-6 rounded-xl border border-slate-100 bg-slate-50/50 space-y-3 scroll-mt-28">
+                        <div class="flex items-center gap-2 text-slate-900">
+                            <div class="p-2 bg-emerald-100 text-emerald-700 rounded-lg"><i data-lucide="combine"
+                                    class="w-5 h-5"></i></div>
+                            <h4 class="text-base sm:text-lg font-bold">二、 自適應智慧映射引擎</h4>
+                        </div>
+                        <p class="text-sm text-slate-600 leading-relaxed">
+                            解決因格式變動（如從 6 欄改為 11 欄）造成的轉檔錯誤。系統在讀取檔案時會動態辨識定位「菜別、食譜、食品名稱、使用數量」所在的列與欄索引。同時具備民國年轉西元
+                            date、狀態繼承（補正空白儲存格與狀態）的能力。
+                        </p>
+                    </div>
+
+                    <!-- Sub 3 -->
+                    <div id="sub-classification"
+                        class="p-6 rounded-xl border border-slate-100 bg-slate-50/50 space-y-3 scroll-mt-28">
+                        <div class="flex items-center gap-2 text-slate-900">
+                            <div class="p-2 bg-emerald-100 text-emerald-700 rounded-lg"><i data-lucide="search-code"
+                                    class="w-5 h-5"></i></div>
+                            <h4 class="text-base sm:text-lg font-bold">三、 加工食品判定分類系統</h4>
+                        </div>
+                        <p class="text-sm text-slate-600 leading-relaxed">
+                            內建強大的特徵詞判定，自動辨識食材是否屬加工品（如含有「丸、醬、包、保久乳」判定為加工品 Y；包含「鮮、有機、生、菜、肉」預設判定為天然食材 N）。使用者亦能隨時透過控制台微調特徵。
+                        </p>
+                    </div>
+
+                    <!-- Sub 4 -->
+                    <div id="sub-binding"
+                        class="p-6 rounded-xl border border-slate-100 bg-slate-50/50 space-y-3 scroll-mt-28">
+                        <div class="flex items-center gap-2 text-slate-900">
+                            <div class="p-2 bg-emerald-100 text-emerald-700 rounded-lg"><i data-lucide="link"
+                                    class="w-5 h-5"></i></div>
+                            <h4 class="text-base sm:text-lg font-bold">四、 資料庫層級關聯與雙向連動</h4>
+                        </div>
+                        <p class="text-sm text-slate-600 leading-relaxed">
+                            食材與菜單資料擁有底層對應關聯。當使用者於「編輯詳細」中修改某日菜單的供餐日期或學校時，系統會自動在背景啟動聯動修改（Key
+                            Migration），將所有對應的食材列同步對齊，防止資料結構零散、錯開。
+                        </p>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Section 2: User Manual -->
+            <section id="section-manual"
+                class="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-8 scroll-mt-28">
+                <div class="border-b border-slate-100 pb-4">
+                    <div class="flex items-center gap-2 text-emerald-600 mb-1">
+                        <i data-lucide="help-circle" class="w-5 h-5"></i>
+                        <span class="text-xs font-bold uppercase tracking-wider">Manual</span>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-900">貳、 使用者說明手冊 (User Manual)</h2>
+                </div>
+
+                <!-- Layout Nav Card -->
+                <div id="sub-layout" class="space-y-4 scroll-mt-28">
+                    <h3 class="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
+                        <span class="w-2 h-5 bg-emerald-600 rounded-full"></span>
+                        一、 主畫面配置導覽
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="p-5 bg-slate-50 rounded-xl border border-slate-150 space-y-1.5">
+                            <h4 class="text-sm sm:text-base font-bold text-slate-700 flex items-center gap-1.5"><i
+                                    data-lucide="upload-cloud" class="w-4 h-4 text-emerald-600"></i>上傳區與映射設定</h4>
+                            <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                                首頁中央區塊。支援拖放檔案，並可點擊展開自訂分類關鍵字和菜別映射偏好設定。</p>
+                        </div>
+                        <div class="p-5 bg-slate-50 rounded-xl border border-slate-150 space-y-1.5">
+                            <h4 class="text-sm sm:text-base font-bold text-slate-700 flex items-center gap-1.5"><i
+                                    data-lucide="alert-triangle" class="w-4 h-4 text-amber-500"></i>衛生安全智慧檢核</h4>
+                            <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                                自動比對供餐完整度、空值或負數重量。並指出不合規的計量單位，降低申報退件機率。</p>
+                        </div>
+                        <div class="p-5 bg-slate-50 rounded-xl border border-slate-150 space-y-1.5">
+                            <h4 class="text-sm sm:text-base font-bold text-slate-700 flex items-center gap-1.5"><i
+                                    data-lucide="table" class="w-4 h-4 text-indigo-600"></i>食材及菜單工作表</h4>
+                            <p class="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                                精緻對稱的數據編輯表。支援雙擊格子立即原地編輯基本配餐原始數據。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Steps Timeline Card -->
+                <div id="sub-steps" class="space-y-6 scroll-mt-28">
+                    <h3 class="text-lg sm:text-xl font-bold text-slate-900 flex items-center gap-2">
+                        <span class="w-2 h-5 bg-emerald-600 rounded-full"></span>
+                        二、 核心步驟引導
+                    </h3>
+
+                    <div class="space-y-8 relative pl-8 border-l-2 border-emerald-100 ml-4">
+
+                        <!-- Step 1 -->
+                        <div class="relative">
+                            <div
+                                class="absolute -left-[41px] top-0 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-md shadow-emerald-500/20">
+                                1</div>
+                            <h4 class="text-base sm:text-lg font-bold text-slate-900">上傳原始配膳日記檔</h4>
+                            <p class="text-sm text-slate-500 mt-1.5 leading-relaxed">
+                                將準備妥當的原始配膳試算表（如 19_21原始檔 或 11-14週原始檔）拖放至拖曳區或點擊上傳。若無檔案，可點選 <span
+                                    class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-xs font-semibold border">載入內建示範資料</span>
+                                進行系統完整功能測試。
+                            </p>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="relative">
+                            <div
+                                class="absolute -left-[41px] top-0 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-md shadow-emerald-500/20">
+                                2</div>
+                            <h4 class="text-base sm:text-lg font-bold text-slate-900">審閱智慧安全警告與分析圖表</h4>
+                            <p class="text-sm text-slate-500 mt-1.5 leading-relaxed">
+                                在「智慧檢核與圖表比對」分頁中核對衛生警告。如有缺漏、零重量、或不合規的單位（例如「包、箱、桶、條」等非公斤），系統將亮起警告，協助第一線人員落實進貨量確認。
+                            </p>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="relative">
+                            <div
+                                class="absolute -left-[41px] top-0 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-md shadow-emerald-500/20">
+                                3</div>
+                            <h4 class="text-base sm:text-lg font-bold text-slate-900">編輯原始配膳與登錄詳細溯源履歷 (食材表)</h4>
+                            <p class="text-sm text-slate-500 mt-1.5 leading-relaxed">
+                                點擊任一食材列右邊的 **「編輯詳細」** 開啟全面表單編輯：
+                                <span
+                                    class="block mt-3 pl-4 border-l-4 border-indigo-500 bg-indigo-50/40 p-3.5 text-xs sm:text-sm text-slate-600 rounded-xl space-y-2">
+                                    <strong>一、配膳基本欄位修改：</strong> 直接更正日期、學校、菜色、食材名稱、配膳重量與單位，並能切換加工屬性 (Y/N)。<br>
+                                    <strong>二、食安溯源細項填寫：</strong> 填入進貨/生產日期、批號、廠商全稱，並自下拉選單補登
+                                    <strong>TAP、有機、CAS、Q標章</strong> 與官方追溯號碼。
+                                </span>
+                            </p>
+                        </div>
+
+                        <!-- Step 4 -->
+                        <div class="relative">
+                            <div
+                                class="absolute -left-[41px] top-0 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-md shadow-emerald-500/20">
+                                4</div>
+                            <h4 class="text-base sm:text-lg font-bold text-slate-900">編輯每日菜色與六大類營養份量 (菜單表)</h4>
+                            <p class="text-sm text-slate-500 mt-1.5 leading-relaxed">
+                                切換至「食登菜單對接表」並點擊 **「編輯詳細」**：
+                                <span
+                                    class="block mt-3 pl-4 border-l-4 border-emerald-500 bg-emerald-50/40 p-3.5 text-xs sm:text-sm text-slate-600 rounded-xl space-y-2">
+                                    <strong>更正菜譜組合：</strong> 精準調整主食一、主食二、主菜一二三副、蔬菜、湯品等欄位。<br>
+                                    <strong>補登營養成分：</strong> 鍵入 <strong>全穀雜糧、豆魚蛋肉、蔬菜、油脂與堅果、水果、乳品份量及整餐大卡熱量</strong>。<br>
+                                    <strong>智慧聯動關聯：</strong> 若修改菜單的供餐日期與學校，系統會自動在底層更新關聯，同步修改食材表中對應的所有供餐日期與學校！
+                                </span>
+                            </p>
+                        </div>
+
+                        <!-- Step 5 -->
+                        <div class="relative">
+                            <div
+                                class="absolute -left-[41px] top-0 bg-emerald-600 text-white w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shadow-md shadow-emerald-500/20">
+                                5</div>
+                            <h4 class="text-base sm:text-lg font-bold text-slate-900">一鍵無縫下載導出</h4>
+                            <p class="text-sm text-slate-500 mt-1.5 leading-relaxed">
+                                審閱確認完畢後，點選底部的 **「導出標準 2-in-1 Excel 活頁簿」**，系統將會在單一活頁簿中自動打包生成「食登食材表」與「食登菜單表」兩個獨立
+                                Sheet。您亦可分別下載各自獨立的標準 UTF-8 格式 CSV 檔。
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 3: FAQ -->
+            <section id="section-faq"
+                class="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-sm space-y-8 scroll-mt-28">
+                <div class="border-b border-slate-100 pb-4">
+                    <div class="flex items-center gap-2 text-emerald-600 mb-1">
+                        <i data-lucide="messages-square" class="w-5 h-5"></i>
+                        <span class="text-xs font-bold uppercase tracking-wider">Troubleshooting</span>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-bold text-slate-900">參、 常見問答與故障排除 (FAQ)</h2>
+                </div>
+
+                <div class="space-y-5" id="faqAccordion">
+
+                    <!-- Q1 -->
+                    <div
+                        class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/30 transition-all shadow-sm">
+                        <button
+                            class="faq-btn w-full px-5 py-4 text-left font-bold text-slate-800 text-sm sm:text-base flex justify-between items-center hover:bg-slate-50/80 focus:outline-none">
+                            <span>Q1：為什麼我匯入新版配膳檔 (如11-14週 XLSX) 之後，畫面沒有反應或抓不到日期？</span>
+                            <i data-lucide="chevron-down"
+                                class="w-5 h-5 text-slate-400 transform transition-transform"></i>
+                        </button>
+                        <div
+                            class="faq-content hidden px-5 pb-5 pt-2 text-sm text-slate-600 leading-relaxed border-t border-slate-100 bg-white space-y-2">
+                            <p class="font-semibold text-slate-800">原因：</p>
+                            <ol class="list-decimal pl-5 space-y-1.5">
+                                <li>原始試算表中可能不包含明確的日期標示。系統仰賴如「用餐日期：115.06.15」、「115-06-15」等格式儲存格作為狀態機切換日期的信號。</li>
+                                <li>試算表的「菜別」等特定關鍵字與預設映射不符。</li>
+                            </ol>
+                            <p class="mt-2 text-slate-600"><strong>解法：</strong>
+                                請點選「自訂分類與欄位映射規則」折疊控制台，手動比對與覆寫原始檔中的菜別文字（如：副菜二可在此自訂映射至蔬菜或附餐）。若需要特定學校名稱，可在預設學校欄位直接修改，或將「用餐日期：YYY.MM.DD」儲存格移至資料上方首列。本系統目前已內建動態欄位追蹤，不易因插入空白列或新增多列而失效。
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Q2 -->
+                    <div
+                        class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/30 transition-all shadow-sm">
+                        <button
+                            class="faq-btn w-full px-5 py-4 text-left font-bold text-slate-800 text-sm sm:text-base flex justify-between items-center hover:bg-slate-50/80 focus:outline-none">
+                            <span>Q2：在彈窗或表格內原地雙擊編輯，需要另外按存檔嗎？離線使用會不會有資料遺漏？</span>
+                            <i data-lucide="chevron-down"
+                                class="w-5 h-5 text-slate-400 transform transition-transform"></i>
+                        </button>
+                        <div
+                            class="faq-content hidden px-5 pb-5 pt-2 text-sm text-slate-600 leading-relaxed border-t border-slate-100 bg-white space-y-2">
+                            <p class="font-semibold text-slate-800">即時儲存機制：</p>
+                            <ul class="list-disc pl-5 space-y-1.5">
+                                <li>無論是雙擊單元格就地修改基本欄位，還是在彈窗內輸入進貨日期、製造商、驗證標章，只要游標移開 (Blur) 或點選 [儲存變更]，資料就會 **即時存入瀏覽器的記憶體**
+                                    中。</li>
+                                <li><strong>完全無遠端傳輸：</strong> 確保 100% 隱私安全，您不需要連網。</li>
+                            </ul>
+                            <p
+                                class="mt-3 text-amber-800 bg-amber-50 p-3.5 rounded-xl border border-amber-200 font-medium">
+                                <strong>特別注意事項：</strong>
+                                由於本程式是離線純前端架構，無外接雲端資料庫。<strong>如果您重新整理網頁、關閉分頁或瀏覽器，目前所編輯與暫存的資料會被清空</strong>。在完成一天的配餐與溯源補登後，務必在第一時間導出
+                                Excel 或單獨下載 CSV 檔案以利留存。
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Q3 -->
+                    <div
+                        class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50/30 transition-all shadow-sm">
+                        <button
+                            class="faq-btn w-full px-5 py-4 text-left font-bold text-slate-800 text-sm sm:text-base flex justify-between items-center hover:bg-slate-50/80 focus:outline-none">
+                            <span>Q3：為什麼我單獨下載食材/菜單的 CSV 檔案後，用 Microsoft Excel 直接打開會是亂碼？</span>
+                            <i data-lucide="chevron-down"
+                                class="w-5 h-5 text-slate-400 transform transition-transform"></i>
+                        </button>
+                        <div
+                            class="faq-content hidden px-5 pb-5 pt-2 text-sm text-slate-600 leading-relaxed border-t border-slate-100 bg-white space-y-2">
+                            <p class="font-semibold text-slate-800">Excel 開啟 CSV 亂碼機制：</p>
+                            <p>Microsoft Excel 在預設情況下會採用作業系統預設編碼（微軟正體中文版為 Big5）來讀取 CSV。然而，本系統輸出的 CSV 檔案全面採用現代網路最通用的
+                                <strong>UTF-8</strong> 國際標準編碼，因而會導致解碼不一致的亂碼現象。
+                            </p>
+                            <p class="mt-2 text-slate-600"><strong>系統防範設計：</strong></p>
+                            <p>為了徹底解決此問題，本程式所產生的 CSV 檔案在開頭均已智慧插入了 <strong>BOM（Byte Order Mark）隱形標記位元
+                                    `\ufeff`</strong>。這個標記會直接提示 Excel 此檔案為高階 UTF-8 編碼。<strong>因此，您無須繁瑣地進行「資料 ->
+                                    匯入文字」手動對齊，直接對 CSV 檔案「按兩下左鍵」雙擊開啟，繁體中文即會完美且正確地顯示。</strong></p>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <footer class="bg-slate-900 text-slate-400 border-t border-slate-800 mt-auto py-8">
+        <div class="max-w-7xl mx-auto px-4 text-center text-sm space-y-3">
+            <p>© 2026 食登數據智慧分析平台.Copyright © 2026 JRH. All rights reserved. 本手冊採創用 CC 姓名標示 4.0 國際授權條款釋出.</p>
+            <p class="text-xs text-slate-500 leading-relaxed">此說明網頁與核心轉檔程式均完全於
+                Client-Side（瀏覽器沙盒）離線執行，保障學校、學童、團膳業之食品配給等機敏數據安全不外洩。</p>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // Smooth active scroll spy for sidebar TOC (Dynamic highlight)
+        const sections = document.querySelectorAll('section, div[id^="sub-"]');
+        const navLinks = document.querySelectorAll('.toc-link');
+
+        window.addEventListener('scroll', () => {
+            let current = "";
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= (sectionTop - 130)) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('text-emerald-600', 'border-emerald-600', 'bg-slate-50');
+                if (link.getAttribute('href') === `#${current}`) {
+                    link.classList.add('text-emerald-600', 'border-emerald-600', 'bg-slate-50');
+                }
+            });
+        });
+
+        // Accordion Control logic for FAQs
+        const faqButtons = document.querySelectorAll('.faq-btn');
+        faqButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const content = btn.nextElementSibling;
+                const icon = btn.querySelector('[data-lucide="chevron-down"]');
+
+                // Toggle active content
+                content.classList.toggle('hidden');
+
+                // Toggle rotating Chevron icon
+                if (content.classList.contains('hidden')) {
+                    icon.style.transform = "rotate(0deg)";
+                } else {
+                    icon.style.transform = "rotate(180deg)";
+                }
+            });
+        });
+
+        // Documentation Keyword Search Filtering
+        const searchInput = document.getElementById('docSearch');
+        const mainContent = document.querySelector('main');
+
+        // Store original text content to revert highlight properly without destroying events/tags
+        const originalHTML = mainContent.innerHTML;
+
+        searchInput.addEventListener('input', () => {
+            const query = searchInput.value.trim().toLowerCase();
+
+            if (!query) {
+                mainContent.innerHTML = originalHTML;
+                lucide.createIcons();
+                rebindFaqEvents();
+                return;
+            }
+
+            // Revert to original first to prevent nested tags
+            mainContent.innerHTML = originalHTML;
+
+            // Recursive text nodes highlighter
+            function highlightText(element, keyword) {
+                if (element.hasChildNodes()) {
+                    element.childNodes.forEach(child => {
+                        if (child.nodeType === 3) { // Text Node
+                            const text = child.nodeValue;
+                            const regex = new RegExp(`(${keyword})`, 'gi');
+                            if (text.match(regex)) {
+                                const span = document.createElement('span');
+                                span.innerHTML = text.replace(regex, '<span class="highlight">$1</span>');
+                                child.parentNode.replaceChild(span, child);
+                            }
+                        } else if (child.nodeType === 1 && child.nodeName !== 'SCRIPT' && child.nodeName !== 'STYLE' && !child.classList.contains('faq-btn')) {
+                            highlightText(child, keyword);
+                        }
+                    });
+                }
+            }
+
+            highlightText(mainContent, query);
+            lucide.createIcons();
+            rebindFaqEvents();
+
+            // Expand matching FAQs automatically if keyword is found inside them
+            const items = document.querySelectorAll('.border.rounded-xl');
+            items.forEach(item => {
+                const content = item.querySelector('.faq-content');
+                if (content && content.querySelector('.highlight')) {
+                    content.classList.remove('hidden');
+                    const icon = item.querySelector('[data-lucide="chevron-down"]');
+                    if (icon) icon.style.transform = "rotate(180deg)";
+                }
+            });
+        });
+
+        // Helper function to rebind toggle events to accordion buttons after search DOM updates
+        function rebindFaqEvents() {
+            const activeFaqBtns = document.querySelectorAll('.faq-btn');
+            activeFaqBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const content = btn.nextElementSibling;
+                    const icon = btn.querySelector('[data-lucide="chevron-down"]');
+                    content.classList.toggle('hidden');
+                    if (content.classList.contains('hidden')) {
+                        if (icon) icon.style.transform = "rotate(0deg)";
+                    } else {
+                        if (icon) icon.style.transform = "rotate(180deg)";
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+
+</html>

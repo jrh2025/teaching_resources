@@ -1,0 +1,1933 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>食登食材與菜單智慧分析系統 (Client-Side Only)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS for processing Excel/CSV in browser -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts - Noto Sans TC & Inter -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans TC', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Navigation / Header -->
+    <header class="bg-slate-900 text-white shadow-md border-b border-slate-800 sticky top-0 z-50">
+        <div
+            class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="p-2.5 bg-emerald-600 rounded-xl shadow-lg shadow-emerald-900/30">
+                    <i data-lucide="clipboard-check" class="w-6 h-6 text-white animate-pulse"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
+                        食登數據轉檔與智慧分析檢核系統
+                        <span
+                            class="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full font-normal">純前端免伺服器</span>
+                    </h1>
+                    <p class="text-xs text-slate-400">專為營養午餐「原始檔 / 多欄位單餐格式」設計，完美產出「食登食材」與「食登菜單」標準格式</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                <div
+                    class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700 w-full sm:w-auto">
+                    <label for="schoolInput" class="text-xs text-slate-400 whitespace-nowrap">預設學校：</label>
+                    <input type="text" id="schoolInput" value="臺南市佳里區佳里國小"
+                        class="bg-transparent border-none text-white text-xs font-semibold focus:outline-none focus:ring-0 w-full sm:w-48"
+                        placeholder="輸入學校名稱">
+                </div>
+                <!-- Manual Link Icon -->
+                <a href="food_login_guide.html" target="_blank"
+                    class="p-2 bg-slate-800 hover:bg-emerald-600 rounded-lg border border-slate-700 hover:border-emerald-500 text-slate-300 hover:text-white transition-all duration-200 flex items-center justify-center gap-1.5"
+                    title="系統設計理念與使用者說明手冊">
+                    <i data-lucide="help-circle" class="w-5 h-5"></i>
+                    <span class="text-xs font-semibold hidden md:inline">系統手冊</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Hero / Upload Zone -->
+        <div id="uploadContainer"
+            class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-10 mb-8 transition-all duration-300">
+            <div class="max-w-3xl mx-auto text-center">
+                <h2 class="text-2xl font-bold text-slate-900 mb-2">上傳您的原始配膳試算表</h2>
+                <p class="text-slate-500 text-sm mb-6">支援上傳包含用餐日期、菜別、食品名稱、使用數量之 Excel (.xlsx) 或 CSV
+                    檔案。<br>系統已啟用<b>自適應智慧欄位辨識</b>，相容各種不同欄位長度與結構。</p>
+
+                <!-- Dropzone -->
+                <div id="dropzone"
+                    class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-xl p-8 cursor-pointer transition-all bg-slate-50 hover:bg-emerald-50/10 flex flex-col items-center justify-center group">
+                    <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="hidden">
+                    <div
+                        class="p-4 bg-white rounded-full shadow-sm group-hover:scale-110 transition-transform duration-300 border border-slate-100 mb-4">
+                        <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-400 group-hover:text-emerald-500"></i>
+                    </div>
+                    <p class="text-sm font-semibold text-slate-700 mb-1">將檔案拖曳至此處，或點擊以選擇檔案</p>
+                    <p class="text-xs text-slate-400">支援 .xlsx, .xls, .csv 格式 (舊版 6 欄與新版 11 欄原始檔皆可直接解析)</p>
+
+                    <div id="fileDetail"
+                        class="hidden mt-4 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg text-xs font-medium flex items-center gap-2 border border-emerald-100">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                        <span id="fileName">未選擇 any 檔案</span>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex flex-wrap justify-center gap-4">
+                    <button id="demoBtn"
+                        class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg inline-flex items-center gap-2 transition-all">
+                        <i data-lucide="sparkles" class="w-4 h-4 text-emerald-600"></i>
+                        載入內建示範資料體驗
+                    </button>
+                    <button id="mappingToggleBtn"
+                        class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg inline-flex items-center gap-2 transition-all">
+                        <i data-lucide="settings-2" class="w-4 h-4 text-slate-500"></i>
+                        自訂分類與欄位映射規則
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mapping Rule Modal (Collapsible Settings) -->
+        <div id="settingsPanel" class="hidden bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-8">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-4 mb-4">
+                <h3 class="font-bold text-slate-900 flex items-center gap-2 text-sm sm:text-base">
+                    <i data-lucide="sliders" class="w-5 h-5 text-emerald-600"></i>
+                    資料處理規則與對接對照設定
+                </h3>
+                <button id="closeSettingsBtn" class="text-slate-400 hover:text-slate-600"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">1. 菜別與食登菜單欄位對照表</h4>
+                    <p class="text-xs text-slate-400 mb-3">設定原始檔的「菜別」如何對接到食登菜單表的指定位置：</p>
+                    <div class="space-y-2 max-h-60 overflow-y-auto custom-scrollbar pr-2">
+                        <div class="grid grid-cols-2 gap-2">
+                            <div class="text-xs font-semibold text-slate-600 bg-slate-50 p-2 rounded">原始檔菜別名稱</div>
+                            <div class="text-xs font-semibold text-slate-600 bg-slate-50 p-2 rounded">對接食登菜單欄位</div>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <span class="w-1/2 text-xs text-slate-700 bg-slate-100/50 px-2 py-1.5 rounded">主食</span>
+                            <select id="map_主食"
+                                class="w-1/2 text-xs bg-white border border-slate-200 rounded px-2 py-1 focus:ring-emerald-500 focus:border-emerald-500">
+                                <option value="主食一" selected>主食一 (自動溢位至二)</option>
+                                <option value="主菜">主菜</option>
+                                <option value="副菜一">副菜一</option>
+                                <option value="蔬菜">蔬菜</option>
+                                <option value="湯品">湯品</option>
+                                <option value="附餐一">附餐一</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <span class="w-1/2 text-xs text-slate-700 bg-slate-100/50 px-2 py-1.5 rounded">主菜</span>
+                            <select id="map_主菜"
+                                class="w-1/2 text-xs bg-white border border-slate-200 rounded px-2 py-1 focus:ring-emerald-500 focus:border-emerald-500">
+                                <option value="主食一">主食一</option>
+                                <option value="主菜" selected>主菜 (自動溢位至一/二/三)</option>
+                                <option value="副菜一">副菜一</option>
+                                <option value="蔬菜">蔬菜</option>
+                                <option value="湯品">湯品</option>
+                                <option value="附餐一">附餐一</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <span class="w-1/2 text-xs text-slate-700 bg-slate-100/50 px-2 py-1.5 rounded">副菜一</span>
+                            <select id="map_副菜一"
+                                class="w-1/2 text-xs bg-white border border-slate-200 rounded px-2 py-1 focus:ring-emerald-500 focus:border-emerald-500">
+                                <option value="主食一">主食一</option>
+                                <option value="主菜">主菜</option>
+                                <option value="副菜一" selected>副菜一</option>
+                                <option value="蔬菜">蔬菜</option>
+                                <option value="湯品">湯品</option>
+                                <option value="附餐一">附餐一</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <span class="w-1/2 text-xs text-slate-700 bg-slate-100/50 px-2 py-1.5 rounded">副菜二</span>
+                            <select id="map_副菜二"
+                                class="w-1/2 text-xs bg-white border border-slate-200 rounded px-2 py-1 focus:ring-emerald-500 focus:border-emerald-500">
+                                <option value="主食一">主食一</option>
+                                <option value="主菜">主菜</option>
+                                <option value="副菜一">副菜一</option>
+                                <option value="蔬菜" selected>蔬菜</option>
+                                <option value="湯品">湯品</option>
+                                <option value="附餐一">附餐一</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <span class="w-1/2 text-xs text-slate-700 bg-slate-100/50 px-2 py-1.5 rounded">蔬菜</span>
+                            <select id="map_蔬菜"
+                                class="w-1/2 text-xs bg-white border border-slate-200 rounded px-2 py-1 focus:ring-emerald-500 focus:border-emerald-500">
+                                <option value="主食一">主食一</option>
+                                <option value="主菜">主菜</option>
+                                <option value="副菜一">副菜一</option>
+                                <option value="蔬菜" selected>蔬菜</option>
+                                <option value="湯品">湯品</option>
+                                <option value="附餐一">附餐一</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <span class="w-1/2 text-xs text-slate-700 bg-slate-100/50 px-2 py-1.5 rounded">湯</span>
+                            <select id="map_湯"
+                                class="w-1/2 text-xs bg-white border border-slate-200 rounded px-2 py-1 focus:ring-emerald-500 focus:border-emerald-500">
+                                <option value="主食一">主食一</option>
+                                <option value="主菜">主菜</option>
+                                <option value="副菜一">副菜一</option>
+                                <option value="蔬菜">蔬菜</option>
+                                <option value="湯品" selected>湯品</option>
+                                <option value="附餐一">附餐一</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <span class="w-1/2 text-xs text-slate-700 bg-slate-100/50 px-2 py-1.5 rounded">點心</span>
+                            <select id="map_點心"
+                                class="w-1/2 text-xs bg-white border border-slate-200 rounded px-2 py-1 focus:ring-emerald-500 focus:border-emerald-500">
+                                <option value="主食一">主食一</option>
+                                <option value="主菜">主菜</option>
+                                <option value="副菜一">副菜一</option>
+                                <option value="蔬菜">蔬菜</option>
+                                <option value="湯品">湯品</option>
+                                <option value="附餐一" selected>附餐一</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">2. 2. 加工食品 (Y / N)
+                        智能判定特徵詞</h4>
+                    <p class="text-xs text-slate-400 mb-3">系統將根據食材名稱是否包含這些關鍵字來初步分類：</p>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">判定為加工品 (Y) 關鍵字：</label>
+                            <textarea id="processedKeywords"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 h-20"
+                                placeholder="以逗號分隔"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">判定為天然食材 (N) 關鍵字：</label>
+                            <textarea id="naturalKeywords"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 h-20"
+                                placeholder="以逗號分隔"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
+                <button id="resetRulesBtn"
+                    class="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-semibold rounded-lg transition-all">重設回預設</button>
+                <button id="saveRulesBtn"
+                    class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm">套用變更規則</button>
+            </div>
+        </div>
+
+        <!-- Main Results Dashboard (Hidden initially, shown after file processed) -->
+        <div id="resultsDashboard" class="hidden space-y-8 animate-[fadeIn_0.5s_ease-out]">
+
+            <!-- Stats KPIs -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="p-3 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="calendar" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-slate-400 font-medium">總供餐天數</span>
+                        <span id="statDays" class="text-xl sm:text-2xl font-bold text-slate-800">0</span>
+                    </div>
+                </div>
+                <div class="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="p-3 bg-amber-50 text-amber-600 rounded-lg"><i data-lucide="utensils"
+                            class="w-5 h-5"></i></div>
+                    <div>
+                        <span class="block text-xs text-slate-400 font-medium">設計菜色種數</span>
+                        <span id="statRecipes" class="text-xl sm:text-2xl font-bold text-slate-800">0</span>
+                    </div>
+                </div>
+                <div class="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="p-3 bg-emerald-50 text-emerald-600 rounded-lg"><i data-lucide="apple"
+                            class="w-5 h-5"></i></div>
+                    <div>
+                        <span class="block text-xs text-slate-400 font-medium">食材品項總數</span>
+                        <span id="statIngredients" class="text-xl sm:text-2xl font-bold text-slate-800">0</span>
+                    </div>
+                </div>
+                <div class="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm flex items-center gap-4">
+                    <div class="p-3 bg-indigo-50 text-indigo-600 rounded-lg"><i data-lucide="info" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <span class="block text-xs text-slate-400 font-medium">加工品食材佔比</span>
+                        <span id="statProcessedPct" class="text-xl sm:text-2xl font-bold text-slate-800">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Buttons -->
+            <div class="border-b border-slate-200 flex flex-wrap gap-2">
+                <button id="tabBtn_analysis"
+                    class="px-5 py-3 border-b-2 border-emerald-600 font-bold text-emerald-600 text-sm flex items-center gap-2 transition-all">
+                    <i data-lucide="bar-chart-2" class="w-4 h-4"></i>智慧檢核與圖表比對
+                </button>
+                <button id="tabBtn_ingredients"
+                    class="px-5 py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 font-medium text-sm flex items-center gap-2 transition-all">
+                    <i data-lucide="layers" class="w-4 h-4"></i>食登食材對接表
+                </button>
+                <button id="tabBtn_menu"
+                    class="px-5 py-3 border-b-2 border-transparent text-slate-500 hover:text-slate-800 font-medium text-sm flex items-center gap-2 transition-all">
+                    <i data-lucide="book-open" class="w-4 h-4"></i>食登菜單對接表
+                </button>
+            </div>
+
+            <!-- Tab Content 1: Validation & Analytics Dashboard -->
+            <div id="tabContent_analysis" class="space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    <!-- Validation Suite Card (Left 1/3) -->
+                    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4 lg:col-span-1">
+                        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                            <i data-lucide="shield-alert" class="w-5 h-5 text-indigo-500"></i>
+                            食品衛生安全檢核與警告
+                        </h3>
+                        <p class="text-xs text-slate-400">系統即時運行規則檢核，自動識別潛在數據錄入異常或不完整配置：</p>
+
+                        <div id="validationList" class="space-y-3 max-h-[450px] overflow-y-auto custom-scrollbar pr-1">
+                            <!-- Dynamically populated -->
+                        </div>
+                    </div>
+
+                    <!-- Charts (Right 2/3) -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <!-- Processing Ratio Chart -->
+                            <div
+                                class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-sm mb-1">加工食品比例分析</h4>
+                                    <p class="text-xs text-slate-400 mb-4">比對加工品(Y)與天然食品(N)的使用數量與頻次分佈</p>
+                                </div>
+                                <div class="w-full max-w-[220px] mx-auto h-[220px]">
+                                    <canvas id="processedChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Top Materials consumed -->
+                            <div
+                                class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm flex flex-col justify-between">
+                                <div>
+                                    <h4 class="font-bold text-slate-800 text-sm mb-1">主要食材用量排行榜 (公斤)</h4>
+                                    <p class="text-xs text-slate-400 mb-4">分析本批次中用量排行前 5 大的關鍵物資</p>
+                                </div>
+                                <div class="w-full h-[220px]">
+                                    <canvas id="materialChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Daily material line chart -->
+                        <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                            <h4 class="font-bold text-slate-800 text-sm mb-1">每日食材配送噸量分佈</h4>
+                            <p class="text-xs text-slate-400 mb-4">檢視各供餐日期的總配膳食材重量，協助物流與進貨日期核對</p>
+                            <div class="w-full h-[200px]">
+                                <canvas id="dailyWeightChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content 2: Ingredients Sheet -->
+            <div id="tabContent_ingredients" class="hidden space-y-4">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                            食登食材規格預覽表 (符合 19_21 食登食材格式)
+                        </h3>
+                        <p class="text-xs text-slate-500">
+                            表格欄位完全相容於校園食材登錄平台。支援雙擊單元格直接編輯，或點選右側<b>「編輯詳細」</b>輸入更詳細的有效期限、加工品屬性與檢驗標章資訊。</p>
+                    </div>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button id="exportIngCsvBtn"
+                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-slate-500"></i>下載食材 CSV
+                        </button>
+                        <button id="addIngRowBtn"
+                            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all shadow-sm">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i>手動新增食材
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div
+                        class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-2">
+                        <div class="relative w-full sm:w-72">
+                            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
+                            <input type="text" id="searchIngInput" placeholder="搜尋食材、菜名或日期..."
+                                class="w-full pl-9 pr-4 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div class="text-xs text-slate-500 font-medium" id="ingRowCount">共 0 筆記錄</div>
+                    </div>
+
+                    <div class="overflow-x-auto custom-scrollbar max-h-[500px]">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead
+                                class="bg-slate-100 border-b border-slate-200 text-slate-700 uppercase font-semibold sticky top-0 z-10">
+                                <tr>
+                                    <th class="p-3 whitespace-nowrap">供餐日期</th>
+                                    <th class="p-3 whitespace-nowrap">學校</th>
+                                    <th class="p-3 whitespace-nowrap">菜色名稱</th>
+                                    <th class="p-3 whitespace-nowrap">食材名稱</th>
+                                    <th class="p-3 whitespace-nowrap">重量 (公斤)</th>
+                                    <th class="p-3 whitespace-nowrap">單位</th>
+                                    <th class="p-3 whitespace-nowrap">加工品</th>
+                                    <th class="p-3 whitespace-nowrap text-center">操作與詳細編輯</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ingTableBody" class="divide-y divide-slate-100 text-slate-600">
+                                <!-- Dynamically generated rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content 3: Menu Sheet -->
+            <div id="tabContent_menu" class="hidden space-y-4">
+                <div class="flex flex-wrap justify-between items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                            食登菜單規格預覽表 (符合 19_21 食登菜單格式)
+                        </h3>
+                        <p class="text-xs text-slate-500">
+                            完全對接每日「主食、主菜、副菜、蔬菜、湯品、附餐」之矩陣分佈表。點選右側<b>「編輯詳細」</b>可完整調整日期、學校、細項菜色與補登六大類份量。</p>
+                    </div>
+                    <div class="flex gap-2 w-full sm:w-auto">
+                        <button id="exportMenuCsvBtn"
+                            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all">
+                            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-slate-500"></i>下載菜單 CSV
+                        </button>
+                        <button id="addMenuRowBtn"
+                            class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-all shadow-sm">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i>手動新增菜單日
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto custom-scrollbar max-h-[500px]">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead
+                                class="bg-slate-100 border-b border-slate-200 text-slate-700 uppercase font-semibold sticky top-0 z-10">
+                                <tr>
+                                    <th class="p-3 whitespace-nowrap">日期</th>
+                                    <th class="p-3 whitespace-nowrap">學校</th>
+                                    <th class="p-3 whitespace-nowrap">主食一</th>
+                                    <th class="p-3 whitespace-nowrap">主食二</th>
+                                    <th class="p-3 whitespace-nowrap">主菜</th>
+                                    <th class="p-3 whitespace-nowrap">主菜一</th>
+                                    <th class="p-3 whitespace-nowrap">主菜二</th>
+                                    <th class="p-3 whitespace-nowrap">副菜一</th>
+                                    <th class="p-3 whitespace-nowrap">蔬菜</th>
+                                    <th class="p-3 whitespace-nowrap">湯品</th>
+                                    <th class="p-3 whitespace-nowrap">附餐一</th>
+                                    <th class="p-3 whitespace-nowrap text-center">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="menuTableBody" class="divide-y divide-slate-100 text-slate-600">
+                                <!-- Dynamically generated rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Big Export Area -->
+            <div
+                class="bg-gradient-to-r from-emerald-800 to-slate-900 rounded-2xl p-6 text-white flex flex-col md:flex-row justify-between items-center gap-6 shadow-md">
+                <div class="space-y-1">
+                    <h3 class="text-lg font-bold flex items-center gap-2">
+                        <i data-lucide="file-check-2" class="w-5 h-5 text-emerald-400"></i>
+                        一鍵導出標準食登整合 Excel 活頁簿
+                    </h3>
+                    <p class="text-xs text-slate-300">本操作將會在單一活頁簿內完美匯出兩個工作表：「食登食材表」與「食登菜單表」，完全符合官方匯入規格。</p>
+                </div>
+                <button id="exportExcelBtn"
+                    class="w-full md:w-auto px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg hover:shadow-emerald-500/20 text-sm">
+                    <i data-lucide="download" class="w-5 h-5"></i>導出標準 2-in-1 Excel 活頁簿
+                </button>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- EDIT MODAL 1: Ingredients Detailed Editor -->
+    <div id="traceabilityModal"
+        class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div
+            class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-2xl w-full overflow-hidden max-h-[90vh] flex flex-col animate-[fadeIn_0.2s_ease-out]">
+            <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="edit-3" class="w-5 h-5 text-emerald-400"></i>
+                    <h3 class="font-bold text-sm sm:text-base">編輯食材配膳與溯源履歷完整細項</h3>
+                </div>
+                <button onclick="closeTraceabilityModal()" class="text-slate-400 hover:text-white transition-colors"><i
+                        data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar space-y-6 flex-grow">
+
+                <!-- SECTION 1: Basic Requested Fields -->
+                <div>
+                    <h4
+                        class="text-xs font-bold text-emerald-700 bg-emerald-50 border-l-4 border-emerald-500 px-3 py-2 uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                        <i data-lucide="layout-grid" class="w-4 h-4"></i>
+                        一、配膳原始基本欄位
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">供餐日期 *</label>
+                            <input type="date" id="trace_date"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-medium font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">學校名稱 *</label>
+                            <input type="text" id="trace_school" placeholder="輸入學校全稱"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">菜色名稱 *</label>
+                            <input type="text" id="trace_recipe" placeholder="例: 南瓜肉燥"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">食材名稱 *</label>
+                            <input type="text" id="trace_ingredient" placeholder="例: 低脂絞肉"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-medium font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">使用重量 *</label>
+                            <input type="number" step="0.001" id="trace_weight" placeholder="0.00"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-bold font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">計量單位 *</label>
+                            <input type="text" id="trace_unit" placeholder="例: 公斤"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">是否屬加工品 (加工品填 Y，非加工品填 N)
+                                *</label>
+                            <select id="trace_processed"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 bg-white font-semibold font-semibold">
+                                <option value="N">天然食材 (N)</option>
+                                <option value="Y">加工食品 (Y)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: Traceability Fields -->
+                <div>
+                    <h4
+                        class="text-xs font-bold text-indigo-700 bg-indigo-50 border-l-4 border-indigo-500 px-3 py-2 uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                        <i data-lucide="shield-check" class="w-4 h-4"></i>
+                        二、進階溯源與食安履歷 (供匯出對接)
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">進貨日期 (格式: YYYY-MM-DD)</label>
+                            <input type="date" id="trace_purchaseDate"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">生產日期 (格式: YYYY-MM-DD)</label>
+                            <input type="date" id="trace_productionDate"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">有效日期 (格式: YYYY-MM-DD)</label>
+                            <input type="date" id="trace_expiryDate"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">批號</label>
+                            <input type="text" id="trace_batchNo" placeholder="如: B20260410"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">製造商名稱</label>
+                            <input type="text" id="trace_manufacturer" placeholder="製造商全名"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">供應商名稱</label>
+                            <input type="text" id="trace_supplier" placeholder="供應商公司全名"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">食材驗證標章</label>
+                            <select id="trace_certType"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
+                                <option value="">無標章</option>
+                                <option value="TAP">TAP 產銷履歷農產品</option>
+                                <option value="有機">有機農產品</option>
+                                <option value="CAS">CAS 台灣優良農產品</option>
+                                <option value="Q">Q 標章 (CAS台灣優良農產品驗證) </option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">驗證號碼 / 追溯碼</label>
+                            <input type="text" id="trace_certNo" placeholder="驗證字號 (16碼等)"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">產品官方登錄名稱 (非必填)</label>
+                            <input type="text" id="trace_productName" placeholder="如與一般食品名稱不同請填寫此處"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="bg-slate-50 p-4 border-t border-slate-100 flex justify-end gap-2">
+                <button onclick="closeTraceabilityModal()"
+                    class="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-semibold rounded-lg transition-all">取消</button>
+                <button id="saveTraceabilityBtn"
+                    class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm">儲存變更</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT MODAL 2: Menu Detailed Editor -->
+    <div id="menuEditModal"
+        class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div
+            class="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-4xl w-full overflow-hidden max-h-[90vh] flex flex-col animate-[fadeIn_0.2s_ease-out]">
+            <div class="bg-slate-900 text-white p-4 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="book-open" class="w-5 h-5 text-emerald-400"></i>
+                    <h3 class="font-bold text-sm sm:text-base">編輯每日菜單內容與六大類營養成分</h3>
+                </div>
+                <button onclick="closeMenuEditModal()" class="text-slate-400 hover:text-white transition-colors"><i
+                        data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-grow space-y-6">
+
+                <!-- Menu Dates and Basics -->
+                <div>
+                    <h4
+                        class="text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 pb-2 mb-4">
+                        1. 日期與學校配置</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">供餐日期 *</label>
+                            <input type="date" id="menu_date"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-bold font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">學校名稱 *</label>
+                            <input type="text" id="menu_school"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Meal configurations -->
+                <div>
+                    <h4
+                        class="text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 pb-2 mb-4">
+                        2. 菜色配置 (食譜名稱)</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">主食一</label>
+                            <input type="text" id="menu_mainFood1"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">主食二</label>
+                            <input type="text" id="menu_mainFood2"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">主菜</label>
+                            <input type="text" id="menu_mainDish"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-medium font-medium">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">主菜一 (副)</label>
+                            <input type="text" id="menu_mainDish1"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">主菜二 (副)</label>
+                            <input type="text" id="menu_mainDish2"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">主菜三 (副)</label>
+                            <input type="text" id="menu_mainDish3"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">副菜一</label>
+                            <input type="text" id="menu_sideDish1"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">蔬菜</label>
+                            <input type="text" id="menu_vegetable"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-medium text-emerald-700 font-medium text-emerald-700">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">湯品</label>
+                            <input type="text" id="menu_soup"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">附餐一</label>
+                            <input type="text" id="menu_dessert1"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">附餐二</label>
+                            <input type="text" id="menu_dessert2"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nutrition configuration -->
+                <div>
+                    <h4
+                        class="text-xs font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 pb-2 mb-4">
+                        3. 六大類營養份量與熱量補登</h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">全穀雜糧類 (份)</label>
+                            <input type="number" step="0.1" id="menu_grains" placeholder="如: 4.5"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-bold font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">豆魚蛋肉類 (份)</label>
+                            <input type="number" step="0.1" id="menu_protein" placeholder="如: 2.0"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-bold font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">蔬菜類 (份)</label>
+                            <input type="number" step="0.1" id="menu_veg" placeholder="如: 1.5"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-bold font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">油脂與堅果種子類 (份)</label>
+                            <input type="number" step="0.1" id="menu_fat" placeholder="如: 1.0"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">水果類 (份)</label>
+                            <input type="number" step="0.1" id="menu_fruit" placeholder="如: 1.0"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">乳品類 (份)</label>
+                            <input type="number" step="0.1" id="menu_milk" placeholder="如: 1.0"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-xs font-semibold text-slate-600 mb-1">熱量 (大卡 kcal)</label>
+                            <input type="number" id="menu_calories" placeholder="如: 780"
+                                class="w-full text-xs border border-slate-200 rounded-lg p-2.5 focus:ring-emerald-500 focus:border-emerald-500 font-bold text-indigo-600 font-bold text-indigo-600">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="bg-slate-50 p-4 border-t border-slate-100 flex justify-end gap-2">
+                <button onclick="closeMenuEditModal()"
+                    class="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-100 text-xs font-semibold rounded-lg transition-all">取消</button>
+                <button id="saveMenuBtn"
+                    class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-all shadow-sm">儲存菜單資料</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-slate-100 border-t border-slate-200 mt-auto py-6">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 space-y-1">
+            <p>© 2026 食登食材與菜單智慧分析平台. All Rights Reserved. Client-Side Only 架構設計.</p>
+            <p>無任何遠端伺服器傳輸，確保您配餐與學校機敏資料 100% 留存於本地端，安全無虞。</p>
+        </div>
+    </footer>
+
+    <!-- Application Logic -->
+    <script>
+        // Initialize icons
+        lucide.createIcons();
+
+        // Application Global State
+        let originalData = [];
+        let ingredientRows = [];
+        let menuDays = {}; // keyed by formatted Date
+
+        // Default configuration for mappings and classification
+        let defaultMapping = {
+            "主食": "主食",
+            "主菜": "主菜",
+            "副菜一": "副菜一",
+            "副菜二": "蔬菜", // Secondary main maps to vegetables to match user target
+            "蔬菜": "蔬菜",
+            "湯": "湯品",
+            "湯品": "湯品",
+            "點心": "附餐一"
+        };
+
+        let processedKeywords = [
+            "油", "鹽", "糖", "醬", "粉", "丸", "罐", "包", "米", "麥", "麵", "絲", "皮", "條", "糕", "酥", "烤", "燒", "熟", "片", "保久乳", "冷凍", "味噌"
+        ];
+
+        let naturalKeywords = [
+            "鮮", "有機", "生", "菜", "蛋", "肉", "骨", "菇", "瓜", "蒜", "薑", "蔥", "蘿蔔", "果", "芽", "椒", "鳳梨", "蘋果", "香蕉", "奇異果", "地瓜", "南瓜"
+        ];
+
+        // Reference Charts to destroy them on refresh
+        let processedChartInstance = null;
+        let materialChartInstance = null;
+        let dailyWeightChartInstance = null;
+
+        // Selected indices for Edit Modals
+        let selectedIngIdx = null;
+        let selectedMenuDate = null;
+
+        // Elements
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const fileDetail = document.getElementById('fileDetail');
+        const fileName = document.getElementById('fileName');
+        const resultsDashboard = document.getElementById('resultsDashboard');
+        const schoolInput = document.getElementById('schoolInput');
+
+        // Tabs elements
+        const tabs = {
+            analysis: { btn: document.getElementById('tabBtn_analysis'), content: document.getElementById('tabContent_analysis') },
+            ingredients: { btn: document.getElementById('tabBtn_ingredients'), content: document.getElementById('tabContent_ingredients') },
+            menu: { btn: document.getElementById('tabBtn_menu'), content: document.getElementById('tabContent_menu') }
+        };
+
+        // Initialize mapping textareas
+        document.getElementById('processedKeywords').value = processedKeywords.join(', ');
+        document.getElementById('naturalKeywords').value = naturalKeywords.join(', ');
+
+        // Rule Panel Toggle
+        const settingsPanel = document.getElementById('settingsPanel');
+        document.getElementById('mappingToggleBtn').addEventListener('click', () => {
+            settingsPanel.classList.toggle('hidden');
+        });
+        document.getElementById('closeSettingsBtn').addEventListener('click', () => {
+            settingsPanel.classList.add('hidden');
+        });
+
+        // Save mapping rules action
+        document.getElementById('saveRulesBtn').addEventListener('click', () => {
+            processedKeywords = document.getElementById('processedKeywords').value.split(',').map(s => s.trim()).filter(s => s);
+            naturalKeywords = document.getElementById('naturalKeywords').value.split(',').map(s => s.trim()).filter(s => s);
+
+            // Load current selection mappings
+            defaultMapping["主食"] = document.getElementById('map_主食').value;
+            defaultMapping["主食"] = document.getElementById('map_主食').value;
+            defaultMapping["主菜"] = document.getElementById('map_主菜').value;
+            defaultMapping["副菜一"] = document.getElementById('map_副菜一').value;
+            defaultMapping["副菜二"] = document.getElementById('map_副菜二').value;
+            defaultMapping["蔬菜"] = document.getElementById('map_蔬菜').value;
+            defaultMapping["湯"] = document.getElementById('map_湯').value;
+            defaultMapping["點心"] = document.getElementById('map_點心').value;
+
+            settingsPanel.classList.add('hidden');
+
+            // Re-process current data if exists
+            if (originalData.length > 0) {
+                processUploadedData(originalData);
+            }
+        });
+
+        // Reset rules to default
+        document.getElementById('resetRulesBtn').addEventListener('click', () => {
+            document.getElementById('processedKeywords').value = [
+                "油", "鹽", "糖", "醬", "粉", "丸", "罐", "包", "米", "麥", "麵", "絲", "皮", "條", "糕", "酥", "烤", "燒", "熟", "片", "保久乳", "冷凍", "味噌"
+            ].join(', ');
+            document.getElementById('naturalKeywords').value = [
+                "鮮", "有機", "生", "菜", "蛋", "肉", "骨", "菇", "瓜", "蒜", "薑", "蔥", "蘿蔔", "果", "芽", "椒", "鳳梨", "蘋果", "香蕉", "奇異果", "地瓜", "南瓜"
+            ].join(', ');
+
+            document.getElementById('map_主食').value = "主食一";
+            document.getElementById('map_主菜').value = "主菜";
+            document.getElementById('map_副菜一').value = "副菜一";
+            document.getElementById('map_副菜二').value = "蔬菜";
+            document.getElementById('map_蔬菜').value = "蔬菜";
+            document.getElementById('map_湯').value = "湯品";
+            document.getElementById('map_點心').value = "附餐一";
+        });
+
+        // File Input Drag and Drop Events
+        dropzone.addEventListener('click', () => fileInput.click());
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('border-emerald-500', 'bg-emerald-50/10');
+        });
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('border-emerald-500', 'bg-emerald-50/10');
+        });
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('border-emerald-500', 'bg-emerald-50/10');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        // Demo Data Action
+        document.getElementById('demoBtn').addEventListener('click', () => {
+            loadDemoData();
+        });
+
+        // File Handler
+        function handleFile(file) {
+            fileName.textContent = file.name;
+            fileDetail.classList.remove('hidden');
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+
+                // Parse raw rows as 2D array
+                const rawJson = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                originalData = rawJson;
+                processUploadedData(rawJson);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // ROC and Western Date Converter Utility
+        function parseRocOrWesternDate(cellStr) {
+            if (!cellStr) return null;
+            const clean = String(cellStr).replace(/\s/g, "");
+            // Matches ROC standard pattern "115.06.15" or CE pattern "2026.06.15" or "2026-06-15"
+            const match = clean.match(/(\d{3,4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);
+            if (match) {
+                let year = parseInt(match[1]);
+                const month = match[2].padStart(2, '0');
+                const day = match[3].padStart(2, '0');
+                if (year < 1000) {
+                    year += 1911; // Conversion logic from ROC
+                }
+                return `${year}-${month}-${day}`;
+            }
+            return null;
+        }
+
+        // Determine Processing Tag (Y or N)
+        function determineProcessed(ingredientName) {
+            if (!ingredientName) return "N";
+            // Natural features overrides processing keyword matches
+            for (const nk of naturalKeywords) {
+                if (ingredientName.includes(nk)) return false;
+            }
+            for (const pk of processedKeywords) {
+                if (ingredientName.includes(pk)) return true;
+            }
+            return false; // Default is unprocessed
+        }
+
+        // Processing Logic State Machine (With Intelligent Adaptive Column Mapping)
+        function processUploadedData(rows) {
+            let schoolName = schoolInput.value || "臺南市佳里區佳里國小";
+            let currentDate = null;
+            let currentMealType = "";
+            let currentRecipeName = "";
+
+            ingredientRows = [];
+            menuDays = {};
+
+            // Default column indices (Old Format as backup)
+            let colIndices = {
+                mealType: 0,
+                recipe: 1,
+                ingredient: 3,
+                qty: 4,
+                unit: 5
+            };
+
+            rows.forEach((row, index) => {
+                if (!row || row.length === 0) return;
+
+                // Format cells to trimmed strings
+                const cells = row.map(cell => cell !== undefined && cell !== null ? String(cell).trim() : "");
+                const rowText = cells.join(" ");
+
+                // 0. Auto-extract School Name from headers if present (e.g. 台南市佳里國民小學葷食日記)
+                if (rowText.includes("國小") || rowText.includes("小學") || rowText.includes("學校")) {
+                    for (let cell of cells) {
+                        if (cell.includes("國小") || cell.includes("小學") || cell.includes("學校")) {
+                            let cleaned = cell.replace(/葷食日記|素食日記|餐點|葷食|素食|日記/g, "").trim();
+                            if (cleaned && cleaned.length > 3) {
+                                schoolName = cleaned;
+                                schoolInput.value = cleaned; // Sync UI input
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                // 1. Adaptive Header Column Index Mapping
+                const cleanCells = cells.map(c => c.replace(/\s+/g, ""));
+                if (cleanCells.includes("菜別") || cleanCells.includes("食品名稱") || cleanCells.includes("使用數量")) {
+                    const mIdx = cleanCells.indexOf("菜別");
+                    const rIdx = cleanCells.indexOf("食譜名稱");
+                    const iIdx = cleanCells.indexOf("食品名稱");
+                    const qIdx = cleanCells.indexOf("使用數量");
+                    const uIdx = cleanCells.indexOf("單位");
+
+                    // Ensure valid matches to assign new indices dynamically
+                    if (iIdx !== -1 && qIdx !== -1) {
+                        colIndices.mealType = mIdx !== -1 ? mIdx : 0;
+                        colIndices.recipe = rIdx !== -1 ? rIdx : 1;
+                        colIndices.ingredient = iIdx;
+                        colIndices.qty = qIdx;
+                        colIndices.unit = uIdx !== -1 ? uIdx : 5;
+                    }
+                    return; // Skip table header row itself
+                }
+
+                // 2. Detect Dining Date Row (ROC or CE date format)
+                if (rowText.includes("用餐日期") || rowText.match(/\d{3}[.\-\/]\d{2}[.\-\/]\d{2}/)) {
+                    const parsedDate = parseRocOrWesternDate(rowText);
+                    if (parsedDate) {
+                        currentDate = parsedDate;
+                        currentMealType = "";
+                        currentRecipeName = "";
+
+                        if (!menuDays[currentDate]) {
+                            menuDays[currentDate] = {
+                                date: currentDate,
+                                school: schoolName,
+                                "主食一": "", "主食二": "",
+                                "主菜": "", "主菜一": "", "主菜二": "", "主菜三": "",
+                                "副菜一": "", "副菜二": "", "副菜三": "", "副菜四": "", "副菜五": "", "副菜六": "",
+                                "蔬菜": "", "湯品": "", "附餐一": "", "附餐二": "",
+                                // Nutrition parameters initialized
+                                grains: "", protein: "", veg: "", fat: "", fruit: "", milk: "", calories: ""
+                            };
+                        }
+                    }
+                }
+
+                if (!currentDate) return; // Skip preceding rows until date is parsed
+
+                // 3. Identify Meal Category & Recipe Header using dynamic column indices
+                const col0 = cells[colIndices.mealType]; // 菜別
+                const col1 = cells[colIndices.recipe]; // 食譜名稱 or 供應人數
+
+                if (col0 && col0 !== "") {
+                    currentMealType = col0;
+                }
+
+                // Avoid mapping "供應人數" or empty dates or item IDs as recipe name
+                if (col1 && col1 !== "" && !col1.startsWith("供應人數") && !col1.startsWith("用餐日期") && !col1.includes("星期") && !col1.match(/^\d+$/)) {
+                    currentRecipeName = col1;
+                }
+
+                // 4. Mapping recipes to Menu Structure dynamically
+                if (currentMealType && currentRecipeName && menuDays[currentDate]) {
+                    const mapTarget = defaultMapping[currentMealType];
+                    if (mapTarget) {
+                        if (mapTarget === "主食") {
+                            if (!menuDays[currentDate]["主食一"]) {
+                                menuDays[currentDate]["主食一"] = currentRecipeName;
+                            } else if (menuDays[currentDate]["主食一"] !== currentRecipeName) {
+                                menuDays[currentDate]["主食二"] = currentRecipeName;
+                            }
+                        } else if (mapTarget === "主菜") {
+                            if (!menuDays[currentDate]["主菜"]) {
+                                menuDays[currentDate]["主菜"] = currentRecipeName;
+                            } else if (menuDays[currentDate]["主菜"] !== currentRecipeName && !menuDays[currentDate]["主菜一"]) {
+                                menuDays[currentDate]["主菜一"] = currentRecipeName;
+                            } else if (menuDays[currentDate]["主菜"] !== currentRecipeName && menuDays[currentDate]["主菜一"] !== currentRecipeName && !menuDays[currentDate]["主菜二"]) {
+                                menuDays[currentDate]["主菜二"] = currentRecipeName;
+                            } else if (menuDays[currentDate]["主菜"] !== currentRecipeName && menuDays[currentDate]["主菜一"] !== currentRecipeName && menuDays[currentDate]["主菜二"] !== currentRecipeName && !menuDays[currentDate]["主菜三"]) {
+                                menuDays[currentDate]["主菜三"] = currentRecipeName;
+                            }
+                        } else {
+                            menuDays[currentDate][mapTarget] = currentRecipeName;
+                        }
+                    }
+                }
+
+                // 5. Ingredient specifications parsing using dynamic column indices
+                const ingredientName = cells[colIndices.ingredient];
+                const rawQty = cells[colIndices.qty];
+                const unit = cells[colIndices.unit] || "公斤";
+
+                if (ingredientName && ingredientName !== "" && ingredientName !== "食品名稱" && rawQty && rawQty !== "") {
+                    const weight = parseFloat(String(rawQty).replace(/,/g, ""));
+                    if (!isNaN(weight)) {
+                        const isProcessed = determineProcessed(ingredientName);
+
+                        ingredientRows.push({
+                            date: currentDate,
+                            school: schoolName,
+                            recipe: currentRecipeName || "未知菜色",
+                            ingredient: ingredientName,
+                            weight: weight,
+                            unit: unit,
+                            processed: isProcessed ? "Y" : "N",
+                            // Extension placeholders matching standard target
+                            purchaseDate: "",
+                            productionDate: "",
+                            expiryDate: "",
+                            batchNo: "",
+                            manufacturer: "",
+                            supplier: "",
+                            certType: "",
+                            certNo: "",
+                            productName: ""
+                        });
+                    }
+                }
+            });
+
+            // Update Dashboard Analytics & Tables
+            renderResults();
+        }
+
+        // Display Data and Generate Visualizations
+        function renderResults() {
+            resultsDashboard.classList.remove('hidden');
+
+            // Calculate Stats
+            const uniqueDates = [...new Set(ingredientRows.map(r => r.date))];
+            const uniqueRecipes = [...new Set(ingredientRows.map(r => r.recipe))];
+            const totalIngredients = ingredientRows.length;
+
+            const processedCount = ingredientRows.filter(r => r.processed === 'Y').length;
+            const processedPercent = totalIngredients > 0 ? Math.round((processedCount / totalIngredients) * 100) : 0;
+
+            document.getElementById('statDays').textContent = uniqueDates.length;
+            document.getElementById('statRecipes').textContent = uniqueRecipes.length;
+            document.getElementById('statIngredients').textContent = totalIngredients;
+            document.getElementById('statProcessedPct').textContent = `${processedPercent}%`;
+
+            // Render Sub-tables
+            renderIngredientsTable();
+            renderMenuTable();
+
+            // Render Validations list
+            runValidations();
+
+            // Draw Charts
+            initCharts();
+        }
+
+        // Validation Module
+        function runValidations() {
+            const vList = document.getElementById('validationList');
+            vList.innerHTML = '';
+
+            const anomalies = [];
+
+            // Check 1: Empty dates or values inside the structures
+            if (ingredientRows.length === 0) {
+                anomalies.push({
+                    level: 'danger',
+                    title: '找不到食材記錄',
+                    desc: '未能從上傳檔案內解析出有效的食材與重量對照，請檢查試算表架構。'
+                });
+            }
+
+            // Check 2: Anomaly ingredient weights (very high or low)
+            const zeroQtyRows = ingredientRows.filter(r => r.weight <= 0);
+            if (zeroQtyRows.length > 0) {
+                anomalies.push({
+                    level: 'warning',
+                    title: '出現 0 或負數重量食材',
+                    desc: `共偵測到 ${zeroQtyRows.length} 筆食材重量記錄為零，將被視作異常登記。`
+                });
+            }
+
+            const extremeHighRows = ingredientRows.filter(r => r.weight > 300 && r.unit === '公斤');
+            if (extremeHighRows.length > 0) {
+                anomalies.push({
+                    level: 'info',
+                    title: '高量物資配送警示',
+                    desc: `偵測到 ${extremeHighRows.length} 筆大宗食材配額（單筆超過 300 公斤），例如 ${extremeHighRows[0].ingredient} 等，建議比對配送量。`
+                });
+            }
+
+            // Check 3: Meal type completeness
+            Object.keys(menuDays).forEach(date => {
+                const day = menuDays[date];
+                const missingCategories = [];
+                if (!day['主食一']) missingCategories.push('主食');
+                if (!day['主菜']) missingCategories.push('主菜');
+                if (!day['湯品']) missingCategories.push('湯品');
+                if (!day['蔬菜']) missingCategories.push('蔬菜');
+
+                if (missingCategories.length > 0) {
+                    anomalies.push({
+                        level: 'warning',
+                        title: `菜單完整度不足 (${date})`,
+                        desc: `該供餐日未偵測到 [${missingCategories.join(', ')}] 的食譜配置項目。`
+                    });
+                }
+            });
+
+            // Check 4: Inconsistent units
+            const nonStandardUnits = [...new Set(ingredientRows.map(r => r.unit))].filter(u => !['公斤', '公克', 'g', 'kg'].includes(u));
+            if (nonStandardUnits.length > 0) {
+                anomalies.push({
+                    level: 'info',
+                    title: '檢測到非標準重量單位',
+                    desc: `食材使用了如 [${nonStandardUnits.join(', ')}] 等非標準克制單位，匯入食登可能需要手動換算。`
+                });
+            }
+
+            // If everything passes beautifully
+            if (anomalies.length === 0) {
+                vList.innerHTML = `
+          <div class="p-4 bg-emerald-50 text-emerald-800 rounded-xl border border-emerald-100 flex gap-3">
+            <i data-lucide="check-circle" class="w-5 h-5 text-emerald-600 flex-shrink-0"></i>
+            <div>
+              <p class="text-xs font-semibold">完美的餐飲數據配備！</p>
+              <p class="text-[10px] text-emerald-600 mt-1">目前未偵測到任何配料遺漏、重量缺失或不合規的計量單位。</p>
+            </div>
+          </div>
+        `;
+            } else {
+                anomalies.forEach(item => {
+                    let badgeColor = 'bg-blue-50 text-blue-700 border-blue-100';
+                    let icon = 'info';
+                    if (item.level === 'warning') {
+                        badgeColor = 'bg-amber-50 text-amber-700 border-amber-100';
+                        icon = 'alert-triangle';
+                    } else if (item.level === 'danger') {
+                        badgeColor = 'bg-rose-50 text-rose-700 border-rose-100';
+                        icon = 'x-circle';
+                    }
+
+                    const div = document.createElement('div');
+                    div.className = `p-3 rounded-lg border flex gap-3 text-xs ${badgeColor} transition-all hover:translate-x-1`;
+                    div.innerHTML = `
+            <i data-lucide="${icon}" class="w-4 h-4 mt-0.5 flex-shrink-0"></i>
+            <div>
+              <p class="font-semibold">${item.title}</p>
+              <p class="text-[10px] text-slate-500 mt-0.5">${item.desc}</p>
+            </div>
+          `;
+                    vList.appendChild(div);
+                });
+            }
+            lucide.createIcons();
+        }
+
+        // Table Renderers with contenteditable support for instant adjustments
+        function renderIngredientsTable() {
+            const tbody = document.getElementById('ingTableBody');
+            const searchVal = document.getElementById('searchIngInput').value.toLowerCase();
+            tbody.innerHTML = '';
+
+            // Preserve indices when filtering by assigning raw array mapping
+            const filtered = ingredientRows
+                .map((row, idx) => ({ row, idx }))
+                .filter(item => {
+                    return item.row.date.includes(searchVal) ||
+                        item.row.recipe.toLowerCase().includes(searchVal) ||
+                        item.row.ingredient.toLowerCase().includes(searchVal);
+                });
+
+            document.getElementById('ingRowCount').textContent = `共 ${filtered.length} 筆記錄 (可雙擊直接修改基本欄位)`;
+
+            filtered.forEach(({ row, idx }) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+                tr.innerHTML = `
+          <td class="p-3 whitespace-nowrap font-medium text-slate-800">${row.date}</td>
+          <td class="p-3 whitespace-nowrap text-slate-400 text-xs">${row.school}</td>
+          <td class="p-3 whitespace-nowrap font-semibold text-slate-700">${row.recipe}</td>
+          <td class="p-3 whitespace-nowrap font-medium text-slate-900 focus:bg-amber-50" contenteditable="true" data-field="ingredient" data-idx="${idx}">${row.ingredient}</td>
+          <td class="p-3 whitespace-nowrap text-right font-bold text-emerald-600 focus:bg-amber-50" contenteditable="true" data-field="weight" data-idx="${idx}">${row.weight}</td>
+          <td class="p-3 whitespace-nowrap text-slate-500 focus:bg-amber-50" contenteditable="true" data-field="unit" data-idx="${idx}">${row.unit}</td>
+          <td class="p-3 whitespace-nowrap">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer transition-all ${row.processed === 'Y' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}" data-action="toggle-proc" data-idx="${idx}">
+              ${row.processed === 'Y' ? '加工 (Y)' : '天然 (N)'}
+            </span>
+          </td>
+          <td class="p-3 whitespace-nowrap flex items-center justify-center gap-2">
+            <button class="px-2.5 py-1 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all" onclick="openTraceabilityModal(${idx})">
+              <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> 編輯詳細 ${row.certType ? '★' : ''}
+            </button>
+            <button class="text-rose-500 hover:text-rose-700 text-xs font-semibold flex items-center gap-1" data-action="delete-row" data-idx="${idx}">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 刪除
+            </button>
+          </td>
+        `;
+                tbody.appendChild(tr);
+            });
+
+            // Bind dynamic updates from cell editing
+            tbody.querySelectorAll('[contenteditable=true]').forEach(cell => {
+                cell.addEventListener('blur', (e) => {
+                    const idx = parseInt(e.target.dataset.idx);
+                    const field = e.target.dataset.field;
+                    let val = e.target.textContent.trim();
+
+                    if (field === 'weight') {
+                        val = parseFloat(val) || 0;
+                    }
+
+                    ingredientRows[idx][field] = val;
+                    runValidations();
+                    updateChartsDataOnly();
+                });
+            });
+
+            tbody.querySelectorAll('[data-action=toggle-proc]').forEach(badge => {
+                badge.addEventListener('click', (e) => {
+                    const idx = parseInt(e.target.dataset.idx);
+                    ingredientRows[idx].processed = ingredientRows[idx].processed === 'Y' ? 'N' : 'Y';
+                    renderIngredientsTable();
+                    runValidations();
+                    updateChartsDataOnly();
+                });
+            });
+
+            tbody.querySelectorAll('[data-action=delete-row]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = parseInt(e.currentTarget.dataset.idx);
+                    ingredientRows.splice(idx, 1);
+                    renderIngredientsTable();
+                    runValidations();
+                    updateChartsDataOnly();
+                });
+            });
+
+            lucide.createIcons();
+        }
+
+        document.getElementById('searchIngInput').addEventListener('input', () => {
+            renderIngredientsTable();
+        });
+
+        function renderMenuTable() {
+            const tbody = document.getElementById('menuTableBody');
+            tbody.innerHTML = '';
+
+            const days = Object.values(menuDays).sort((a, b) => a.date.localeCompare(b.date));
+
+            days.forEach((day, index) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+                tr.innerHTML = `
+          <td class="p-3 whitespace-nowrap font-semibold text-slate-800">${day.date}</td>
+          <td class="p-3 whitespace-nowrap text-slate-400 text-xs">${day.school}</td>
+          <td class="p-3">${day['主食一'] || '<span class="text-slate-300">-</span>'}</td>
+          <td class="p-3 text-slate-400">${day['主食二'] || '<span class="text-slate-300">-</span>'}</td>
+          <td class="p-3 font-semibold text-slate-700">${day['主菜'] || '<span class="text-slate-300">-</span>'}</td>
+          <td class="p-3 text-slate-400">${day['主菜一'] || '<span class="text-slate-300">-</span>'}</td>
+          <td class="p-3 text-slate-400">${day['主菜二'] || '<span class="text-slate-300">-</span>'}</td>
+          <td class="p-3">${day['副菜一'] || '<span class="text-slate-300">-</span>'}</td>
+          <td class="p-3 text-emerald-700 font-medium">${day['蔬菜'] || '<span class="text-slate-300">-</span>'}</td>
+          <td class="p-3">${day['湯品'] || '<span class="text-slate-300">-</span>'}</td>
+          <td class="p-3">${day['附餐一'] || '<span class="text-slate-300">-</span>'}</td>
+          <td class="p-3 text-center flex items-center justify-center gap-2">
+            <button class="px-2.5 py-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded-lg font-bold flex items-center gap-1 transition-all" onclick="openMenuEditModal('${day.date}')">
+              <i data-lucide="edit-3" class="w-3.5 h-3.5"></i> 編輯詳細
+            </button>
+            <button class="text-rose-500 hover:text-rose-700 text-xs font-semibold" data-action="delete-menu" data-date="${day.date}">
+              <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 刪除
+            </button>
+          </td>
+        `;
+                tbody.appendChild(tr);
+            });
+
+            tbody.querySelectorAll('[data-action=delete-menu]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const date = e.target.dataset.date;
+                    delete menuDays[date];
+                    renderMenuTable();
+                    runValidations();
+                });
+            });
+            lucide.createIcons();
+        }
+
+        // Modal 1 Controller: Ingredients Traceability Detailed Editors (Now includes basic fields)
+        function openTraceabilityModal(index) {
+            selectedIngIdx = index;
+            const row = ingredientRows[index];
+
+            // Section 1: Basic requested fields
+            document.getElementById('trace_date').value = row.date || "";
+            document.getElementById('trace_school').value = row.school || "";
+            document.getElementById('trace_recipe').value = row.recipe || "";
+            document.getElementById('trace_ingredient').value = row.ingredient || "";
+            document.getElementById('trace_weight').value = row.weight || 0;
+            document.getElementById('trace_unit').value = row.unit || "公斤";
+            document.getElementById('trace_processed').value = row.processed || "N";
+
+            // Section 2: Traceability details
+            document.getElementById('trace_purchaseDate').value = row.purchaseDate || "";
+            document.getElementById('trace_productionDate').value = row.productionDate || "";
+            document.getElementById('trace_expiryDate').value = row.expiryDate || "";
+            document.getElementById('trace_batchNo').value = row.batchNo || "";
+            document.getElementById('trace_manufacturer').value = row.manufacturer || "";
+            document.getElementById('trace_supplier').value = row.supplier || "";
+            document.getElementById('trace_certType').value = row.certType || "";
+            document.getElementById('trace_certNo').value = row.certNo || "";
+            document.getElementById('trace_productName').value = row.productName || "";
+
+            document.getElementById('traceabilityModal').classList.remove('hidden');
+        }
+
+        function closeTraceabilityModal() {
+            document.getElementById('traceabilityModal').classList.add('hidden');
+            selectedIngIdx = null;
+        }
+
+        document.getElementById('saveTraceabilityBtn').addEventListener('click', () => {
+            if (selectedIngIdx === null) return;
+
+            const row = ingredientRows[selectedIngIdx];
+
+            // Save Section 1: Basic fields
+            row.date = document.getElementById('trace_date').value;
+            row.school = document.getElementById('trace_school').value;
+            row.recipe = document.getElementById('trace_recipe').value;
+            row.ingredient = document.getElementById('trace_ingredient').value;
+            row.weight = parseFloat(document.getElementById('trace_weight').value) || 0;
+            row.unit = document.getElementById('trace_unit').value;
+            row.processed = document.getElementById('trace_processed').value;
+
+            // Save Section 2: Traceability details
+            row.purchaseDate = document.getElementById('trace_purchaseDate').value;
+            row.productionDate = document.getElementById('trace_productionDate').value;
+            row.expiryDate = document.getElementById('trace_expiryDate').value;
+            row.batchNo = document.getElementById('trace_batchNo').value;
+            row.manufacturer = document.getElementById('trace_manufacturer').value;
+            row.supplier = document.getElementById('trace_supplier').value;
+            row.certType = document.getElementById('trace_certType').value;
+            row.certNo = document.getElementById('trace_certNo').value;
+            row.productName = document.getElementById('trace_productName').value;
+
+            closeTraceabilityModal();
+            renderIngredientsTable();
+            runValidations();
+            updateChartsDataOnly();
+        });
+
+        // Modal 2 Controller: Menu Details Editor
+        function openMenuEditModal(date) {
+            selectedMenuDate = date;
+            const day = menuDays[date];
+
+            // Date and School
+            document.getElementById('menu_date').value = day.date || "";
+            document.getElementById('menu_school').value = day.school || "";
+
+            // Meal Configuration
+            document.getElementById('menu_mainFood1').value = day['主食一'] || "";
+            document.getElementById('menu_mainFood2').value = day['主食二'] || "";
+            document.getElementById('menu_mainDish').value = day['主菜'] || "";
+            document.getElementById('menu_mainDish1').value = day['主菜一'] || "";
+            document.getElementById('menu_mainDish2').value = day['主菜二'] || "";
+            document.getElementById('menu_mainDish3').value = day['主菜三'] || "";
+            document.getElementById('menu_sideDish1').value = day['副菜一'] || "";
+            document.getElementById('menu_vegetable').value = day['蔬菜'] || "";
+            document.getElementById('menu_soup').value = day['湯品'] || "";
+            document.getElementById('menu_dessert1').value = day['附餐一'] || "";
+            document.getElementById('menu_dessert2').value = day['附餐二'] || "";
+
+            // Populate nutrition details
+            document.getElementById('menu_grains').value = day.grains || "";
+            document.getElementById('menu_protein').value = day.protein || "";
+            document.getElementById('menu_veg').value = day.veg || "";
+            document.getElementById('menu_fat').value = day.fat || "";
+            document.getElementById('menu_fruit').value = day.fruit || "";
+            document.getElementById('menu_milk').value = day.milk || "";
+            document.getElementById('menu_calories').value = day.calories || "";
+
+            document.getElementById('menuEditModal').classList.remove('hidden');
+        }
+
+        function closeMenuEditModal() {
+            document.getElementById('menuEditModal').classList.add('hidden');
+            selectedMenuDate = null;
+        }
+
+        document.getElementById('saveMenuBtn').addEventListener('click', () => {
+            if (selectedMenuDate === null) return;
+
+            const oldDate = selectedMenuDate;
+            const newDate = document.getElementById('menu_date').value;
+            const newSchool = document.getElementById('menu_school').value;
+
+            // Extract details
+            const updateData = {
+                date: newDate,
+                school: newSchool,
+                "主食一": document.getElementById('menu_mainFood1').value,
+                "主食二": document.getElementById('menu_mainFood2').value,
+                "主菜": document.getElementById('menu_mainDish').value,
+                "主菜一": document.getElementById('menu_mainDish1').value,
+                "主菜二": document.getElementById('menu_mainDish2').value,
+                "主菜三": document.getElementById('menu_mainDish3').value,
+                "副菜一": document.getElementById('menu_sideDish1').value,
+                "蔬菜": document.getElementById('menu_vegetable').value,
+                "湯品": document.getElementById('menu_soup').value,
+                "附餐一": document.getElementById('menu_dessert1').value,
+                "附餐二": document.getElementById('menu_dessert2').value,
+                grains: document.getElementById('menu_grains').value,
+                protein: document.getElementById('menu_protein').value,
+                veg: document.getElementById('menu_veg').value,
+                fat: document.getElementById('menu_fat').value,
+                fruit: document.getElementById('menu_fruit').value,
+                milk: document.getElementById('menu_milk').value,
+                calories: document.getElementById('menu_calories').value
+            };
+
+            // Handle key migration if date changes
+            if (oldDate !== newDate) {
+                menuDays[newDate] = updateData;
+                delete menuDays[oldDate];
+
+                // Cascade update corresponding ingredients to maintain data integrity
+                ingredientRows.forEach(row => {
+                    if (row.date === oldDate) {
+                        row.date = newDate;
+                    }
+                });
+            } else {
+                menuDays[oldDate] = updateData;
+            }
+
+            // Sync schools to corresponding ingredients if modified
+            ingredientRows.forEach(row => {
+                if (row.date === newDate) {
+                    row.school = newSchool;
+                }
+            });
+
+            closeMenuEditModal();
+            renderMenuTable();
+            renderIngredientsTable();
+            runValidations();
+            updateChartsDataOnly();
+        });
+
+        // Add row manually to ingredient table
+        document.getElementById('addIngRowBtn').addEventListener('click', () => {
+            const today = new Date().toISOString().split('T')[0];
+            const schoolName = schoolInput.value || "臺南市佳里區佳里國小";
+
+            ingredientRows.unshift({
+                date: today,
+                school: schoolName,
+                recipe: "自訂新增配膳",
+                ingredient: "新食材",
+                weight: 10,
+                unit: "公斤",
+                processed: "N",
+                purchaseDate: "", productionDate: "", expiryDate: "", batchNo: "",
+                manufacturer: "", supplier: "", certType: "", certNo: "", productName: ""
+            });
+
+            renderIngredientsTable();
+            runValidations();
+            updateChartsDataOnly();
+        });
+
+        // Add row manually to Menu days map
+        document.getElementById('addMenuRowBtn').addEventListener('click', () => {
+            const today = new Date().toISOString().split('T')[0];
+            const schoolName = schoolInput.value || "臺南市佳里區佳里國小";
+
+            if (menuDays[today]) {
+                alert("今日菜單已存在，請直接在列表內編輯或刪除原項目。");
+                return;
+            }
+
+            menuDays[today] = {
+                date: today,
+                school: schoolName,
+                "主食一": "白米飯", "主食二": "",
+                "主菜": "精緻主菜", "主菜一": "", "主菜二": "", "主菜三": "",
+                "副菜一": "", "副菜二": "", "副菜三": "", "副菜四": "", "副菜五": "", "副菜六": "",
+                "蔬菜": "季節蔬菜", "湯品": "例湯", "附餐一": "", "附餐二": "",
+                grains: "", protein: "", veg: "", fat: "", fruit: "", milk: "", calories: ""
+            };
+
+            renderMenuTable();
+            runValidations();
+        });
+
+        // Charting Engine Using Chart.js
+        function initCharts() {
+            const processedCount = ingredientRows.filter(r => r.processed === 'Y').length;
+            const naturalCount = ingredientRows.length - processedCount;
+
+            const pCtx = document.getElementById('processedChart').getContext('2d');
+            if (processedChartInstance) processedChartInstance.destroy();
+            processedChartInstance = new Chart(pCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['加工食品 (Y)', '天然食材 (N)'],
+                    datasets: [{
+                        data: [processedCount, naturalCount],
+                        backgroundColor: ['#f59e0b', '#10b981'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+                    },
+                    cutout: '70%'
+                }
+            });
+
+            const materialWeights = {};
+            ingredientRows.forEach(r => {
+                if (r.unit === '公斤') {
+                    materialWeights[r.ingredient] = (materialWeights[r.ingredient] || 0) + r.weight;
+                }
+            });
+
+            const sortedMaterials = Object.entries(materialWeights)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            const mLabels = sortedMaterials.map(x => x[0]);
+            const mData = sortedMaterials.map(x => x[1]);
+
+            const mCtx = document.getElementById('materialChart').getContext('2d');
+            if (materialChartInstance) materialChartInstance.destroy();
+            materialChartInstance = new Chart(mCtx, {
+                type: 'bar',
+                data: {
+                    labels: mLabels.length > 0 ? mLabels : ['尚無物資'],
+                    datasets: [{
+                        label: '總使用重量 (公斤)',
+                        data: mData.length > 0 ? mData : [0],
+                        backgroundColor: 'rgba(16, 185, 129, 0.85)',
+                        borderRadius: 6,
+                        barThickness: 16
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9 } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 9 } } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            const dailyWeights = {};
+            ingredientRows.forEach(r => {
+                if (r.unit === '公斤') {
+                    dailyWeights[r.date] = (dailyWeights[r.date] || 0) + r.weight;
+                }
+            });
+
+            const sortedDaily = Object.entries(dailyWeights).sort((a, b) => a[0].localeCompare(b[0]));
+            const dLabels = sortedDaily.map(x => x[0]);
+            const dData = sortedDaily.map(x => x[1]);
+
+            const dCtx = document.getElementById('dailyWeightChart').getContext('2d');
+            if (dailyWeightChartInstance) dailyWeightChartInstance.destroy();
+            dailyWeightChartInstance = new Chart(dCtx, {
+                type: 'line',
+                data: {
+                    labels: dLabels.length > 0 ? dLabels : ['無日期數據'],
+                    datasets: [{
+                        label: '當日配膳重量總合 (公斤)',
+                        data: dData.length > 0 ? dData : [0],
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.15)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.35,
+                        pointBackgroundColor: '#6366f1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 9 } } },
+                        x: { grid: { display: false }, ticks: { font: { size: 9 } } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function updateChartsDataOnly() {
+            if (processedChartInstance && materialChartInstance && dailyWeightChartInstance) {
+                initCharts();
+            }
+        }
+
+        // Tab Navigation Controller
+        function switchTab(target) {
+            Object.keys(tabs).forEach(k => {
+                const t = tabs[k];
+                if (k === target) {
+                    t.btn.classList.add('border-emerald-600', 'text-emerald-600', 'font-bold');
+                    t.btn.classList.remove('border-transparent', 'text-slate-500');
+                    t.content.classList.remove('hidden');
+                } else {
+                    t.btn.classList.remove('border-emerald-600', 'text-emerald-600', 'font-bold');
+                    t.btn.classList.add('border-transparent', 'text-slate-500');
+                    t.content.classList.add('hidden');
+                }
+            });
+        }
+
+        Object.keys(tabs).forEach(k => {
+            tabs[k].btn.addEventListener('click', () => switchTab(k));
+        });
+
+        // Excel Export Utilities (Single multi-sheet excel generation)
+        document.getElementById('exportExcelBtn').addEventListener('click', () => {
+            if (ingredientRows.length === 0) return;
+
+            const wb = XLSX.utils.book_new();
+
+            // Sheet 1: Ingredients Specifications (對接食登食材格式)
+            const ingHeaders = [
+                "供餐日期", "學校", "菜色名稱", "食材名稱", "進貨日期", "生產日期", "有效日期", "批號",
+                "製造商", "供應商名稱", "食材驗證標章", "驗證號碼", "產品名稱", "重量(公斤)", "非基改玉米",
+                "非基改黃豆", "加工品", "食材原產地"
+            ];
+
+            // FIXED: Merged weight unit into weight column and set Non-GMO corn column as empty
+            const ingData = ingredientRows.map(r => [
+                r.date, r.school, r.recipe, r.ingredient,
+                r.purchaseDate, r.productionDate, r.expiryDate, r.batchNo,
+                r.manufacturer, r.supplier, r.certType, r.certNo, r.productName,
+                `${r.weight}${r.unit}`, "", "", r.processed, ""
+            ]);
+
+            const wsIng = XLSX.utils.aoa_to_sheet([ingHeaders, ...ingData]);
+            XLSX.utils.book_append_sheet(wb, wsIng, "食登食材表");
+
+            // Sheet 2: Menu specifications
+            const menuHeaders = [
+                "學校", "日期", "主食一", "主食二", "主菜", "主菜一", "主菜二", "主菜三", "副菜一", "副菜二",
+                "副菜三", "副菜四", "副菜五", "副菜六", "蔬菜", "湯品", "附餐一", "附餐二", "全穀雜糧",
+                "豆魚蛋肉", "蔬菜", "油脂與堅果種子", "水果", "乳品", "熱量", "油脂與堅果種子(自定義)"
+            ];
+
+            const daysSorted = Object.values(menuDays).sort((a, b) => a.date.localeCompare(b.date));
+            const menuData = daysSorted.map(d => [
+                d.school, d.date, d["主食一"], d["主食二"], d["主菜"], d["主菜一"], d["主菜二"],
+                d["主菜三"], d["副菜一"], d["副菜二"], d["副菜三"], d["副菜四"], d["副菜五"],
+                d["副菜六"], d["蔬菜"], d["湯品"], d["附餐一"], d["附餐二"],
+                d.grains, d.protein, d.veg, d.fat, d.fruit, d.milk, d.calories, ""
+            ]);
+
+            const wsMenu = XLSX.utils.aoa_to_sheet([menuHeaders, ...menuData]);
+            XLSX.utils.book_append_sheet(wb, wsMenu, "食登菜單表");
+
+            const today = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `食登對接整合表_${today}.xlsx`);
+        });
+
+        // CSV Download support
+        function downloadCsv(headers, rows, filename) {
+            let csvContent = "\ufeff" + headers.join(",") + "\n";
+            rows.forEach(r => {
+                const escaped = r.map(v => {
+                    const str = String(v === undefined || v === null ? "" : v);
+                    if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+                        return `"${str.replace(/"/g, '""')}"`;
+                    }
+                    return str;
+                });
+                csvContent += escaped.join(",") + "\n";
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        document.getElementById('exportIngCsvBtn').addEventListener('click', () => {
+            const ingHeaders = [
+                "供餐日期", "學校", "菜色名稱", "食材名稱", "進貨日期", "生產日期", "有效日期", "批號",
+                "製造商", "供應商名稱", "食材驗證標章", "驗證號碼", "產品名稱", "重量(公斤)", "非基改玉米",
+                "非基改黃豆", "加工品", "食材原產地"
+            ];
+            // FIXED: Merged weight unit into weight column and set Non-GMO corn column as empty
+            const ingData = ingredientRows.map(r => [
+                r.date, r.school, r.recipe, r.ingredient,
+                r.purchaseDate, r.productionDate, r.expiryDate, r.batchNo,
+                r.manufacturer, r.supplier, r.certType, r.certNo, r.productName,
+                `${r.weight}${r.unit}`, "", "", r.processed, ""
+            ]);
+            const today = new Date().toISOString().split('T')[0];
+            downloadCsv(ingHeaders, ingData, `食登食材_${today}.csv`);
+        });
+
+        document.getElementById('exportMenuCsvBtn').addEventListener('click', () => {
+            const menuHeaders = [
+                "學校", "日期", "主食一", "主食二", "主菜", "主菜一", "主菜二", "主菜三", "副菜一", "副菜二",
+                "副菜三", "副菜四", "副菜五", "副菜六", "蔬菜", "湯品", "附餐一", "附餐二", "全穀雜糧",
+                "豆魚蛋肉", "蔬菜", "油脂與堅果種子", "水果", "乳品", "熱量", "油脂與堅果種子(自定義)"
+            ];
+            const daysSorted = Object.values(menuDays).sort((a, b) => a.date.localeCompare(b.date));
+            const menuData = daysSorted.map(d => [
+                d.school, d.date, d["主食一"], d["主食二"], d["主菜"], d["主菜一"], d["主菜二"],
+                d["主菜三"], d["副菜一"], d["副菜二"], d["副菜三"], d["副菜四"], d["副菜五"],
+                d["副菜六"], d["蔬菜"], d["湯品"], d["附餐一"], d["附餐二"],
+                d.grains, d.protein, d.veg, d.fat, d.fruit, d.milk, d.calories, ""
+            ]);
+            const today = new Date().toISOString().split('T')[0];
+            downloadCsv(menuHeaders, menuData, `食登菜單_${today}.csv`);
+        });
+
+        // Embed and load demo dataset based on user uploaded core snippet
+        function loadDemoData() {
+            const demoCsvRows = [
+                ["菜 別", "食譜名稱", "", "食品名稱", "使用數量", "單位"],
+                ["", "", "用餐日期：115.06.15", "星期一", "", ""],
+                ["主食", "燕麥飯", "", "白米", "78.0", "公斤"],
+                ["", "供應人數：  1,762", "", "燕麥粒", "10.0", "公斤"],
+                ["主菜", "南瓜肉燥", "", "食鹽", "24.0", "公斤"],
+                ["", "供應人數：  1,762", "", "低脂絞肉", "105.0", "公斤"],
+                ["", "", "", "南瓜", "55.0", "公斤"],
+                ["", "", "", "二砂糖", "40.0", "包"],
+                ["", "", "", "去皮紅蔥頭", "7.0", "公斤"],
+                ["", "", "", "醬油", "6.0", "罐"],
+                ["副菜一", "鮪魚聰明蛋", "", "冷凍玉米粒", "35.0", "公斤"],
+                ["", "供應人數：  1,762", "", "雞蛋", "7.0", "箱"],
+                ["", "", "", "鮪魚罐頭", "9.0", "罐"],
+                ["", "", "", "蔥", "2.0", "公斤"],
+                ["", "", "", "紅蘿蔔", "10.0", "公斤"],
+                ["副菜二", "有機奶油白菜", "", "有機奶油白菜", "110.0", "公斤"],
+                ["", "供應人數：  1,762", "", "蒜末", "1.0", "公斤"],
+                ["", "", "", "大豆沙拉油", "5.0", "桶"],
+                ["湯", "高麗菜金針菇湯", "", "高麗菜", "45.0", "公斤"],
+                ["", "供應人數：  1,762", "", "金針菇", "8.0", "公斤"],
+                ["", "", "", "芹菜", "2.0", "公斤"],
+                ["點心", "時令水果", "", "時令水果", "1805.0", "包"],
+                ["", "", "用餐日期：115.06.16", "星期二", "", ""],
+                ["主食", "白米飯", "", "白米", "88.0", "公斤"],
+                ["主菜", "香酥孜然鯛魚", "", "鯛魚片", "110.0", "公斤"],
+                ["副菜一", "塔香豆瓣海帶根", "", "海帶結", "50.0", "公斤"],
+                ["副菜二", "有機油菜", "", "有機油菜", "100.0", "公斤"],
+                ["湯", "黃瓜魚丸湯", "", "大黃瓜", "30.0", "公斤"],
+                ["", "", "", "魚丸", "15.0", "公斤"],
+                ["點心", "統一保久乳", "", "保久乳", "1800.0", "瓶"],
+                ["", "", "用餐日期：115.06.29", "星期一", "", ""],
+                ["主食", "糙米飯", "", "白米", "78.0", "公斤"],
+                ["", "供應人數：  1,755", "", "糙米", "10.0", "公斤"],
+                ["主菜", "薑汁味噌燒肉", "", "瘦肉片", "95.0", "公斤"],
+                ["", "", "", "蒜末", "1.0", "公斤"],
+                ["", "", "", "味噌", "12.0", "公斤"],
+                ["", "", "", "蔥", "2.0", "公斤"],
+                ["", "", "", "生薑末", "3.0", "公斤"],
+                ["副菜一", "紅蘿蔔炒蛋", "", "紅蘿蔔", "55.0", "公斤"],
+                ["", "", "", "雞蛋", "70.0", "公斤"],
+                ["", "", "", "蔥", "1.5", "公斤"],
+                ["副菜二", "有機黑葉白菜", "", "有機黑葉白菜", "115.0", "公斤"],
+                ["", "", "", "蒜末", "1.0", "公斤"],
+                ["湯", "高麗菜豆腐湯", "", "高麗菜", "35.0", "公斤"],
+                ["", "", "", "板豆腐", "5.0", "板"]
+            ];
+
+            originalData = demoCsvRows;
+            fileName.textContent = "19_21原始檔_內建示範資料";
+            fileDetail.classList.remove('hidden');
+            processUploadedData(demoCsvRows);
+        }
+    </script>
+</body>
+
+</html>
