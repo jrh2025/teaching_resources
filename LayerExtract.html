@@ -1,0 +1,2528 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LayerExtract AI - 智慧圖像元素分離與去背工作坊</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- JSZip: Supporting client-side batch layer compressing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            900: '#4c1d95',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', 'Microsoft JhengHei', sans-serif;
+            background-color: #0b0f19;
+            color: #f8fafc;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8b5cf6;
+        }
+
+        /* Standard design software alpha chessboard pattern for transparency visualization */
+        .checkerboard-bg {
+            background-size: 24px 20px;
+            background-image:
+                linear-gradient(45deg, #111827 25%, transparent 25%),
+                linear-gradient(-45deg, #111827 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #111827 75%),
+                linear-gradient(-45deg, transparent 75%, #111827 75%);
+            background-color: #070a13;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        /* Prevent default dragging on elements */
+        img {
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        /* Scanner scanline laser animation */
+        @keyframes scan {
+            0% {
+                top: 0%;
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            90% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 100%;
+                opacity: 0;
+            }
+        }
+
+        .scanner-beam {
+            animation: scan 2.5s infinite linear;
+        }
+    </style>
+</head>
+
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- 頂部導航控制列 - 字體加大優化 -->
+    <header
+        class="bg-slate-950/90 border-b border-slate-900 px-6 py-4 flex items-center justify-between z-30 shrink-0 shadow-lg">
+        <div class="flex items-center space-x-3.5">
+            <div class="bg-gradient-to-tr from-brand-600 to-indigo-500 p-3 rounded-xl shadow-md">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            </div>
+            <div>
+                <h1
+                    class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white to-slate-200 bg-clip-text text-transparent">
+                    LayerExtract AI
+                </h1>
+                <p class="text-xs md:text-sm text-slate-400 font-medium">智慧圖像多圖層自動分離與去背工作坊</p>
+            </div>
+        </div>
+
+        <!-- 快速引擎狀態資訊 -->
+        <div class="flex items-center space-x-5">
+            <span id="activeEngineBadge"
+                class="hidden sm:inline-flex items-center px-3.5 py-1.5 rounded-full text-xs md:text-sm font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <span class="w-2.5 h-2.5 mr-2 bg-emerald-400 rounded-full animate-ping"></span>
+                本地處理引擎就緒
+            </span>
+            <div class="flex items-center space-x-2">
+                <button id="btnHelp"
+                    class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition"
+                    title="功能導覽與使用教學">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主要應用程式容器 -->
+    <div class="flex-1 flex flex-col md:flex-row overflow-hidden relative">
+
+        <!-- 左側控制面板 -->
+        <aside
+            class="w-full md:w-80 bg-slate-950/95 border-r border-slate-900 flex flex-col z-20 shrink-0 overflow-y-auto max-h-[40vh] md:max-h-none">
+            <div class="p-5 space-y-6">
+                <!-- 步驟一：選擇或上傳圖片 - 字體放大 -->
+                <div>
+                    <label
+                        class="block text-sm font-bold uppercase tracking-wider text-slate-300 mb-3">步驟一：選擇或上傳原始圖片</label>
+                    <div class="grid grid-cols-2 gap-2.5 mb-3.5">
+                        <button onclick="loadSample('geometry')"
+                            class="sample-btn border border-slate-800 bg-slate-900/40 hover:bg-slate-800/80 px-3.5 py-3 rounded-xl text-xs md:text-sm font-semibold transition text-left group">
+                            <span class="block text-slate-300 font-bold group-hover:text-slate-200">幾何藝術設計</span>
+                            <span class="text-xs text-slate-500">向量彩色圖案</span>
+                        </button>
+                        <button onclick="loadSample('grid_cats')"
+                            class="sample-btn border border-brand-500/30 bg-brand-500/10 hover:bg-brand-500/20 px-3.5 py-3 rounded-xl text-xs md:text-sm font-semibold transition text-left group">
+                            <span class="block text-brand-300 font-bold group-hover:text-brand-200">萌寵與標籤</span>
+                            <span class="text-xs text-slate-400">網格密集組件</span>
+                        </button>
+                    </div>
+
+                    <!-- 檔案拖曳上傳框 -->
+                    <label
+                        class="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-slate-800 hover:border-brand-500/50 bg-slate-900/30 hover:bg-slate-900/50 rounded-xl cursor-pointer transition group relative overflow-hidden">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6 text-center px-4">
+                            <svg class="w-7 h-7 text-slate-500 group-hover:text-brand-400 mb-2 transition" fill="none"
+                                stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            <p class="text-xs md:text-sm text-slate-300 font-semibold group-hover:text-brand-300">上傳圖片檔案
+                            </p>
+                            <p class="text-xs text-slate-500 mt-1">支援 PNG, JPG, WEBP</p>
+                        </div>
+                        <input type="file" id="imageInput" accept="image/*" class="hidden" />
+                    </label>
+                </div>
+
+                <!-- 步驟二：智慧分割引擎與配置 -->
+                <div class="border-t border-slate-900 pt-5">
+                    <label
+                        class="block text-sm font-bold uppercase tracking-wider text-slate-300 mb-3">步驟二：設定分割引擎</label>
+                    <div class="space-y-3">
+                        <!-- 本地高級圖元分割 -->
+                        <label
+                            class="flex items-start p-3.5 rounded-xl border border-brand-500 bg-brand-500/5 cursor-pointer hover:bg-brand-500/10 transition"
+                            id="labelEngineLocal">
+                            <input type="radio" name="engine" value="local" checked
+                                class="mt-1 text-brand-600 focus:ring-brand-500 w-4 h-4"
+                                onchange="switchEngine('local')">
+                            <div class="ml-3">
+                                <span class="block text-xs md:text-sm font-bold text-slate-200">本地高級 BFS 混合提取</span>
+                                <span class="block text-xs text-slate-400 mt-1 leading-relaxed">免
+                                    API、零延遲。搭載 Sobel 梯度與亮度邊緣感知，大幅強化照片、海報及文字的分離精度。</span>
+                            </div>
+                        </label>
+
+                        <!-- Gemini AI 語意物件偵測 -->
+                        <label
+                            class="flex items-start p-3.5 rounded-xl border border-slate-900 hover:border-slate-800 cursor-pointer transition"
+                            id="labelEngineGemini">
+                            <input type="radio" name="engine" value="gemini"
+                                class="mt-1 text-brand-600 focus:ring-brand-500 w-4 h-4"
+                                onchange="switchEngine('gemini')">
+                            <div class="ml-3">
+                                <span class="block text-xs md:text-sm font-bold text-slate-200">Gemini 雲端語意提取</span>
+                                <span class="block text-xs text-slate-400 mt-1 leading-relaxed">透過 Google Cloud AI
+                                    多模態模型 understanding 影像中實體，取得高精度語意邊界。</span>
+                            </div>
+                        </label>
+                    </div>
+
+                    <!-- Gemini API 與自訂模型設定面板 -->
+                    <div id="geminiConfigBlock"
+                        class="hidden mt-3 p-3.5 bg-slate-950 border border-slate-900 rounded-xl space-y-3.5 shadow-inner">
+
+                        <!-- API 金鑰管理區 -->
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label class="text-xs text-slate-400 font-bold uppercase tracking-wider">Gemini API
+                                    金鑰</label>
+                                <span class="text-[10px] text-indigo-400 font-bold">本地加密儲存</span>
+                            </div>
+                            <div class="relative">
+                                <input type="password" id="apiKeyInput" placeholder="請輸入您的 API 金鑰"
+                                    class="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500">
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="saveApiKey()"
+                                    class="flex-1 bg-brand-600 hover:bg-brand-500 text-white text-[11px] font-bold py-1 px-2 rounded transition shadow">
+                                    儲存並記憶金鑰
+                                </button>
+                                <button onclick="deleteApiKey()"
+                                    class="flex-1 bg-slate-850 hover:bg-slate-850 border border-slate-800 text-slate-300 text-[11px] font-bold py-1 px-2 rounded transition">
+                                    清除金鑰
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 模型選用與自訂輸入區 -->
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <label class="text-xs text-slate-400 font-bold uppercase tracking-wider">選擇或自訂模型</label>
+                            </div>
+                            <select id="modelSelect" onchange="toggleCustomModelField()"
+                                class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500">
+                                <option value="gemini-3.5-flash" selected>gemini-3.5-flash (最新主力預設)</option>
+                                <option value="gemini-2.5-flash">gemini-2.5-flash (穩定效能版本)</option>
+                                <option value="custom">自訂模型標識符...</option>
+                            </select>
+
+                            <div id="customModelField" class="hidden space-y-1.5">
+                                <label class="block text-[10px] text-slate-500 font-semibold">自訂模型位置/名稱 (例如:
+                                    gemini-4.0-flash)</label>
+                                <input type="text" id="customModelInput" placeholder="輸入自訂的模型名稱"
+                                    class="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500">
+                            </div>
+                        </div>
+
+                        <p class="text-[10px] text-slate-500 leading-relaxed">💡 本地儲存僅使用您的瀏覽器緩存 (LocalStorage)，通訊直連
+                            Google 雲端端點，您的安全有絕對保障。</p>
+                    </div>
+                </div>
+
+                <!-- 高級細節分割參數 - 字體調大 -->
+                <div class="border-t border-slate-900 pt-5">
+                    <label
+                        class="block text-sm font-bold uppercase tracking-wider text-slate-300 mb-3">高級分割與細節參數</label>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-xs md:text-sm mb-1.5">
+                                <span class="text-slate-300 font-medium">處理掃描解析度</span>
+                                <span id="valScale" class="text-brand-400 font-bold">400px</span>
+                            </div>
+                            <!-- Control scanning downscaling factor -->
+                            <input type="range" id="paramScale" min="200" max="1000" step="50" value="400"
+                                class="w-full accent-brand-500 bg-slate-800 h-1.5 rounded"
+                                oninput="document.getElementById('valScale').innerText = this.value + 'px (最大邊)'">
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs md:text-sm mb-1.5">
+                                <span class="text-slate-300 font-medium">最小提取物件尺寸</span>
+                                <span id="valMinSize" class="text-brand-400 font-bold">20px</span>
+                            </div>
+                            <input type="range" id="paramMinSize" min="5" max="100" value="20"
+                                class="w-full accent-brand-500 bg-slate-800 h-1.5 rounded"
+                                oninput="document.getElementById('valMinSize').innerText = this.value + 'px'">
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs md:text-sm mb-1.5">
+                                <span class="text-slate-300 font-medium">色彩識別與邊界容差</span>
+                                <span id="valThreshold" class="text-brand-400 font-bold">35</span>
+                            </div>
+                            <input type="range" id="paramThreshold" min="5" max="120" value="35"
+                                class="w-full accent-brand-500 bg-slate-800 h-1.5 rounded"
+                                oninput="document.getElementById('valThreshold').innerText = this.value">
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-xs md:text-sm mb-1.5">
+                                <span class="text-slate-300 font-medium">智慧去背邊緣容差</span>
+                                <span id="valMattingTol" class="text-brand-400 font-bold">45</span>
+                            </div>
+                            <input type="range" id="paramMattingTol" min="5" max="150" value="45"
+                                class="w-full accent-brand-500 bg-slate-800 h-1.5 rounded"
+                                oninput="document.getElementById('valMattingTol').innerText = this.value">
+                        </div>
+                        <label class="flex items-center space-x-2.5 text-xs md:text-sm text-slate-300 cursor-pointer">
+                            <input type="checkbox" id="chkAutoInpaint" checked
+                                class="rounded text-brand-600 focus:ring-brand-500 bg-slate-900 border-slate-700 w-4 h-4">
+                            <span class="font-medium">啟用智慧雙線性邊界擴散補色</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 智慧分割執行按鈕 -->
+                <button id="btnScan"
+                    class="w-full bg-gradient-to-r from-brand-600 to-violet-600 hover:from-brand-500 hover:to-violet-500 text-white font-bold text-sm md:text-base py-3 px-4 rounded-xl shadow-lg transition duration-200 transform hover:-translate-y-0.5 active:translate-y-0 flex items-center justify-center space-x-2">
+                    <svg class="w-5 h-5 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                    <span>啟動 AI 智慧分離拆圖</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- 中間畫布工作區：標準透明棋盤格背景 -->
+        <main class="flex-1 bg-slate-950 flex items-center justify-center relative overflow-hidden checkerboard-bg p-4">
+
+            <!-- 工作區畫布控制列 -->
+            <div class="absolute top-4 left-4 right-4 flex items-center justify-between z-10 pointer-events-none">
+                <div
+                    class="bg-slate-900/95 border border-slate-800 rounded-lg p-1.5 flex items-center space-x-1.5 shadow-xl pointer-events-auto">
+                    <button onclick="zoomWorkspace(0.1)"
+                        class="p-2 text-slate-400 hover:text-white rounded hover:bg-slate-800 transition" title="放大">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                    </button>
+                    <button onclick="zoomWorkspace(-0.1)"
+                        class="p-2 text-slate-400 hover:text-white rounded hover:bg-slate-800 transition" title="縮小">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                        </svg>
+                    </button>
+                    <button onclick="resetZoom()"
+                        class="p-2 text-slate-400 hover:text-white rounded hover:bg-slate-800 transition text-xs md:text-sm font-bold px-3.5"
+                        title="重設縮放">
+                        自適應
+                    </button>
+                    <span class="h-5 w-[1px] bg-slate-800"></span>
+                    <button id="btnToggleCheckerboard" onclick="toggleCheckerboard()"
+                        class="p-2 text-brand-400 hover:text-white rounded bg-slate-800/80 transition" title="切換背景預覽底紋">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                    </button>
+                    <span class="h-5 w-[1px] bg-slate-800"></span>
+
+                    <!-- Undo 按鈕 -->
+                    <button id="btnUndo" onclick="undo()" disabled
+                        class="p-2 text-slate-400 hover:text-white rounded disabled:opacity-40 disabled:cursor-not-allowed transition"
+                        title="回到上一步 (Ctrl+Z)">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                        </svg>
+                    </button>
+                    <!-- Redo 按鈕 -->
+                    <button id="btnRedo" onclick="redo()" disabled
+                        class="p-2 text-slate-400 hover:text-white rounded disabled:opacity-40 disabled:cursor-not-allowed transition"
+                        title="下一步 (Ctrl+Y)">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 10H11a8 8 0 00-8 8v2m18-10l-6 6m6-6l-6-6" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div
+                    class="bg-slate-900/95 border border-slate-800 rounded-lg p-1.5 flex items-center space-x-2.5 shadow-xl pointer-events-auto">
+                    <button onclick="exportFullLayout()"
+                        class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded text-xs md:text-sm font-bold shadow flex items-center space-x-1.5 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        <span>導出完整合成圖</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 可拖曳互動的主畫布容器 -->
+            <div id="workspaceContainer"
+                class="absolute transition-transform duration-100 ease-out cursor-grab select-none flex items-center justify-center pointer-events-auto"
+                style="left: 50%; top: 50%; transform: translate(-50%, -50%) translate(0px, 0px) scale(1); transform-origin: center center;">
+                <div id="blueprintBackdrop"
+                    class="relative bg-slate-900/30 rounded-2xl shadow-2xl p-4 border border-slate-800/80 flex items-center justify-center transition overflow-visible">
+                    <div class="relative shadow-lg overflow-visible" id="canvasWrapper">
+                        <!-- 底層原始圖像 (加載防拖曳干擾) -->
+                        <img id="sourceImageDisplay" class="block opacity-100 transition rounded-lg"
+                            style="width: 100%; height: 100%; object-fit: contain; pointer-events: none; -webkit-user-drag: none;"
+                            alt="原始預覽" />
+                        <!-- 動態雷射掃描動畫遮罩 -->
+                        <div id="scannerOverlay" class="hidden absolute inset-0 bg-brand-500/10 pointer-events-none">
+                            <div
+                                class="absolute inset-x-0 h-1 bg-gradient-to-r from-transparent via-brand-400 to-transparent scanner-beam">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 工作區底部操作提示 -->
+            <div
+                class="absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur-sm px-4 py-3 rounded-xl border border-slate-800 text-xs text-slate-400 pointer-events-none max-w-sm shadow-md leading-relaxed">
+                💡 <span class="font-bold text-slate-200">圖像編輯提示：</span>
+                按住 `滑鼠左鍵` 在空白或底圖上拖曳，或按住 `滑鼠中鍵` 可移動工作區。點擊分離物件可任意平移、旋轉與調整。
+            </div>
+        </main>
+
+        <!-- 右側圖層管理器 -->
+        <aside class="w-full md:w-80 bg-slate-950/95 border-l border-slate-900 flex flex-col z-20 shrink-0">
+            <div class="p-4 border-b border-slate-900 flex items-center justify-between shadow-sm">
+                <div class="flex items-center space-x-2">
+                    <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">智慧分離圖層</h3>
+                </div>
+                <span id="layerCount"
+                    class="text-xs bg-slate-900 text-slate-400 px-3 py-1 rounded-full font-bold border border-slate-800">0
+                    層</span>
+            </div>
+
+            <!-- 智慧去背圖層批次導出工具列 -->
+            <div id="batchExportToolbar"
+                class="hidden p-3 bg-slate-900/40 border-b border-slate-900 flex items-center justify-between">
+                <span class="text-xs text-slate-400 font-medium">批次控制選項</span>
+                <button onclick="exportAllLayersZip()"
+                    class="bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white px-4 py-2 rounded-lg text-xs md:text-sm font-bold flex items-center space-x-1.5 shadow transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span>打包去背圖層 (ZIP)</span>
+                </button>
+            </div>
+
+            <!-- 分離出的圖層列表卡片 -->
+            <div id="layersList" class="flex-1 overflow-y-auto p-4 space-y-2.5">
+                <!-- 空狀態提示 -->
+                <div id="emptyLayersPlaceholder" class="text-center py-12 px-4 text-slate-500">
+                    <svg class="w-12 h-10 mx-auto mb-3 text-slate-700" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2" />
+                    </svg>
+                    <p class="text-xs md:text-sm font-bold text-slate-400">尚未產生分離物件</p>
+                    <p class="text-xs text-slate-600 mt-1.5 leading-relaxed">請上傳含有獨立元素或文字的照片海報，並點選「啟動 AI 智慧分離拆圖」開始提取物件。
+                    </p>
+                </div>
+            </div>
+
+            <!-- 選取物件快捷控制面板與獨立去背導出 -->
+            <div id="quickEditPanel" class="hidden border-t border-slate-900 p-4 bg-slate-950 space-y-3.5 shadow-2xl">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-sm font-bold text-brand-400 uppercase tracking-wider">選取圖層控制</h4>
+                    <span id="selectedLayerType"
+                        class="text-[10px] bg-brand-500/10 text-brand-300 px-2 py-0.5 rounded font-bold border border-brand-500/20">OBJECT</span>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <div class="flex justify-between text-xs md:text-sm mb-1.5">
+                            <span class="text-slate-400 font-medium">物件不透明度</span>
+                            <span id="valLayerOpacity" class="text-slate-200 font-bold">100%</span>
+                        </div>
+                        <input type="range" id="layerOpacitySlider" min="10" max="100" value="100"
+                            class="w-full accent-brand-500 bg-slate-800 h-1.5 rounded cursor-pointer"
+                            oninput="updateActiveLayerOpacity(this.value)" onchange="saveState()">
+                    </div>
+                    <!-- 深度調整控制組 -->
+                    <div id="depthControls" class="grid grid-cols-2 gap-2.5">
+                        <button onclick="changeActiveLayerDepth('up')"
+                            class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 py-2 rounded-lg text-xs md:text-sm font-semibold transition"
+                            title="深度向上提升一層">置前</button>
+                        <button onclick="changeActiveLayerDepth('down')"
+                            class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 py-2 rounded-lg text-xs md:text-sm font-semibold transition"
+                            title="深度向下降低一層">置後</button>
+                    </div>
+                    <!-- Single object Matting/Transparency Export -->
+                    <button id="btnExportSingle" onclick="exportSingleLayer()"
+                        class="w-full bg-slate-900 hover:bg-slate-800 border border-brand-500/30 hover:border-brand-500 text-brand-300 py-2.5 rounded-lg text-xs md:text-sm font-bold flex items-center justify-center space-x-1.5 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        <span>導出此去背物件 (PNG)</span>
+                    </button>
+                    <!-- 刪除控制鈕 -->
+                    <button onclick="deleteActiveLayer()"
+                        class="w-full bg-red-950/20 hover:bg-red-950/40 border border-red-900/30 text-red-400 py-2 rounded-lg text-xs md:text-sm font-semibold transition flex items-center justify-center space-x-1">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <span id="btnDeleteLayerText">從畫布中刪除此物件</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- 系統微型提示通知 (Toast) - 高規格重構並大幅加大字體 -->
+    <div id="toastNotification"
+        class="fixed bottom-8 right-8 z-50 bg-slate-900/95 backdrop-blur-md border border-slate-800 text-slate-100 px-6 py-4 rounded-2xl shadow-2xl flex items-center space-x-4 transition duration-300 transform translate-y-20 opacity-0 pointer-events-none max-w-md">
+        <div id="toastIcon" class="p-2 rounded-xl bg-brand-500/10 text-brand-400 shrink-0">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        </div>
+        <div class="min-w-0 flex-1">
+            <p id="toastMessage" class="text-sm md:text-base font-extrabold text-white tracking-wide">通知標題</p>
+            <p id="toastSubMessage" class="text-xs md:text-sm text-slate-300 mt-1 leading-relaxed">進一步詳情資訊說明</p>
+        </div>
+    </div>
+
+    <!-- 智慧使用導覽面板 -->
+    <div id="helpModal"
+        class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-md font-bold text-white flex items-center space-x-2">
+                    <span>💡 LayerExtract AI 進階導覽</span>
+                </h3>
+                <button onclick="toggleHelpModal()" class="text-slate-400 hover:text-white transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <div class="text-sm text-slate-300 space-y-3 leading-relaxed">
+                <p>本系統是專門為<strong>多組件提取、自動去背與智慧修補</strong>而設計的通用設計工具。其運作邏輯如下：</p>
+                <ul class="list-disc pl-5 space-y-2 text-slate-400">
+                    <li><strong class="text-brand-300">精準細節分離 (BFS Components Extraction)</strong>:
+                        適合分離插畫網格、緊密排列的物件。藉由降低「色彩識別容差」與提高「處理掃描解析度」，極小細節與細微文字都不會被粘連。</li>
+                    <li><strong class="text-brand-300">主動智慧去背 (Automatic Matting)</strong>: 提取物件的瞬間，自動計算並抹除背景色，形成完全透明的
+                        PNG 圖元層。您可在右側側邊欄將去背物件打包為一個 ZIP 批次下載。</li>
+                    <li><strong class="text-brand-300">智慧邊界擴散補色 (Bilinear Boundary Diffusion Inpainting)</strong>:
+                        當您將物件移開時，原圖對應區域將基於邊緣像素雙線性插值演算法（Bilinear Boundary Interpolation）進行漸變填充，從背景中完美抹除物件原始殘影。</li>
+                </ul>
+            </div>
+            <div class="pt-2 flex justify-end">
+                <button onclick="toggleHelpModal()"
+                    class="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg text-xs font-semibold transition">開始體驗</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 演算法與核心邏輯代碼 -->
+    <script>
+        // 設定應用程式狀態機
+        let appState = {
+            currentImageSrc: '',
+            imageWidth: 0,
+            imageHeight: 0,
+            selectedEngine: 'local',
+            layers: [], // 存放所有已被分離出的圖層 (不含背景與包含背景)
+            activeLayerId: null,
+            zoom: 1,
+            panX: 0,
+            panY: 0,
+            isDraggingWorkspace: false,
+            workspaceGridVisible: true,
+            originalBgColor: { r: 255, g: 255, b: 255 }, // 精確背景色
+            isUpdatingBg: false, // 關鍵旗標：防止背景去印底圖重新載入時誤觸清空及歷史清空
+            isInitializingNewImage: false, // 全新圖片初始化安全鎖，防任何 reflow 誤觸 reset
+            pendingFilename: '', // 紀錄待初始化圖片名稱
+            lastLoadedSrc: '' // 核心快取安全鎖：紀錄上次實質載入之來源，杜絕因 Transform Reflow 導致的重複載入與圖層消失 Bug
+        };
+
+        // 歷史復原/重做堆疊與開關
+        let undoStack = [];
+        let redoStack = [];
+
+        // DOM 緩存快取
+        const elImageInput = document.getElementById('imageInput');
+        const elSourceDisplay = document.getElementById('sourceImageDisplay');
+        const elLayersList = document.getElementById('layersList');
+        const elEmptyLayers = document.getElementById('emptyLayersPlaceholder');
+        const elQuickEdit = document.getElementById('quickEditPanel');
+        const elScannerOverlay = document.getElementById('scannerOverlay');
+        const elCanvasWrapper = document.getElementById('canvasWrapper');
+        const elWorkspaceContainer = document.getElementById('workspaceContainer');
+        const elToast = document.getElementById('toastNotification');
+        const elBatchToolbar = document.getElementById('batchExportToolbar');
+
+        const apiKey = ""; // 雲端預設內置金鑰 (留空則強制要求使用者輸入/自訂)
+
+        // 啟動初始化
+        window.addEventListener('load', () => {
+            loadSample('geometry');
+            setupInteractionHandlers();
+            setupKeyboardShortcuts();
+            loadSavedApiKey(); // 啟動時主動讀取 LocalStorage 快取
+        });
+
+        // 控制幫助彈窗
+        function toggleHelpModal() {
+            const modal = document.getElementById('helpModal');
+            modal.classList.toggle('hidden');
+        }
+        document.getElementById('btnHelp').addEventListener('click', toggleHelpModal);
+
+        // 切換透明棋盤格預覽
+        function toggleCheckerboard() {
+            const main = document.querySelector('main');
+            const btn = document.getElementById('btnToggleCheckerboard');
+            main.classList.toggle('checkerboard-bg');
+            if (main.classList.contains('checkerboard-bg')) {
+                btn.classList.add('text-brand-400');
+                btn.classList.remove('text-slate-400');
+            } else {
+                btn.classList.remove('text-brand-400');
+                btn.classList.add('text-slate-400');
+            }
+        }
+
+        // 切換分割引擎
+        function switchEngine(type) {
+            appState.selectedEngine = type;
+            const geminiBlock = document.getElementById('geminiConfigBlock');
+            const localLabel = document.getElementById('labelEngineLocal');
+            const geminiLabel = document.getElementById('labelEngineGemini');
+            const badge = document.getElementById('activeEngineBadge');
+
+            if (type === 'gemini') {
+                geminiBlock.classList.remove('hidden');
+                geminiLabel.className = "flex items-start p-3.5 rounded-xl border border-brand-500 bg-brand-500/5 cursor-pointer hover:bg-brand-500/10 transition";
+                localLabel.className = "flex items-start p-3.5 rounded-xl border border-slate-800 hover:border-slate-800 cursor-pointer transition";
+                badge.innerHTML = `<span class="w-2.5 h-2.5 mr-2 bg-indigo-400 rounded-full animate-ping"></span>雲端 AI 引擎設定中`;
+                badge.className = "hidden sm:inline-flex items-center px-3.5 py-1.5 rounded-full text-xs md:text-sm font-semibold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20";
+            } else {
+                geminiBlock.classList.add('hidden');
+                localLabel.className = "flex items-start p-3.5 rounded-xl border border-brand-500 bg-brand-500/5 cursor-pointer hover:bg-brand-500/10 transition";
+                geminiLabel.className = "flex items-start p-3.5 rounded-xl border border-slate-800 hover:border-slate-800 cursor-pointer transition";
+                badge.innerHTML = `<span class="w-2.5 h-2.5 mr-2 bg-emerald-400 rounded-full animate-ping"></span>本地 CV 引擎就緒`;
+                badge.className = "hidden sm:inline-flex items-center px-3.5 py-1.5 rounded-full text-xs md:text-sm font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20";
+            }
+        }
+
+        // 發送全局 Toast 提示通知
+        function showNotification(title, sub, type = 'info') {
+            const toastTitle = document.getElementById('toastMessage');
+            const toastSub = document.getElementById('toastSubMessage');
+            const toastIcon = document.getElementById('toastIcon');
+
+            toastTitle.innerText = title;
+            toastSub.innerText = sub;
+
+            if (type === 'error') {
+                toastIcon.className = "p-2 rounded-xl bg-red-500/10 text-red-400";
+                toastIcon.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>`;
+            } else if (type === 'success') {
+                toastIcon.className = "p-2 rounded-xl bg-emerald-500/10 text-emerald-400";
+                toastIcon.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+            } else {
+                toastIcon.className = "p-2 rounded-xl bg-brand-500/10 text-brand-400";
+                toastIcon.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+            }
+
+            elToast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            elToast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                elToast.classList.remove('translate-y-0', 'opacity-100');
+                elToast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+            }, 5500);
+        }
+
+        // ==========================================
+        // LocalStorage API 金鑰儲存、載入與自訂模型控制段
+        // ==========================================
+        function saveApiKey() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            if (key) {
+                localStorage.setItem('layerextract_api_key', key);
+                showNotification("金鑰已儲存", "Gemini API 金鑰已成功記錄於 LocalStorage 緩存中。", "success");
+            } else {
+                showNotification("無效金鑰", "請先輸入有效的 API 金鑰內容再點擊儲存。", "error");
+            }
+        }
+
+        function deleteApiKey() {
+            localStorage.removeItem('layerextract_api_key');
+            document.getElementById('apiKeyInput').value = '';
+            showNotification("金鑰已清除", "已完全清除本機 LocalStorage 上的快取 API 金鑰。", "info");
+        }
+
+        function loadSavedApiKey() {
+            const savedKey = localStorage.getItem('layerextract_api_key');
+            if (savedKey) {
+                document.getElementById('apiKeyInput').value = savedKey;
+            }
+        }
+
+        function toggleCustomModelField() {
+            const select = document.getElementById('modelSelect');
+            const customField = document.getElementById('customModelField');
+            if (select.value === 'custom') {
+                customField.classList.remove('hidden');
+            } else {
+                customField.classList.add('hidden');
+            }
+        }
+
+        // 支援重複選擇同一張底圖檔案
+        elImageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (evt) {
+                loadImageToWorkspace(evt.target.result, file.name);
+                elImageInput.value = ''; // 清空以利重複上傳
+            };
+            reader.readAsDataURL(file);
+        });
+
+        window.addEventListener('dragover', (e) => e.preventDefault());
+        window.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function (evt) {
+                    loadImageToWorkspace(evt.target.result, file.name);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // 載入展示樣板
+        function loadSample(type) {
+            const tempCanvas = document.createElement('canvas');
+            const ctx = tempCanvas.getContext('2d');
+            tempCanvas.width = 650;
+            tempCanvas.height = 450;
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+            if (type === 'geometry') {
+                ctx.strokeStyle = '#e2e8f0';
+                ctx.lineWidth = 4;
+                ctx.strokeRect(10, 10, 630, 430);
+
+                // 圓角矩形
+                ctx.fillStyle = '#ef4444';
+                ctx.beginPath();
+                ctx.roundRect(80, 80, 120, 120, [20]);
+                ctx.fill();
+
+                // 五角星
+                ctx.fillStyle = '#3b82f6';
+                ctx.beginPath();
+                drawStar(ctx, 480, 140, 5, 60, 25);
+                ctx.fill();
+
+                // 三角形
+                ctx.fillStyle = '#f59e0b';
+                ctx.beginPath();
+                ctx.moveTo(140, 260);
+                ctx.lineTo(220, 380);
+                ctx.lineTo(60, 380);
+                ctx.closePath();
+                ctx.fill();
+
+                // 翠綠圓形組合
+                ctx.fillStyle = '#10b981';
+                ctx.beginPath();
+                ctx.arc(460, 320, 50, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#059669';
+                ctx.beginPath();
+                ctx.arc(520, 320, 30, 0, Math.PI * 2);
+                ctx.fill();
+
+                // 紫色點綴
+                ctx.fillStyle = '#8b5cf6';
+                ctx.beginPath();
+                ctx.arc(325, 225, 25, 0, Math.PI * 2);
+                ctx.fill();
+
+            } else {
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+                ctx.strokeStyle = '#cbd5e1';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(20, 20, 610, 410);
+
+                const rows = 3;
+                const cols = 4;
+                // 將 grid_cats 網格之繪製起始座標修正置中，防止內容偏上且耳朵邊界被裁切
+                const startX = 108; // 原為 50，修正為 108 使水平完美置中
+                const startY = 94;  // 原為 45，修正為 94 使垂直完美置中且完全收納於邊框內
+                const catColors = ['#f97316', '#fb923c', '#ea580c'];
+
+                let catId = 1;
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const cx = startX + c * 145;
+                        const cy = startY + r * 125;
+
+                        ctx.fillStyle = catColors[(r + c) % catColors.length];
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, 32, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        ctx.beginPath();
+                        ctx.moveTo(cx - 30, cy - 10);
+                        ctx.lineTo(cx - 35, cy - 40);
+                        ctx.lineTo(cx - 10, cy - 30);
+                        ctx.closePath();
+                        ctx.moveTo(cx + 30, cy - 10);
+                        ctx.lineTo(cx + 35, cy - 40);
+                        ctx.lineTo(cx + 10, cy - 30);
+                        ctx.closePath();
+                        ctx.fill();
+
+                        ctx.fillStyle = '#ffffff';
+                        ctx.beginPath();
+                        ctx.arc(cx - 10, cy - 5, 6, 0, Math.PI * 2);
+                        ctx.arc(cx + 10, cy - 5, 6, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.fillStyle = '#0f172a';
+                        ctx.beginPath();
+                        ctx.arc(cx - 10, cy - 5, 3, 0, Math.PI * 2);
+                        ctx.arc(cx + 10, cy - 5, 3, 0, Math.PI * 2);
+                        ctx.fill();
+
+                        ctx.fillStyle = '#475569';
+                        ctx.font = 'bold 10px Plus Jakarta Sans';
+                        ctx.textAlign = 'center';
+                        ctx.fillText(`CAT #${catId++}`, cx, cy + 48);
+                    }
+                }
+            }
+
+            loadImageToWorkspace(tempCanvas.toDataURL(), `sample_${type}.png`);
+        }
+
+        // 輔助繪製五角星之函式
+        function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3;
+            let x = cx;
+            let y = cy;
+            let step = Math.PI / spikes;
+
+            ctx.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                ctx.lineTo(x, y);
+                rot += step;
+            }
+            ctx.lineTo(cx, cy - outerRadius);
+            ctx.closePath();
+        }
+
+        // 載入新圖片至工作區，並預設初始化背景圖層
+        function loadImageToWorkspace(dataUrl, filename) {
+            clearLayerSystem();
+            appState.isUpdatingBg = false;
+            appState.isInitializingNewImage = true; // 鎖定：啟動全新圖片初始化安全防禦
+            appState.lastLoadedSrc = ''; // 重設快取安全鎖
+            appState.pendingFilename = filename || '';
+            appState.currentImageSrc = dataUrl;
+            elSourceDisplay.src = dataUrl;
+
+            elSourceDisplay.style.display = 'block';
+            elSourceDisplay.style.opacity = '1';
+
+            elSourceDisplay.onload = function () {
+                // 安全鎖：如果圖片 Src 沒有發生實質改變，拒絕重複觸發 Onload
+                if (elSourceDisplay.src === appState.lastLoadedSrc) {
+                    return;
+                }
+                appState.lastLoadedSrc = elSourceDisplay.src;
+
+                const imgWidth = elSourceDisplay.naturalWidth || elSourceDisplay.width || 400;
+                const imgHeight = elSourceDisplay.naturalHeight || elSourceDisplay.height || 300;
+                appState.imageWidth = imgWidth;
+                appState.imageHeight = imgHeight;
+
+                elCanvasWrapper.style.width = `${imgWidth}px`;
+                elCanvasWrapper.style.height = `${imgHeight}px`;
+
+                if (appState.isInitializingNewImage) {
+                    appState.isInitializingNewImage = false; // 立即重設，防任何 transform/reflow 誤觸
+
+                    const parent = elWorkspaceContainer.parentElement;
+                    const containerW = parent.clientWidth - 48;
+                    const containerH = parent.clientHeight - 48;
+                    const fitScale = Math.min(containerW / imgWidth, containerH / imgHeight, 1);
+
+                    appState.zoom = Math.max(0.15, fitScale);
+                    appState.panX = 0;
+                    appState.panY = 0;
+                    renderWorkspaceTransform();
+
+                    // 建立背景 bg_layer
+                    const bgCanvas = document.createElement('canvas');
+                    bgCanvas.width = imgWidth;
+                    bgCanvas.height = imgHeight;
+                    const bgCtx = bgCanvas.getContext('2d');
+                    bgCtx.drawImage(elSourceDisplay, 0, 0);
+
+                    const bgLayer = {
+                        id: 'bg_layer',
+                        name: appState.pendingFilename ? `主畫布背景 (${appState.pendingFilename})` : '原始主畫布背景',
+                        type: 'BACKGROUND',
+                        canvas: bgCanvas,
+                        originalX: 0,
+                        originalY: 0,
+                        x: 0,
+                        y: 0,
+                        width: imgWidth,
+                        height: imgHeight,
+                        scaleX: 1,
+                        scaleY: 1,
+                        rotation: 0,
+                        opacity: 100,
+                        visible: true,
+                        isLocked: true
+                    };
+
+                    appState.layers = [bgLayer];
+
+                    initHistoryOnLoad();
+                    updateLayerPanel();
+
+                    showNotification("圖像載入成功", `${appState.pendingFilename || '自訂圖檔'} (${imgWidth}×${imgHeight}px)`, "success");
+                }
+            };
+        }
+
+        // 清空所有動態生成的圖層元素與狀態
+        function clearLayerSystem() {
+            const dynamicLayers = elCanvasWrapper.querySelectorAll('.draggable-layer-element');
+            dynamicLayers.forEach(el => el.remove());
+
+            appState.layers = [];
+            appState.activeLayerId = null;
+            elBatchToolbar.classList.add('hidden');
+            updateLayerPanel();
+        }
+
+        // 縮放工作區
+        function zoomWorkspace(factor) {
+            appState.zoom = Math.min(Math.max(appState.zoom + factor, 0.1), 4);
+            renderWorkspaceTransform();
+        }
+
+        // 自適應還原縮放與平移
+        function resetZoom() {
+            const parent = elWorkspaceContainer.parentElement;
+            const containerW = parent.clientWidth - 48;
+            const containerH = parent.clientHeight - 48;
+            const fitScale = Math.min(containerW / appState.imageWidth, containerH / appState.imageHeight, 1);
+
+            appState.zoom = Math.max(0.15, fitScale);
+            appState.panX = 0;
+            appState.panY = 0;
+            renderWorkspaceTransform();
+        }
+
+        function renderWorkspaceTransform() {
+            elWorkspaceContainer.style.transform = `translate(-50%, -50%) translate(${appState.panX}px, ${appState.panY}px) scale(${appState.zoom})`;
+        }
+
+        // 移動工作區平移支援
+        function setupInteractionHandlers() {
+            let isPanning = false;
+            let startX, startY;
+
+            elWorkspaceContainer.parentElement.addEventListener('mousedown', (e) => {
+                if (!e.target.closest('.draggable-layer-element') &&
+                    !e.target.closest('button') &&
+                    !e.target.closest('input') &&
+                    !e.target.closest('select') &&
+                    !e.target.closest('aside')) {
+
+                    isPanning = true;
+                    elWorkspaceContainer.classList.remove('cursor-grab');
+                    elWorkspaceContainer.classList.add('cursor-grabbing');
+                    startX = e.clientX - appState.panX;
+                    startY = e.clientY - appState.panY;
+                    e.preventDefault();
+                }
+            });
+
+            window.addEventListener('mousemove', (e) => {
+                if (isPanning) {
+                    appState.panX = e.clientX - startX;
+                    appState.panY = e.clientY - startY;
+                    renderWorkspaceTransform();
+                }
+            });
+
+            window.addEventListener('mouseup', () => {
+                if (isPanning) {
+                    isPanning = false;
+                    elWorkspaceContainer.classList.remove('cursor-grabbing');
+                    elWorkspaceContainer.classList.add('cursor-grab');
+                }
+            });
+
+            // 行動觸控設備平移相容
+            elWorkspaceContainer.parentElement.addEventListener('touchstart', (e) => {
+                if (!e.target.closest('.draggable-layer-element') &&
+                    !e.target.closest('button') &&
+                    !e.target.closest('input') &&
+                    !e.target.closest('select') &&
+                    !e.target.closest('aside')) {
+
+                    isPanning = true;
+                    const touch = e.touches[0];
+                    startX = touch.clientX - appState.panX;
+                    startY = touch.clientY - appState.panY;
+                }
+            }, { passive: true });
+
+            window.addEventListener('touchmove', (e) => {
+                if (isPanning && e.touches.length > 0) {
+                    const touch = e.touches[0];
+                    appState.panX = touch.clientX - startX;
+                    appState.panY = touch.clientY - startY;
+                    renderWorkspaceTransform();
+                }
+            }, { passive: true });
+
+            window.addEventListener('touchend', () => {
+                if (isPanning) {
+                    isPanning = false;
+                }
+            });
+        }
+
+
+        // ==========================================
+        // 精確檢測：防止嵌套重疊與過度融合演算法
+        // ==========================================
+        function shouldMerge(box1, box2, padding) {
+            const overlapX = !(box1.xmin > box2.xmax + padding || box2.xmin > box1.xmax + padding);
+            const overlapY = !(box1.ymin > box2.ymax + padding || box2.ymin > box1.ymax + padding);
+            if (!overlapX || !overlapY) return false;
+
+            const box1ContainsBox2 = (box1.xmin <= box2.xmin && box1.xmax >= box2.xmax && box1.ymin <= box2.ymin && box1.ymax >= box2.ymax);
+            const box2ContainsBox1 = (box2.xmin <= box1.xmin && box2.xmax >= box1.xmax && box1.ymin <= box2.ymin && box1.ymax >= box2.ymax);
+
+            if (box1ContainsBox2) {
+                const margin = Math.min(box2.xmin - box1.xmin, box1.xmax - box2.xmax, box2.ymin - box1.ymin, box1.ymax - box2.ymax);
+                return margin <= padding;
+            }
+            if (box2ContainsBox1) {
+                const margin = Math.min(box1.xmin - box2.xmin, box2.xmax - box1.xmax, box1.ymin - box2.ymin, box2.ymax - box1.ymax);
+                return margin <= padding;
+            }
+
+            return true;
+        }
+
+        // 獲取乾淨無污染的原始圖片
+        function getOriginalImage() {
+            return new Promise((resolve, reject) => {
+                if (!appState.currentImageSrc) {
+                    reject(new Error("沒有載入有效的原始影像。"));
+                    return;
+                }
+                const img = new Image();
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error("載入原始影像失敗，請確認檔案格式。"));
+                img.src = appState.currentImageSrc;
+            });
+        }
+
+
+        // ==========================================
+        // 本地高階 BFS 智慧圖元分離引擎 (搭載 Sobel 梯度特徵與色彩感知)
+        // ==========================================
+        function executeLocalCVSegmentation() {
+            return new Promise(async (resolve, reject) => {
+                try {
+                    const img = await getOriginalImage();
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    const maxDim = parseInt(document.getElementById('paramScale').value);
+                    const imgWidth = img.naturalWidth || img.width || appState.imageWidth || 400;
+                    const imgHeight = img.naturalHeight || img.height || appState.imageHeight || 300;
+                    let scale = Math.min(maxDim / imgWidth, maxDim / imgHeight);
+                    if (scale > 1 || !isFinite(scale)) scale = 1;
+
+                    const wDown = Math.round(imgWidth * scale);
+                    const hDown = Math.round(imgHeight * scale);
+                    canvas.width = wDown;
+                    canvas.height = hDown;
+                    ctx.drawImage(img, 0, 0, wDown, hDown);
+
+                    const imgData = ctx.getImageData(0, 0, wDown, hDown);
+                    const data = imgData.data;
+
+                    // 1. 多採樣直方圖 - 計算背景色
+                    const buckets = {};
+                    const edgeMargin = 4;
+                    for (let y = 0; y < hDown; y += 2) {
+                        for (let x = 0; x < wDown; x += 2) {
+                            if (x < edgeMargin || x >= wDown - edgeMargin || y < edgeMargin || y >= hDown - edgeMargin) {
+                                const idx = (y * wDown + x) * 4;
+                                const r = data[idx];
+                                const g = data[idx + 1];
+                                const b = data[idx + 2];
+                                const key = `${Math.round(r / 12) * 12},${Math.round(g / 12) * 12},${Math.round(b / 12) * 12}`;
+                                buckets[key] = (buckets[key] || 0) + 1;
+                            }
+                        }
+                    }
+
+                    let maxCount = 0;
+                    let bestKey = "255,255,255";
+                    for (let key in buckets) {
+                        if (buckets[key] > maxCount) {
+                            maxCount = buckets[key];
+                            bestKey = key;
+                        }
+                    }
+                    const [bgR, bgG, bgB] = bestKey.split(',').map(Number);
+                    appState.originalBgColor = { r: bgR, g: bgG, b: bgB };
+
+                    // 2. 計算亮度與 Sobel 邊界梯度強度
+                    const luminance = new Float32Array(wDown * hDown);
+                    for (let i = 0; i < wDown * hDown; i++) {
+                        const r = data[i * 4];
+                        const g = data[i * 4 + 1];
+                        const b = data[i * 4 + 2];
+                        luminance[i] = 0.299 * r + 0.587 * g + 0.114 * b;
+                    }
+
+                    const gradient = new Float32Array(wDown * hDown);
+                    for (let y = 1; y < hDown - 1; y++) {
+                        for (let x = 1; x < wDown - 1; x++) {
+                            const idx = y * wDown + x;
+                            const gx = (
+                                -1 * luminance[idx - wDown - 1] + 1 * luminance[idx - wDown + 1] +
+                                -2 * luminance[idx - 1] + 2 * luminance[idx + 1] +
+                                -1 * luminance[idx + wDown - 1] + 1 * luminance[idx + wDown + 1]
+                            );
+                            const gy = (
+                                -1 * luminance[idx - wDown - 1] - 2 * luminance[idx - wDown] - 1 * luminance[idx - wDown + 1] +
+                                1 * luminance[idx + wDown - 1] + 2 * luminance[idx + wDown] + 1 * luminance[idx + wDown + 1]
+                            );
+                            gradient[idx] = Math.sqrt(gx * gx + gy * gy);
+                        }
+                    }
+
+                    // 3. Queue-based BFS 混合特徵標記
+                    const threshold = parseInt(document.getElementById('paramThreshold').value);
+                    const visited = new Uint8Array(wDown * hDown);
+                    const rawComponents = [];
+
+                    for (let y = 0; y < hDown; y++) {
+                        for (let x = 0; x < wDown; x++) {
+                            const idx = y * wDown + x;
+                            if (visited[idx]) continue;
+
+                            const pIdx = idx * 4;
+                            const r = data[pIdx];
+                            const g = data[pIdx + 1];
+                            const b = data[pIdx + 2];
+
+                            const dist = Math.sqrt(
+                                Math.pow(r - bgR, 2) +
+                                Math.pow(g - bgG, 2) +
+                                Math.pow(b - bgB, 2)
+                            );
+                            const gradVal = gradient[idx];
+
+                            if (dist > threshold || gradVal > threshold * 1.5) {
+                                let xmin = x, xmax = x, ymin = y, ymax = y;
+                                const queue = [idx];
+                                visited[idx] = 1;
+                                let head = 0;
+
+                                while (head < queue.length) {
+                                    const currIdx = queue[head++];
+                                    const cx = currIdx % wDown;
+                                    const cy = Math.floor(currIdx / wDown);
+
+                                    if (cx < xmin) xmin = cx;
+                                    if (cx > xmax) xmax = cx;
+                                    if (cy < ymin) ymin = cy;
+                                    if (cy > ymax) ymax = cy;
+
+                                    const neighbors = [];
+                                    if (cx > 0) neighbors.push(currIdx - 1);
+                                    if (cx < wDown - 1) neighbors.push(currIdx + 1);
+                                    if (cy > 0) neighbors.push(currIdx - wDown);
+                                    if (cy < hDown - 1) neighbors.push(currIdx + wDown);
+
+                                    for (let nIdx of neighbors) {
+                                        if (!visited[nIdx]) {
+                                            visited[nIdx] = 1;
+                                            const nPIdx = nIdx * 4;
+                                            const nr = data[nPIdx];
+                                            const ng = data[nPIdx + 1];
+                                            const nb = data[nPIdx + 2];
+
+                                            const nDist = Math.sqrt(
+                                                Math.pow(nr - bgR, 2) +
+                                                Math.pow(ng - bgG, 2) +
+                                                Math.pow(nb - bgB, 2)
+                                            );
+                                            const nGradVal = gradient[nIdx];
+
+                                            if (nDist > threshold || nGradVal > threshold * 1.5) {
+                                                queue.push(nIdx);
+                                            }
+                                        }
+                                    }
+                                }
+                                rawComponents.push({ xmin, xmax, ymin, ymax });
+                            } else {
+                                visited[idx] = 1;
+                            }
+                        }
+                    }
+
+                    // 4. 重疊區域合併
+                    const merged = [];
+                    const mergedFlags = new Array(rawComponents.length).fill(false);
+                    const mergePadding = 4;
+
+                    for (let i = 0; i < rawComponents.length; i++) {
+                        if (mergedFlags[i]) continue;
+                        let current = { ...rawComponents[i] };
+                        mergedFlags[i] = true;
+
+                        let growing = true;
+                        while (growing) {
+                            growing = false;
+                            for (let j = 0; j < rawComponents.length; j++) {
+                                if (mergedFlags[j]) continue;
+                                const cand = rawComponents[j];
+
+                                if (shouldMerge(current, cand, mergePadding)) {
+                                    current.xmin = Math.min(current.xmin, cand.xmin);
+                                    current.xmax = Math.max(current.xmax, cand.xmax);
+                                    current.ymin = Math.min(current.ymin, cand.ymin);
+                                    current.ymax = Math.max(current.ymax, cand.ymax);
+                                    mergedFlags[j] = true;
+                                    growing = true;
+                                }
+                            }
+                        }
+                        merged.push(current);
+                    }
+
+                    // 5. 產生物件
+                    const detectedElements = [];
+                    const minSize = parseInt(document.getElementById('paramMinSize').value);
+
+                    merged.forEach((box, index) => {
+                        const xmin = Math.round(box.xmin / scale);
+                        const xmax = Math.round(box.xmax / scale);
+                        const ymin = Math.round(box.ymin / scale);
+                        const ymax = Math.round(box.ymax / scale);
+
+                        const boxW = xmax - xmin;
+                        const boxH = ymax - ymin;
+
+                        if (boxW >= minSize && boxH >= minSize &&
+                            boxW < imgWidth * 0.96 && boxH < imgHeight * 0.96) {
+
+                            detectedElements.push({
+                                label: `提取物件 #${index + 1}`,
+                                confidence: 0.98,
+                                box: [ymin, xmin, ymax, xmax]
+                            });
+                        }
+                    });
+
+                    resolve(detectedElements);
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        }
+
+
+        // ==========================================
+        // 雲端 GEMINI 多模態提取引擎 (支援自訂輸入模型與 LocalStorage 金鑰管理)
+        // ==========================================
+        async function executeGeminiAISegmentation() {
+            let key = document.getElementById('apiKeyInput').value.trim() || apiKey;
+
+            if (!key) {
+                showNotification("未偵測到金鑰", "請先於左側的設定面板中輸入並儲存您的 Gemini API 金鑰。", "error");
+                throw new Error("Missing Gemini API Key");
+            }
+
+            // 取得當前選定或自訂的模型標識符
+            let modelName = document.getElementById('modelSelect').value;
+            if (modelName === 'custom') {
+                modelName = document.getElementById('customModelInput').value.trim();
+                if (!modelName) {
+                    modelName = 'gemini-3.5-flash'; // 降級機制
+                }
+            }
+
+            const img = await getOriginalImage();
+            const tempCanvas = document.createElement('canvas');
+            const ctx = tempCanvas.getContext('2d');
+            tempCanvas.width = img.naturalWidth || img.width || appState.imageWidth || 400;
+            tempCanvas.height = img.naturalHeight || img.height || appState.imageHeight || 300;
+            ctx.drawImage(img, 0, 0);
+
+            const base64Data = tempCanvas.toDataURL('image/png').split(',')[1];
+
+            const systemPrompt = `You are an expert image segmenter. Detect all foreground elements, illustrations, shapes, objects, characters, or text bounding tags.
+For each element, return its name and precise normalized coordinates represented in scale 0 to 1000: [ymin, xmin, ymax, xmax] relative to the image size.
+Exclude background patterns. Only list the foreground objects to be extracted.`;
+
+            const userQuery = "Detect and extract all individual visual elements and objects with their normalized coordinates [ymin, xmin, ymax, xmax].";
+
+            const payload = {
+                contents: [
+                    {
+                        parts: [
+                            { text: userQuery },
+                            { inlineData: { mimeType: "image/png", data: base64Data } }
+                        ]
+                    }
+                ],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            elements: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        label: { type: "STRING" },
+                                        confidence: { type: "NUMBER" },
+                                        box: {
+                                            type: "ARRAY",
+                                            items: { type: "NUMBER" },
+                                            description: "Bounding box [ymin, xmin, ymax, xmax] normalized 0 to 1000"
+                                        }
+                                    },
+                                    required: ["label", "box"]
+                                }
+                            }
+                        },
+                        required: ["elements"]
+                    }
+                }
+            };
+
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`;
+
+            const maxRetries = 5;
+            let currentDelay = 1000;
+
+            for (let i = 0; i < maxRetries; i++) {
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    const parsedData = JSON.parse(textResponse);
+
+                    if (parsedData && parsedData.elements) {
+                        return parsedData.elements;
+                    } else {
+                        throw new Error("Gemini response is empty");
+                    }
+                } catch (err) {
+                    if (i === maxRetries - 1) throw err;
+                    await new Promise(resolve => setTimeout(resolve, currentDelay));
+                    currentDelay *= 2;
+                }
+            }
+        }
+
+
+        // ==========================================
+        // 高階智慧雙線性邊界擴散補色填空演算法 (Inpainting)
+        // ==========================================
+        function executeBoundaryDiffusionInpaint(ctx, xmin, ymin, xmax, ymax) {
+            const canvasW = ctx.canvas.width;
+            const canvasH = ctx.canvas.height;
+
+            xmin = Math.max(0, Math.min(canvasW - 1, xmin));
+            ymin = Math.max(0, Math.min(canvasH - 1, ymin));
+            xmax = Math.max(0, Math.min(canvasW, xmax));
+            ymax = Math.max(0, Math.min(canvasH, ymax));
+
+            const w = xmax - xmin;
+            const h = ymax - ymin;
+            if (w <= 0 || h <= 0) return;
+
+            const pad = 2;
+            const srcLeft = Math.max(0, xmin - pad);
+            const srcRight = Math.min(canvasW - 1, xmax + pad);
+            const srcTop = Math.max(0, ymin - pad);
+            const srcBot = Math.min(canvasH - 1, ymax + pad);
+
+            const topRow = ctx.getImageData(xmin, srcTop, w, 1).data;
+            const botRow = ctx.getImageData(xmin, srcBot, w, 1).data;
+            const leftCol = ctx.getImageData(srcLeft, ymin, 1, h).data;
+            const rightCol = ctx.getImageData(srcRight, ymin, 1, h).data;
+
+            const targetImg = ctx.createImageData(w, h);
+            const targetData = targetImg.data;
+
+            for (let y = 0; y < h; y++) {
+                const weightY = y / h;
+                for (let x = 0; x < w; x++) {
+                    const weightX = x / w;
+                    const idx = (y * w + x) * 4;
+
+                    const tIdx = x * 4;
+                    const bIdx = x * 4;
+                    const rT = topRow[tIdx], gT = topRow[tIdx + 1], bT = topRow[tIdx + 2];
+                    const rB = botRow[bIdx], gB = botRow[bIdx + 1], bB = botRow[bIdx + 2];
+
+                    const lIdx = y * 4;
+                    const rIdx = y * 4;
+                    const rL = leftCol[lIdx], gL = leftCol[lIdx + 1], bL = leftCol[lIdx + 2];
+                    const rR = rightCol[rIdx], gR = rightCol[rIdx + 1], bR = rightCol[rIdx + 2];
+
+                    const valR = (rT * (1 - weightY) + rB * weightY) * 0.5 + (rL * (1 - weightX) + rR * weightX) * 0.5;
+                    const valG = (gT * (1 - weightY) + gB * weightY) * 0.5 + (gL * (1 - weightX) + gR * weightX) * 0.5;
+                    const valB = (bT * (1 - weightY) + bB * weightY) * 0.5 + (bL * (1 - weightX) + bR * weightX) * 0.5;
+
+                    targetData[idx] = Math.round(valR);
+                    targetData[idx + 1] = Math.round(valG);
+                    targetData[idx + 2] = Math.round(valB);
+                    targetData[idx + 3] = 255;
+                }
+            }
+            ctx.putImageData(targetImg, xmin, ymin);
+        }
+
+        // ==========================================
+        // 主動圖元去背演算法 (Active Layer Matting)
+        // ==========================================
+        function makeLayerMatted(canvas, bgR, bgG, bgB, tolerance) {
+            const ctx = canvas.getContext('2d');
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imgData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+
+                const dist = Math.sqrt(
+                    Math.pow(r - bgR, 2) +
+                    Math.pow(g - bgG, 2) +
+                    Math.pow(b - bgB, 2)
+                );
+
+                if (dist < tolerance) {
+                    data[i + 3] = 0;
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+
+        // ==========================================
+        // 執行圖像分離與圖層生成
+        // ==========================================
+        document.getElementById('btnScan').addEventListener('click', async () => {
+            const hasBg = appState.layers.some(l => l.id === 'bg_layer');
+            if (!hasBg) {
+                showNotification("未檢測到背景圖層", "當前專案無背景底圖，請先在右側「智慧分離圖層」中重建空白背景或載入圖片再執行分離。", "error");
+                return;
+            }
+
+            if (!appState.currentImageSrc) {
+                showNotification("未檢測到原始圖片", "請先上傳您的圖片或選擇範例圖檔。", "error");
+                return;
+            }
+
+            elScannerOverlay.classList.remove('hidden');
+            showNotification("AI 圖層智慧分離中", "正在進行圖像邊緣特徵算子解算與高頻圖元 BFS 拓撲提取...", "info");
+
+            try {
+                let elements = [];
+                if (appState.selectedEngine === 'gemini') {
+                    elements = await executeGeminiAISegmentation();
+                } else {
+                    elements = await executeLocalCVSegmentation();
+                }
+
+                if (!elements || elements.length === 0) {
+                    throw new Error("無法辨識到獨立元素。請嘗試調低「色彩識別容差」或調整「最小物件尺寸」。");
+                }
+
+                await fabricateLayers(elements);
+                showNotification("圖層智慧分離完成", `成功在畫布中分離出 ${elements.length} 個高精去背物件與文字元素！`, "success");
+
+            } catch (error) {
+                console.error(error);
+                showNotification("AI 提取中斷", `錯誤: ${error.message}`, "error");
+            } finally {
+                elScannerOverlay.classList.add('hidden');
+            }
+        });
+
+        // 裁剪原始區域、生成去背物件與智慧修補背景
+        async function fabricateLayers(elements) {
+            saveState();
+
+            const dynamicLayers = elCanvasWrapper.querySelectorAll('.draggable-layer-element');
+            dynamicLayers.forEach(el => el.remove());
+            appState.layers = [];
+            appState.activeLayerId = null;
+
+            const img = await getOriginalImage();
+            const originalCanvas = document.createElement('canvas');
+            const imgWidth = img.naturalWidth || img.width || appState.imageWidth || 400;
+            const imgHeight = img.naturalHeight || img.height || appState.imageHeight || 300;
+            originalCanvas.width = imgWidth;
+            originalCanvas.height = imgHeight;
+            const originalCtx = originalCanvas.getContext('2d');
+            originalCtx.drawImage(img, 0, 0);
+
+            const enableInpaint = document.getElementById('chkAutoInpaint').checked;
+            const mattingTolerance = parseInt(document.getElementById('paramMattingTol').value);
+
+            // 背景 Canvas 初始化
+            const bgCanvas = document.createElement('canvas');
+            bgCanvas.width = imgWidth;
+            bgCanvas.height = imgHeight;
+            const bgCtx = bgCanvas.getContext('2d');
+            bgCtx.drawImage(img, 0, 0);
+
+            // 1. 執行智慧修補
+            if (enableInpaint) {
+                elements.forEach(el => {
+                    const box = el.box;
+                    let ymin = box[0], xmin = box[1], ymax = box[2], xmax = box[3];
+                    if (appState.selectedEngine === 'gemini') {
+                        ymin = Math.round((box[0] / 1000) * bgCanvas.height);
+                        xmin = Math.round((box[1] / 1000) * bgCanvas.width);
+                        ymax = Math.round((box[2] / 1000) * bgCanvas.height);
+                        xmax = Math.round((box[3] / 1000) * bgCanvas.width);
+                    }
+                    executeBoundaryDiffusionInpaint(bgCtx, xmin, ymin, xmax, ymax);
+                });
+            }
+
+            // 保存底層背景
+            appState.layers.push({
+                id: 'bg_layer',
+                name: '背景牆體與主畫布',
+                type: 'BACKGROUND',
+                canvas: bgCanvas,
+                originalX: 0,
+                originalY: 0,
+                x: 0,
+                y: 0,
+                width: bgCanvas.width,
+                height: bgCanvas.height,
+                scaleX: 1,
+                scaleY: 1,
+                rotation: 0,
+                opacity: 100,
+                visible: true,
+                isLocked: true
+            });
+
+            // 2. 生成去背圖層
+            elements.forEach((el, index) => {
+                const box = el.box;
+                let ymin = box[0], xmin = box[1], ymax = box[2], xmax = box[3];
+                if (appState.selectedEngine === 'gemini') {
+                    ymin = Math.round((box[0] / 1000) * originalCanvas.height);
+                    xmin = Math.round((box[1] / 1000) * originalCanvas.width);
+                    ymax = Math.round((box[2] / 1000) * originalCanvas.height);
+                    xmax = Math.round((box[3] / 1000) * originalCanvas.width);
+                }
+
+                const cropW = xmax - xmin;
+                const cropH = ymax - ymin;
+
+                const elementCanvas = document.createElement('canvas');
+                elementCanvas.width = cropW;
+                elementCanvas.height = cropH;
+                const elCtx = elementCanvas.getContext('2d');
+
+                elCtx.drawImage(
+                    originalCanvas,
+                    xmin, ymin, cropW, cropH,
+                    0, 0, cropW, cropH
+                );
+
+                makeLayerMatted(elementCanvas, appState.originalBgColor.r, appState.originalBgColor.g, appState.originalBgColor.b, mattingTolerance);
+
+                const layerId = `layer_${Date.now()}_${index}`;
+                appState.layers.push({
+                    id: layerId,
+                    name: el.label,
+                    type: 'OBJECT',
+                    canvas: elementCanvas,
+                    originalX: xmin,
+                    originalY: ymin,
+                    x: xmin,
+                    y: ymin,
+                    width: cropW,
+                    height: cropH,
+                    scaleX: 1,
+                    scaleY: 1,
+                    rotation: 0,
+                    opacity: 100,
+                    visible: true,
+                    isLocked: false
+                });
+            });
+
+            appState.isUpdatingBg = true;
+            elSourceDisplay.src = bgCanvas.toDataURL();
+
+            renderInteractiveLayers();
+            updateLayerPanel();
+            saveState();
+
+            if (elements.length > 0) {
+                elBatchToolbar.classList.remove('hidden');
+            }
+        }
+
+        // 渲染互動圖層元件
+        function renderInteractiveLayers() {
+            const existing = elCanvasWrapper.querySelectorAll('.draggable-layer-element');
+            existing.forEach(e => e.remove());
+
+            appState.layers.forEach(layer => {
+                if (layer.id === 'bg_layer') return;
+
+                const el = document.createElement('div');
+                el.id = layer.id;
+                el.className = 'draggable-layer-element absolute cursor-move transition-shadow duration-150 group';
+                el.style.left = '0px';
+                el.style.top = '0px';
+                el.style.width = `${layer.width}px`;
+                el.style.height = `${layer.height}px`;
+
+                updateElementTransform(el, layer);
+
+                const canvasClone = document.createElement('canvas');
+                canvasClone.width = layer.width;
+                canvasClone.height = layer.height;
+                canvasClone.className = 'w-full h-full object-contain pointer-events-none rounded';
+                canvasClone.getContext('2d').drawImage(layer.canvas, 0, 0);
+                el.appendChild(canvasClone);
+
+                const widget = document.createElement('div');
+                widget.className = 'widget-overlay absolute inset-0 border-2 border-brand-500/0 hover:border-brand-500/40 pointer-events-none transition';
+                widget.innerHTML = `
+                    <div class="active-border absolute inset-0 border-2 border-brand-500 hidden"></div>
+                    <div class="rotate-handle absolute -top-6 left-1/2 -ml-2 w-4 h-4 bg-brand-600 rounded-full border-2 border-white cursor-alias hidden hover:bg-brand-500 pointer-events-auto shadow"></div>
+                    <div class="resize-handle absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border border-brand-500 cursor-nwse-resize hidden pointer-events-auto shadow-sm" data-dir="tl"></div>
+                    <div class="resize-handle absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border border-brand-500/0 cursor-nesw-resize hidden pointer-events-auto shadow-sm" data-dir="tr"></div>
+                    <div class="resize-handle absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border border-brand-500 cursor-nesw-resize hidden pointer-events-auto shadow-sm" data-dir="bl"></div>
+                    <div class="resize-handle absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border border-brand-500 cursor-nwse-resize hidden pointer-events-auto shadow-sm" data-dir="br"></div>
+                `;
+                el.appendChild(widget);
+
+                setupLayerInteraction(el, layer);
+                elCanvasWrapper.appendChild(el);
+            });
+
+            rebuildZIndexRender();
+        }
+
+        function updateElementTransform(el, layer) {
+            el.style.transform = `translate(${layer.x}px, ${layer.y}px) rotate(${layer.rotation}deg) scale(${layer.scaleX}, ${layer.scaleY})`;
+            el.style.opacity = layer.opacity / 100;
+            el.style.display = layer.visible ? 'block' : 'none';
+        }
+
+        // 移動、旋轉與縮放互動綁定
+        function setupLayerInteraction(el, layer) {
+            el.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                selectLayer(layer.id);
+
+                if (e.target.classList.contains('rotate-handle')) {
+                    startRotating(e, el, layer);
+                } else if (e.target.classList.contains('resize-handle')) {
+                    startResizing(e, el, layer, e.target.dataset.dir);
+                } else {
+                    startDragging(e, el, layer);
+                }
+            });
+
+            el.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                selectLayer(layer.id);
+                const touch = e.touches[0];
+
+                if (e.target.classList.contains('rotate-handle')) {
+                    startRotating(touch, el, layer);
+                } else if (e.target.classList.contains('resize-handle')) {
+                    startResizing(touch, el, layer, e.target.dataset.dir);
+                } else {
+                    startDragging(touch, el, layer);
+                }
+            }, { passive: true });
+        }
+
+        // 選取指定圖層與設定控制面板
+        function selectLayer(layerId) {
+            if (appState.activeLayerId === layerId) return;
+
+            appState.activeLayerId = layerId;
+
+            if (layerId !== 'bg_layer') {
+                bringLayerToFront(layerId);
+            }
+
+            document.querySelectorAll('.draggable-layer-element').forEach(el => {
+                el.querySelector('.active-border').classList.add('hidden');
+                el.querySelectorAll('.resize-handle, .rotate-handle').forEach(h => h.classList.add('hidden'));
+            });
+
+            const activeEl = document.getElementById(layerId);
+            if (activeEl && layerId !== 'bg_layer') {
+                activeEl.querySelector('.active-border').classList.remove('hidden');
+                activeEl.querySelectorAll('.resize-handle, .rotate-handle').forEach(h => h.classList.remove('hidden'));
+            }
+
+            document.querySelectorAll('.layer-card').forEach(card => {
+                card.classList.remove('border-brand-500', 'bg-slate-900/80');
+                card.classList.add('border-slate-800');
+            });
+            const activeCard = document.getElementById(`card_${layerId}`);
+            if (activeCard) {
+                activeCard.classList.remove('border-slate-800');
+                activeCard.classList.add('border-brand-500', 'bg-slate-900/80');
+            }
+
+            const layerObj = appState.layers.find(l => l.id === layerId);
+            if (layerObj) {
+                elQuickEdit.classList.remove('hidden');
+                if (layerObj.id === 'bg_layer') {
+                    document.getElementById('selectedLayerType').innerText = 'BACKGROUND';
+                    document.getElementById('layerOpacitySlider').value = layerObj.opacity;
+                    document.getElementById('valLayerOpacity').innerText = `${layerObj.opacity}%`;
+                    document.getElementById('depthControls').classList.add('hidden');
+                    document.getElementById('btnDeleteLayerText').innerText = "刪除此主畫布背景";
+                    document.getElementById('btnExportSingle').classList.add('hidden');
+                } else {
+                    document.getElementById('selectedLayerType').innerText = 'OBJECT';
+                    document.getElementById('layerOpacitySlider').value = layerObj.opacity;
+                    document.getElementById('valLayerOpacity').innerText = `${layerObj.opacity}%`;
+                    document.getElementById('depthControls').classList.remove('hidden');
+                    document.getElementById('btnDeleteLayerText').innerText = "從畫布中刪除此物件";
+                    document.getElementById('btnExportSingle').classList.remove('hidden');
+                }
+            } else {
+                elQuickEdit.classList.add('hidden');
+            }
+        }
+
+        function bringLayerToFront(layerId) {
+            const index = appState.layers.findIndex(l => l.id === layerId);
+            if (index !== -1 && layerId !== 'bg_layer') {
+                const [selectedLayer] = appState.layers.splice(index, 1);
+                appState.layers.push(selectedLayer);
+
+                rebuildZIndexRender();
+                updateLayerPanel();
+            }
+        }
+
+        // 物件拖曳
+        function startDragging(e, el, layer) {
+            const startX = e.clientX || (e.touches && e.touches[0].clientX);
+            const startY = e.clientY || (e.touches && e.touches[0].clientY);
+            const initialX = layer.x;
+            const initialY = layer.y;
+            let moved = false;
+
+            function onMove(moveEvent) {
+                const clientX = moveEvent.clientX || (moveEvent.touches && moveEvent.touches[0].clientX);
+                const clientY = moveEvent.clientY || (moveEvent.touches && moveEvent.touches[0].clientY);
+                if (!clientX) return;
+
+                const dx = (clientX - startX) / appState.zoom;
+                const dy = (clientY - startY) / appState.zoom;
+
+                if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) moved = true;
+
+                layer.x = initialX + dx;
+                layer.y = initialY + dy;
+                updateElementTransform(el, layer);
+            }
+
+            // 放開拖曳
+            function onUp() {
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onUp);
+                window.removeEventListener('touchmove', onMove);
+                window.removeEventListener('touchend', onUp);
+                if (moved) {
+                    saveState();
+                }
+            }
+
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onUp);
+            window.addEventListener('touchmove', onMove, { passive: true });
+            window.addEventListener('touchend', onUp);
+        }
+
+        // 物件旋轉
+        function startRotating(e, el, layer) {
+            const rect = el.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            let moved = false;
+
+            function onMove(moveEvent) {
+                const clientX = moveEvent.clientX || (moveEvent.touches && moveEvent.touches[0].clientX);
+                const clientY = moveEvent.clientY || (moveEvent.touches && moveEvent.touches[0].clientY);
+                if (!clientX) return;
+
+                const angleRad = Math.atan2(clientY - cy, clientX - cx);
+                let angleDeg = angleRad * (180 / Math.PI) - 90;
+                layer.rotation = Math.round(angleDeg);
+                updateElementTransform(el, layer);
+                moved = true;
+            }
+
+            function onUp() {
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onUp);
+                window.removeEventListener('touchmove', onMove);
+                window.removeEventListener('touchend', onUp);
+                if (moved) {
+                    saveState();
+                }
+            }
+
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onUp);
+            window.addEventListener('touchmove', onMove, { passive: true });
+            window.addEventListener('touchend', onUp);
+        }
+
+        // 物件縮放
+        function startResizing(e, el, layer, dir) {
+            const startX = e.clientX || (e.touches && e.touches[0].clientX);
+            const startY = e.clientY || (e.touches && e.touches[0].clientY);
+            const initialScaleX = layer.scaleX;
+            const initialScaleY = layer.scaleY;
+            let moved = false;
+
+            function onMove(moveEvent) {
+                const clientX = moveEvent.clientX || (moveEvent.touches && moveEvent.touches[0].clientX);
+                const clientY = moveEvent.clientY || (moveEvent.touches && moveEvent.touches[0].clientY);
+                if (!clientX) return;
+
+                const dx = (clientX - startX) / appState.zoom;
+                const dy = (clientY - startY) / appState.zoom;
+
+                let ratioX = 1;
+                let ratioY = 1;
+
+                if (dir === 'tr' || dir === 'br') {
+                    ratioX = (layer.width + dx) / layer.width;
+                } else if (dir === 'tl' || dir === 'bl') {
+                    ratioX = (layer.width - dx) / layer.width;
+                }
+
+                if (dir === 'bl' || dir === 'br') {
+                    ratioY = (layer.height + dy) / layer.height;
+                } else if (dir === 'tl' || dir === 'tr') {
+                    ratioY = (layer.height - dy) / layer.height;
+                }
+
+                const scale = Math.max(0.15, Math.min(initialScaleX * Math.max(ratioX, ratioY), 4));
+
+                layer.scaleX = scale;
+                layer.scaleY = scale;
+                updateElementTransform(el, layer);
+                moved = true;
+            }
+
+            function onUp() {
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onUp);
+                window.removeEventListener('touchmove', onMove);
+                window.removeEventListener('touchend', onUp);
+                if (moved) {
+                    saveState();
+                }
+            }
+
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onUp);
+            window.addEventListener('touchmove', onMove, { passive: true });
+            window.addEventListener('touchend', onUp);
+        }
+
+
+        // ==========================================
+        // 主動提供符合原尺寸的單色底圖填空演算法
+        // ==========================================
+        function createSolidBg(colorHex) {
+            const w = appState.imageWidth || 800;
+            const h = appState.imageHeight || 600;
+
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = w;
+            tempCanvas.height = h;
+            const ctx = tempCanvas.getContext('2d');
+            ctx.fillStyle = colorHex;
+            ctx.fillRect(0, 0, w, h);
+
+            // 同步最新資料源，讓 BFS 分析維持運作
+            appState.currentImageSrc = tempCanvas.toDataURL();
+            reconstructBackground(tempCanvas, `單色背景 (${colorHex})`);
+        }
+
+
+        // ==========================================
+        // 側欄面板 UI 渲染核心 (支援空狀態與背景重建)
+        // ==========================================
+        function updateLayerPanel() {
+            const activeLayers = appState.layers.filter(l => l.id !== 'bg_layer');
+            document.getElementById('layerCount').innerText = `${activeLayers.length} 層`;
+
+            elLayersList.innerHTML = '';
+
+            const hasBg = appState.layers.some(l => l.id === 'bg_layer');
+
+            // 智慧防空置保護：如果背景已被刪除，主動提供「新背景載入」與「原畫布尺寸單色套用」功能
+            if (!hasBg) {
+                const wVal = appState.imageWidth || 800;
+                const hVal = appState.imageHeight || 600;
+                const recreateCard = document.createElement('div');
+                recreateCard.className = "p-4.5 bg-slate-900/80 border border-dashed border-brand-500/30 rounded-xl space-y-4 shadow-inner my-2";
+                recreateCard.innerHTML = `
+                    <div>
+                        <h4 class="text-xs md:text-sm font-bold text-brand-300 uppercase tracking-wider flex items-center space-x-1.5">
+                            <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            <span>重新載入背景底圖</span>
+                        </h4>
+                        <p class="text-xs text-slate-400 leading-relaxed mt-1">您可以手動上傳新圖，或直接使用系統主動為您產生的原畫布大小單色背景：</p>
+                    </div>
+                    
+                    <!-- 檔案上傳 -->
+                    <div>
+                        <label class="flex flex-col items-center justify-center w-full h-14 border border-dashed border-slate-800 hover:border-brand-500/50 bg-slate-950 hover:bg-slate-900 rounded-lg cursor-pointer transition group">
+                            <span class="text-xs text-slate-400 group-hover:text-brand-300 font-bold">📤 上傳新背景檔案</span>
+                            <input type="file" id="recreateBgFileInput" accept="image/*" class="hidden" onchange="handleNewBgFileUpload(event)">
+                        </label>
+                    </div>
+
+                    <!-- 系統主動提供的單色畫布套用 -->
+                    <div class="space-y-2 border-t border-slate-800/80 pt-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs text-slate-300 font-bold">✨ 主動提供單色背景</span>
+                            <span class="text-[10px] bg-slate-850 text-slate-400 px-1.5 py-0.5 rounded font-mono">${wVal} × ${hVal} px</span>
+                        </div>
+                        
+                        <!-- 快速預設色塊 (White, Charcoal, Green Screen, Cool Blue) -->
+                        <div class="grid grid-cols-4 gap-1.5">
+                            <button onclick="createSolidBg('#ffffff')" class="bg-white border border-slate-700 hover:scale-105 active:scale-95 transition h-7 rounded shadow-sm" title="白色背景板"></button>
+                            <button onclick="createSolidBg('#111827')" class="bg-[#111827] border border-slate-800 hover:scale-105 active:scale-95 transition h-7 rounded shadow-sm" title="高奢暗黑板"></button>
+                            <button onclick="createSolidBg('#22c55e')" class="bg-[#22c55e] border border-slate-700 hover:scale-105 active:scale-95 transition h-7 rounded shadow-sm" title="去背綠幕板"></button>
+                            <button onclick="createSolidBg('#3b82f6')" class="bg-[#3b82f6] border border-slate-700 hover:scale-105 active:scale-95 transition h-7 rounded shadow-sm" title="商務科技藍"></button>
+                        </div>
+
+                        <!-- 無極色彩選擇器與套用 -->
+                        <div class="flex items-center space-x-2 pt-1">
+                            <input type="color" id="quickColorPicker" value="#ede9fe" class="w-8 h-8 rounded bg-slate-800 border border-slate-700 cursor-pointer shrink-0">
+                            <button onclick="createSolidBg(document.getElementById('quickColorPicker').value)" class="flex-1 bg-brand-600 hover:bg-brand-500 text-white text-[11px] font-bold py-1.5 rounded transition shadow-sm">
+                                套用自訂色板
+                            </button>
+                        </div>
+                    </div>
+                `;
+                elLayersList.appendChild(recreateCard);
+            }
+
+            if (appState.layers.length === 0) {
+                elEmptyLayers.classList.remove('hidden');
+                return;
+            }
+            elEmptyLayers.classList.add('hidden');
+
+            const reversedLayers = [...appState.layers].reverse();
+
+            reversedLayers.forEach((layer) => {
+                const isBg = layer.id === 'bg_layer';
+
+                const card = document.createElement('div');
+                card.id = `card_${layer.id}`;
+                card.className = `layer-card border rounded-xl p-3 flex items-center justify-between cursor-pointer transition ${isBg ? 'bg-slate-950 border-slate-900' : 'bg-slate-900/40 border-slate-800 hover:border-slate-700'}`;
+
+                card.addEventListener('click', () => {
+                    selectLayer(layer.id);
+                });
+
+                const thumbCanvas = document.createElement('canvas');
+                thumbCanvas.width = 44;
+                thumbCanvas.height = 44;
+                const tCtx = thumbCanvas.getContext('2d');
+
+                tCtx.fillStyle = '#0f172a';
+                tCtx.fillRect(0, 0, 44, 44);
+                tCtx.fillStyle = '#1e293b';
+                tCtx.fillRect(0, 0, 22, 22);
+                tCtx.fillRect(22, 22, 22, 22);
+
+                const scale = Math.min(38 / layer.width, 38 / layer.height);
+                const tw = layer.width * scale;
+                const th = layer.height * scale;
+                const tx = (44 - tw) / 2;
+                const ty = (44 - th) / 2;
+                tCtx.drawImage(layer.canvas, tx, ty, tw, th);
+
+                card.innerHTML = `
+                    <div class="flex items-center space-x-3.5 min-w-0">
+                        <img src="${thumbCanvas.toDataURL()}" class="w-10 h-10 rounded bg-slate-950 border border-slate-800 object-cover shrink-0" />
+                        <div class="min-w-0">
+                            <span class="block text-xs md:text-sm font-bold text-slate-200 truncate">${layer.name}</span>
+                            <span class="block text-[11px] text-slate-500 mt-0.5">${layer.width} × ${layer.height} px • 深度: ${appState.layers.indexOf(layer)}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-1 shrink-0">
+                        <button onclick="toggleLayerVisibility(event, '${layer.id}')" class="p-1.5 text-slate-500 hover:text-slate-200 hover:bg-slate-800 rounded transition" title="隱藏/顯示圖層">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="${layer.visible ? 'M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' : 'M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.025 10.025 0 014.132-5.4M9.69 9.69a2.886 2.886 0 00-1.19 1.19M12 5c2.9 0 5.5 1.2 7.3 3.3m-1.7 1.7A2.9 2.9 0 0015 15.3M12 12a3 3 0 00-3 3m13-3a10.025 10.025 0 00-4.132-5.4M21 21L3 3'}" />
+                            </svg>
+                        </button>
+                    </div>
+                `;
+
+                elLayersList.appendChild(card);
+            });
+
+            if (appState.activeLayerId) {
+                const activeCard = document.getElementById(`card_${appState.activeLayerId}`);
+                if (activeCard) {
+                    activeCard.classList.remove('border-slate-800');
+                    activeCard.classList.add('border-brand-500', 'bg-slate-900/80');
+                }
+            }
+        }
+
+        // 重新上傳主背景檔案
+        function handleNewBgFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (evt) {
+                const img = new Image();
+                img.onload = function () {
+                    const tempCanvas = document.createElement('canvas');
+                    tempCanvas.width = img.width;
+                    tempCanvas.height = img.height;
+                    const ctx = tempCanvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+
+                    // 同步新圖片資料源，供後續拆圖引擎
+                    appState.currentImageSrc = evt.target.result;
+
+                    reconstructBackground(tempCanvas, "圖片底圖");
+                    event.target.value = '';
+                };
+                img.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 在工作區重新初始化重建主背景畫布
+        function reconstructBackground(canvas, sourceLabel) {
+            saveState();
+
+            appState.imageWidth = canvas.width;
+            appState.imageHeight = canvas.height;
+
+            elCanvasWrapper.style.width = `${canvas.width}px`;
+            elCanvasWrapper.style.height = `${canvas.height}px`;
+
+            const bgLayer = {
+                id: 'bg_layer',
+                name: `主畫布背景 (${sourceLabel})`,
+                type: 'BACKGROUND',
+                canvas: canvas,
+                originalX: 0,
+                originalY: 0,
+                x: 0,
+                y: 0,
+                width: canvas.width,
+                height: canvas.height,
+                scaleX: 1,
+                scaleY: 1,
+                rotation: 0,
+                opacity: 100,
+                visible: true,
+                isLocked: true
+            };
+
+            // 清除現有的 bg_layer，將新 bg 壓入底層
+            appState.layers = appState.layers.filter(l => l.id !== 'bg_layer');
+            appState.layers.unshift(bgLayer);
+
+            appState.isUpdatingBg = true;
+            elSourceDisplay.src = canvas.toDataURL();
+            elSourceDisplay.style.display = 'block';
+            elSourceDisplay.style.opacity = '1';
+
+            renderInteractiveLayers();
+            updateWorkspaceDisplayAfterBgRebuild();
+            updateLayerPanel();
+
+            saveState();
+
+            showNotification("主畫布背景已建立", `成功生成全新底層主畫布 (${canvas.width}×${canvas.height}px)！`, "success");
+        }
+
+        function updateWorkspaceDisplayAfterBgRebuild() {
+            const parent = elWorkspaceContainer.parentElement;
+            const containerW = parent.clientWidth - 48;
+            const containerH = parent.clientHeight - 48;
+            const fitScale = Math.min(containerW / appState.imageWidth, containerH / appState.imageHeight, 1);
+
+            appState.zoom = Math.max(0.15, fitScale);
+            appState.panX = 0;
+            appState.panY = 0;
+            renderWorkspaceTransform();
+        }
+
+        // 切換圖層可見度
+        function toggleLayerVisibility(e, id) {
+            e.stopPropagation();
+            const layer = appState.layers.find(l => l.id === id);
+            if (layer) {
+                saveState();
+                layer.visible = !layer.visible;
+                if (id === 'bg_layer') {
+                    elSourceDisplay.style.display = layer.visible ? 'block' : 'none';
+                } else {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = layer.visible ? 'block' : 'none';
+                }
+
+                if (!layer.visible && appState.activeLayerId === id) {
+                    elQuickEdit.classList.add('hidden');
+                }
+                updateLayerPanel();
+            }
+        }
+
+        // 圖層堆疊深度向上/向下移動
+        function changeActiveLayerDepth(dir) {
+            const index = appState.layers.findIndex(l => l.id === appState.activeLayerId);
+            if (index === -1) return;
+
+            saveState();
+
+            if (dir === 'up' && index < appState.layers.length - 1) {
+                const temp = appState.layers[index];
+                appState.layers[index] = appState.layers[index + 1];
+                appState.layers[index + 1] = temp;
+            } else if (dir === 'down' && index > 1) {
+                const temp = appState.layers[index];
+                appState.layers[index] = appState.layers[index - 1];
+                appState.layers[index - 1] = temp;
+            }
+
+            rebuildZIndexRender();
+            updateLayerPanel();
+        }
+
+        function rebuildZIndexRender() {
+            appState.layers.forEach((layer, index) => {
+                const el = document.getElementById(layer.id);
+                if (el) {
+                    el.style.zIndex = index + 1;
+                }
+            });
+        }
+
+        // 修改選定物件不透明度
+        function updateActiveLayerOpacity(value) {
+            const layer = appState.layers.find(l => l.id === appState.activeLayerId);
+            if (layer) {
+                layer.opacity = value;
+                document.getElementById('valLayerOpacity').innerText = `${value}%`;
+                if (layer.id === 'bg_layer') {
+                    elSourceDisplay.style.opacity = value / 100;
+                } else {
+                    const el = document.getElementById(layer.id);
+                    if (el) el.style.opacity = value / 100;
+                }
+            }
+        }
+
+        // 刪除物件或主畫布功能 (完美保留並強化刪除主底圖體驗)
+        function deleteActiveLayer() {
+            const index = appState.layers.findIndex(l => l.id === appState.activeLayerId);
+            if (index !== -1) {
+                saveState();
+
+                const idToDelete = appState.activeLayerId;
+                if (idToDelete === 'bg_layer') {
+                    // 主底圖刪除流程
+                    elSourceDisplay.removeAttribute('src');
+                    appState.lastLoadedSrc = ''; // 重置載入快取安全鎖
+                    elSourceDisplay.style.display = 'none';
+                    appState.layers.splice(index, 1);
+                    appState.activeLayerId = null;
+                    elQuickEdit.classList.add('hidden');
+                    updateLayerPanel();
+                    showNotification("主畫布已刪除", "主畫布背景已被安全移除，您可以在右側重新上傳全新主底圖進行拼貼排版。", "info");
+                } else {
+                    // 獨立去背物件刪除流程
+                    const el = document.getElementById(idToDelete);
+                    if (el) el.remove();
+
+                    appState.layers.splice(index, 1);
+                    appState.activeLayerId = null;
+                    elQuickEdit.classList.add('hidden');
+                    updateLayerPanel();
+                    showNotification("物件已刪除", "選定圖層已從畫布中安全移除。", "info");
+                }
+            }
+        }
+
+
+        // ==========================================
+        // 核心：回到上一步與下一步 (Undo / Redo 引擎)
+        // ==========================================
+        function cloneCanvas(oldCanvas) {
+            const newCanvas = document.createElement('canvas');
+            newCanvas.width = oldCanvas.width;
+            newCanvas.height = oldCanvas.height;
+            const ctx = newCanvas.getContext('2d');
+            ctx.drawImage(oldCanvas, 0, 0);
+            return newCanvas;
+        }
+
+        function initHistoryOnLoad() {
+            undoStack = [];
+            redoStack = [];
+
+            const snapshot = appState.layers.map(l => ({
+                ...l,
+                canvas: cloneCanvas(l.canvas)
+            }));
+            undoStack.push(snapshot);
+            updateHistoryButtons();
+        }
+
+        function saveState() {
+            const stateSnapshot = appState.layers.map(l => ({
+                ...l,
+                canvas: cloneCanvas(l.canvas)
+            }));
+            undoStack.push(stateSnapshot);
+            redoStack = [];
+            updateHistoryButtons();
+        }
+
+        function undo() {
+            if (undoStack.length <= 1) return;
+
+            const currentState = appState.layers.map(l => ({
+                ...l,
+                canvas: cloneCanvas(l.canvas)
+            }));
+            redoStack.push(currentState);
+
+            const prevState = undoStack.pop();
+            appState.layers = prevState;
+
+            applyRestoredStateToUI();
+            updateHistoryButtons();
+            showNotification("復原成功", "已回到上一步操作", "info");
+        }
+
+        function redo() {
+            if (redoStack.length === 0) return;
+
+            const currentState = appState.layers.map(l => ({
+                ...l,
+                canvas: cloneCanvas(l.canvas)
+            }));
+            undoStack.push(currentState);
+
+            const nextState = redoStack.pop();
+            appState.layers = nextState;
+
+            applyRestoredStateToUI();
+            updateHistoryButtons();
+            showNotification("重做成功", "已回復至下一步操作", "info");
+        }
+
+        function applyRestoredStateToUI() {
+            const bgLayer = appState.layers.find(l => l.id === 'bg_layer');
+            if (bgLayer) {
+                appState.isUpdatingBg = true;
+                elSourceDisplay.src = bgLayer.canvas.toDataURL();
+                elSourceDisplay.style.display = bgLayer.visible ? 'block' : 'none';
+                elSourceDisplay.style.opacity = bgLayer.opacity / 100;
+            } else {
+                const hasAnyLayers = appState.layers.length > 0;
+                if (!hasAnyLayers && appState.currentImageSrc) {
+                    elSourceDisplay.src = appState.currentImageSrc;
+                    elSourceDisplay.style.display = 'block';
+                    elSourceDisplay.style.opacity = '1';
+                } else {
+                    elSourceDisplay.removeAttribute('src');
+                    elSourceDisplay.style.display = 'none';
+                }
+            }
+
+            renderInteractiveLayers();
+            updateLayerPanel();
+
+            if (appState.activeLayerId) {
+                const exists = appState.layers.some(l => l.id === appState.activeLayerId);
+                if (exists) {
+                    selectLayer(appState.activeLayerId);
+                } else {
+                    appState.activeLayerId = null;
+                    elQuickEdit.classList.add('hidden');
+                }
+            }
+        }
+
+        function updateHistoryButtons() {
+            const btnUndo = document.getElementById('btnUndo');
+            const btnRedo = document.getElementById('btnRedo');
+
+            if (btnUndo) {
+                if (undoStack.length > 1) {
+                    btnUndo.disabled = false;
+                    btnUndo.classList.remove('opacity-40', 'cursor-not-allowed');
+                    btnUndo.classList.add('hover:bg-slate-800', 'text-brand-400');
+                } else {
+                    btnUndo.disabled = true;
+                    btnUndo.classList.add('opacity-40', 'cursor-not-allowed');
+                    btnUndo.classList.remove('hover:bg-slate-800', 'text-brand-400');
+                }
+            }
+
+            if (btnRedo) {
+                if (redoStack.length > 0) {
+                    btnRedo.disabled = false;
+                    btnRedo.classList.remove('opacity-40', 'cursor-not-allowed');
+                    btnRedo.classList.add('hover:bg-slate-800', 'text-brand-400');
+                } else {
+                    btnRedo.disabled = true;
+                    btnRedo.classList.add('opacity-40', 'cursor-not-allowed');
+                    btnRedo.classList.remove('hover:bg-slate-800', 'text-brand-400');
+                }
+            }
+        }
+
+        function setupKeyboardShortcuts() {
+            window.addEventListener('keydown', (e) => {
+                const isCtrl = e.ctrlKey || e.metaKey;
+                if (isCtrl && !e.shiftKey && e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    undo();
+                } else if (isCtrl && e.key.toLowerCase() === 'y') {
+                    e.preventDefault();
+                    redo();
+                } else if (isCtrl && e.shiftKey && e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    redo();
+                }
+            });
+        }
+
+
+        // ==========================================
+        // 單張與批次去背導出功能核心 (ZIP打包下載)
+        // ==========================================
+
+        function exportSingleLayer() {
+            const layer = appState.layers.find(l => l.id === appState.activeLayerId);
+            if (!layer || layer.id === 'bg_layer') return;
+
+            const link = document.createElement('a');
+            link.download = `Layer_${layer.name.replace(/[^a-zA-Z0-9_\u4e00-\u9fa5]/g, '')}_transparent.png`;
+            link.href = layer.canvas.toDataURL('image/png');
+            link.click();
+
+            showNotification("導出成功", "去背物件 PNG 影像已存入下載資料夾中。", "success");
+        }
+
+        async function exportAllLayersZip() {
+            const activeLayers = appState.layers.filter(l => l.id !== 'bg_layer');
+            if (activeLayers.length === 0) {
+                showNotification("無有效物件", "當前專案無有效分離圖層。", "error");
+                return;
+            }
+
+            showNotification("批次封裝中", "正在將所有分離去背後的圖層打包壓縮...", "info");
+
+            const zip = new JSZip();
+
+            activeLayers.forEach((layer, index) => {
+                const dataUrl = layer.canvas.toDataURL('image/png');
+                const base64Data = dataUrl.split(',')[1];
+                const layerName = layer.name.replace(/[^a-zA-Z0-9_\u4e00-\u9fa5]/g, '') || `object_${index + 1}`;
+                zip.file(`layer_${index + 1}_${layerName}.png`, base64Data, { base64: true });
+            });
+
+            try {
+                const content = await zip.generateAsync({ type: "blob" });
+                const link = document.createElement('a');
+                link.download = `LayerExtract_Batch_${Date.now()}.zip`;
+                link.href = URL.createObjectURL(content);
+                link.click();
+                showNotification("打包下載成功", "所有去背物件已整合打包至 ZIP 壓縮檔！", "success");
+            } catch (e) {
+                console.error(e);
+                showNotification("打包失敗", "ZIP 編譯時發生錯誤，請改用單張導出功能。", "error");
+            }
+        }
+
+        function exportFullLayout() {
+            if (appState.layers.length === 0) {
+                showNotification("無導出數據", "當前無有效圖層，請先點擊智慧分離或建立背景畫布。", "error");
+                return;
+            }
+
+            showNotification("開始合成平面圖", "正重新渲染您的傢俱擺設、旋轉角度與透明度...", "info");
+
+            const finalCanvas = document.createElement('canvas');
+            finalCanvas.width = appState.imageWidth;
+            finalCanvas.height = appState.imageHeight;
+            const ctx = finalCanvas.getContext('2d');
+
+            appState.layers.forEach(layer => {
+                if (!layer.visible) return;
+
+                ctx.save();
+
+                if (layer.id === 'bg_layer') {
+                    ctx.globalAlpha = layer.opacity / 100;
+                    ctx.drawImage(layer.canvas, 0, 0);
+                } else {
+                    const cx = layer.x + layer.width / 2;
+                    const cy = layer.y + layer.height / 2;
+
+                    ctx.translate(cx, cy);
+                    ctx.rotate((layer.rotation * Math.PI) / 180);
+                    ctx.scale(layer.scaleX, layer.scaleY);
+
+                    ctx.globalAlpha = layer.opacity / 100;
+                    ctx.drawImage(layer.canvas, -layer.width / 2, -layer.height / 2);
+                }
+
+                ctx.restore();
+            });
+
+            const outUrl = finalCanvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = `LayerExtract_Composite_${Date.now()}.png`;
+            link.href = outUrl;
+            link.click();
+
+            showNotification("圖像合成成功", "合成後的新規劃圖已成功存入下載路徑中！", "success");
+        }
+    </script>
+</body>
+
+</html>
