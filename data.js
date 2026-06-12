@@ -216,6 +216,16 @@ window.APP_DATA = {
       "icon": "QrCode",
       "color": "sky",
       "grade": "小程式"
+    },
+    {
+      "id": "item_1781267713352",
+      "title": "LayerExtract AI 智慧圖像多圖層自動分離與去背工作坊",
+      "category": "小程式",
+      "description": "一款運行於瀏覽器端的通用圖形與影像處理工具，專為多組件元素提取、自動化精準去背、主動式背景智慧修補 (Inpainting) 與多圖層排版設計而開發。本系統結合了「本地輕量化計算機視覺演算法」與「雲端大語言模型 (Gemini Multimodal) 語意感知技術」，提供使用者零延遲的互動體驗與高精度的視覺設計環境。",
+      "link": "LayerExtract.html",
+      "icon": "Scissors",
+      "color": "orange",
+      "grade": "小程式"
     }
   ]
 };
