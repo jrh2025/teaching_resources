@@ -211,9 +211,9 @@
                                 class="mt-1 text-brand-600 focus:ring-brand-500 w-4 h-4"
                                 onchange="switchEngine('gemini')">
                             <div class="ml-3">
-                                <span class="block text-xs md:text-sm font-bold text-slate-200">Gemini 雲端語意提取</span>
-                                <span class="block text-xs text-slate-400 mt-1 leading-relaxed">透過 Google Cloud AI
-                                    多模態模型 understanding 影像中實體，取得高精度語意邊界。</span>
+                                <span class="block text-xs md:text-sm font-bold text-slate-200">Gemini 雲端高精多邊形去背</span>
+                                <span class="block text-xs text-slate-400 mt-1 leading-relaxed">透過 Google Gemini
+                                    多模態模型辨識主體輪廓，以 50-100 頂點高密度多邊形裁切，並支援橡皮擦精修。</span>
                             </div>
                         </label>
                     </div>
@@ -230,7 +230,7 @@
                                 <span class="text-[10px] text-indigo-400 font-bold">本地加密儲存</span>
                             </div>
                             <div class="relative">
-                                <input type="password" id="apiKeyInput" placeholder="請輸入您的 API 金鑰"
+                                <input type="password" id="apiKeyInput" placeholder="請輸入您的 API 金鑰 (選填，環境預設具備)"
                                     class="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500">
                             </div>
                             <div class="flex space-x-2">
@@ -253,13 +253,12 @@
                             <select id="modelSelect" onchange="toggleCustomModelField()"
                                 class="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500">
                                 <option value="gemini-3.5-flash" selected>gemini-3.5-flash (最新主力預設)</option>
-                                <option value="gemini-2.5-flash">gemini-2.5-flash (穩定效能版本)</option>
                                 <option value="custom">自訂模型標識符...</option>
                             </select>
 
                             <div id="customModelField" class="hidden space-y-1.5">
                                 <label class="block text-[10px] text-slate-500 font-semibold">自訂模型位置/名稱 (例如:
-                                    gemini-4.0-flash)</label>
+                                    gemini-3.5-flash)</label>
                                 <input type="text" id="customModelInput" placeholder="輸入自訂的模型名稱"
                                     class="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500">
                             </div>
@@ -296,7 +295,7 @@
                         </div>
                         <div>
                             <div class="flex justify-between text-xs md:text-sm mb-1.5">
-                                <span class="text-slate-300 font-medium">色彩識別與邊界容差</span>
+                                <span class="text-slate-300 font-medium">色彩識別與邊界容差 (僅限本地)</span>
                                 <span id="valThreshold" class="text-brand-400 font-bold">35</span>
                             </div>
                             <input type="range" id="paramThreshold" min="5" max="120" value="35"
@@ -305,7 +304,7 @@
                         </div>
                         <div>
                             <div class="flex justify-between text-xs md:text-sm mb-1.5">
-                                <span class="text-slate-300 font-medium">智慧去背邊緣容差</span>
+                                <span class="text-slate-300 font-medium">智慧去背邊緣容差 (僅限本地)</span>
                                 <span id="valMattingTol" class="text-brand-400 font-bold">45</span>
                             </div>
                             <input type="range" id="paramMattingTol" min="5" max="150" value="45"
@@ -420,9 +419,16 @@
                 </div>
             </div>
 
-            <!-- 工作區底部操作提示 -->
-            <div
-                class="absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur-sm px-4 py-3 rounded-xl border border-slate-800 text-xs text-slate-400 pointer-events-none max-w-sm shadow-md leading-relaxed">
+            <!-- 工作區底部操作提示 (已調整為可互動 pointer-events-auto，並加上✕關閉按鈕與ID) -->
+            <div id="workspaceTipBox"
+                class="absolute bottom-4 left-4 bg-slate-900/90 backdrop-blur-sm pl-4 pr-10 py-3 rounded-xl border border-slate-800 text-xs text-slate-400 pointer-events-auto max-w-sm shadow-md leading-relaxed transition-all duration-300">
+                <button onclick="closeTipBox()"
+                    class="absolute top-2.5 right-2.5 text-slate-500 hover:text-slate-300 transition" title="關閉提示欄">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
                 💡 <span class="font-bold text-slate-200">圖像編輯提示：</span>
                 按住 `滑鼠左鍵` 在空白或底圖上拖曳，或按住 `滑鼠中鍵` 可移動工作區。點擊分離物件可任意平移、旋轉與調整。
             </div>
@@ -472,50 +478,111 @@
                 </div>
             </div>
 
-            <!-- 選取物件快捷控制面板與獨立去背導出 -->
-            <div id="quickEditPanel" class="hidden border-t border-slate-900 p-4 bg-slate-950 space-y-3.5 shadow-2xl">
-                <div class="flex items-center justify-between">
-                    <h4 class="text-sm font-bold text-brand-400 uppercase tracking-wider">選取圖層控制</h4>
-                    <span id="selectedLayerType"
-                        class="text-[10px] bg-brand-500/10 text-brand-300 px-2 py-0.5 rounded font-bold border border-brand-500/20">OBJECT</span>
+            <!-- 選取物件快捷控制面板與獨立去背導出 - 高度收折與關閉支援 -->
+            <div id="quickEditPanel"
+                class="hidden border-t border-slate-900 bg-slate-950 flex flex-col shadow-2xl transition-all duration-300">
+                <!-- 控制面板頂部 header (提供一鍵收折與關閉功能) -->
+                <div class="px-4 py-3 border-b border-slate-900/60 flex items-center justify-between bg-slate-900/30">
+                    <div class="flex items-center space-x-2.5 min-w-0">
+                        <button onclick="toggleQuickEditCollapse()"
+                            class="p-1 text-slate-400 hover:text-white hover:bg-slate-800 rounded transition"
+                            title="一鍵收折/展開面板">
+                            <svg id="collapseIcon" class="w-4 h-4 transform transition-transform duration-200"
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <h4 class="text-xs font-bold text-brand-400 uppercase tracking-wider truncate">選取圖層控制</h4>
+                        <span id="selectedLayerType"
+                            class="text-[9px] bg-brand-500/10 text-brand-300 px-1.5 py-0.5 rounded font-bold border border-brand-500/20 shrink-0">OBJECT</span>
+                    </div>
+                    <!-- 取消選擇按鈕 ✕ (點選即可完全關閉面板，騰出100%空間) -->
+                    <button onclick="deselectActiveLayer()"
+                        class="p-1 text-slate-400 hover:text-red-400 hover:bg-slate-800 rounded transition"
+                        title="取消選擇並釋放畫布 (✕)">
+                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
-                <div class="space-y-3">
-                    <div>
-                        <div class="flex justify-between text-xs md:text-sm mb-1.5">
-                            <span class="text-slate-400 font-medium">物件不透明度</span>
-                            <span id="valLayerOpacity" class="text-slate-200 font-bold">100%</span>
+
+                <!-- 面板可收折折疊內容區域 -->
+                <div id="quickEditPanelContent" class="p-4 space-y-3.5 max-h-[45vh] overflow-y-auto">
+                    <!-- 去背精修筆刷控制區 -->
+                    <div class="border-b border-slate-900/60 pb-3.5 mb-1.5 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-slate-300 font-bold uppercase tracking-wider">去背手動精修筆刷</span>
+                            <span class="text-[10px] text-brand-400 font-bold">擦除與還原</span>
                         </div>
-                        <input type="range" id="layerOpacitySlider" min="10" max="100" value="100"
-                            class="w-full accent-brand-500 bg-slate-800 h-1.5 rounded cursor-pointer"
-                            oninput="updateActiveLayerOpacity(this.value)" onchange="saveState()">
+
+                        <!-- 筆刷模式選擇按鈕群組 -->
+                        <div class="grid grid-cols-3 gap-1.5">
+                            <button onclick="setBrushMode('none')" id="btnBrushNone"
+                                class="bg-brand-600 hover:bg-brand-500 text-white border border-transparent py-1.5 px-1 rounded text-[11px] font-semibold transition text-center flex items-center justify-center space-x-1 shadow-sm">
+                                <span>選取調整</span>
+                            </button>
+                            <button onclick="setBrushMode('eraser')" id="btnBrushEraser"
+                                class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 py-1.5 px-1 rounded text-[11px] font-semibold transition text-center flex items-center justify-center space-x-1">
+                                <span>🧽 橡皮擦</span>
+                            </button>
+                            <button onclick="setBrushMode('restore')" id="btnBrushRestore"
+                                class="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 py-1.5 px-1 rounded text-[11px] font-semibold transition text-center flex items-center justify-center space-x-1">
+                                <span>🖌️ 還原筆</span>
+                            </button>
+                        </div>
+
+                        <!-- 筆刷粗細尺寸滑桿 (僅在啟用筆刷時展開) -->
+                        <div id="brushSizeControlBlock" class="hidden space-y-1.5 pt-1">
+                            <div class="flex justify-between text-xs">
+                                <span class="text-slate-400 font-medium">筆刷大小粗細</span>
+                                <span id="valBrushSize" class="text-brand-400 font-bold">20px</span>
+                            </div>
+                            <input type="range" id="brushSizeSlider" min="5" max="150" value="20"
+                                class="w-full accent-brand-500 bg-slate-800 h-1.5 rounded cursor-pointer"
+                                oninput="updateBrushSize(this.value)">
+                        </div>
                     </div>
-                    <!-- 深度調整控制組 -->
-                    <div id="depthControls" class="grid grid-cols-2 gap-2.5">
-                        <button onclick="changeActiveLayerDepth('up')"
-                            class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 py-2 rounded-lg text-xs md:text-sm font-semibold transition"
-                            title="深度向上提升一層">置前</button>
-                        <button onclick="changeActiveLayerDepth('down')"
-                            class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 py-2 rounded-lg text-xs md:text-sm font-semibold transition"
-                            title="深度向下降低一層">置後</button>
+
+                    <div class="space-y-3">
+                        <div>
+                            <div class="flex justify-between text-xs md:text-sm mb-1.5">
+                                <span class="text-slate-400 font-medium">物件不透明度</span>
+                                <span id="valLayerOpacity" class="text-slate-200 font-bold">100%</span>
+                            </div>
+                            <input type="range" id="layerOpacitySlider" min="10" max="100" value="100"
+                                class="w-full accent-brand-500 bg-slate-800 h-1.5 rounded cursor-pointer"
+                                oninput="updateActiveLayerOpacity(this.value)" onchange="saveState()">
+                        </div>
+                        <!-- 深度調整控制組 -->
+                        <div id="depthControls" class="grid grid-cols-2 gap-2.5">
+                            <button onclick="changeActiveLayerDepth('up')"
+                                class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 py-2 rounded-lg text-xs md:text-sm font-semibold transition"
+                                title="深度向上提升一層">置前</button>
+                            <button onclick="changeActiveLayerDepth('down')"
+                                class="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 py-2 rounded-lg text-xs md:text-sm font-semibold transition"
+                                title="深度向下降低一層">置後</button>
+                        </div>
+                        <!-- Single object Matting/Transparency Export -->
+                        <button id="btnExportSingle" onclick="exportSingleLayer()"
+                            class="w-full bg-slate-900 hover:bg-slate-800 border border-brand-500/30 hover:border-brand-500 text-brand-300 py-2.5 rounded-lg text-xs md:text-sm font-bold flex items-center justify-center space-x-1.5 transition">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            <span>導出此去背物件 (PNG)</span>
+                        </button>
+                        <!-- 刪除控制鈕 -->
+                        <button onclick="deleteActiveLayer()"
+                            class="w-full bg-red-950/20 hover:bg-red-950/40 border border-red-900/30 text-red-400 py-2 rounded-lg text-xs md:text-sm font-semibold transition flex items-center justify-center space-x-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 016.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            <span id="btnDeleteLayerText">從畫布中刪除此物件</span>
+                        </button>
                     </div>
-                    <!-- Single object Matting/Transparency Export -->
-                    <button id="btnExportSingle" onclick="exportSingleLayer()"
-                        class="w-full bg-slate-900 hover:bg-slate-800 border border-brand-500/30 hover:border-brand-500 text-brand-300 py-2.5 rounded-lg text-xs md:text-sm font-bold flex items-center justify-center space-x-1.5 transition">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                        </svg>
-                        <span>導出此去背物件 (PNG)</span>
-                    </button>
-                    <!-- 刪除控制鈕 -->
-                    <button onclick="deleteActiveLayer()"
-                        class="w-full bg-red-950/20 hover:bg-red-950/40 border border-red-900/30 text-red-400 py-2 rounded-lg text-xs md:text-sm font-semibold transition flex items-center justify-center space-x-1">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        <span id="btnDeleteLayerText">從畫布中刪除此物件</span>
-                    </button>
                 </div>
             </div>
         </aside>
@@ -554,12 +621,13 @@
             <div class="text-sm text-slate-300 space-y-3 leading-relaxed">
                 <p>本系統是專門為<strong>多組件提取、自動去背與智慧修補</strong>而設計的通用設計工具。其運作邏輯如下：</p>
                 <ul class="list-disc pl-5 space-y-2 text-slate-400">
-                    <li><strong class="text-brand-300">精準細節分離 (BFS Components Extraction)</strong>:
-                        適合分離插畫網格、緊密排列的物件。藉由降低「色彩識別容差」與提高「處理掃描解析度」，極小細節與細微文字都不會被粘連。</li>
-                    <li><strong class="text-brand-300">主動智慧去背 (Automatic Matting)</strong>: 提取物件的瞬間，自動計算並抹除背景色，形成完全透明的
-                        PNG 圖元層。您可在右側側邊欄將去背物件打包為一個 ZIP 批次下載。</li>
+                    <li><strong class="text-brand-300">Gemini 雲端精細多邊形去背</strong>:
+                        當使用 Gemini 引擎時，AI 會為每個元素建立 50 至 100 個控制點組成的超高密度多邊形路徑（Polygon
+                        Contour），能夠精確貼合人像、花束等主體邊緣進行裁切，完美隔離背景像素，並提供手動修補筆刷精細調整。</li>
+                    <li><strong class="text-brand-300">本地高級 BFS 分離去背</strong>:
+                        免 API、零延遲。搭載 Sobel 梯度與亮度邊緣感知，適合分離簡潔插畫、向量色塊、密集標籤或幾何圖形。</li>
                     <li><strong class="text-brand-300">智慧邊界擴散補色 (Bilinear Boundary Diffusion Inpainting)</strong>:
-                        當您將物件移開時，原圖對應區域將基於邊緣像素雙線性插值演算法（Bilinear Boundary Interpolation）進行漸變填充，從背景中完美抹除物件原始殘影。</li>
+                        當您將物件移開時，原圖對應區域將基於邊緣像素雙線性插值演算法進行漸變填充，從背景中完美抹除物件原始殘影。</li>
                 </ul>
             </div>
             <div class="pt-2 flex justify-end">
@@ -588,12 +656,19 @@
             isUpdatingBg: false, // 關鍵旗標：防止背景去印底圖重新載入時誤觸清空及歷史清空
             isInitializingNewImage: false, // 全新圖片初始化安全鎖，防任何 reflow 誤觸 reset
             pendingFilename: '', // 紀錄待初始化圖片名稱
-            lastLoadedSrc: '' // 核心快取安全鎖：紀錄上次實質載入之來源，杜絕因 Transform Reflow 導致的重複載入與圖層消失 Bug
+            lastLoadedSrc: '', // 核心快取安全鎖：紀錄上次實質載入之來源，杜絕因 Transform Reflow 導致的重複載入與圖層消失 Bug
+
+            // 手動精修筆刷狀態
+            brushMode: 'none', // 'none' | 'eraser' | 'restore'
+            brushSize: 20
         };
 
         // 歷史復原/重做堆疊與開關
         let undoStack = [];
         let redoStack = [];
+
+        // 控制面板摺疊狀態旗標
+        let isQuickEditCollapsed = false;
 
         // DOM 緩存快取
         const elImageInput = document.getElementById('imageInput');
@@ -607,7 +682,7 @@
         const elToast = document.getElementById('toastNotification');
         const elBatchToolbar = document.getElementById('batchExportToolbar');
 
-        const apiKey = ""; // 雲端預設內置金鑰 (留空則強制要求使用者輸入/自訂)
+        const apiKey = ""; // 雲端預設內置金鑰 (環境會自動注入)
 
         // 啟動初始化
         window.addEventListener('load', () => {
@@ -623,6 +698,18 @@
             modal.classList.toggle('hidden');
         }
         document.getElementById('btnHelp').addEventListener('click', toggleHelpModal);
+
+        // 一鍵漸變關閉底部的「圖像編輯提示」
+        function closeTipBox() {
+            const tipBox = document.getElementById('workspaceTipBox');
+            if (tipBox) {
+                tipBox.style.opacity = '0';
+                tipBox.style.transform = 'translateY(15px)';
+                setTimeout(() => {
+                    tipBox.classList.add('hidden');
+                }, 300);
+            }
+        }
 
         // 切換透明棋盤格預覽
         function toggleCheckerboard() {
@@ -815,9 +902,8 @@
 
                 const rows = 3;
                 const cols = 4;
-                // 將 grid_cats 網格之繪製起始座標修正置中，防止內容偏上且耳朵邊界被裁切
-                const startX = 108; // 原為 50，修正為 108 使水平完美置中
-                const startY = 94;  // 原為 45，修正為 94 使垂直完美置中且完全收納於邊框內
+                const startX = 108;
+                const startY = 94;
                 const catColors = ['#f97316', '#fb923c', '#ea580c'];
 
                 let catId = 1;
@@ -996,6 +1082,7 @@
 
         function renderWorkspaceTransform() {
             elWorkspaceContainer.style.transform = `translate(-50%, -50%) translate(${appState.panX}px, ${appState.panY}px) scale(${appState.zoom})`;
+            updateBrushCursor(); // 確保縮放時，筆刷游標尺寸在螢幕上等比配合縮放
         }
 
         // 移動工作區平移支援
@@ -1066,7 +1153,6 @@
             });
         }
 
-
         // ==========================================
         // 精確檢測：防止嵌套重疊與過度融合演算法
         // ==========================================
@@ -1083,7 +1169,7 @@
                 return margin <= padding;
             }
             if (box2ContainsBox1) {
-                const margin = Math.min(box1.xmin - box2.xmin, box2.xmax - box1.xmax, box1.ymin - box2.ymin, box2.ymax - box1.ymax);
+                const margin = Math.min(box1.xmin - box2.xmin, box2.xmax - box1.xmax, img1.ymin - box2.ymin, box2.ymax - box1.ymax);
                 return margin <= padding;
             }
 
@@ -1103,7 +1189,6 @@
                 img.src = appState.currentImageSrc;
             });
         }
-
 
         // ==========================================
         // 本地高階 BFS 智慧圖元分離引擎 (搭載 Sobel 梯度特徵與色彩感知)
@@ -1316,9 +1401,8 @@
             });
         }
 
-
         // ==========================================
-        // 雲端 GEMINI 多模態提取引擎 (支援自訂輸入模型與 LocalStorage 金鑰管理)
+        // 雲端 GEMINI 多模態高精多邊形提取引擎 (支援最新 gemini-3.5-flash 與 50-100 頂點高密度拓撲)
         // ==========================================
         async function executeGeminiAISegmentation() {
             let key = document.getElementById('apiKeyInput').value.trim() || apiKey;
@@ -1346,11 +1430,16 @@
 
             const base64Data = tempCanvas.toDataURL('image/png').split(',')[1];
 
-            const systemPrompt = `You are an expert image segmenter. Detect all foreground elements, illustrations, shapes, objects, characters, or text bounding tags.
-For each element, return its name and precise normalized coordinates represented in scale 0 to 1000: [ymin, xmin, ymax, xmax] relative to the image size.
-Exclude background patterns. Only list the foreground objects to be extracted.`;
+            const systemPrompt = `你是一個專業級圖像分割與高精多邊形去背大師。
+請檢測圖像中的前景主體元素（例如：人像、花束、萌寵、獨立物件等）。
+對於每個前景主體元素，請返回其名稱（label）、邊界框 [ymin, xmin, ymax, xmax] 以及一個極高密度、平滑貼合的多邊形輪廓（polygon）。
 
-            const userQuery = "Detect and extract all individual visual elements and objects with their normalized coordinates [ymin, xmin, ymax, xmax].";
+座標均需歸一化至 0 到 1000 區間（相對於圖像高度與寬度）：
+- box 格式：[ymin, xmin, ymax, xmax]
+- polygon 格式：一個包含 50 至 100 個頂點座標 [[y1, x1], [y2, x2], ..., [yn, xn]] 的閉合曲線陣列。多邊形必須極度緊密地沿著主體物件邊緣描繪，徹底刨除任何麥田、天空、草地等雜亂背景。
+排除任何整體背景層，僅提取可以被完全去背的前景實體。`;
+
+            const userQuery = "Detect and extract all foreground visual elements. For each element, provide the precise bounding box [ymin, xmin, ymax, xmax] and a high-precision polygon outline containing 50 to 100 points tracing its exact physical boundary, excluding the background completely.";
 
             const payload = {
                 contents: [
@@ -1379,10 +1468,19 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
                                         box: {
                                             type: "ARRAY",
                                             items: { type: "NUMBER" },
-                                            description: "Bounding box [ymin, xmin, ymax, xmax] normalized 0 to 1000"
+                                            description: "邊界框 [ymin, xmin, ymax, xmax] 歸一化 0 至 1000"
+                                        },
+                                        polygon: {
+                                            type: "ARRAY",
+                                            items: {
+                                                type: "ARRAY",
+                                                items: { type: "NUMBER" },
+                                                description: "座標 [y, x] 歸一化 0 至 1000"
+                                            },
+                                            description: "由 50-100 個頂點組成的超高密度精細閉合多邊形輪廓，必須緊貼主體邊界以完美去背"
                                         }
                                     },
-                                    required: ["label", "box"]
+                                    required: ["label", "box", "polygon"]
                                 }
                             }
                         },
@@ -1424,7 +1522,6 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
                 }
             }
         }
-
 
         // ==========================================
         // 高階智慧雙線性邊界擴散補色填空演算法 (Inpainting)
@@ -1486,7 +1583,7 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
         }
 
         // ==========================================
-        // 主動圖元去背演算法 (Active Layer Matting)
+        // 主動圖元去背演算法 (Active Layer Matting - 僅本地 BFS 模式使用)
         // ==========================================
         function makeLayerMatted(canvas, bgR, bgG, bgB, tolerance) {
             const ctx = canvas.getContext('2d');
@@ -1511,7 +1608,6 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
             ctx.putImageData(imgData, 0, 0);
         }
 
-
         // ==========================================
         // 執行圖像分離與圖層生成
         // ==========================================
@@ -1528,7 +1624,7 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
             }
 
             elScannerOverlay.classList.remove('hidden');
-            showNotification("AI 圖層智慧分離中", "正在進行圖像邊緣特徵算子解算與高頻圖元 BFS 拓撲提取...", "info");
+            showNotification("AI 圖層智慧分離中", "正在進行圖像邊緣特徵算子解算與高頻圖元多邊形拓撲提取...", "info");
 
             try {
                 let elements = [];
@@ -1553,7 +1649,7 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
             }
         });
 
-        // 裁剪原始區域、生成去背物件與智慧修補背景
+        // 裁剪原始區域、生成高精多邊形去背/本地去背物件與智慧修補背景
         async function fabricateLayers(elements) {
             saveState();
 
@@ -1581,7 +1677,7 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
             const bgCtx = bgCanvas.getContext('2d');
             bgCtx.drawImage(img, 0, 0);
 
-            // 1. 執行智慧修補
+            // 1. 執行智慧修補背景 (Gemini 模式下補色僅限於多邊形內部，避免破壞原圖其他背景)
             if (enableInpaint) {
                 elements.forEach(el => {
                     const box = el.box;
@@ -1592,7 +1688,36 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
                         ymax = Math.round((box[2] / 1000) * bgCanvas.height);
                         xmax = Math.round((box[3] / 1000) * bgCanvas.width);
                     }
-                    executeBoundaryDiffusionInpaint(bgCtx, xmin, ymin, xmax, ymax);
+
+                    const cropW = xmax - xmin;
+                    const cropH = ymax - ymin;
+                    if (cropW <= 0 || cropH <= 0) return;
+
+                    // 建立一個臨時補色畫布
+                    const tempInpaintCanvas = document.createElement('canvas');
+                    tempInpaintCanvas.width = bgCanvas.width;
+                    tempInpaintCanvas.height = bgCanvas.height;
+                    const tempInpaintCtx = tempInpaintCanvas.getContext('2d');
+                    tempInpaintCtx.drawImage(bgCanvas, 0, 0);
+
+                    // 於臨時畫布上進行擴散著色
+                    executeBoundaryDiffusionInpaint(tempInpaintCtx, xmin, ymin, xmax, ymax);
+
+                    // 輸出到背景上。Gemini 模式時：利用 polygon 將補色局限在主體底下，保留原始旁邊的綠草/過道等美景不遭破壞
+                    bgCtx.save();
+                    if (appState.selectedEngine === 'gemini' && el.polygon && Array.isArray(el.polygon) && el.polygon.length >= 3) {
+                        bgCtx.beginPath();
+                        el.polygon.forEach((pt, ptIdx) => {
+                            const px = (pt[1] / 1000) * bgCanvas.width;
+                            const py = (pt[0] / 1000) * bgCanvas.height;
+                            if (ptIdx === 0) bgCtx.moveTo(px, py);
+                            else bgCtx.lineTo(px, py);
+                        });
+                        bgCtx.closePath();
+                        bgCtx.clip();
+                    }
+                    bgCtx.drawImage(tempInpaintCanvas, 0, 0);
+                    bgCtx.restore();
                 });
             }
 
@@ -1616,7 +1741,7 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
                 isLocked: true
             });
 
-            // 2. 生成去背圖層
+            // 2. 生成去背圖層 (確保 100% 同步寫入原圖 backupCanvas 與解決毀壞前景去背問題)
             elements.forEach((el, index) => {
                 const box = el.box;
                 let ymin = box[0], xmin = box[1], ymax = box[2], xmax = box[3];
@@ -1629,19 +1754,57 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
 
                 const cropW = xmax - xmin;
                 const cropH = ymax - ymin;
+                if (cropW <= 0 || cropH <= 0) return;
 
                 const elementCanvas = document.createElement('canvas');
                 elementCanvas.width = cropW;
                 elementCanvas.height = cropH;
                 const elCtx = elementCanvas.getContext('2d');
 
-                elCtx.drawImage(
+                // 核心修復：為手動精修筆刷建立一個完整的「未去背原始裁切像素備份 (backupCanvas)」
+                const backupCanvas = document.createElement('canvas');
+                backupCanvas.width = cropW;
+                backupCanvas.height = cropH;
+                const backupCtx = backupCanvas.getContext('2d');
+                backupCtx.drawImage(
                     originalCanvas,
                     xmin, ymin, cropW, cropH,
                     0, 0, cropW, cropH
                 );
 
-                makeLayerMatted(elementCanvas, appState.originalBgColor.r, appState.originalBgColor.g, appState.originalBgColor.b, mattingTolerance);
+                // 判斷是否啟用 Gemini 多邊形去背模式
+                if (appState.selectedEngine === 'gemini' && el.polygon && Array.isArray(el.polygon) && el.polygon.length >= 3) {
+                    elCtx.save();
+                    elCtx.beginPath();
+                    // 根據歸一化座標描摹 50-100 個頂點
+                    el.polygon.forEach((pt, ptIdx) => {
+                        const px = (pt[1] / 1000) * originalCanvas.width - xmin;
+                        const py = (pt[0] / 1000) * originalCanvas.height - ymin;
+                        if (ptIdx === 0) elCtx.moveTo(px, py);
+                        else elCtx.lineTo(px, py);
+                    });
+                    elCtx.closePath();
+                    // 裁剪路徑，只保留主體內部像素，徹底屏蔽背景雜色
+                    elCtx.clip();
+
+                    elCtx.drawImage(
+                        originalCanvas,
+                        xmin, ymin, cropW, cropH,
+                        0, 0, cropW, cropH
+                    );
+                    elCtx.restore();
+                } else {
+                    // 本地模式 BFS 去背流程
+                    elCtx.drawImage(
+                        originalCanvas,
+                        xmin, ymin, cropW, cropH,
+                        0, 0, cropW, cropH
+                    );
+                    // 核心修復：僅在本地 Local BFS 模式下呼叫 makeLayerMatted。避免 Gemini 模式因 Dominant 顏色誤差使前景主體半透明受損！
+                    if (appState.selectedEngine === 'local') {
+                        makeLayerMatted(elementCanvas, appState.originalBgColor.r, appState.originalBgColor.g, appState.originalBgColor.b, mattingTolerance);
+                    }
+                }
 
                 const layerId = `layer_${Date.now()}_${index}`;
                 appState.layers.push({
@@ -1649,6 +1812,7 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
                     name: el.label,
                     type: 'OBJECT',
                     canvas: elementCanvas,
+                    backupCanvas: backupCanvas, // 儲存乾淨備份，供還原筆刷取用
                     originalX: xmin,
                     originalY: ymin,
                     x: xmin,
@@ -1726,11 +1890,17 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
             el.style.display = layer.visible ? 'block' : 'none';
         }
 
-        // 移動、旋轉與縮放互動綁定
+        // 移動、旋轉、縮放與「筆刷精修」互動綁定
         function setupLayerInteraction(el, layer) {
-            el.addEventListener('mousedown', (e) => {
+            const handleStart = (e) => {
                 e.stopPropagation();
                 selectLayer(layer.id);
+
+                // 如果當前啟用了精修筆刷模式，則不執行平移旋轉，而是啟動手動筆劃精修
+                if (appState.brushMode !== 'none') {
+                    startBrushing(e, el, layer);
+                    return;
+                }
 
                 if (e.target.classList.contains('rotate-handle')) {
                     startRotating(e, el, layer);
@@ -1739,21 +1909,228 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
                 } else {
                     startDragging(e, el, layer);
                 }
+            };
+
+            el.addEventListener('mousedown', handleStart);
+            el.addEventListener('touchstart', (e) => {
+                handleStart(e);
+            }, { passive: false });
+        }
+
+        // ==========================================
+        // 核心：手動魔術筆刷精修繪圖演算法 (逆矩陣座標轉換與像素重組)
+        // ==========================================
+        function startBrushing(e, el, layer) {
+            let lastX = null;
+            let lastY = null;
+            let hasDrawn = false;
+
+            // 逆矩陣坐標映射：將視窗縮放/平移/旋轉後的滑鼠位置，精確還原為圖層畫布內的原生座標
+            function getLocalCoords(clientX, clientY) {
+                const rect = elCanvasWrapper.getBoundingClientRect();
+                const wrapperX = (clientX - rect.left) / appState.zoom;
+                const wrapperY = (clientY - rect.top) / appState.zoom;
+
+                const cx = layer.x + layer.width / 2;
+                const cy = layer.y + layer.height / 2;
+
+                const dx = wrapperX - cx;
+                const dy = wrapperY - cy;
+
+                const angleRad = -layer.rotation * Math.PI / 180; // 逆向角度旋轉
+                const rx = (dx * Math.cos(angleRad) - dy * Math.sin(angleRad)) / layer.scaleX;
+                const ry = (dx * Math.sin(angleRad) + dy * Math.cos(angleRad)) / layer.scaleY;
+
+                return {
+                    x: rx + layer.width / 2,
+                    y: ry + layer.height / 2
+                };
+            }
+
+            function onMove(moveEvent) {
+                const clientX = moveEvent.clientX || (moveEvent.touches && moveEvent.touches[0].clientX);
+                const clientY = moveEvent.clientY || (moveEvent.touches && moveEvent.touches[0].clientY);
+                if (clientX === undefined || clientY === undefined) return;
+
+                const { x, y } = getLocalCoords(clientX, clientY);
+                drawBrush(x, y, lastX, lastY);
+                lastX = x;
+                lastY = y;
+                hasDrawn = true;
+            }
+
+            function onUp() {
+                window.removeEventListener('mousemove', onMove);
+                window.removeEventListener('mouseup', onUp);
+                window.removeEventListener('touchmove', onMove);
+                window.removeEventListener('touchend', onUp);
+                if (hasDrawn) {
+                    saveState(); // 完成筆劃，儲存歷史狀態供 Undo / Redo
+                }
+            }
+
+            // 單點點擊
+            const startClientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const startClientY = e.clientY || (e.touches && e.touches[0].clientY);
+            if (startClientX !== undefined && startClientY !== undefined) {
+                const { x, y } = getLocalCoords(startClientX, startClientY);
+                drawBrush(x, y, null, null);
+                lastX = x;
+                lastY = y;
+            }
+
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('mouseup', onUp);
+            window.addEventListener('touchmove', onMove, { passive: false });
+            window.addEventListener('touchend', onUp);
+        }
+
+        // 核心修復：繪製去背擦除或還原 (採用離屏緩存合併，完美避開直接 stroke 導致的黑色線條/塗黑 bug)
+        function drawBrush(localX, localY, prevLocalX, prevLocalY) {
+            const layer = appState.layers.find(l => l.id === appState.activeLayerId);
+            if (!layer || !layer.canvas) return;
+
+            const ctx = layer.canvas.getContext('2d');
+
+            if (appState.brushMode === 'eraser') {
+                // 1. 魔術橡皮擦：利用 destination-out 擦除為完全透明像素
+                ctx.save();
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+                ctx.lineWidth = appState.brushSize;
+                ctx.strokeStyle = 'rgba(0, 0, 0, 1)';
+                ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+
+                ctx.beginPath();
+                if (prevLocalX !== null && prevLocalY !== null) {
+                    ctx.moveTo(prevLocalX, prevLocalY);
+                    ctx.lineTo(localX, localY);
+                    ctx.stroke();
+                } else {
+                    ctx.arc(localX, localY, appState.brushSize / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.restore();
+            } else if (appState.brushMode === 'restore') {
+                if (!layer.backupCanvas) return;
+
+                // 2. 還原筆刷：利用離屏 Canvas 將備份畫布中的原始像素精確映射回來，防止任何塗黑 bug
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = layer.width;
+                tempCanvas.height = layer.height;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                tempCtx.lineCap = 'round';
+                tempCtx.lineJoin = 'round';
+                tempCtx.lineWidth = appState.brushSize;
+                tempCtx.strokeStyle = 'white';
+                tempCtx.fillStyle = 'white';
+
+                tempCtx.beginPath();
+                if (prevLocalX !== null && prevLocalY !== null) {
+                    tempCtx.moveTo(prevLocalX, prevLocalY);
+                    tempCtx.lineTo(localX, localY);
+                    tempCtx.stroke();
+                } else {
+                    tempCtx.arc(localX, localY, appState.brushSize / 2, 0, Math.PI * 2);
+                    tempCtx.fill();
+                }
+
+                // 剪切只保留筆刷刷過的地方
+                tempCtx.globalCompositeOperation = 'source-in';
+                tempCtx.drawImage(layer.backupCanvas, 0, 0);
+
+                // 將還原後的像素蓋回原圖層
+                ctx.save();
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.drawImage(tempCanvas, 0, 0);
+                ctx.restore();
+            }
+
+            // 更新工作區內對應圖層元件的 Canvas 視覺
+            const layerEl = document.getElementById(layer.id);
+            if (layerEl) {
+                const displayCanvas = layerEl.querySelector('canvas');
+                if (displayCanvas) {
+                    const dCtx = displayCanvas.getContext('2d');
+                    dCtx.clearRect(0, 0, layer.width, layer.height);
+                    dCtx.drawImage(layer.canvas, 0, 0);
+                }
+            }
+        }
+
+        // 設定筆刷模式
+        function setBrushMode(mode) {
+            appState.brushMode = mode;
+
+            const btnNone = document.getElementById('btnBrushNone');
+            const btnEraser = document.getElementById('btnBrushEraser');
+            const btnRestore = document.getElementById('btnBrushRestore');
+            const sizeControl = document.getElementById('brushSizeControlBlock');
+
+            // 重設樣式
+            [btnNone, btnEraser, btnRestore].forEach(btn => {
+                if (btn) {
+                    btn.className = "bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 py-1.5 px-1 rounded text-[11px] font-semibold transition text-center flex items-center justify-center space-x-1";
+                }
             });
 
-            el.addEventListener('touchstart', (e) => {
-                e.stopPropagation();
-                selectLayer(layer.id);
-                const touch = e.touches[0];
+            // 點亮選取
+            let activeBtn = null;
+            if (mode === 'none') {
+                activeBtn = btnNone;
+                if (sizeControl) sizeControl.classList.add('hidden');
+            } else if (mode === 'eraser') {
+                activeBtn = btnEraser;
+                if (sizeControl) sizeControl.classList.remove('hidden');
+            } else if (mode === 'restore') {
+                activeBtn = btnRestore;
+                if (sizeControl) sizeControl.classList.remove('hidden');
+            }
 
-                if (e.target.classList.contains('rotate-handle')) {
-                    startRotating(touch, el, layer);
-                } else if (e.target.classList.contains('resize-handle')) {
-                    startResizing(touch, el, layer, e.target.dataset.dir);
-                } else {
-                    startDragging(touch, el, layer);
-                }
-            }, { passive: true });
+            if (activeBtn) {
+                activeBtn.className = "bg-brand-600 hover:bg-brand-500 text-white border border-transparent py-1.5 px-1 rounded text-[11px] font-semibold transition text-center flex items-center justify-center space-x-1 shadow-sm";
+            }
+
+            updateBrushCursor();
+        }
+
+        function updateBrushSize(val) {
+            appState.brushSize = parseInt(val);
+            const display = document.getElementById('valBrushSize');
+            if (display) display.innerText = `${val}px`;
+            updateBrushCursor();
+        }
+
+        // 依照筆刷粗細、解析度與工作區目前的 Zoom Level，繪製並動態綁定 SVG 指標
+        function updateBrushCursor() {
+            const workspace = document.querySelector('main');
+            if (!workspace) return;
+
+            if (appState.brushMode === 'none') {
+                workspace.style.cursor = '';
+                document.querySelectorAll('.draggable-layer-element').forEach(el => {
+                    el.style.cursor = 'move';
+                });
+                return;
+            }
+
+            document.querySelectorAll('.draggable-layer-element').forEach(el => {
+                el.style.cursor = 'crosshair';
+            });
+
+            // 依縮放係數 Zoom 縮放螢幕上的虛線圓框尺寸，使外框完美貼合畫布上將要被抹除/還原的範圍
+            const size = Math.max(8, appState.brushSize * appState.zoom);
+            const r = size / 2;
+
+            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+                <circle cx="${r}" cy="${r}" r="${r - 1}" fill="none" stroke="%238b5cf6" stroke-width="1.5" stroke-dasharray="3,3"/>
+                <circle cx="${r}" cy="${r}" r="1.5" fill="%238b5cf6"/>
+            </svg>`;
+
+            const cursorUrl = `url('data:image/svg+xml;utf8,${svg}') ${r} ${r}, crosshair`;
+            workspace.style.cursor = cursorUrl;
         }
 
         // 選取指定圖層與設定控制面板
@@ -1790,6 +2167,11 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
             const layerObj = appState.layers.find(l => l.id === layerId);
             if (layerObj) {
                 elQuickEdit.classList.remove('hidden');
+                // 如果目前是折疊狀態，當用戶點選了新圖層，可以溫柔展開以供操作
+                if (isQuickEditCollapsed) {
+                    toggleQuickEditCollapse();
+                }
+
                 if (layerObj.id === 'bg_layer') {
                     document.getElementById('selectedLayerType').innerText = 'BACKGROUND';
                     document.getElementById('layerOpacitySlider').value = layerObj.opacity;
@@ -1797,6 +2179,7 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
                     document.getElementById('depthControls').classList.add('hidden');
                     document.getElementById('btnDeleteLayerText').innerText = "刪除此主畫布背景";
                     document.getElementById('btnExportSingle').classList.add('hidden');
+                    setBrushMode('none'); // 背景不支援精修筆刷
                 } else {
                     document.getElementById('selectedLayerType').innerText = 'OBJECT';
                     document.getElementById('layerOpacitySlider').value = layerObj.opacity;
@@ -1804,9 +2187,44 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
                     document.getElementById('depthControls').classList.remove('hidden');
                     document.getElementById('btnDeleteLayerText').innerText = "從畫布中刪除此物件";
                     document.getElementById('btnExportSingle').classList.remove('hidden');
+                    setBrushMode(appState.brushMode); // 保持並更新圖層筆刷游標
                 }
             } else {
                 elQuickEdit.classList.add('hidden');
+            }
+        }
+
+        // 取消選取圖層並收合控制面板，釋放畫布空間
+        function deselectActiveLayer() {
+            appState.activeLayerId = null;
+
+            document.querySelectorAll('.draggable-layer-element').forEach(el => {
+                el.querySelector('.active-border').classList.add('hidden');
+                el.querySelectorAll('.resize-handle, .rotate-handle').forEach(h => h.classList.add('hidden'));
+            });
+
+            document.querySelectorAll('.layer-card').forEach(card => {
+                card.classList.remove('border-brand-500', 'bg-slate-900/80');
+                card.classList.add('border-slate-800');
+            });
+
+            setBrushMode('none');
+            elQuickEdit.classList.add('hidden');
+            showNotification("已取消選取", "控制面板已收折，已騰出完整高度給圖層列表。", "info");
+        }
+
+        // 一鍵摺疊與展開快捷控制面板
+        function toggleQuickEditCollapse() {
+            isQuickEditCollapsed = !isQuickEditCollapsed;
+            const content = document.getElementById('quickEditPanelContent');
+            const icon = document.getElementById('collapseIcon');
+
+            if (isQuickEditCollapsed) {
+                content.classList.add('hidden');
+                icon.classList.add('rotate-180');
+            } else {
+                content.classList.remove('hidden');
+                icon.classList.remove('rotate-180');
             }
         }
 
@@ -1935,6 +2353,7 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
                 moved = true;
             }
 
+            // 放開縮放
             function onUp() {
                 window.removeEventListener('mousemove', onMove);
                 window.removeEventListener('mouseup', onUp);
@@ -1950,7 +2369,6 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
             window.addEventListener('touchmove', onMove, { passive: true });
             window.addEventListener('touchend', onUp);
         }
-
 
         // ==========================================
         // 主動提供符合原尺寸的單色底圖填空演算法
@@ -1970,7 +2388,6 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
             appState.currentImageSrc = tempCanvas.toDataURL();
             reconstructBackground(tempCanvas, `單色背景 (${colorHex})`);
         }
-
 
         // ==========================================
         // 側欄面板 UI 渲染核心 (支援空狀態與背景重建)
@@ -2283,11 +2700,11 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
             }
         }
 
-
         // ==========================================
-        // 核心：回到上一步與下一步 (Undo / Redo 引擎)
+        // 核心：回到上一步與下一步 (Undo / Redo 引擎，同步深層拷貝 backupCanvas)
         // ==========================================
         function cloneCanvas(oldCanvas) {
+            if (!oldCanvas) return null;
             const newCanvas = document.createElement('canvas');
             newCanvas.width = oldCanvas.width;
             newCanvas.height = oldCanvas.height;
@@ -2302,16 +2719,19 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
 
             const snapshot = appState.layers.map(l => ({
                 ...l,
-                canvas: cloneCanvas(l.canvas)
+                canvas: cloneCanvas(l.canvas),
+                backupCanvas: cloneCanvas(l.backupCanvas) // 深度拷貝備份畫布
             }));
             undoStack.push(snapshot);
             updateHistoryButtons();
         }
 
+        // 儲存狀態歷史記錄
         function saveState() {
             const stateSnapshot = appState.layers.map(l => ({
                 ...l,
-                canvas: cloneCanvas(l.canvas)
+                canvas: cloneCanvas(l.canvas),
+                backupCanvas: cloneCanvas(l.backupCanvas) // 深度拷貝備份畫布
             }));
             undoStack.push(stateSnapshot);
             redoStack = [];
@@ -2323,7 +2743,8 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
 
             const currentState = appState.layers.map(l => ({
                 ...l,
-                canvas: cloneCanvas(l.canvas)
+                canvas: cloneCanvas(l.canvas),
+                backupCanvas: cloneCanvas(l.backupCanvas)
             }));
             redoStack.push(currentState);
 
@@ -2340,7 +2761,8 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
 
             const currentState = appState.layers.map(l => ({
                 ...l,
-                canvas: cloneCanvas(l.canvas)
+                canvas: cloneCanvas(l.canvas),
+                backupCanvas: cloneCanvas(l.backupCanvas)
             }));
             undoStack.push(currentState);
 
@@ -2414,27 +2836,9 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
             }
         }
 
-        function setupKeyboardShortcuts() {
-            window.addEventListener('keydown', (e) => {
-                const isCtrl = e.ctrlKey || e.metaKey;
-                if (isCtrl && !e.shiftKey && e.key.toLowerCase() === 'z') {
-                    e.preventDefault();
-                    undo();
-                } else if (isCtrl && e.key.toLowerCase() === 'y') {
-                    e.preventDefault();
-                    redo();
-                } else if (isCtrl && e.shiftKey && e.key.toLowerCase() === 'z') {
-                    e.preventDefault();
-                    redo();
-                }
-            });
-        }
-
-
         // ==========================================
         // 單張與批次去背導出功能核心 (ZIP打包下載)
         // ==========================================
-
         function exportSingleLayer() {
             const layer = appState.layers.find(l => l.id === appState.activeLayerId);
             if (!layer || layer.id === 'bg_layer') return;
@@ -2521,6 +2925,22 @@ Exclude background patterns. Only list the foreground objects to be extracted.`;
             link.click();
 
             showNotification("圖像合成成功", "合成後的新規劃圖已成功存入下載路徑中！", "success");
+        }
+
+        function setupKeyboardShortcuts() {
+            window.addEventListener('keydown', (e) => {
+                const isCtrl = e.ctrlKey || e.metaKey;
+                if (isCtrl && !e.shiftKey && e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    undo();
+                } else if (isCtrl && e.key.toLowerCase() === 'y') {
+                    e.preventDefault();
+                    redo();
+                } else if (isCtrl && e.shiftKey && e.key.toLowerCase() === 'z') {
+                    e.preventDefault();
+                    redo();
+                }
+            });
         }
     </script>
 </body>
