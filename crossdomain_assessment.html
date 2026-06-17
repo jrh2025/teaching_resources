@@ -1,0 +1,1363 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>跨域素養評量動態生成引擎 (AI Generator)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 mammoth.js 解析 docx -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <!-- 引入 pdf.js 解析 pdf -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <script>
+        // 設定 PDF.js worker
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.pdfjsLib) {
+                window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            }
+        });
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        .loader {
+            border-top-color: #4f46e5;
+            -webkit-animation: spinner 1.5s linear infinite;
+            animation: spinner 1.5s linear infinite;
+        }
+
+        @keyframes spinner {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+        }
+
+        /* 隱藏捲軸但允許捲動 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+
+<body class="text-gray-800 antialiased min-h-screen flex flex-col relative pb-10">
+
+    <header class="bg-slate-900 text-white shadow-xl py-6 border-b-4 border-indigo-500 sticky top-0 z-40">
+        <div class="max-w-5xl mx-auto px-4 flex justify-between items-center">
+            <div>
+                <h1
+                    class="text-2xl md:text-3xl font-black tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-300">
+                    跨域素養評量動態生成引擎
+                </h1>
+                <p class="mt-1 text-slate-400 text-sm md:text-base font-medium flex items-center">
+                    <svg class="w-4 h-4 mr-1 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    PISA & PIRLS 雙模式試卷生成架構
+                </p>
+            </div>
+            <button onclick="toggleSettings()"
+                class="hover:bg-slate-800 p-2 rounded-lg transition-colors border border-slate-700 flex items-center gap-2">
+                <svg class="w-5 h-5 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                    </path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+                <span class="hidden sm:inline text-sm font-medium">模型設定</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-5xl mx-auto w-full p-4 mt-6 space-y-6">
+
+        <section id="settings-panel" class="glass-panel rounded-2xl shadow-sm p-6 border-l-4 border-indigo-500 hidden">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-bold text-slate-800 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                        </path>
+                    </svg>
+                    API 與模型設定
+                </h2>
+                <button onclick="toggleSettings()" class="text-gray-400 hover:text-gray-700">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="bg-blue-50 text-blue-800 p-4 rounded-lg text-sm mb-5 border border-blue-100 flex gap-3">
+                <svg class="w-6 h-6 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div>
+                    <strong class="block mb-1">初次使用與模型設定指南：</strong>
+                    本系統為純前端架構，資料不會上傳至第三方伺服器。請至 <a href="https://aistudio.google.com/app/apikey" target="_blank"
+                        class="text-blue-600 underline font-bold hover:text-blue-800">Google AI Studio</a> 取得免費金鑰。<br>
+                    目前預設使用最新且速度極快的 <code>gemini-2.5-flash</code>。若您想要使用具備更強推理能力的模型，或是未來模型更新時，您可以自行手動更換此端點參數。<br>
+                    想查詢目前官方支援的所有最新模型端點名稱與版本說明，請參閱官方文件：<a href="https://ai.google.dev/gemini-api/docs/models/gemini"
+                        target="_blank" class="text-blue-600 underline font-bold hover:text-blue-800">Gemini
+                        模型官方列表與定位說明</a>。
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">Gemini API Key</label>
+                    <div class="relative">
+                        <input type="password" id="api-key" placeholder="AIzaSy..."
+                            class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                        <button type="button" onclick="togglePasswordVisibility()"
+                            class="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5">
+                            <svg id="eye-icon" class="h-5 w-5 text-gray-400 hover:text-gray-600" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1">模型端點 (Model Version)</label>
+                    <input type="text" id="model-version" placeholder="例如: gemini-2.5-flash" value="gemini-2.5-flash"
+                        class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all">
+                </div>
+            </div>
+            <div class="mt-4 flex justify-end gap-2">
+                <button onclick="clearSettings()"
+                    class="px-4 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg text-sm font-medium transition-colors">清除紀錄</button>
+                <button onclick="saveSettings()"
+                    class="px-4 py-2 bg-slate-800 text-white hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors">儲存設定</button>
+            </div>
+        </section>
+
+        <section class="glass-panel rounded-2xl shadow-sm p-6 transition-all duration-300">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                <h2 class="text-xl font-bold text-slate-800 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    步驟一：提供文本素材
+                </h2>
+
+                <div class="flex items-center gap-2 w-full md:w-auto">
+                    <label
+                        class="cursor-pointer bg-white border border-indigo-200 text-indigo-600 hover:bg-indigo-50 px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm w-full md:w-auto text-center">
+                        <span>上傳檔案 (最多 5 個)</span>
+                        <input type="file" id="file-upload" class="hidden" accept=".txt,.pdf,.docx,.html" multiple
+                            onchange="handleFileUpload(event)">
+                    </label>
+                </div>
+            </div>
+
+            <p class="text-sm text-gray-500 mb-3">貼上閱讀文本或上傳檔案後，系統將分析語意並產出單純的「四選項選擇題試卷」，不會將原始文本顯示於試卷上。</p>
+
+            <div class="relative">
+                <textarea id="source-text"
+                    class="w-full h-48 p-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-y text-slate-700 text-sm md:text-base leading-relaxed"
+                    placeholder="在此貼上閱讀文本，或點擊右上角上傳檔案..."></textarea>
+                <div id="file-loading"
+                    class="absolute inset-0 bg-white/80 backdrop-blur-sm hidden flex-col justify-center items-center rounded-xl z-10">
+                    <div class="w-10 h-10 border-4 border-indigo-200 rounded-full loader mb-3"></div>
+                    <span class="text-indigo-700 font-medium">正在解析文件，請稍候...</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="glass-panel rounded-2xl shadow-sm p-6 border-t-4 border-cyan-400">
+            <h2 class="text-xl font-bold text-slate-800 flex items-center mb-5">
+                <svg class="w-6 h-6 mr-2 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z">
+                    </path>
+                </svg>
+                步驟二：設定試卷屬性與版本
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- 學習階段 -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">學習階段 (適用對象)</label>
+                    <select id="learning-stage"
+                        class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none bg-white">
+                        <option value="國小低年級">國小低年級 (小一、小二)</option>
+                        <option value="國小中年級">國小中年級 (小三、小四)</option>
+                        <option value="國小高年級">國小高年級 (小五、小六)</option>
+                        <option value="國中" selected>國民中學 (七至九年級)</option>
+                        <option value="高中">高級中學 (十至十二年級)</option>
+                    </select>
+                </div>
+                <!-- 出題數量 -->
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">出題數量 (1~20題)</label>
+                    <input type="number" id="question-count" min="1" max="20" value="10"
+                        class="w-full p-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none bg-white">
+                </div>
+            </div>
+
+            <!-- 跨域學科 -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-slate-700 mb-2">融入跨域學科 (可複選)</label>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2" id="subject-checkboxes">
+                    <label
+                        class="flex items-center space-x-2 p-2 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors bg-white">
+                        <input type="checkbox" value="國語文"
+                            class="w-4 h-4 text-cyan-600 rounded border-gray-300 focus:ring-cyan-500" checked>
+                        <span class="text-sm text-slate-700">國語文</span>
+                    </label>
+                    <label
+                        class="flex items-center space-x-2 p-2 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors bg-white">
+                        <input type="checkbox" value="英語"
+                            class="w-4 h-4 text-cyan-600 rounded border-gray-300 focus:ring-cyan-500">
+                        <span class="text-sm text-slate-700">英語</span>
+                    </label>
+                    <label
+                        class="flex items-center space-x-2 p-2 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors bg-white">
+                        <input type="checkbox" value="數學"
+                            class="w-4 h-4 text-cyan-600 rounded border-gray-300 focus:ring-cyan-500" checked>
+                        <span class="text-sm text-slate-700">數學</span>
+                    </label>
+                    <label
+                        class="flex items-center space-x-2 p-2 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors bg-white">
+                        <input type="checkbox" value="社會"
+                            class="w-4 h-4 text-cyan-600 rounded border-gray-300 focus:ring-cyan-500">
+                        <span class="text-sm text-slate-700">社會</span>
+                    </label>
+                    <label
+                        class="flex items-center space-x-2 p-2 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors bg-white">
+                        <input type="checkbox" value="自然科學"
+                            class="w-4 h-4 text-cyan-600 rounded border-gray-300 focus:ring-cyan-500" checked>
+                        <span class="text-sm text-slate-700">自然科學</span>
+                    </label>
+                    <label
+                        class="flex items-center space-x-2 p-2 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors bg-white">
+                        <input type="checkbox" value="科技"
+                            class="w-4 h-4 text-cyan-600 rounded border-gray-300 focus:ring-cyan-500">
+                        <span class="text-sm text-slate-700">科技</span>
+                    </label>
+                    <label
+                        class="flex items-center space-x-2 p-2 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors bg-white">
+                        <input type="checkbox" value="藝術"
+                            class="w-4 h-4 text-cyan-600 rounded border-gray-300 focus:ring-cyan-500">
+                        <span class="text-sm text-slate-700">藝術</span>
+                    </label>
+                    <label
+                        class="flex items-center space-x-2 p-2 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors bg-white">
+                        <input type="checkbox" value="綜合活動"
+                            class="w-4 h-4 text-cyan-600 rounded border-gray-300 focus:ring-cyan-500">
+                        <span class="text-sm text-slate-700">綜合活動</span>
+                    </label>
+                    <label
+                        class="flex items-center space-x-2 p-2 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors bg-white">
+                        <input type="checkbox" value="健康與體育"
+                            class="w-4 h-4 text-cyan-600 rounded border-gray-300 focus:ring-cyan-500">
+                        <span class="text-sm text-slate-700">健康與體育</span>
+                    </label>
+                    <label
+                        class="flex items-center space-x-2 p-2 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors bg-white">
+                        <input type="checkbox" value="自訂"
+                            class="w-4 h-4 text-cyan-600 rounded border-gray-300 focus:ring-cyan-500"
+                            onchange="toggleOtherSubject(this)">
+                        <span class="text-sm text-slate-700">自訂(含SDGs)</span>
+                    </label>
+                </div>
+                <input type="text" id="cross-subject-other" placeholder="例如：SDGs環境保育、媒體識讀..."
+                    class="mt-2 w-full p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-cyan-500 outline-none hidden text-sm transition-all duration-300">
+            </div>
+
+            <!-- 輸出版本選擇 -->
+            <div class="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                <label class="block text-base font-bold text-slate-800 mb-3">請選擇欲生成的 HTML 試卷版本 (可複選)</label>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <label
+                        class="flex-1 relative flex items-start p-4 cursor-pointer rounded-lg border-2 border-transparent bg-white shadow-sm hover:border-indigo-200 focus-within:border-indigo-500 transition-colors">
+                        <div class="flex items-center h-5">
+                            <input type="checkbox" id="version-standard" value="standard"
+                                class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked>
+                        </div>
+                        <div class="ml-3 flex flex-col">
+                            <span class="text-slate-900 font-bold">一般練習版 (Standard)</span>
+                            <span class="text-slate-500 text-sm mt-1">含解答解析與重測功能，適合學生自我演練。</span>
+                        </div>
+                    </label>
+                    <label
+                        class="flex-1 relative flex items-start p-4 cursor-pointer rounded-lg border-2 border-transparent bg-white shadow-sm hover:border-indigo-200 focus-within:border-indigo-500 transition-colors">
+                        <div class="flex items-center h-5">
+                            <input type="checkbox" id="version-secure" value="secure"
+                                class="w-5 h-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500" checked>
+                        </div>
+                        <div class="ml-3 flex flex-col">
+                            <span class="text-slate-900 font-bold">安全防護版 (Pro)</span>
+                            <span class="text-slate-500 text-sm mt-1">導入嚴格零信任防弊與防重新整理機制，並條列禁止事項。</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <button id="generate-btn" onclick="generateAssessments()"
+                class="w-full py-4 bg-gradient-to-r from-indigo-600 to-cyan-500 hover:from-indigo-700 hover:to-cyan-600 text-white rounded-xl font-bold text-lg shadow-lg transform transition hover:-translate-y-1 hover:shadow-xl flex justify-center items-center gap-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                </svg>
+                <span>開始生成動態 HTML 網頁試卷</span>
+            </button>
+        </section>
+
+        <section id="result-section" class="glass-panel rounded-2xl shadow-sm p-0 overflow-hidden hidden flex-col">
+
+            <!-- Result Toolbar with Version Switcher -->
+            <div
+                class="bg-slate-100 px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                    <span class="text-sm font-bold text-slate-700 whitespace-nowrap">檢視版本：</span>
+                    <select id="result-version-select" onchange="updateView()"
+                        class="w-full sm:w-auto border border-indigo-300 rounded-lg p-2 text-sm font-bold text-indigo-800 bg-indigo-50 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <!-- Options populated dynamically based on selection -->
+                    </select>
+                </div>
+
+                <div class="flex gap-2">
+                    <button onclick="downloadHtml()"
+                        class="flex items-center gap-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 border border-transparent rounded-lg text-sm font-medium text-white shadow-sm transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        下載當前版本 (.html)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs (Preview / Code) -->
+            <div class="flex border-b border-slate-200 bg-white">
+                <button onclick="switchTab('preview')" id="tab-preview"
+                    class="flex-1 py-3 text-center font-bold text-indigo-700 border-b-4 border-indigo-600 bg-slate-50 transition-colors">
+                    🖥️ 互動網頁預覽
+                </button>
+                <button onclick="switchTab('code')" id="tab-code"
+                    class="flex-1 py-3 text-center font-bold text-slate-500 hover:text-slate-700 border-b-4 border-transparent hover:bg-slate-50 transition-colors">
+                    👨‍💻 HTML 原始碼
+                </button>
+            </div>
+
+            <!-- Content Areas -->
+            <div class="bg-white relative">
+                <!-- 載入中動畫 -->
+                <div id="ai-loading"
+                    class="absolute inset-0 bg-white/95 backdrop-blur-sm hidden flex-col justify-center items-center z-20 min-h-[600px]">
+                    <div class="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full loader mb-4">
+                    </div>
+                    <h3 id="ai-loading-title" class="text-xl font-bold text-indigo-800 mb-2">正在與 AI 核心連線...</h3>
+                    <p id="ai-loading-desc" class="text-slate-500 text-center max-w-md">生成過程約需 15~30
+                        秒。系統正在為您進行文本分析並生成高契合度的素養試卷。</p>
+                </div>
+
+                <!-- 預覽容器 -->
+                <div id="preview-container" class="w-full h-[750px] bg-gray-200 relative">
+                    <iframe id="quiz-preview-frame" class="w-full h-full border-0 bg-white"></iframe>
+                </div>
+
+                <!-- 原始碼容器 -->
+                <div id="code-container" class="hidden w-full h-[750px] relative">
+                    <textarea id="html-code-view"
+                        class="w-full h-full p-4 bg-slate-900 text-green-400 font-mono text-sm resize-none outline-none leading-relaxed"
+                        readonly></textarea>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 訊息提示組件 (Toast) -->
+    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+        <div class="bg-slate-800 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
+            <svg id="toast-icon" class="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span id="toast-msg" class="font-medium">操作成功</span>
+        </div>
+    </div>
+
+    <script>
+        // --- 狀態管理 ---
+        let currentActiveTab = 'preview';
+        let currentActiveVersion = '';
+        let generatedResults = {
+            'standard': null,
+            'secure': null
+        };
+        let currentQuizTitle = '跨域素養測驗卷';
+        let currentLearningStage = '預設對象';
+
+        const versionLabels = {
+            'standard': '一般練習版 (Standard)',
+            'secure': '安全防護版 (Pro)'
+        };
+
+        // UI 輔助功能
+        function toggleOtherSubject(checkbox) {
+            const otherInput = document.getElementById('cross-subject-other');
+            if (checkbox.checked) {
+                otherInput.classList.remove('hidden');
+                otherInput.focus();
+            } else {
+                otherInput.classList.add('hidden');
+                otherInput.value = '';
+            }
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.textContent = msg;
+            if (isError) {
+                toastIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>';
+                toastIcon.classList.replace('text-green-400', 'text-red-400');
+            } else {
+                toastIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>';
+                toastIcon.classList.replace('text-red-400', 'text-green-400');
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // --- 設定管理 ---
+        function toggleSettings() {
+            document.getElementById('settings-panel').classList.toggle('hidden');
+        }
+
+        function togglePasswordVisibility() {
+            const input = document.getElementById('api-key');
+            const icon = document.getElementById('eye-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.29 3.29m0 0a10.05 10.05 0 015.71-1.205c4.478 0 8.268 2.943 9.542 7a10.02 10.02 0 01-2.43 3.93m-3.32-3.32l-3.29-3.29" />';
+            } else {
+                input.type = 'password';
+                icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>';
+            }
+        }
+
+        window.onload = function () {
+            const savedKey = localStorage.getItem('gemini_api_key');
+            const savedModel = localStorage.getItem('gemini_model_version');
+            if (savedKey) document.getElementById('api-key').value = savedKey;
+            document.getElementById('model-version').value = savedModel || 'gemini-2.5-flash';
+            if (!savedKey) document.getElementById('settings-panel').classList.remove('hidden');
+        };
+
+        function saveSettings() {
+            const key = document.getElementById('api-key').value.trim();
+            const model = document.getElementById('model-version').value.trim();
+            if (!key) {
+                showToast('API Key 不能為空', true);
+                return;
+            }
+            localStorage.setItem('gemini_api_key', key);
+            localStorage.setItem('gemini_model_version', model || 'gemini-2.5-flash');
+            showToast('設定已安全儲存於本地瀏覽器');
+            toggleSettings();
+        }
+
+        function clearSettings() {
+            localStorage.removeItem('gemini_api_key');
+            localStorage.removeItem('gemini_model_version');
+            document.getElementById('api-key').value = '';
+            document.getElementById('model-version').value = 'gemini-2.5-flash';
+            showToast('設定已清除');
+        }
+
+        // --- 多檔案解析 ---
+        async function handleFileUpload(event) {
+            const files = event.target.files;
+            if (!files || files.length === 0) return;
+
+            if (files.length > 5) {
+                showToast('最多只能同時上傳 5 個檔案！', true);
+                event.target.value = '';
+                return;
+            }
+
+            const textarea = document.getElementById('source-text');
+            const loadingOverlay = document.getElementById('file-loading');
+            loadingOverlay.classList.remove('hidden');
+            loadingOverlay.classList.add('flex');
+
+            try {
+                let allExtractedText = textarea.value ? textarea.value + '\n\n' : '';
+
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    let extractedText = '';
+                    const ext = file.name.split('.').pop().toLowerCase();
+
+                    if (ext === 'txt' || ext === 'html') {
+                        extractedText = await file.text();
+                        if (ext === 'html') {
+                            const tempDiv = document.createElement("div");
+                            tempDiv.innerHTML = extractedText;
+                            extractedText = tempDiv.textContent || tempDiv.innerText || "";
+                        }
+                    }
+                    else if (ext === 'docx') {
+                        const arrayBuffer = await file.arrayBuffer();
+                        const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                        extractedText = result.value;
+                    }
+                    else if (ext === 'pdf') {
+                        if (!window.pdfjsLib) throw new Error("PDF 解析核心尚未載入");
+                        const arrayBuffer = await file.arrayBuffer();
+                        const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                        let text = '';
+                        for (let j = 1; j <= pdf.numPages; j++) {
+                            const page = await pdf.getPage(j);
+                            const content = await page.getTextContent();
+                            const strings = content.items.map(item => item.str);
+                            text += strings.join(' ') + '\n\n';
+                        }
+                        extractedText = text;
+                    } else {
+                        throw new Error(`不支援的檔案格式: ${file.name}`);
+                    }
+
+                    // 標記文本來源以利 AI 區分
+                    allExtractedText += `--- 文本素材：${file.name} ---\n${extractedText.trim()}\n\n`;
+                }
+
+                textarea.value = allExtractedText.trim();
+                showToast(`成功解析 ${files.length} 個檔案`);
+            } catch (error) {
+                console.error("Parse Error:", error);
+                showToast(error.message || '檔案解析失敗', true);
+            } finally {
+                loadingOverlay.classList.add('hidden');
+                loadingOverlay.classList.remove('flex');
+                event.target.value = '';
+            }
+        }
+
+        function switchTab(tabName) {
+            currentActiveTab = tabName;
+            const previewTab = document.getElementById('tab-preview');
+            const codeTab = document.getElementById('tab-code');
+            const previewContainer = document.getElementById('preview-container');
+            const codeContainer = document.getElementById('code-container');
+
+            if (tabName === 'preview') {
+                previewTab.className = "flex-1 py-3 text-center font-bold text-indigo-700 border-b-4 border-indigo-600 bg-slate-50 transition-colors";
+                codeTab.className = "flex-1 py-3 text-center font-bold text-slate-500 hover:text-slate-700 border-b-4 border-transparent hover:bg-slate-50 transition-colors";
+                previewContainer.classList.remove('hidden');
+                codeContainer.classList.add('hidden');
+            } else {
+                codeTab.className = "flex-1 py-3 text-center font-bold text-indigo-700 border-b-4 border-indigo-600 bg-slate-50 transition-colors";
+                previewTab.className = "flex-1 py-3 text-center font-bold text-slate-500 hover:text-slate-700 border-b-4 border-transparent hover:bg-slate-50 transition-colors";
+                codeContainer.classList.remove('hidden');
+                previewContainer.classList.add('hidden');
+            }
+        }
+
+        function updateView() {
+            const selectEl = document.getElementById('result-version-select');
+            currentActiveVersion = selectEl.value;
+
+            const htmlCode = generatedResults[currentActiveVersion] || '';
+            document.getElementById('quiz-preview-frame').srcdoc = htmlCode;
+            document.getElementById('html-code-view').value = htmlCode;
+        }
+
+        // --- 本地前端 HTML 生成核心模組 ---
+        function compileHtmlTemplate(quizData, isSecure, learningStage, crossSubject) {
+            const title = quizData.quizTitle || "跨域素養學科綜合評量";
+            const materialsText = quizData.readingMaterials ? quizData.readingMaterials.trim() : "";
+            const hasMaterials = materialsText.length > 0;
+            const materialsEscaped = encodeURIComponent(materialsText);
+            const questionsJsonStr = encodeURIComponent(JSON.stringify(quizData.questions || []));
+            const secureModeBoolean = isSecure ? "true" : "false";
+
+            return `<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${title} - ${isSecure ? '安全考核防護版' : '一般學習練習版'}</title>
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"><\/script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f1f5f9;
+            ${isSecure ? `
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            ` : ''}
+        }
+        .option-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .option-card:hover:not(.disabled) {
+            transform: translateX(4px);
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+    <!-- 頂部 Navbar -->
+    <header class="bg-gradient-to-r ${isSecure ? 'from-slate-900 via-red-950 to-slate-900 border-red-600' : 'from-slate-900 via-indigo-950 to-slate-900 border-indigo-600'} text-white py-5 shadow-lg border-b-4">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div>
+                <span class="px-2.5 py-1 bg-white/10 text-xs font-bold rounded-full text-indigo-300 mr-2 border border-white/20">
+                    ${learningStage}
+                </span>
+                <h1 class="text-xl md:text-2xl font-black tracking-wide inline-block">${title}</h1>
+                <p class="text-slate-400 text-xs mt-1">融入學科：${crossSubject || "跨領域綜合精熟學習"}</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-sm font-semibold bg-white/10 px-3 py-1.5 rounded-lg border border-white/10" id="timer-display">
+                    ⏱️ 測驗時間：00:00
+                </span>
+                <span class="px-3 py-1 rounded-full text-xs font-black ${isSecure ? 'bg-red-500 text-white animate-pulse' : 'bg-green-500 text-white'}">
+                    ${isSecure ? '🛡️ 安全考核版' : '📝 一般練習版'}
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 安全防護版專屬：考試須知跑馬燈 / 宣告 -->
+    ${isSecure ? `
+    <section class="bg-red-50 border-b border-red-200 py-3 px-4 text-red-800">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-start md:items-center gap-2 justify-between">
+            <div class="flex items-start gap-2">
+                <span class="text-lg">📢</span>
+                <div class="text-xs md:text-sm font-bold">
+                    <span class="underline">安全防護版（防弊須知）</span>：
+                    本試卷已啟用零信任防弊模式。
+                    【🚫 嚴禁切換分頁與視窗】(累計 3 次將自動收卷鎖定) ｜ 
+                    【🚫 嚴禁按 F5/重新整理或離開】(否則進度全失且需向老師申請重新授權) ｜ 
+                    【🚫 嚴禁按 F12/開啟開發者工具】 ｜ 
+                    【🚫 已抑制滑鼠右鍵點擊】(誤觸將發出提示)
+                </div>
+            </div>
+        </div>
+    </section>
+    ` : ''}
+
+    <!-- 主容器 -->
+    <main class="flex-grow max-w-7xl mx-auto w-full p-4 flex flex-col lg:flex-row gap-6">
+        
+        ${hasMaterials ? `
+        <!-- 左側：補充數據與虛擬情境圖表 (如果 AI 有生成) -->
+        <section class="w-full lg:w-1/3 xl:w-2/5 flex flex-col gap-4">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex-grow overflow-y-auto max-h-[75vh] no-scrollbar">
+                <h2 class="text-lg font-black text-slate-900 border-b pb-3 mb-4 flex items-center gap-2">
+                    <span>📊</span> 補充數據與情境 (非連續性文本)
+                </h2>
+                <!-- 渲染後的 Markdown 文本 -->
+                <article id="reading-content" class="prose max-w-none text-slate-700 leading-relaxed text-sm md:text-base space-y-4">
+                    <!-- 由 marked.js 動態渲染 -->
+                </article>
+            </div>
+        </section>
+        ` : ''}
+
+        <!-- 右側/置中：動態題目作答區 -->
+        <section class="w-full ${hasMaterials ? 'lg:w-2/3 xl:w-3/5' : 'max-w-4xl mx-auto'} flex flex-col gap-4 transition-all">
+            
+            <!-- 答題進度條 -->
+            <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-200">
+                <div class="flex justify-between items-center mb-1.5 text-xs font-bold text-slate-500">
+                    <span>作答進度</span>
+                    <span id="progress-text">已答 0 / 0 題</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div id="progress-bar" class="bg-indigo-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <!-- 題目列表區 (一次展開全部題目) -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex-grow flex flex-col min-h-[420px]" id="quiz-card">
+                
+                <div id="questions-list-container" class="space-y-6 overflow-y-auto pr-2 flex-grow no-scrollbar" style="max-h: 70vh;">
+                    <!-- 動態生成所有題目 -->
+                </div>
+
+                <!-- 提交控制鈕 -->
+                <div class="mt-6 pt-4 border-t border-slate-100 text-center">
+                    <button id="submit-quiz-btn" onclick="triggerSubmit()" class="w-full md:w-auto px-8 py-3 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white font-extrabold rounded-xl text-lg transition-all shadow-md">
+                        ✓ 確認提交試卷
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 測驗結果與詳解 Modal -->
+    <div id="result-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden justify-center items-center z-50 p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-3xl rounded-3xl shadow-2xl p-6 md:p-8 flex flex-col max-h-[90vh] overflow-y-auto">
+            <div class="text-center mb-6">
+                <span class="text-5xl">🏆</span>
+                <h2 class="text-2xl font-black mt-2 text-slate-900">測驗完成與評估反饋</h2>
+                <p class="text-slate-500 text-sm mt-1">數據已記錄封存</p>
+            </div>
+
+            <!-- 分數儀表板 -->
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-2xl text-center">
+                    <span class="block text-slate-500 text-xs font-bold">總分</span>
+                    <strong class="text-2xl md:text-3xl font-black text-indigo-700" id="score-text-val">0</strong>
+                </div>
+                <div class="bg-emerald-50 border border-emerald-100 p-4 rounded-2xl text-center">
+                    <span class="block text-slate-500 text-xs font-bold">精準答對</span>
+                    <strong class="text-2xl md:text-3xl font-black text-emerald-700" id="correct-count-val">0 / 0</strong>
+                </div>
+                <div class="bg-slate-50 border border-slate-100 p-4 rounded-2xl text-center">
+                    <span class="block text-slate-500 text-xs font-bold">耗時</span>
+                    <strong class="text-2xl md:text-3xl font-black text-slate-700" id="elapsed-time-val">00:00</strong>
+                </div>
+            </div>
+
+            <!-- 詳解清單區 -->
+            <div class="flex-grow space-y-4 overflow-y-auto pr-2 no-scrollbar" id="review-list">
+                <!-- 動態注入題目對錯與精細解析 -->
+            </div>
+
+            <div class="mt-6 pt-4 border-t flex justify-end gap-2">
+                ${!isSecure ? `<button onclick="restartQuiz()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-sm transition-colors">重新測驗</button>` : ''}
+                <button onclick="window.close()" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-lg text-sm transition-colors">關閉測驗頁面</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 鎖定畫面 Modal (安全防護版專用) -->
+    <div id="lock-modal" class="fixed inset-0 bg-red-950 text-white hidden flex-col justify-center items-center z-[100] p-6 text-center">
+        <span class="text-7xl animate-bounce">🔒</span>
+        <h2 class="text-3xl font-black mt-4 text-red-400">系統檢測到嚴重異常，試卷已遭到封鎖！</h2>
+        <p class="text-slate-300 max-w-md mt-2 text-sm md:text-base" id="lock-reason">
+            因為您已超出切換視窗 / 分頁之限制次數，系統依據「零信任防弊機制」自動提交試卷並永久封閉。
+        </p>
+        <p class="text-red-300 font-bold text-xs mt-4">若非故意違規，請向監考人員或授課教師申請重新解鎖授權。</p>
+    </div>
+
+    <!-- 自訂溫和 Toast 通知 -->
+    <div id="quiz-toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 z-[99]">
+        <div class="bg-slate-900 text-white px-5 py-3 rounded-xl shadow-xl flex items-center gap-3 border border-slate-700">
+            <span class="text-yellow-400 font-bold text-lg">⚠️</span>
+            <span id="quiz-toast-msg" class="text-sm font-semibold">系統通知</span>
+        </div>
+    </div>
+
+    <script>
+        // --- 核心變數設定 ---
+        const readingContentText = decodeURIComponent("${materialsEscaped}");
+        const rawQuestions = JSON.parse(decodeURIComponent("${questionsJsonStr}"));
+        const isSecureMode = ${secureModeBoolean};
+
+        let userAnswers = []; // 動態陣列長度
+        let activeQuestions = []; 
+        let secondsElapsed = 0;
+        let timerInterval = null;
+        let cheatCounter = 0;
+
+        // --- 初始化配置 ---
+        window.onload = function() {
+            // 如果有補充數據，才進行 Markdown 渲染
+            if (readingContentText && document.getElementById('reading-content')) {
+                if (window.marked) {
+                    document.getElementById('reading-content').innerHTML = marked.parse(readingContentText);
+                } else {
+                    document.getElementById('reading-content').textContent = readingContentText;
+                }
+            }
+
+            // 本地處理參數化數學數值 
+            activeQuestions = rawQuestions.map((q, i) => {
+                if (q.type === 'parametric' && q.paramRange) {
+                    const min = q.paramRange.min || 10;
+                    const max = q.paramRange.max || 100;
+                    const step = q.paramRange.step || 5;
+                    
+                    const stepsCount = Math.floor((max - min) / step);
+                    const randomStep = Math.floor(Math.random() * (stepsCount + 1));
+                    const valX = min + (randomStep * step);
+
+                    const optionsEvaluated = [];
+                    const letters = ['A', 'B', 'C', 'D'];
+                    
+                    letters.forEach(letter => {
+                        let formula = q.optionFormulas && q.optionFormulas[letter] ? q.optionFormulas[letter] : "X";
+                        let val = evaluateFormula(formula, valX);
+                        optionsEvaluated.push(val);
+                    });
+
+                    const finalQuestionText = q.questionTemplate.replace(/{{X}}/g, valX);
+
+                    return {
+                        ...q,
+                        questionText: finalQuestionText,
+                        options: optionsEvaluated.map((val, idx) => letters[idx] + ". " + val),
+                        correctIndex: letters.indexOf(q.correctOption)
+                    };
+                }
+                return q;
+            });
+            
+            userAnswers = Array(activeQuestions.length).fill(null);
+
+            startTimer();
+            renderAllQuestions();
+            updateProgressBar();
+
+            if (isSecureMode) {
+                initSecurityMeasures();
+            }
+        };
+
+        // 安全防護機制註冊
+        function initSecurityMeasures() {
+            window.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                showWarningToast("ℹ️ 安全測驗模式已停用右鍵功能，請專注作答。");
+            });
+
+            window.addEventListener('copy', e => e.preventDefault());
+            window.addEventListener('cut', e => e.preventDefault());
+            window.addEventListener('dragstart', e => e.preventDefault());
+
+            window.addEventListener('keydown', function(e) {
+                if (e.key === 'F5' || (e.ctrlKey && e.key === 'r') || (e.metaKey && e.key === 'r')) {
+                    e.preventDefault();
+                    showWarningToast("🚫 測驗進行中，嚴禁重新整理網頁！");
+                }
+                if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || (e.ctrlKey && e.key === 'u')) {
+                    e.preventDefault();
+                    showWarningToast("🚫 安全機制：本測驗不開放調試與檢視原始碼。");
+                }
+            });
+
+            window.addEventListener('beforeunload', function(e) {
+                e.preventDefault();
+                e.returnValue = '測驗正在進行中，強行離開或重新整理將導致所有答案遺失！';
+            });
+
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    cheatCounter++;
+                    if (cheatCounter >= 3) {
+                        lockExamPage("偵測到您切換分頁或離開視窗次數已達 3 次上限，系統已鎖定試卷並終止測驗！");
+                    } else {
+                        showWarningToast("⚠️ 警示：請勿切換分頁或離開測驗！違規記錄: " + cheatCounter + " / 3 次。");
+                    }
+                }
+            });
+
+            setInterval(function() {
+                const start = performance.now();
+                debugger;
+                const end = performance.now();
+                if (end - start > 100) {
+                    lockExamPage("偵測到試圖透過調試工具（DevTools）干預網頁運算，系統已鎖定並提交試卷。");
+                }
+            }, 1000);
+        }
+
+        function lockExamPage(reason) {
+            clearInterval(timerInterval);
+            document.getElementById('lock-reason').textContent = reason;
+            document.getElementById('lock-modal').classList.remove('hidden');
+            document.getElementById('lock-modal').classList.add('flex');
+            
+            window.addEventListener('beforeunload', null);
+        }
+
+        function showWarningToast(msg) {
+            const toast = document.getElementById('quiz-toast');
+            const toastMsg = document.getElementById('quiz-toast-msg');
+            toastMsg.textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3500);
+        }
+
+        function evaluateFormula(formula, X) {
+            try {
+                const sanitized = formula.replace(/X/g, X);
+                return Math.round(new Function("return " + sanitized)() * 100) / 100;
+            } catch(e) {
+                return X;
+            }
+        }
+
+        function startTimer() {
+            timerInterval = setInterval(() => {
+                secondsElapsed++;
+                const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+                const secs = String(secondsElapsed % 60).padStart(2, '0');
+                document.getElementById('timer-display').textContent = "⏱️ 測驗時間：" + mins + ":" + secs;
+            }, 1000);
+        }
+
+        // --- 一次渲染所有題目 ---
+        function renderAllQuestions() {
+            if (activeQuestions.length === 0) return;
+            const container = document.getElementById('questions-list-container');
+            container.innerHTML = '';
+
+            activeQuestions.forEach((q, qIndex) => {
+                const qBlock = document.createElement('div');
+                qBlock.className = 'p-5 border border-slate-200 rounded-xl bg-slate-50/30 hover:bg-slate-50 transition-colors';
+
+                const header = document.createElement('div');
+                header.className = 'flex justify-between items-center border-b border-slate-200 pb-3 mb-4';
+                const typeLabel = q.type === 'regular' ? '學科素養選擇題' : '數據與參數計算';
+                header.innerHTML = '<span class="text-xs font-extrabold bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded border border-indigo-100 uppercase">' + typeLabel + '</span><span class="text-sm font-bold text-slate-400">第 ' + (qIndex + 1) + ' 題</span>';
+                qBlock.appendChild(header);
+
+                const qText = document.createElement('h3');
+                qText.className = 'text-base md:text-lg font-bold text-slate-900 leading-snug mb-5';
+                qText.textContent = (qIndex + 1) + '. ' + q.questionText;
+                qBlock.appendChild(qText);
+
+                const optsContainer = document.createElement('div');
+                optsContainer.className = 'space-y-3';
+                optsContainer.id = 'options-container-' + qIndex;
+
+                qBlock.appendChild(optsContainer);
+                container.appendChild(qBlock);
+
+                updateOptionsUI(qIndex); // 繪製該題的四個選項
+            });
+        }
+
+        // --- 局部更新單一題目的選項狀態 (避免重繪整個清單導致捲軸跳動) ---
+        function updateOptionsUI(qIndex) {
+            const optsContainer = document.getElementById('options-container-' + qIndex);
+            if (!optsContainer) return;
+            optsContainer.innerHTML = '';
+            
+            const q = activeQuestions[qIndex];
+            q.options.forEach((opt, optIndex) => {
+                const isSelected = userAnswers[qIndex] === optIndex;
+                const optCard = document.createElement('button');
+                optCard.className = 'option-card w-full text-left p-4 rounded-xl border-2 transition-all flex items-center justify-between ' +
+                    (isSelected 
+                        ? 'border-indigo-600 bg-indigo-50/50 font-bold text-indigo-900' 
+                        : 'border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700');
+                
+                optCard.onclick = () => {
+                    userAnswers[qIndex] = optIndex;
+                    updateOptionsUI(qIndex); // 僅更新被點擊的該題畫面
+                    updateProgressBar();
+                };
+                
+                const labelText = document.createElement('span');
+                labelText.className = 'text-sm md:text-base leading-snug';
+                labelText.textContent = opt;
+                optCard.appendChild(labelText);
+
+                const indicator = document.createElement('div');
+                indicator.className = 'w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0 ml-3 ' +
+                    (isSelected ? 'border-indigo-600 bg-indigo-600 text-white' : 'border-slate-300 bg-white');
+                if (isSelected) {
+                    indicator.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>';
+                }
+                optCard.appendChild(indicator);
+
+                optsContainer.appendChild(optCard);
+            });
+        }
+
+        function updateProgressBar() {
+            const answeredCount = userAnswers.filter(ans => ans !== null).length;
+            document.getElementById('progress-text').textContent = "已答 " + answeredCount + " / " + activeQuestions.length + " 題";
+            const prc = (answeredCount / activeQuestions.length) * 100;
+            document.getElementById('progress-bar').style.width = prc + "%";
+        }
+
+        function triggerSubmit() {
+            const unanswered = [];
+            userAnswers.forEach((ans, i) => {
+                if (ans === null) unanswered.push(i + 1);
+            });
+
+            if (unanswered.length > 0) {
+                const confirmSubmit = confirm("提示：您還有 " + unanswered.length + " 題未作答 (第 " + unanswered.join(', ') + " 題)。確認要提交試卷嗎？");
+                if (!confirmSubmit) return;
+            } else {
+                const confirmSubmit = confirm("確認要提交試卷並結束評量嗎？提交後將即時結算分數。");
+                if (!confirmSubmit) return;
+            }
+
+            submitQuiz();
+        }
+
+        function submitQuiz() {
+            clearInterval(timerInterval);
+            
+            window.addEventListener('beforeunload', null);
+
+            let score = 0;
+            let correctCount = 0;
+            const scorePerQuestion = Math.round((100 / activeQuestions.length) * 10) / 10;
+            const reviewList = document.getElementById('review-list');
+            reviewList.innerHTML = '';
+
+            activeQuestions.forEach((q, i) => {
+                const userAns = userAnswers[i];
+                const isCorrect = userAns === q.correctIndex;
+                if (isCorrect) {
+                    score += scorePerQuestion;
+                    correctCount++;
+                }
+
+                const card = document.createElement('div');
+                card.className = "p-5 rounded-2xl border-2 " + (isCorrect ? "border-emerald-200 bg-emerald-50/40" : "border-red-200 bg-red-50/40");
+                
+                card.innerHTML = \`
+                    <div class="flex items-start gap-3">
+                        <span class="text-xl">\${isCorrect ? '✅' : '❌'}</span>
+                        <div class="flex-grow">
+                            <h4 class="font-bold text-slate-900 mb-1">\${i + 1}. \${q.questionText}</h4>
+                            <p class="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wider">題型分類：\${q.type === 'regular' ? '學科素養選擇題' : '數據與參數計算'}</p>
+                            
+                            <div class="space-y-1 text-sm mb-3">
+                                <p class="\${isCorrect ? 'text-emerald-800' : 'text-red-800'}">
+                                    <span class="font-semibold">您的答案：</span>\${userAns !== null ? q.options[userAns] : '未作答'}
+                                </p>
+                                \${!isCorrect ? \`<p class="text-emerald-800 font-semibold">
+                                    <span>標準解答：</span>\${q.options[q.correctIndex]}
+                                </p>\` : ''}
+                            </div>
+                            
+                            <div class="bg-white/80 rounded-xl p-3 border border-slate-100 text-xs md:text-sm text-slate-600 leading-relaxed">
+                                <strong class="block text-indigo-900 mb-1">💡 精準解析與回饋：</strong>
+                                \${q.explanation}
+                            </div>
+                        </div>
+                    </div>
+                \`;
+                reviewList.appendChild(card);
+            });
+
+            document.getElementById('score-text-val').textContent = Math.round(score);
+            document.getElementById('correct-count-val').textContent = correctCount + " / " + activeQuestions.length;
+            
+            const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+            const secs = String(secondsElapsed % 60).padStart(2, '0');
+            document.getElementById('elapsed-time-val').textContent = mins + ":" + secs;
+
+            document.getElementById('result-modal').classList.remove('hidden');
+            document.getElementById('result-modal').classList.add('flex');
+        }
+
+        function restartQuiz() {
+            userAnswers = Array(activeQuestions.length).fill(null);
+            secondsElapsed = 0;
+            cheatCounter = 0;
+            document.getElementById('result-modal').classList.add('hidden');
+            document.getElementById('result-modal').classList.remove('flex');
+            
+            startTimer();
+            renderAllQuestions();
+            updateProgressBar();
+            
+            // 捲動回題目最上方
+            const container = document.getElementById('questions-list-container');
+            if(container) container.scrollTop = 0;
+        }
+    <\/script>
+</body>
+</html>`;
+        }
+
+        // --- 多重非同步生成排程器 ---
+        async function generateAssessments() {
+            const sourceText = document.getElementById('source-text').value.trim();
+            const apiKey = localStorage.getItem('gemini_api_key');
+            let modelVersion = localStorage.getItem('gemini_model_version') || 'gemini-2.5-flash';
+            const learningStage = document.getElementById('learning-stage').value;
+
+            // 取得自訂的題數
+            const questionCountInput = parseInt(document.getElementById('question-count').value, 10);
+            const questionCount = (isNaN(questionCountInput) || questionCountInput < 1) ? 1 : (questionCountInput > 20 ? 20 : questionCountInput);
+
+            // 動態調配參數化題目的比例 (大約 20%，最少 1 題)
+            const paramCount = Math.min(questionCount, Math.max(1, Math.floor(questionCount * 0.2)));
+            const regularCount = questionCount - paramCount;
+
+            let selectedSubjects = [];
+            document.querySelectorAll('#subject-checkboxes input[type="checkbox"]:checked').forEach(cb => {
+                if (cb.value === "自訂") {
+                    const otherVal = document.getElementById('cross-subject-other').value.trim();
+                    if (otherVal) selectedSubjects.push(otherVal);
+                } else {
+                    selectedSubjects.push(cb.value);
+                }
+            });
+            const crossSubject = selectedSubjects.join('、');
+
+            let targetVersions = [];
+            if (document.getElementById('version-standard').checked) targetVersions.push('standard');
+            if (document.getElementById('version-secure').checked) targetVersions.push('secure');
+
+            if (!apiKey) {
+                showToast('請先設定 Gemini API Key！', true);
+                document.getElementById('settings-panel').classList.remove('hidden');
+                return;
+            }
+            if (!sourceText) {
+                showToast('請輸入或上傳文本素材！', true);
+                document.getElementById('source-text').focus();
+                return;
+            }
+            if (targetVersions.length === 0) {
+                showToast('請至少選擇一種試卷版本', true);
+                return;
+            }
+
+            modelVersion = modelVersion.replace(/^models\//, '');
+
+            const resultSection = document.getElementById('result-section');
+            const aiLoading = document.getElementById('ai-loading');
+            const loadingTitle = document.getElementById('ai-loading-title');
+
+            resultSection.classList.remove('hidden');
+            resultSection.classList.add('flex');
+            aiLoading.classList.remove('hidden');
+            aiLoading.classList.add('flex');
+
+            switchTab('preview');
+
+            generatedResults = { 'standard': null, 'secure': null };
+            document.getElementById('quiz-preview-frame').srcdoc = '';
+            document.getElementById('html-code-view').value = '';
+
+            // 結構化 Prompt，要求 AI 強制以指定學科出題並控制數量，並嚴格隱藏教師文本
+            const prompt = `專為 108 課綱、PISA 與 PIRLS 精神打造。請分析以下文本，設計 ${questionCount} 題高層次素養選擇題，並以 JSON 格式輸出。
+
+# Role & Persona
+你是「跨域素養評量學家」。你精通 PISA（跨域解決問題、圖表轉譯）、PIRLS（四層次閱讀理解）與 108 課綱素養導向精神。
+
+# Theoretical Framework (題庫必須嚴格遵守)
+1. 隱藏原始文本 (極度重要)：強烈要求試卷中【絕對不要】包含教師提供的原始文本內容！測驗介面只要單純呈現選擇題與你虛擬的「補充情境」即可。
+2. 選項數量約束：每個選擇題必須精準包含 4 個選項 (A, B, C, D)，不可多也不可少。
+3. PIRLS 閱讀理解四層次：題目必須涵蓋「直接提取」、「直接推論」、「詮釋與整合」、「檢驗與評估」。
+4. PISA 跨域與情境化：自動為輸入的文本虛構一份「非連續性文本（如：實驗數據、統計表格、物理數值、統計量）」，作為題目的補充情境。必須嚴格依據以下指定的學科領域出題：【${crossSubject || "跨領域綜合"}】，確保題目情境與知識點緊扣該學科領域。
+5. Parametric Generation（參數化數學出題）：必須有 ${paramCount} 題參數化數學題。針對數量、時間、物理量或機率的題目，在 JSON 中設定合理的數值範圍 (paramRange) 以及選項公式 (optionFormulas)，格式見下方 Schema 說明。
+
+# 輸出 JSON 結構規格（Schema）：
+\`\`\`json
+{
+  "quizTitle": "為測驗設計一個具備吸引力的名稱",
+  "readingMaterials": "僅限放置你為本測驗自動虛擬擴充的數據表格、統計資料或非連續性文本（請用 Markdown 表格排版）。【嚴禁】在此處或任何地方重複輸出使用者提供的原始文本！若無補充情境可填寫空字串。",
+  "questions": [
+    {
+      "type": "regular", 
+      "questionText": "問題描述字串...",
+      "options": ["選項 A 內容", "選項 B 內容", "選項 C 內容", "選項 D 內容"],
+      "correctIndex": 0, // 正確選項的索引 (0 到 3)
+      "explanation": "對本題各選項的精細素養回饋與深度解析說明..."
+    },
+    {
+      "type": "parametric",
+      "questionTemplate": "參數化數學問題範本，數值變數部分請用 {{X}} 替代（例如：若某生態系中生產者能量為 {{X}} 焦耳，則...）",
+      "paramRange": { "min": 100, "max": 1000, "step": 10 },
+      "optionFormulas": {
+        "A": "X * 0.1", // 代表選項 A 的計算公式
+        "B": "X * 0.01",
+        "C": "X * 0.2",
+        "D": "X * 0.5"
+      },
+      "correctOption": "A", // 代表正確的選項字母
+      "explanation": "參數化數學題目的解題邏輯與運算過程分析..."
+    }
+  ]
+}
+\`\`\`
+
+【請務必注意：questions 陣列中必須精準包含 ${questionCount} 個題目（${regularCount} 題 regular，${paramCount} 題 parametric），並且每題確保只有 4 個選項。請僅輸出合法的 JSON，不要包含 Markdown 程式碼區塊外任何其餘雜詞。】
+
+【閱讀文本素材如下】
+${sourceText.substring(0, 30000)}`;
+
+            try {
+                loadingTitle.textContent = "AI 核心正在生成高品質素養題庫...";
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelVersion}:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: {
+                            temperature: 0.7,
+                            responseMimeType: "application/json",
+                            responseSchema: {
+                                type: "OBJECT",
+                                properties: {
+                                    quizTitle: { type: "STRING" },
+                                    readingMaterials: { type: "STRING" },
+                                    questions: {
+                                        type: "ARRAY",
+                                        items: {
+                                            type: "OBJECT",
+                                            properties: {
+                                                type: { type: "STRING", enum: ["regular", "parametric"] },
+                                                questionText: { type: "STRING" },
+                                                questionTemplate: { type: "STRING" },
+                                                options: {
+                                                    type: "ARRAY",
+                                                    items: { type: "STRING" },
+                                                    minItems: 4,
+                                                    maxItems: 4
+                                                },
+                                                correctIndex: { type: "INTEGER" },
+                                                paramRange: {
+                                                    type: "OBJECT",
+                                                    properties: {
+                                                        min: { type: "INTEGER" },
+                                                        max: { type: "INTEGER" },
+                                                        step: { type: "INTEGER" }
+                                                    }
+                                                },
+                                                optionFormulas: {
+                                                    type: "OBJECT",
+                                                    properties: {
+                                                        A: { type: "STRING" },
+                                                        B: { type: "STRING" },
+                                                        C: { type: "STRING" },
+                                                        D: { type: "STRING" }
+                                                    }
+                                                },
+                                                correctOption: { type: "STRING" },
+                                                explanation: { type: "STRING" }
+                                            },
+                                            required: ["type", "options", "explanation"]
+                                        }
+                                    }
+                                },
+                                required: ["quizTitle", "readingMaterials", "questions"]
+                            }
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || 'API 請求失敗');
+                }
+
+                const data = await response.json();
+                const aiOutputText = data.candidates[0].content.parts[0].text;
+
+                // 解析 JSON
+                const quizData = JSON.parse(aiOutputText);
+
+                // 儲存全域變數供下載檔名使用
+                currentQuizTitle = quizData.quizTitle || "跨域素養學科綜合評量";
+                currentLearningStage = learningStage;
+
+                // 在本地分別編譯雙版本，確保試題內容與數值絕對一致
+                if (targetVersions.includes('standard')) {
+                    generatedResults['standard'] = compileHtmlTemplate(quizData, false, learningStage, crossSubject);
+                }
+                if (targetVersions.includes('secure')) {
+                    generatedResults['secure'] = compileHtmlTemplate(quizData, true, learningStage, crossSubject);
+                }
+
+                // 更新下拉選單
+                const selectEl = document.getElementById('result-version-select');
+                selectEl.innerHTML = '';
+                targetVersions.forEach(ver => {
+                    const opt = document.createElement('option');
+                    opt.value = ver;
+                    opt.textContent = versionLabels[ver];
+                    selectEl.appendChild(opt);
+                });
+
+                currentActiveVersion = targetVersions[0];
+                updateView();
+                showToast(`試卷編譯成功！題目已無縫對齊。`);
+
+            } catch (error) {
+                console.error(`Compilation Error:`, error);
+                document.getElementById('html-code-view').value = `試卷編譯失敗：\n${error.message}\n請檢查 API Key、額度限制，或嘗試再次生成。`;
+                switchTab('code');
+                showToast('生成或解析失敗', true);
+            } finally {
+                aiLoading.classList.add('hidden');
+                aiLoading.classList.remove('flex');
+            }
+        }
+
+        function downloadHtml() {
+            const htmlContent = generatedResults[currentActiveVersion];
+            if (!htmlContent) {
+                showToast('尚未生成對應的試卷內容', true);
+                return;
+            }
+
+            const dateStr = new Date().toISOString().slice(0, 10);
+            const suffix = currentActiveVersion === 'secure' ? 'Pro防弊版' : '標準練習版';
+
+            // 安全處理檔名，移除不合法字元
+            const safeTitle = currentQuizTitle.replace(/[\\/:*?"<>|]/g, '-');
+            const safeStage = currentLearningStage.replace(/[\\/:*?"<>|]/g, '-');
+
+            const filename = `${safeTitle}_${safeStage}_${suffix}_${dateStr}.html`;
+
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast(`已成功下載：${filename}`);
+        }
+    </script>
+</body>
+
+</html>

@@ -41,13 +41,13 @@
     <!-- 引入 React 與 Babel -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.15.0/babel.min.js"></script>
 </head>
 
 <body class="min-h-screen bg-slate-50 font-sans text-gray-800 selection:bg-pink-200">
     <div id="root"></div>
 
-    <script type="text/babel">
+    <script type="text/babel" data-type="module">
         const { useState, useEffect } = React;
 
         // --- 預設的防呆資料 (當 chrome_skills.js 尚未建立時的替代方案) ---

@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全能拼貼大師 - 穩定版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* 引入更多 Google Fonts (中文與英文) */
+        @import url('https://fonts.googleapis.com/css2?family=DotGothic16&family=Hachi+Maru+Pop&family=Lobster&family=Noto+Sans+TC:wght@400;700&family=Noto+Serif+TC:wght@400;700&family=Oswald:wght@400;700&family=Pacifico&family=Roboto:wght@400;700&family=Yusei+Magic&family=Zen+Maru+Gothic:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #f3f4f6;
+            overflow: hidden;
+        }
+
+        /* --- Common Styles --- */
+        .workspace-bg {
+            background-image:
+                linear-gradient(45deg, #e5e7eb 25%, transparent 25%),
+                linear-gradient(-45deg, #e5e7eb 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #e5e7eb 75%),
+                linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        /* Drag & Drop Overlay (Fixed: Allow clicks to cancel) */
+        #drag-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: rgba(59, 130, 246, 0.95);
+            color: white;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            border: 8px dashed white;
+            margin: 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            /* Change cursor to indicate clickability */
+            pointer-events: auto;
+            /* Enable pointer events to capture clicks/drops */
+        }
+
+        body.drag-active #drag-overlay {
+            display: flex;
+        }
+
+        /* --- Free Item / Text Overlay Styles --- */
+        .collage-item {
+            position: absolute;
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+            transition: box-shadow 0.2s;
+        }
+
+        .collage-item:active {
+            cursor: grabbing;
+        }
+
+        .collage-item.selected {
+            outline: 2px solid #3b82f6;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .resize-handle {
+            width: 12px;
+            height: 12px;
+            background-color: #3b82f6;
+            border: 2px solid white;
+            border-radius: 50%;
+            position: absolute;
+            display: none;
+            z-index: 99999;
+        }
+
+        .collage-item.selected .resize-handle {
+            display: block;
+        }
+
+        .handle-nw {
+            top: -6px;
+            left: -6px;
+            cursor: nw-resize;
+        }
+
+        .handle-ne {
+            top: -6px;
+            right: -6px;
+            cursor: ne-resize;
+        }
+
+        .handle-sw {
+            bottom: -6px;
+            left: -6px;
+            cursor: sw-resize;
+        }
+
+        .handle-se {
+            bottom: -6px;
+            right: -6px;
+            cursor: se-resize;
+        }
+
+        .rotate-handle {
+            width: 24px;
+            height: 24px;
+            background-color: white;
+            border: 1px solid #d1d5db;
+            color: #374151;
+            border-radius: 50%;
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .collage-item.selected .rotate-handle {
+            display: flex;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: -12px;
+            right: -12px;
+            width: 24px;
+            height: 24px;
+            background-color: #ef4444;
+            color: white;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100000;
+            font-size: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .collage-item.selected .delete-btn {
+            display: flex;
+        }
+
+        .editable-text:focus {
+            outline: 2px dashed #9ca3af;
+            background-color: rgba(255, 255, 255, 0.5);
+            cursor: text;
+        }
+
+        /* --- Grid Mode Styles --- */
+        .grid-cell {
+            background-color: #e5e7eb;
+            overflow: hidden;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            user-select: none;
+        }
+
+        .grid-cell:hover {
+            background-color: #d1d5db;
+        }
+
+        .grid-cell.drag-over {
+            border: 4px dashed #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .grid-cell img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            min-width: 100%;
+            min-height: 100%;
+            max-width: none;
+            object-fit: cover;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .grid-cell.has-image {
+            cursor: move;
+        }
+
+        .grid-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #9ca3af;
+            pointer-events: none;
+            width: 100%;
+        }
+
+        /* --- Grid Layout Definitions --- */
+
+        /* 1 Image */
+        .layout-1 {
+            grid-template-columns: 1fr;
+            grid-template-rows: 1fr;
+        }
+
+        /* 2 Images */
+        .layout-2h {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr;
+        }
+
+        .layout-2v {
+            grid-template-columns: 1fr;
+            grid-template-rows: 1fr 1fr;
+        }
+
+        .layout-2-left-big {
+            grid-template-columns: 2fr 1fr;
+        }
+
+        .layout-2-top-big {
+            grid-template-rows: 2fr 1fr;
+        }
+
+        /* 3 Images */
+        .layout-3h {
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr;
+        }
+
+        .layout-3v {
+            grid-template-columns: 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+        }
+
+        .layout-3-main-left {
+            grid-template-columns: 1.5fr 1fr;
+            grid-template-rows: 1fr 1fr;
+        }
+
+        .layout-3-main-left> :first-child {
+            grid-row: span 2;
+        }
+
+        .layout-3-main-right {
+            grid-template-columns: 1fr 1.5fr;
+            grid-template-rows: 1fr 1fr;
+        }
+
+        .layout-3-main-right> :first-child {
+            grid-column: 2;
+            grid-row: 1 / span 2;
+        }
+
+        .layout-3-main-top {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1.5fr 1fr;
+        }
+
+        .layout-3-main-top> :first-child {
+            grid-column: span 2;
+        }
+
+        .layout-3-main-bottom {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1.5fr;
+        }
+
+        .layout-3-main-bottom> :first-child {
+            grid-column: span 2;
+            grid-row: 2;
+        }
+
+        /* 4 Images */
+        .layout-4-grid {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+        }
+
+        .layout-4h {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr;
+        }
+
+        .layout-4v {
+            grid-template-columns: 1fr;
+            grid-template-rows: 1fr 1fr 1fr 1fr;
+        }
+
+        .layout-4-main-left {
+            grid-template-columns: 2fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+        }
+
+        .layout-4-main-left> :first-child {
+            grid-row: span 3;
+        }
+
+        .layout-4-main-right {
+            grid-template-columns: 1fr 2fr;
+            grid-template-rows: 1fr 1fr 1fr;
+        }
+
+        .layout-4-main-right> :first-child {
+            grid-column: 2;
+            grid-row: 1 / span 3;
+        }
+
+        .layout-4-main-top {
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 2fr 1fr;
+        }
+
+        .layout-4-main-top> :first-child {
+            grid-column: span 3;
+        }
+
+        .layout-4-main-bottom {
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 2fr;
+        }
+
+        .layout-4-main-bottom> :first-child {
+            grid-column: span 3;
+            grid-row: 2;
+        }
+
+        /* 5 Images */
+        .layout-5-main-center {
+            grid-template-columns: 1fr 2fr 1fr;
+            grid-template-rows: 1fr 1fr;
+        }
+
+        .layout-5-main-center> :nth-child(2) {
+            grid-row: span 2;
+        }
+
+        .layout-5-grid {
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+        }
+
+        .layout-5-grid> :first-child {
+            grid-column: span 1;
+            grid-row: span 2;
+        }
+
+        .layout-5-main-top {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-rows: 2fr 1fr;
+        }
+
+        .layout-5-main-top> :first-child {
+            grid-column: span 4;
+        }
+
+        .layout-5-masonry {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+        }
+
+        .layout-5-masonry> :first-child {
+            grid-row: span 2;
+        }
+
+        /* 6 Images */
+        .layout-6-grid {
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+        }
+
+        .layout-6-main-top {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-rows: 2fr 1fr;
+        }
+
+        .layout-6-main-top> :first-child {
+            grid-column: span 2;
+        }
+
+        .layout-6-main-top> :nth-child(2) {
+            grid-column: span 2;
+        }
+
+        .layout-6-3x2 {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+        }
+
+        /* 7-9 Images (Generic Grid) */
+        .layout-7-grid {
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+        }
+
+        .layout-7-grid> :first-child {
+            grid-column: span 3;
+        }
+
+        .layout-8-grid {
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+        }
+
+        .layout-9-grid {
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+        }
+    </style>
+</head>
+
+<body class="h-screen flex flex-col">
+
+    <!-- Drag & Drop Overlay (Fixed) -->
+    <div id="drag-overlay" title="點擊取消上傳">
+        <i class="fas fa-cloud-upload-alt mb-4 text-6xl"></i>
+        <span class="text-3xl font-bold mb-2">放開滑鼠以上傳圖片</span>
+        <span class="text-sm opacity-80">(如果卡住，請點擊此處取消)</span>
+    </div>
+
+    <!-- Top Navigation -->
+    <header class="bg-white border-b border-gray-200 px-6 py-3 shadow-sm z-50">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-2 rounded-lg">
+                    <i class="fas fa-shapes"></i>
+                </div>
+                <h1 class="text-xl font-bold text-gray-800">全能拼貼大師 <span
+                        class="text-xs bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full ml-1">V1.0</span></h1>
+            </div>
+
+            <!-- Mode Switcher -->
+            <div class="bg-gray-100 p-1 rounded-lg flex shadow-inner">
+                <button onclick="switchMode('grid')" id="btn-mode-grid"
+                    class="px-6 py-1.5 rounded-md text-sm font-bold transition-all bg-white text-blue-600 shadow-sm flex items-center">
+                    <i class="fas fa-th-large mr-2"></i>標準格子
+                </button>
+                <button onclick="switchMode('free')" id="btn-mode-free"
+                    class="px-6 py-1.5 rounded-md text-sm font-bold transition-all text-gray-500 hover:text-gray-700 flex items-center">
+                    <i class="fas fa-hand-paper mr-2"></i>自由拼貼
+                </button>
+            </div>
+
+            <div class="flex gap-2">
+                <label
+                    class="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow-sm transition cursor-pointer active:scale-95"
+                    title="支援拖放多張圖片">
+                    <i class="fas fa-images"></i>
+                    <span>批次上傳</span>
+                    <input type="file" id="batch-upload-input" accept="image/*" multiple class="hidden">
+                </label>
+
+                <button onclick="downloadCurrentWorkspace()"
+                    class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2 rounded-lg shadow-sm transition transform active:scale-95">
+                    <i class="fas fa-download"></i>
+                    <span>下載</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex flex-1 overflow-hidden relative">
+
+        <!-- ==================== GRID MODE SIDEBAR ==================== -->
+        <aside id="sidebar-grid"
+            class="w-80 bg-white border-r border-gray-200 flex flex-col p-4 gap-4 overflow-y-auto z-40 scrollbar-thin">
+
+            <!-- Grid Layout Selector -->
+            <div>
+                <h3 class="font-bold text-gray-700 border-b pb-2 mb-3">版型選擇</h3>
+
+                <!-- Count Filter -->
+                <div class="mb-3">
+                    <label class="text-xs text-gray-500 font-bold mb-1 block">照片數量</label>
+                    <div class="flex gap-1 flex-wrap" id="layout-count-filter">
+                        <!-- Generated by JS -->
+                    </div>
+                </div>
+
+                <!-- Layout Thumbnails -->
+                <div class="grid grid-cols-3 gap-2" id="layout-thumbnails">
+                    <!-- Injected by JS based on count -->
+                </div>
+            </div>
+
+            <!-- Grid Text Tool -->
+            <div class="p-3 bg-purple-50 rounded-lg border border-purple-100">
+                <button onclick="addTextToWorkspace()"
+                    class="w-full flex items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded shadow-sm transition">
+                    <i class="fas fa-font"></i>
+                    <span>在格子上新增文字</span>
+                </button>
+            </div>
+
+            <div>
+                <h3 class="font-bold text-gray-700 border-b pb-2 mb-3">畫布設定</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs text-gray-500 font-semibold mb-1 block">邊框間距 (Gap)</label>
+                        <input type="range" min="0" max="40" value="4" oninput="updateGridGap(this.value)"
+                            class="w-full accent-blue-600">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 font-semibold mb-1 block">背景顏色</label>
+                        <div class="flex gap-2">
+                            <input type="color" id="grid-bg-color" value="#ffffff" oninput="updateGridBg(this.value)"
+                                class="h-8 w-12 p-0 border-0 rounded cursor-pointer">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-500 font-semibold mb-1 block">畫布比例</label>
+                        <select onchange="updateAspectRatio(this.value, 'grid')"
+                            class="w-full border rounded p-2 text-sm bg-gray-50">
+                            <option value="4/3">4:3 (標準)</option>
+                            <option value="1/1">1:1 (正方形)</option>
+                            <option value="16/9">16:9 (寬螢幕)</option>
+                            <option value="9/16">9:16 (限時動態)</option>
+                            <option value="3/4">3:4 (人像)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ==================== FREE MODE SIDEBAR ==================== -->
+        <aside id="sidebar-free"
+            class="w-80 bg-white border-r border-gray-200 flex flex-col p-4 gap-6 overflow-y-auto z-40 hidden">
+            <!-- Tools -->
+            <div class="flex flex-col gap-3">
+                <label
+                    class="flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-4 py-3 rounded-lg cursor-pointer transition shadow-sm">
+                    <i class="fas fa-image"></i>
+                    <span>新增單張圖片</span>
+                    <input type="file" id="free-image-input" accept="image/*" class="hidden">
+                </label>
+
+                <button onclick="addTextToWorkspace()"
+                    class="flex items-center justify-center gap-2 bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 px-4 py-3 rounded-lg transition shadow-sm">
+                    <i class="fas fa-font"></i>
+                    <span>新增文字</span>
+                </button>
+            </div>
+
+            <!-- Canvas Settings -->
+            <div>
+                <h3 class="font-bold text-gray-700 border-b pb-2 mb-3">畫布設定</h3>
+                <label class="text-xs text-gray-500 font-semibold mb-1 block">畫布比例</label>
+                <select onchange="updateAspectRatio(this.value, 'free')"
+                    class="w-full border rounded p-2 text-sm bg-gray-50">
+                    <option value="4/3">4:3 (標準)</option>
+                    <option value="1/1">1:1 (正方形)</option>
+                    <option value="16/9">16:9 (寬螢幕)</option>
+                    <option value="9/16">9:16 (限時動態)</option>
+                </select>
+            </div>
+
+            <!-- Controls -->
+            <div id="controls-placeholder" class="text-center text-gray-400 py-6 border-t mt-2">
+                <p class="text-sm font-medium">點選畫布上的物件<br>以編輯屬性</p>
+            </div>
+
+            <!-- TEXT CONTROLS -->
+            <div id="text-controls" class="hidden flex-col gap-4 border-t pt-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-gray-700">文字設定</h3>
+                    <span class="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-500">已選取</span>
+                </div>
+
+                <div>
+                    <label class="text-xs text-gray-500 font-semibold mb-1 block">內容</label>
+                    <textarea id="text-content-input" class="w-full border rounded p-2 text-sm" rows="2"></textarea>
+                </div>
+
+                <div>
+                    <label class="text-xs text-gray-500 font-semibold mb-1 block">字型</label>
+                    <select id="text-font-family" class="w-full border rounded p-2 text-sm">
+                        <optgroup label="中文字型">
+                            <option value="'Noto Sans TC', sans-serif">黑體 (Noto Sans)</option>
+                            <option value="'Noto Serif TC', serif">宋體 (Noto Serif)</option>
+                            <option value="'Zen Maru Gothic', sans-serif">圓體 (Zen Maru)</option>
+                            <option value="'Yusei Magic', sans-serif">魔幻手寫 (Yusei)</option>
+                            <option value="'Hachi Maru Pop', cursive">可愛波普 (Hachi)</option>
+                            <option value="'DotGothic16', sans-serif">點陣體 (Pixel)</option>
+                        </optgroup>
+                        <optgroup label="英文字型">
+                            <option value="'Roboto', sans-serif">Roboto (標準)</option>
+                            <option value="'Oswald', sans-serif">Oswald (高窄)</option>
+                            <option value="'Lobster', cursive">Lobster (書法)</option>
+                            <option value="'Pacifico', cursive">Pacifico (手寫)</option>
+                            <option value="monospace">Monospace (等寬)</option>
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="text-xs text-gray-500 font-semibold mb-1 block">顏色</label>
+                        <input type="color" id="text-color" class="h-8 w-full p-0 border-0 rounded cursor-pointer">
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-xs text-gray-500 font-semibold mb-1 block">粗體</label>
+                        <button id="text-bold-btn"
+                            class="w-full h-8 border rounded hover:bg-gray-100 font-bold">B</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs text-gray-500 font-semibold mb-1 block">字體大小: <span
+                            id="font-size-val">24</span>px</label>
+                    <input type="range" id="font-size" min="12" max="150" value="24" class="w-full accent-blue-600">
+                </div>
+
+                <div>
+                    <label class="text-xs text-gray-500 font-semibold mb-1 block">背景顏色</label>
+                    <div class="flex gap-2 items-center">
+                        <input type="color" id="free-bg-color" value="#ffffff"
+                            class="h-8 w-12 p-0 border-0 rounded cursor-pointer">
+                        <button id="bg-transparent-btn"
+                            class="text-xs bg-white hover:bg-gray-50 px-3 py-1 rounded border shadow-sm transition">設為透明</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IMAGE CONTROLS -->
+            <div id="image-controls" class="hidden flex-col gap-4 border-t pt-4">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-gray-700">圖片設定</h3>
+                    <span class="text-xs bg-gray-100 px-2 py-0.5 rounded text-gray-500">已選取</span>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 font-semibold mb-1 block">不透明度</label>
+                    <input type="range" id="opacity" min="0" max="100" value="100" class="w-full accent-blue-600">
+                </div>
+
+                <div>
+                    <label class="text-xs text-gray-500 font-semibold mb-1 block">圓角</label>
+                    <input type="range" id="radius" min="0" max="100" value="0" class="w-full accent-blue-600">
+                </div>
+            </div>
+
+            <!-- Layer Controls -->
+            <div id="common-controls" class="hidden flex-col gap-2 pt-4 border-t">
+                <button id="bring-to-front-btn"
+                    class="w-full bg-white border hover:bg-gray-50 text-gray-700 py-2 rounded text-sm transition flex items-center justify-center">
+                    <i class="fas fa-arrow-up mr-2 text-gray-400"></i>移到最上層
+                </button>
+                <button id="send-to-back-btn"
+                    class="w-full bg-white border hover:bg-gray-50 text-gray-700 py-2 rounded text-sm transition flex items-center justify-center">
+                    <i class="fas fa-arrow-down mr-2 text-gray-400"></i>移到最下層
+                </button>
+            </div>
+        </aside>
+
+
+        <!-- ==================== WORKSPACE AREA ==================== -->
+        <main class="flex-1 flex items-center justify-center relative bg-gray-200 overflow-hidden workspace-bg"
+            id="main-scroll-area">
+
+            <!-- Grid Workspace -->
+            <div id="workspace-grid" class="shadow-2xl bg-white transition-all duration-300 p-1 relative"
+                style="width: 800px; height: 600px;">
+                <div id="grid-container" class="w-full h-full grid gap-1 layout-2h">
+                    <!-- Cells injected by JS -->
+                </div>
+                <!-- Container for Free-Floating Text on top of Grid -->
+                <div id="grid-text-layer" class="absolute inset-0 pointer-events-none overflow-hidden"
+                    style="z-index: 20;">
+                    <!-- Floating text items go here -->
+                </div>
+
+                <div id="grid-intro-text"
+                    class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0">
+                    <div class="bg-black/50 text-white px-4 py-2 rounded-lg text-sm backdrop-blur">
+                        拖曳可調整圖片位置
+                    </div>
+                </div>
+            </div>
+
+            <!-- Free Workspace -->
+            <div id="workspace-free" class="shadow-2xl bg-white relative hidden" style="width: 800px; height: 600px;">
+                <!-- Items injected here -->
+                <div class="absolute inset-0 pointer-events-none border-2 border-transparent" id="free-canvas-border">
+                </div>
+            </div>
+
+            <!-- Hidden File Input for Grid Single Upload -->
+            <input type="file" id="grid-upload-input" accept="image/*" class="hidden">
+        </main>
+
+    </div>
+
+    <script>
+        // --- Global State ---
+        let currentMode = 'grid'; // 'grid' or 'free'
+
+        // --- Data: Layout Definitions (EXPANDED) ---
+        // Defines available layouts for each photo count
+        const LAYOUT_DB = {
+            1: [
+                { class: 'layout-1', name: '單張全版' }
+            ],
+            2: [
+                { class: 'layout-2h', name: '左右平分' },
+                { class: 'layout-2v', name: '上下平分' },
+                { class: 'layout-2-left-big', name: '左2右1' },
+                { class: 'layout-2-top-big', name: '上2下1' }
+            ],
+            3: [
+                { class: 'layout-3h', name: '三列直排' },
+                { class: 'layout-3v', name: '三行橫排' },
+                { class: 'layout-3-main-left', name: '左大右二' },
+                { class: 'layout-3-main-right', name: '右大左二' },
+                { class: 'layout-3-main-top', name: '上大下二' },
+                { class: 'layout-3-main-bottom', name: '下大上二' }
+            ],
+            4: [
+                { class: 'layout-4-grid', name: '四格田字' },
+                { class: 'layout-4h', name: '四列直排' },
+                { class: 'layout-4v', name: '四行橫排' },
+                { class: 'layout-4-main-left', name: '左大右三' },
+                { class: 'layout-4-main-right', name: '右大左三' },
+                { class: 'layout-4-main-top', name: '上大下三' },
+                { class: 'layout-4-main-bottom', name: '下大上三' }
+            ],
+            5: [
+                { class: 'layout-5-main-center', name: '中大四圍' },
+                { class: 'layout-5-grid', name: '左大右四' },
+                { class: 'layout-5-main-top', name: '上大下四' },
+                { class: 'layout-5-masonry', name: '左長右二' }
+            ],
+            6: [
+                { class: 'layout-6-grid', name: '六格(3x2)' },
+                { class: 'layout-6-3x2', name: '六格(2x3)' },
+                { class: 'layout-6-main-top', name: '上二下四' }
+            ],
+            7: [
+                { class: 'layout-7-grid', name: '上三下四' }
+            ],
+            8: [
+                { class: 'layout-8-grid', name: '八格(4x2)' }
+            ],
+            9: [
+                { class: 'layout-9-grid', name: '九宮格' }
+            ]
+        };
+
+        // --- Init Sidebar Layout Filter ---
+        const countFilterContainer = document.getElementById('layout-count-filter');
+        const thumbnailsContainer = document.getElementById('layout-thumbnails');
+        let currentLayoutCount = 2; // Default
+
+        function initLayoutSidebar() {
+            countFilterContainer.innerHTML = '';
+            for (let i = 1; i <= 9; i++) {
+                const btn = document.createElement('button');
+                btn.className = `w-8 h-8 rounded-full text-sm font-bold border transition ${i === currentLayoutCount ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-100'}`;
+                btn.innerText = i;
+                btn.onclick = () => renderLayoutThumbnails(i);
+                countFilterContainer.appendChild(btn);
+            }
+            renderLayoutThumbnails(currentLayoutCount);
+        }
+
+        function renderLayoutThumbnails(count) {
+            currentLayoutCount = count;
+
+            // Update filter styles
+            Array.from(countFilterContainer.children).forEach(btn => {
+                if (parseInt(btn.innerText) === count) {
+                    btn.className = 'w-8 h-8 rounded-full text-sm font-bold border transition bg-blue-600 text-white border-blue-600';
+                } else {
+                    btn.className = 'w-8 h-8 rounded-full text-sm font-bold border transition bg-white text-gray-600 border-gray-300 hover:bg-gray-100';
+                }
+            });
+
+            thumbnailsContainer.innerHTML = '';
+            const layouts = LAYOUT_DB[count];
+
+            layouts.forEach(layout => {
+                const btn = document.createElement('button');
+                btn.className = 'aspect-square border border-gray-200 hover:border-blue-500 hover:bg-blue-50 rounded p-1 bg-white transition flex flex-col items-center justify-center gap-1 group';
+                btn.title = layout.name;
+                btn.onclick = () => setGridLayout(layout.class, count);
+
+                // Mini CSS Grid for visual representation
+                const miniGrid = document.createElement('div');
+                miniGrid.className = `w-full h-full grid gap-0.5 ${layout.class} pointer-events-none`;
+
+                // Logic to simulate main cells for preview
+                let items = [];
+                for (let k = 0; k < count; k++) {
+                    const div = document.createElement('div');
+                    div.className = 'bg-gray-300 rounded-sm group-hover:bg-blue-200';
+                    miniGrid.appendChild(div);
+                }
+
+                btn.appendChild(miniGrid);
+                thumbnailsContainer.appendChild(btn);
+            });
+        }
+
+        // --- Grid Mode Logic ---
+        const gridContainer = document.getElementById('grid-container');
+        const gridUploadInput = document.getElementById('grid-upload-input');
+        let currentGridCell = null;
+        let draggedSourceCell = null;
+
+        function setGridLayout(layoutClass, count) {
+            const cells = gridContainer.querySelectorAll('.grid-cell');
+            const currentImages = [];
+            cells.forEach(cell => {
+                const img = cell.querySelector('img');
+                if (img) currentImages.push(img.src);
+            });
+
+            gridContainer.className = `w-full h-full grid gap-1 ${layoutClass}`;
+            gridContainer.innerHTML = '';
+
+            for (let i = 0; i < count; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                cell.dataset.index = i;
+
+                let innerHTML = `
+                    <div class="grid-placeholder">
+                        <i class="fas fa-plus text-2xl mb-2 opacity-50"></i><br>上傳
+                    </div>
+                `;
+
+                if (currentImages[i]) {
+                    innerHTML += `<img src="${currentImages[i]}" style="top:50%; left:50%; transform:translate(-50%, -50%) scale(1);">`;
+                    cell.classList.add('has-image');
+                }
+
+                cell.innerHTML = innerHTML;
+                bindGridCellEvents(cell);
+                gridContainer.appendChild(cell);
+            }
+
+            updateGridGap(document.querySelector('#sidebar-grid input[type=range]').value);
+            updateGridBg(document.getElementById('grid-bg-color').value);
+        }
+
+        function bindGridCellEvents(cell) {
+            cell.addEventListener('click', (e) => {
+                if (cell.dataset.isDragging === 'true') return;
+                triggerGridUpload(cell);
+            });
+            cell.addEventListener('mousedown', (e) => startGridPan(e, cell));
+            cell.addEventListener('wheel', (e) => gridZoom(e, cell), { passive: false });
+
+            cell.draggable = true;
+            cell.addEventListener('dragstart', (e) => {
+                if (!cell.classList.contains('has-image')) { e.preventDefault(); return; }
+                draggedSourceCell = cell;
+                e.dataTransfer.effectAllowed = 'move';
+            });
+            cell.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; cell.classList.add('drag-over'); });
+            cell.addEventListener('dragleave', () => { cell.classList.remove('drag-over'); });
+            cell.addEventListener('drop', (e) => {
+                e.preventDefault();
+                cell.classList.remove('drag-over');
+                if (draggedSourceCell && draggedSourceCell !== cell) {
+                    swapGridContent(draggedSourceCell, cell);
+                }
+                draggedSourceCell = null;
+            });
+        }
+
+        function swapGridContent(cellA, cellB) {
+            const imgA = cellA.querySelector('img');
+            const imgB = cellB.querySelector('img');
+            const srcA = imgA ? imgA.src : null;
+            const styleA = imgA ? imgA.getAttribute('style') : null;
+            const srcB = imgB ? imgB.src : null;
+            const styleB = imgB ? imgB.getAttribute('style') : null;
+
+            updateCellImage(cellA, srcB, styleB);
+            updateCellImage(cellB, srcA, styleA);
+        }
+
+        function updateCellImage(cell, src, style) {
+            const existingImg = cell.querySelector('img');
+            if (existingImg) existingImg.remove();
+
+            if (src) {
+                cell.innerHTML += `<img src="${src}" style="${style}">`;
+                cell.classList.add('has-image');
+            } else {
+                cell.classList.remove('has-image');
+            }
+        }
+
+        function startGridPan(e, cell) {
+            const img = cell.querySelector('img');
+            if (!img) return;
+            cell.dataset.isDragging = 'false';
+            let startX = e.clientX, startY = e.clientY;
+            let currentX = parseFloat(img.dataset.x || 0);
+            let currentY = parseFloat(img.dataset.y || 0);
+            let currentScale = parseFloat(img.dataset.scale || 1);
+
+            const onMouseMove = (moveEvent) => {
+                cell.dataset.isDragging = 'true';
+                const dx = moveEvent.clientX - startX;
+                const dy = moveEvent.clientY - startY;
+                const newX = currentX + dx / currentScale;
+                const newY = currentY + dy / currentScale;
+                img.style.transform = `translate(-50%, -50%) translate(${newX}px, ${newY}px) scale(${currentScale})`;
+                img.dataset.tx = newX; img.dataset.ty = newY;
+            };
+
+            const onMouseUp = () => {
+                if (cell.dataset.isDragging === 'true') {
+                    img.dataset.x = img.dataset.tx || currentX;
+                    img.dataset.y = img.dataset.ty || currentY;
+                }
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+                setTimeout(() => { cell.dataset.isDragging = 'false'; }, 100);
+            };
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        }
+
+        function gridZoom(e, cell) {
+            e.preventDefault();
+            const img = cell.querySelector('img');
+            if (!img) return;
+            let scale = parseFloat(img.dataset.scale || 1);
+            scale = Math.max(0.1, Math.min(5, scale + (e.deltaY > 0 ? -0.1 : 0.1)));
+            img.dataset.scale = scale;
+            const x = parseFloat(img.dataset.x || 0);
+            const y = parseFloat(img.dataset.y || 0);
+            img.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px) scale(${scale})`;
+        }
+
+        function updateGridGap(val) {
+            gridContainer.style.gap = `${val}px`;
+            gridContainer.style.padding = `${val}px`;
+        }
+        function updateGridBg(color) { document.getElementById('workspace-grid').style.backgroundColor = color; }
+
+        function updateAspectRatio(ratioStr, target) {
+            const workspace = target === 'grid' ? document.getElementById('workspace-grid') : document.getElementById('workspace-free');
+            const [w, h] = ratioStr.split('/').map(Number);
+            let newH = 600;
+            let newW = newH * (w / h);
+            if (newW > 800) { newW = 800; newH = newW * (h / w); }
+            workspace.style.width = `${newW}px`;
+            workspace.style.height = `${newH}px`;
+        }
+
+        function triggerGridUpload(cellElement) {
+            currentGridCell = cellElement;
+            gridUploadInput.click();
+        }
+
+        gridUploadInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file && currentGridCell) {
+                const reader = new FileReader();
+                reader.onload = (event) => updateCellImage(currentGridCell, event.target.result, 'transform: translate(-50%, -50%) translate(0px, 0px) scale(1);');
+                reader.readAsDataURL(file);
+                gridUploadInput.value = '';
+            }
+        });
+
+        // --- Drag & Drop Batch Upload Logic (Fixed) ---
+        const dragOverlay = document.getElementById('drag-overlay');
+
+        // Hide overlay on click
+        dragOverlay.addEventListener('click', () => {
+            document.body.classList.remove('drag-active');
+        });
+
+        // Prevent default behavior for all drag events
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            document.body.addEventListener(eventName, preventDefaults, false);
+            dragOverlay.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
+        // Show overlay when dragging file into window
+        document.body.addEventListener('dragenter', (e) => {
+            // Check if dragging files (not just text)
+            if (e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
+                document.body.classList.add('drag-active');
+            }
+        });
+
+        // Handle drop on overlay
+        dragOverlay.addEventListener('drop', (e) => {
+            document.body.classList.remove('drag-active');
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleBatchFiles(files);
+        });
+
+        // Handle dragleave on overlay (if user cancels drag by moving out)
+        dragOverlay.addEventListener('dragleave', (e) => {
+            // Only hide if we actually left the overlay (and not just went over a child element)
+            if (e.relatedTarget === null) {
+                document.body.classList.remove('drag-active');
+            }
+        });
+
+        const batchInput = document.getElementById('batch-upload-input');
+        batchInput.addEventListener('change', function (e) {
+            handleBatchFiles(e.target.files);
+            batchInput.value = '';
+        });
+
+        function handleBatchFiles(files) {
+            files = Array.from(files);
+            if (!files.length) return;
+
+            if (currentMode === 'grid') {
+                const cells = Array.from(document.querySelectorAll('.grid-cell'));
+                let fileIdx = 0;
+                // First pass: fill empty
+                for (let cell of cells) {
+                    if (fileIdx >= files.length) break;
+                    if (!cell.classList.contains('has-image')) {
+                        readFileToCell(files[fileIdx], cell);
+                        fileIdx++;
+                    }
+                }
+                // Optional: Overwrite remaining? No, safe logic.
+            } else {
+                files.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        createFreeLayer('image', evt.target.result, true);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        }
+
+        function readFileToCell(file, cell) {
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                updateCellImage(cell, evt.target.result, 'transform: translate(-50%, -50%) translate(0px, 0px) scale(1);');
+            }
+            reader.readAsDataURL(file);
+        }
+
+        // --- Free Mode & Overlay Logic ---
+        let globalZIndex = 100;
+        let selectedElement = null;
+        let isDragging = false, isResizing = false, isRotating = false;
+        let startX, startY, startLeft, startTop, startWidth, startHeight, startAngle = 0, resizeDirection = '';
+
+        const freeCanvas = document.getElementById('workspace-free');
+        const gridTextLayer = document.getElementById('grid-text-layer');
+        const freeImageInput = document.getElementById('free-image-input');
+
+        // Property Inputs
+        const textContentInput = document.getElementById('text-content-input');
+        const textColorInput = document.getElementById('text-color');
+        const fontSizeInput = document.getElementById('font-size');
+        const freeBgColorInput = document.getElementById('free-bg-color');
+        const opacityInput = document.getElementById('opacity');
+        const radiusInput = document.getElementById('radius');
+
+        const textFontFamily = document.getElementById('text-font-family');
+        const textBoldBtn = document.getElementById('text-bold-btn');
+
+        function getNextZIndex() { return ++globalZIndex; }
+
+        freeImageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (evt) => createFreeLayer('image', evt.target.result);
+                reader.readAsDataURL(file);
+                freeImageInput.value = '';
+            }
+        });
+
+        function addTextToWorkspace() {
+            createFreeLayer('text', '點擊編輯文字');
+        }
+
+        function createFreeLayer(type, content, randomOffset = false) {
+            const wrapper = document.createElement('div');
+            wrapper.classList.add('collage-item');
+            wrapper.dataset.type = type;
+            wrapper.dataset.rotation = 0;
+            wrapper.style.zIndex = getNextZIndex();
+
+            const targetParent = currentMode === 'grid' ? gridTextLayer : freeCanvas;
+            const parentW = targetParent.clientWidth || 800;
+            const parentH = targetParent.clientHeight || 600;
+
+            let left = parentW / 2 - 100;
+            let top = parentH / 2 - 50;
+
+            if (randomOffset) {
+                left += (Math.random() - 0.5) * 100;
+                top += (Math.random() - 0.5) * 100;
+            }
+
+            wrapper.style.left = left + 'px';
+            wrapper.style.top = top + 'px';
+
+            if (currentMode === 'grid') { wrapper.style.pointerEvents = 'auto'; }
+
+            let innerHTMLContent = '';
+
+            if (type === 'image') {
+                wrapper.style.width = '200px';
+                innerHTMLContent = `<div class="w-full h-full overflow-hidden content-box"><img src="${content}" class="w-full h-full object-cover pointer-events-none" style="border-radius:0px;"></div>`;
+            } else {
+                wrapper.style.width = 'auto';
+                innerHTMLContent = `
+                    <div class="content-box p-2" style="font-size:24px; color:#000; line-height:1.2; font-family:'Noto Sans TC', sans-serif;">
+                        <div class="editable-text" style="outline:none; white-space:pre-wrap;">${content}</div>
+                    </div>`;
+            }
+
+            wrapper.innerHTML = innerHTMLContent + `
+                <div class="delete-btn" title="刪除"><i class="fas fa-times"></i></div>
+                <div class="rotate-handle" title="旋轉"><i class="fas fa-sync-alt"></i></div>
+                <div class="resize-handle handle-nw" data-dir="nw"></div>
+                <div class="resize-handle handle-ne" data-dir="ne"></div>
+                <div class="resize-handle handle-sw" data-dir="sw"></div>
+                <div class="resize-handle handle-se" data-dir="se"></div>
+            `;
+
+            if (type === 'text') {
+                const textDiv = wrapper.querySelector('.editable-text');
+                wrapper.addEventListener('dblclick', (e) => {
+                    e.stopPropagation();
+                    textDiv.contentEditable = true;
+                    textDiv.focus();
+                    wrapper.classList.add('editing');
+                });
+                textDiv.addEventListener('blur', () => {
+                    textDiv.contentEditable = false;
+                    wrapper.classList.remove('editing');
+                    updateControls();
+                });
+                textDiv.addEventListener('input', () => textContentInput.value = textDiv.innerText);
+            }
+
+            attachFreeEvents(wrapper);
+            targetParent.appendChild(wrapper);
+            selectFreeItem(wrapper);
+        }
+
+        function attachFreeEvents(el) {
+            el.addEventListener('mousedown', (e) => {
+                if (el.classList.contains('editing')) return;
+                e.stopPropagation();
+                el.style.zIndex = getNextZIndex();
+
+                if (e.target.closest('.delete-btn')) { el.remove(); deselectFree(); return; }
+                if (e.target.classList.contains('resize-handle')) { startResize(e, el, e.target.dataset.dir); return; }
+                if (e.target.closest('.rotate-handle')) { startRotate(e, el); return; }
+
+                selectFreeItem(el);
+                startDrag(e, el);
+            });
+            el.addEventListener('touchstart', (e) => {
+                if (!e.target.classList.contains('resize-handle') && !e.target.closest('.rotate-handle')) {
+                    el.style.zIndex = getNextZIndex();
+                    selectFreeItem(el);
+                }
+            }, { passive: false });
+        }
+
+        function selectFreeItem(el) {
+            if (selectedElement) selectedElement.classList.remove('selected');
+            selectedElement = el;
+            selectedElement.classList.add('selected');
+
+            const textControls = document.getElementById('text-controls');
+            const targetSidebar = currentMode === 'grid' ? document.getElementById('sidebar-grid') : document.getElementById('sidebar-free');
+
+            if (el.dataset.type === 'text') {
+                if (!textControls.parentElement.isSameNode(targetSidebar)) {
+                    targetSidebar.insertBefore(textControls, targetSidebar.firstChild.nextSibling.nextSibling);
+                }
+                textControls.classList.remove('hidden');
+            }
+
+            updateControls();
+        }
+
+        function deselectFree() {
+            if (selectedElement) {
+                selectedElement.classList.remove('selected');
+                selectedElement = null;
+            }
+            document.getElementById('text-controls').classList.add('hidden');
+            document.getElementById('image-controls').classList.add('hidden');
+            document.getElementById('common-controls').classList.add('hidden');
+
+            const freeSidebar = document.getElementById('sidebar-free');
+            const textControls = document.getElementById('text-controls');
+            if (!textControls.parentElement.isSameNode(freeSidebar)) {
+                freeSidebar.insertBefore(textControls, document.getElementById('controls-placeholder').nextSibling);
+            }
+        }
+
+        document.getElementById('workspace-free').addEventListener('mousedown', (e) => { if (e.target.id === 'workspace-free') deselectFree(); });
+        document.getElementById('grid-text-layer').addEventListener('mousedown', (e) => { if (e.target.id === 'grid-text-layer') deselectFree(); });
+
+
+        function startDrag(e, el) {
+            isDragging = true;
+            startX = e.clientX; startY = e.clientY;
+            startLeft = el.offsetLeft; startTop = el.offsetTop;
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('mouseup', stopDrag);
+        }
+        function onDrag(e) {
+            if (!isDragging) return;
+            selectedElement.style.left = (startLeft + e.clientX - startX) + 'px';
+            selectedElement.style.top = (startTop + e.clientY - startY) + 'px';
+        }
+        function stopDrag() {
+            isDragging = false;
+            document.removeEventListener('mousemove', onDrag);
+            document.removeEventListener('mouseup', stopDrag);
+        }
+
+        function startResize(e, el, dir) {
+            e.stopPropagation(); isResizing = true; resizeDirection = dir;
+            startX = e.clientX; startY = e.clientY;
+            startWidth = el.offsetWidth; startHeight = el.offsetHeight;
+            startLeft = el.offsetLeft; startTop = el.offsetTop;
+            document.addEventListener('mousemove', onResize);
+            document.addEventListener('mouseup', stopResize);
+        }
+        function onResize(e) {
+            if (!isResizing) return;
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            let nw = startWidth, nh = startHeight, nl = startLeft, nt = startTop;
+            if (resizeDirection.includes('e')) nw = startWidth + dx;
+            if (resizeDirection.includes('w')) { nw = startWidth - dx; nl = startLeft + dx; }
+            if (resizeDirection.includes('s')) nh = startHeight + dy;
+            if (resizeDirection.includes('n')) { nh = startHeight - dy; nt = startTop + dy; }
+            if (nw > 20) { selectedElement.style.width = nw + 'px'; if (resizeDirection.includes('w')) selectedElement.style.left = nl + 'px'; }
+            if (nh > 20) { selectedElement.style.height = nh + 'px'; if (resizeDirection.includes('n')) selectedElement.style.top = nt + 'px'; }
+        }
+        function stopResize() {
+            isResizing = false;
+            document.removeEventListener('mousemove', onResize);
+            document.removeEventListener('mouseup', stopResize);
+        }
+
+        function startRotate(e, el) {
+            e.stopPropagation(); isRotating = true;
+            const rect = el.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            startAngle = Math.atan2(e.clientY - cy, e.clientX - cx) - (parseFloat(el.dataset.rotation) * Math.PI / 180);
+            el.dataset.cx = cx; el.dataset.cy = cy;
+            document.addEventListener('mousemove', onRotate);
+            document.addEventListener('mouseup', stopRotate);
+        }
+        function onRotate(e) {
+            if (!isRotating) return;
+            const cx = parseFloat(selectedElement.dataset.cx);
+            const cy = parseFloat(selectedElement.dataset.cy);
+            let deg = (Math.atan2(e.clientY - cy, e.clientX - cx) - startAngle) * (180 / Math.PI);
+            if (e.shiftKey) deg = Math.round(deg / 45) * 45;
+            selectedElement.style.transform = `rotate(${deg}deg)`;
+            selectedElement.dataset.rotation = deg;
+        }
+        function stopRotate() {
+            isRotating = false;
+            document.removeEventListener('mousemove', onRotate);
+            document.removeEventListener('mouseup', stopRotate);
+        }
+
+        function updateControls() {
+            if (!selectedElement) {
+                document.getElementById('text-controls').classList.add('hidden');
+                document.getElementById('image-controls').classList.add('hidden');
+                document.getElementById('common-controls').classList.add('hidden');
+                return;
+            }
+            const type = selectedElement.dataset.type;
+
+            document.getElementById('common-controls').classList.remove('hidden');
+
+            if (type === 'text') {
+                document.getElementById('text-controls').classList.remove('hidden');
+                document.getElementById('image-controls').classList.add('hidden');
+
+                const textDiv = selectedElement.querySelector('.editable-text');
+                const contentBox = selectedElement.querySelector('.content-box');
+                const computedStyle = window.getComputedStyle(contentBox);
+
+                textContentInput.value = textDiv.innerText;
+                fontSizeInput.value = parseInt(computedStyle.fontSize);
+                document.getElementById('font-size-val').innerText = fontSizeInput.value;
+
+                let font = computedStyle.fontFamily.replace(/"/g, "'");
+                if (font.includes("Noto Sans TC")) textFontFamily.value = "'Noto Sans TC', sans-serif";
+                else if (font.includes("Noto Serif TC")) textFontFamily.value = "'Noto Serif TC', serif";
+                else if (font.includes("Zen Maru Gothic")) textFontFamily.value = "'Zen Maru Gothic', sans-serif";
+                else if (font.includes("Yusei Magic")) textFontFamily.value = "'Yusei Magic', sans-serif";
+                else if (font.includes("Hachi Maru Pop")) textFontFamily.value = "'Hachi Maru Pop', cursive";
+                else if (font.includes("DotGothic16")) textFontFamily.value = "'DotGothic16', sans-serif";
+                else if (font.includes("Roboto")) textFontFamily.value = "'Roboto', sans-serif";
+                else if (font.includes("Oswald")) textFontFamily.value = "'Oswald', sans-serif";
+                else if (font.includes("Lobster")) textFontFamily.value = "'Lobster', cursive";
+                else if (font.includes("Pacifico")) textFontFamily.value = "'Pacifico', cursive";
+                else textFontFamily.value = font.split(',')[0];
+
+                const isBold = parseInt(computedStyle.fontWeight) > 500 || computedStyle.fontWeight === 'bold';
+                updateBoldBtnStyle(isBold);
+
+            } else if (type === 'image') {
+                document.getElementById('image-controls').classList.remove('hidden');
+                document.getElementById('text-controls').classList.add('hidden');
+
+                const img = selectedElement.querySelector('img');
+                opacityInput.value = (img.style.opacity || 1) * 100;
+                radiusInput.value = parseInt(img.style.borderRadius) || 0;
+            }
+        }
+
+        function updateBoldBtnStyle(isBold) {
+            if (isBold) {
+                textBoldBtn.classList.add('bg-blue-100', 'text-blue-700', 'border-blue-300');
+                textBoldBtn.dataset.active = 'true';
+            } else {
+                textBoldBtn.classList.remove('bg-blue-100', 'text-blue-700', 'border-blue-300');
+                textBoldBtn.dataset.active = 'false';
+            }
+        }
+
+        textContentInput.addEventListener('input', (e) => { if (selectedElement) selectedElement.querySelector('.editable-text').innerText = e.target.value; });
+        textColorInput.addEventListener('input', (e) => { if (selectedElement) selectedElement.querySelector('.content-box').style.color = e.target.value; });
+        fontSizeInput.addEventListener('input', (e) => { if (selectedElement) { selectedElement.querySelector('.content-box').style.fontSize = e.target.value + 'px'; document.getElementById('font-size-val').innerText = e.target.value; } });
+        freeBgColorInput.addEventListener('input', (e) => { if (selectedElement) selectedElement.querySelector('.content-box').style.backgroundColor = e.target.value; });
+        document.getElementById('bg-transparent-btn').addEventListener('click', () => { if (selectedElement) selectedElement.querySelector('.content-box').style.backgroundColor = 'transparent'; });
+
+        textFontFamily.addEventListener('change', (e) => {
+            if (selectedElement && selectedElement.dataset.type === 'text') {
+                selectedElement.querySelector('.content-box').style.fontFamily = e.target.value;
+            }
+        });
+
+        textBoldBtn.addEventListener('click', () => {
+            if (selectedElement && selectedElement.dataset.type === 'text') {
+                const currentActive = textBoldBtn.dataset.active === 'true';
+                const newState = !currentActive;
+                selectedElement.querySelector('.content-box').style.fontWeight = newState ? 'bold' : 'normal';
+                updateBoldBtnStyle(newState);
+            }
+        });
+
+        opacityInput.addEventListener('input', (e) => { if (selectedElement) { selectedElement.querySelector('img').style.opacity = e.target.value / 100; } });
+        radiusInput.addEventListener('input', (e) => { if (selectedElement) { selectedElement.querySelector('img').style.borderRadius = e.target.value + 'px'; } });
+
+        document.getElementById('bring-to-front-btn').addEventListener('click', () => { if (selectedElement) selectedElement.style.zIndex = getNextZIndex(); });
+        document.getElementById('send-to-back-btn').addEventListener('click', () => { if (selectedElement) selectedElement.style.zIndex = 0; });
+
+        function switchMode(mode) {
+            currentMode = mode;
+            deselectFree();
+
+            const gridBtn = document.getElementById('btn-mode-grid');
+            const freeBtn = document.getElementById('btn-mode-free');
+            const gridWS = document.getElementById('workspace-grid');
+            const freeWS = document.getElementById('workspace-free');
+            const gridSB = document.getElementById('sidebar-grid');
+            const freeSB = document.getElementById('sidebar-free');
+
+            if (mode === 'grid') {
+                gridBtn.className = "px-6 py-1.5 rounded-md text-sm font-bold transition-all bg-white text-blue-600 shadow-sm flex items-center";
+                freeBtn.className = "px-6 py-1.5 rounded-md text-sm font-bold transition-all text-gray-500 hover:text-gray-700 flex items-center";
+                gridWS.classList.remove('hidden');
+                freeWS.classList.add('hidden');
+                gridSB.classList.remove('hidden');
+                freeSB.classList.add('hidden');
+            } else {
+                freeBtn.className = "px-6 py-1.5 rounded-md text-sm font-bold transition-all bg-white text-blue-600 shadow-sm flex items-center";
+                gridBtn.className = "px-6 py-1.5 rounded-md text-sm font-bold transition-all text-gray-500 hover:text-gray-700 flex items-center";
+                freeWS.classList.remove('hidden');
+                gridWS.classList.add('hidden');
+                freeSB.classList.remove('hidden');
+                gridSB.classList.add('hidden');
+            }
+        }
+
+        function downloadCurrentWorkspace() {
+            deselectFree();
+            const target = currentMode === 'grid' ? document.getElementById('workspace-grid') : document.getElementById('workspace-free');
+            setTimeout(() => {
+                html2canvas(target, { scale: 2, backgroundColor: null }).then(canvas => {
+                    const link = document.createElement('a');
+                    link.download = `my-collage-${currentMode}.png`;
+                    link.href = canvas.toDataURL();
+                    link.click();
+                });
+            }, 100);
+        }
+
+        initLayoutSidebar();
+        setGridLayout('layout-2h', 2);
+    </script>
+</body>
+
+</html>

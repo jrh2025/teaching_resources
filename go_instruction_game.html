@@ -1,0 +1,1455 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全視角 AI 實戰指導棋系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #8b5cf6;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #7c3aed;
+        }
+
+        .chat-enter {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 隱藏原生選取框箭頭，美化 UI */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1.2em 1.2em;
+            padding-right: 2rem !important;
+        }
+
+        /* 整地模式面板與 Modal 動畫 */
+        .scoring-panel {
+            transition: all 0.3s ease;
+        }
+
+        .modal-enter {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                backdrop-filter: blur(0px);
+            }
+
+            to {
+                opacity: 1;
+                backdrop-filter: blur(4px);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans h-screen flex flex-col overflow-hidden">
+
+    <!-- 頂部導覽列 (標題與主要操作) -->
+    <header
+        class="bg-slate-900 text-white p-3 md:p-4 shadow-md flex flex-col md:flex-row justify-between items-center z-20 gap-3">
+        <h1 class="text-xl font-bold tracking-wide flex items-center shrink-0">
+            全視角 AI 實戰指導棋
+        </h1>
+        <div class="flex flex-wrap items-center gap-2 justify-end" id="main-controls">
+            <button id="api-key-btn"
+                class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded transition-colors text-sm font-bold shadow-sm flex items-center gap-1">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z">
+                    </path>
+                </svg>
+                API 金鑰
+            </button>
+            <div class="h-5 w-px bg-slate-600 mx-1 hidden md:block"></div>
+            <button id="hint-btn"
+                class="bg-amber-500 hover:bg-amber-400 text-white px-3 py-1.5 rounded transition-colors text-sm font-bold shadow-sm">
+                💡 戰術提示
+            </button>
+            <button id="pass-btn"
+                class="bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded transition-colors text-sm font-medium">
+                PASS (虛手)
+            </button>
+            <button id="score-btn"
+                class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded transition-colors text-sm font-bold shadow-sm">
+                ⚖️ 算目整地
+            </button>
+            <button id="resign-btn"
+                class="bg-rose-700 hover:bg-rose-600 text-white px-3 py-1.5 rounded transition-colors text-sm font-bold shadow-sm">
+                🏳️ 投子
+            </button>
+        </div>
+        <!-- 算目整地專用控制列 (預設隱藏) -->
+        <div class="hidden flex-wrap items-center gap-2 justify-end scoring-panel" id="scoring-controls">
+            <span class="text-emerald-400 font-bold text-sm mr-2 animate-pulse">👉 點擊盤面標記死子</span>
+            <button id="cancel-score-btn"
+                class="bg-slate-600 hover:bg-slate-500 text-white px-3 py-1.5 rounded transition-colors text-sm font-medium">
+                取消整地
+            </button>
+            <button id="confirm-score-btn"
+                class="bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-1.5 rounded transition-colors text-sm font-bold shadow-sm">
+                ✅ 確認結算勝負
+            </button>
+        </div>
+    </header>
+
+    <!-- 次級設定列 (對局參數與座標顯示) -->
+    <div class="bg-slate-800 text-slate-200 px-4 py-2 flex flex-wrap items-center gap-4 text-sm shadow z-10">
+        <div class="flex items-center gap-2">
+            <label class="font-medium">棋盤:</label>
+            <select id="board-size"
+                class="bg-slate-700 text-white border border-slate-600 rounded py-1 px-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="9">9x9 (初級)</option>
+                <option value="13">13x13 (中級)</option>
+                <option value="19" selected>19x19 (高級)</option>
+            </select>
+        </div>
+        <div class="flex items-center gap-2">
+            <label class="font-medium">您的顏色:</label>
+            <select id="player-color"
+                class="bg-slate-700 text-white border border-slate-600 rounded py-1 px-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="1" selected>執黑 (先手)</option>
+                <option value="2">執白 (後手)</option>
+            </select>
+        </div>
+        <div class="flex items-center gap-2">
+            <label class="font-medium">讓子:</label>
+            <select id="handicap"
+                class="bg-slate-700 text-white border border-slate-600 rounded py-1 px-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="0" selected>無</option>
+                <option value="2">2 子</option>
+                <option value="3">3 子</option>
+                <option value="4">4 子</option>
+                <option value="5">5 子</option>
+                <option value="6">6 子</option>
+                <option value="7">7 子</option>
+                <option value="8">8 子</option>
+                <option value="9">9 子</option>
+            </select>
+        </div>
+        <div class="flex items-center gap-2">
+            <label class="font-medium">貼目:</label>
+            <select id="komi"
+                class="bg-slate-700 text-white border border-slate-600 rounded py-1 px-2 focus:ring-2 focus:ring-indigo-500 outline-none">
+                <option value="6.5" selected>6.5 目 (分先)</option>
+                <option value="7.5">7.5 目</option>
+                <option value="0.5">0.5 目 (讓子)</option>
+                <option value="0">0 目</option>
+            </select>
+        </div>
+        <button id="apply-settings-btn"
+            class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1 rounded transition-colors font-medium ml-auto">
+            確認並開局
+        </button>
+    </div>
+
+    <!-- 主要內容區 -->
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden bg-gray-200">
+
+        <!-- 左側：棋盤視圖與座標追蹤 -->
+        <div class="flex-1 flex flex-col items-center p-2 md:p-4 overflow-hidden relative">
+            <!-- 座標狀態列 -->
+            <div class="w-full max-w-3xl flex justify-between items-center mb-2 px-2">
+                <button id="toggle-coords-btn"
+                    class="text-sm bg-white text-slate-700 border border-slate-300 px-3 py-1.5 rounded shadow-sm hover:bg-slate-50 transition-colors font-medium flex items-center gap-2">
+                    <span id="coords-status-icon">✅</span> 顯示邊緣座標
+                </button>
+                <div
+                    class="text-sm font-mono bg-white px-3 py-1.5 rounded shadow-sm border border-slate-300 text-slate-600 flex items-center gap-3">
+                    <span id="score-preview"
+                        class="hidden text-emerald-600 font-bold border-r border-slate-300 pr-3">實時算目預覽中...</span>
+                    <span>📍 游標: <span id="hover-coord-text"
+                            class="font-bold text-indigo-600 w-8 inline-block text-center">--</span></span>
+                </div>
+            </div>
+
+            <div class="flex-1 w-full flex justify-center items-center overflow-hidden">
+                <div class="relative shadow-2xl rounded-sm">
+                    <canvas id="go-board" class="bg-[#E2C281] cursor-crosshair block rounded-sm"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側：AI 導師對話區 -->
+        <div class="w-full md:w-[450px] bg-white border-l border-gray-300 flex flex-col shadow-xl z-10 relative">
+            <div class="p-3 border-b border-gray-200 bg-slate-50 flex justify-between items-center shadow-sm">
+                <h2 class="text-[1.05rem] font-bold text-slate-800 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                        </path>
+                    </svg>
+                    動態對局分析
+                </h2>
+                <span id="game-status-badge"
+                    class="bg-indigo-100 text-indigo-800 text-xs font-bold px-2.5 py-1 rounded border border-indigo-200">19x19
+                    實戰</span>
+            </div>
+            <div id="chat-box" class="flex-1 overflow-y-auto p-4 space-y-4 bg-white pb-10">
+                <!-- 訊息將透過 JS 動態注入 -->
+            </div>
+            <!-- 互動式 AI 問答輸入區 -->
+            <div class="p-3 border-t border-gray-200 bg-slate-100 flex gap-2">
+                <input type="text" id="user-query" placeholder="與導師討論戰局..."
+                    class="flex-1 px-3 py-2 border border-slate-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+                <button id="ask-btn"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded font-medium text-sm transition-colors shadow-sm">
+                    發送
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 本地 API 金鑰設定 Modal -->
+    <div id="api-modal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 modal-enter">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 transform transition-all">
+            <h3 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2">
+                <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z">
+                    </path>
+                </svg>
+                API 金鑰設定
+            </h3>
+            <p class="text-sm text-slate-500 mb-5 leading-relaxed">
+                為啟用 AI 導師進行實戰演算，請輸入您的 Google Gemini API Key。<br>
+                <strong class="text-emerald-600">🛡️ 隱私安全保證：</strong>您的金鑰僅會採用 `localStorage`
+                技術加密儲存於您的<b>本地端瀏覽器</b>中，絕對不會上傳至任何外部伺服器。
+            </p>
+            <div class="mb-5 relative">
+                <input type="password" id="api-key-input" placeholder="輸入 API Key (例如: AIzaSy...)"
+                    class="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50 text-slate-800 font-mono text-sm transition-shadow">
+            </div>
+            <div class="flex justify-between items-center mt-2">
+                <span id="api-status-text" class="text-sm font-medium"></span>
+                <div class="flex gap-2">
+                    <button id="clear-api-btn"
+                        class="px-4 py-2 text-sm font-medium text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors">清除記憶</button>
+                    <button id="close-api-btn"
+                        class="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">關閉</button>
+                    <button id="save-api-btn"
+                        class="px-6 py-2 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-lg shadow-sm transition-transform active:scale-95">安全儲存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 基礎常數與 DOM 綁定
+        // ==========================================
+        const EMPTY = 0;
+        const BLACK = 1;
+        const WHITE = 2;
+
+        const canvas = document.getElementById('go-board');
+        const ctx = canvas.getContext('2d');
+        const chatBox = document.getElementById('chat-box');
+
+        // DOM 綁定與全域變數
+        const passBtn = document.getElementById('pass-btn');
+        const hintBtn = document.getElementById('hint-btn');
+        const scoreBtn = document.getElementById('score-btn');
+        const cancelScoreBtn = document.getElementById('cancel-score-btn');
+        const confirmScoreBtn = document.getElementById('confirm-score-btn');
+        const resignBtn = document.getElementById('resign-btn');
+        const apiKeyBtn = document.getElementById('api-key-btn');
+
+        let CELL_SIZE = 30;
+        let MARGIN = 20;
+        let BOARD_DIM = 600;
+
+        const COL_LABELS = "ABCDEFGHJKLMNOPQRST";
+
+        // 過濾字串中的 Markdown 符號，確保呈現純淨 HTML
+        function cleanMarkdown(str) {
+            if (!str) return "";
+            return str.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+                .replace(/\*(.*?)\*/g, '<i>$1</i>')
+                .replace(/#/g, '')
+                .replace(/`/g, '');
+        }
+
+        // ==========================================
+        // 生成式 AI 服務模組 (Gemini API 整合)
+        // ==========================================
+        const GEMINI_MODEL = "gemini-3.1-flash-lite-preview";
+
+        async function callGemini(prompt, isJSON = false, customSystemPrompt = null) {
+            // 從本地端安全提取金鑰
+            const apiKey = localStorage.getItem('gemini_api_key');
+            if (!apiKey) {
+                return isJSON ? null : "⚠️ <b>系統攔截：</b>未偵測到 API 金鑰。請先點擊上方「🔑 API 金鑰」按鈕完成本地端安全綁定。";
+            }
+
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+            const defaultSysInstruction = isJSON
+                ? "你是一位擁有職業九段水準的圍棋 AI。請嚴格輸出 JSON 格式資料，不要包含任何 Markdown 標記（如 ```json），直接以 { 開頭。"
+                : "你是一位極具耐心、擁有職業九段水準的圍棋導師。請用專業、鼓勵的語氣，以繁體中文回答。請嚴格使用 HTML 標籤 (如 <b>, <br>) 來排版，絕對不要使用任何 Markdown 符號 (例如 ** 或 *)。";
+
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: customSystemPrompt || defaultSysInstruction }] }
+            };
+            if (isJSON) {
+                payload.generationConfig = { responseMimeType: "application/json" };
+            }
+
+            let retries = 5;
+            let delay = 1000;
+            while (retries > 0) {
+                try {
+                    const response = await fetch(url, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 400 || response.status === 403) throw new Error("API_KEY_INVALID");
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    let text = result.candidates?.[0]?.content?.parts?.[0]?.text || "";
+                    if (isJSON) {
+                        text = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+                    } else {
+                        text = cleanMarkdown(text);
+                    }
+                    return text;
+                } catch (error) {
+                    retries--;
+                    if (retries === 0) {
+                        if (error.message === "API_KEY_INVALID") {
+                            return isJSON ? null : "⚠️ <b>授權失敗：</b>您設定的 API 金鑰無效或遭拒絕連線，請重新確認金鑰是否正確。";
+                        }
+                        return isJSON ? null : "AI 導師目前腦力激盪過度 (連線不穩)，請稍後再試。";
+                    }
+                    await new Promise(res => setTimeout(res, delay));
+                    delay *= 2; // 實作指數退避演算法 (Exponential Backoff)
+                }
+            }
+        }
+
+        // ==========================================
+        // 圍棋核心邏輯模組 (包含算目與領地判定)
+        // ==========================================
+        class GoLogic {
+            constructor(size = 19) {
+                this.size = size;
+                this.board = Array(size).fill(null).map(() => Array(size).fill(EMPTY));
+                this.currentPlayer = BLACK;
+                this.koPoint = null;
+            }
+
+            getCoordStr(r, c) {
+                if (r < 0 || r >= this.size || c < 0 || c >= this.size) return "外";
+                const colLabel = COL_LABELS[c];
+                const rowLabel = this.size - r;
+                return `${colLabel}${rowLabel}`;
+            }
+
+            serializeBoard() {
+                let blackStones = [];
+                let whiteStones = [];
+                for (let r = 0; r < this.size; r++) {
+                    for (let c = 0; c < this.size; c++) {
+                        if (this.board[r][c] === BLACK) blackStones.push(this.getCoordStr(r, c));
+                        if (this.board[r][c] === WHITE) whiteStones.push(this.getCoordStr(r, c));
+                    }
+                }
+                if (blackStones.length === 0 && whiteStones.length === 0) return "盤面全空";
+                return `黑棋: ${blackStones.join(", ")}\n白棋: ${whiteStones.join(", ")}`;
+            }
+
+            getGroupAndLiberties(r, c, customBoard = null) {
+                const targetBoard = customBoard || this.board;
+                const color = targetBoard[r][c];
+                if (color === EMPTY) return { group: new Set(), liberties: new Set() };
+
+                const visited = new Set();
+                const queue = [[r, c]];
+                const group = new Set();
+                const liberties = new Set();
+
+                while (queue.length > 0) {
+                    const [currR, currC] = queue.shift();
+                    const key = `${currR},${currC}`;
+                    if (visited.has(key)) continue;
+
+                    visited.add(key);
+                    group.add(key);
+
+                    const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+                    for (const [dr, dc] of dirs) {
+                        const nr = currR + dr; const nc = currC + dc;
+                        if (nr >= 0 && nr < this.size && nc >= 0 && nc < this.size) {
+                            if (targetBoard[nr][nc] === EMPTY) liberties.add(`${nr},${nc}`);
+                            else if (targetBoard[nr][nc] === color && !visited.has(`${nr},${nc}`)) queue.push([nr, nc]);
+                        }
+                    }
+                }
+                return { group, liberties };
+            }
+
+            placeStone(r, c, forceColor = null) {
+                if (r < 0 || r >= this.size || c < 0 || c >= this.size) return { success: false, msg: "超出邊界。" };
+                if (this.board[r][c] !== EMPTY) return { success: false, msg: "此處已有棋子。" };
+                if (this.koPoint && this.koPoint.r === r && this.koPoint.c === c) return { success: false, msg: "打劫！禁止立即回提。" };
+
+                const stoneColor = forceColor || this.currentPlayer;
+                const opponentColor = stoneColor === BLACK ? WHITE : BLACK;
+                this.board[r][c] = stoneColor;
+
+                const capturedStones = new Set();
+                const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+                for (const [dr, dc] of dirs) {
+                    const nr = r + dr; const nc = c + dc;
+                    if (nr >= 0 && nr < this.size && nc >= 0 && nc < this.size) {
+                        if (this.board[nr][nc] === opponentColor) {
+                            const { group: oppGroup, liberties: oppLiberties } = this.getGroupAndLiberties(nr, nc);
+                            if (oppLiberties.size === 0) oppGroup.forEach(stone => capturedStones.add(stone));
+                        }
+                    }
+                }
+
+                capturedStones.forEach(stoneStr => {
+                    const [cr, cc] = stoneStr.split(',').map(Number);
+                    this.board[cr][cc] = EMPTY;
+                });
+
+                const { liberties: myLiberties } = this.getGroupAndLiberties(r, c);
+                if (myLiberties.size === 0 && capturedStones.size === 0) {
+                    this.board[r][c] = EMPTY;
+                    return { success: false, msg: "禁止自殺！" };
+                }
+
+                if (capturedStones.size === 1 && myLiberties.size === 1) {
+                    const capArr = Array.from(capturedStones)[0].split(',').map(Number);
+                    this.koPoint = { r: capArr[0], c: capArr[1] };
+                } else {
+                    this.koPoint = null;
+                }
+
+                if (!forceColor) this.currentPlayer = opponentColor;
+                return { success: true, msg: "落子成功" };
+            }
+
+            getValidFallbackMove() {
+                for (let i = 0; i < 150; i++) {
+                    let r = Math.floor(Math.random() * this.size);
+                    let c = Math.floor(Math.random() * this.size);
+                    if (this.board[r][c] === EMPTY) {
+                        this.board[r][c] = this.currentPlayer;
+                        const { liberties } = this.getGroupAndLiberties(r, c);
+                        this.board[r][c] = EMPTY;
+                        if (liberties.size > 0) return { r, c };
+                    }
+                }
+                return null;
+            }
+
+            // --- 核心算目演算法 (Area Scoring 法，等同中國數子法精神) ---
+            calculateScore(komi, deadStonesSet) {
+                // 1. 複製盤面並移除死子
+                let boardCopy = this.board.map(row => [...row]);
+                deadStonesSet.forEach(key => {
+                    let [r, c] = key.split(',').map(Number);
+                    boardCopy[r][c] = EMPTY;
+                });
+
+                let blackArea = 0;
+                let whiteArea = 0;
+                let visited = Array(this.size).fill(false).map(() => Array(this.size).fill(false));
+                let territoryMap = Array(this.size).fill(0).map(() => Array(this.size).fill(0)); // 1=黑地, 2=白地, 3=公氣
+
+                // 2. 泛洪演算法計算領地
+                for (let r = 0; r < this.size; r++) {
+                    for (let c = 0; c < this.size; c++) {
+                        if (boardCopy[r][c] === BLACK) {
+                            blackArea++;
+                            territoryMap[r][c] = BLACK;
+                        } else if (boardCopy[r][c] === WHITE) {
+                            whiteArea++;
+                            territoryMap[r][c] = WHITE;
+                        } else if (!visited[r][c]) {
+                            // 遇到空點，進行擴展
+                            let queue = [[r, c]];
+                            let currentRegion = [];
+                            let touchesBlack = false;
+                            let touchesWhite = false;
+
+                            visited[r][c] = true;
+
+                            while (queue.length > 0) {
+                                let [currR, currC] = queue.shift();
+                                currentRegion.push([currR, currC]);
+
+                                const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+                                for (let [dr, dc] of dirs) {
+                                    let nr = currR + dr, nc = currC + dc;
+                                    if (nr >= 0 && nr < this.size && nc >= 0 && nc < this.size) {
+                                        if (boardCopy[nr][nc] === BLACK) touchesBlack = true;
+                                        else if (boardCopy[nr][nc] === WHITE) touchesWhite = true;
+                                        else if (!visited[nr][nc]) {
+                                            visited[nr][nc] = true;
+                                            queue.push([nr, nc]);
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 根據邊界判斷領地歸屬
+                            if (touchesBlack && !touchesWhite) {
+                                blackArea += currentRegion.length;
+                                currentRegion.forEach(([rr, cc]) => territoryMap[rr][cc] = BLACK);
+                            } else if (touchesWhite && !touchesBlack) {
+                                whiteArea += currentRegion.length;
+                                currentRegion.forEach(([rr, cc]) => territoryMap[rr][cc] = WHITE);
+                            } else {
+                                currentRegion.forEach(([rr, cc]) => territoryMap[rr][cc] = 3); // 單官/公氣
+                            }
+                        }
+                    }
+                }
+
+                let totalBlack = blackArea;
+                let totalWhite = whiteArea + parseFloat(komi);
+                let diff = totalBlack - totalWhite;
+                let winner = diff > 0 ? "黑棋" : (diff < 0 ? "白棋" : "平局");
+
+                return {
+                    totalBlack,
+                    totalWhite,
+                    diff: Math.abs(diff),
+                    winner,
+                    territoryMap
+                };
+            }
+        }
+
+        // ==========================================
+        // 實戰指導棋引擎
+        // ==========================================
+        class TeachingGameEngine {
+            constructor(appController) {
+                this.app = appController;
+                this.isThinking = false;
+                this.moveCount = 1;
+                this.boardSize = 19;
+                this.playerColor = BLACK;
+                this.aiColor = WHITE;
+                this.handicap = 0;
+                this.komi = 6.5;
+                this.isGameOver = false;
+            }
+
+            // 安全攔截：檢查是否具有金鑰
+            checkAPIKeyGuard() {
+                if (!localStorage.getItem('gemini_api_key')) {
+                    this.app.addMessage("⚠️ <b>系統攔截：</b>未偵測到 API 金鑰。進行 AI 對局、提示與覆盤分析前，請務必點擊畫面上方的「🔑 API 金鑰」按鈕完成設定。", "system");
+                    return false;
+                }
+                return true;
+            }
+
+            // 監聽讓子變化，自動調整貼目
+            handleHandicapChange() {
+                const handicapVal = parseInt(document.getElementById('handicap').value);
+                const komiSelect = document.getElementById('komi');
+                if (handicapVal > 0) {
+                    komiSelect.value = "0.5";
+                } else {
+                    komiSelect.value = "6.5";
+                }
+            }
+
+            applySettingsAndStart() {
+                this.boardSize = parseInt(document.getElementById('board-size').value);
+                this.handicap = parseInt(document.getElementById('handicap').value);
+                this.playerColor = parseInt(document.getElementById('player-color').value);
+                this.komi = parseFloat(document.getElementById('komi').value);
+
+                if (this.handicap > 0 && this.playerColor === WHITE) {
+                    alert("提示：圍棋規則中，被讓子的一方必須執黑。系統已為您自動切換為執黑。");
+                    document.getElementById('player-color').value = "1";
+                    this.playerColor = BLACK;
+                }
+
+                this.aiColor = this.playerColor === BLACK ? WHITE : BLACK;
+
+                this.app.logic = new GoLogic(this.boardSize);
+                this.app.lastMove = null;
+                this.app.isScoringPhase = false;
+                this.app.deadStones.clear();
+                this.app.territoryMap = null;
+
+                this.isThinking = false;
+                this.isGameOver = false;
+                this.moveCount = 1;
+
+                // UI 重置
+                document.getElementById('game-status-badge').innerText = `${this.boardSize}x${this.boardSize} 實戰`;
+                document.getElementById('main-controls').classList.remove('hidden');
+                document.getElementById('main-controls').classList.add('flex');
+                document.getElementById('scoring-controls').classList.remove('flex');
+                document.getElementById('scoring-controls').classList.add('hidden');
+                document.getElementById('score-preview').classList.add('hidden');
+
+                this.app.clearChat();
+                this.app.clearHint();
+                this.app.resizeBoard();
+
+                if (this.handicap > 0) {
+                    this.placeHandicapStones();
+                    this.app.logic.currentPlayer = WHITE;
+                }
+
+                const playerColorStr = this.playerColor === BLACK ? "黑" : "白";
+                const handicapStr = this.handicap > 0 ? `，系統讓 ${this.handicap} 子` : " (分先)";
+                this.app.addMessage(`【對局開始】`, "system");
+                this.app.addMessage(`您好！我是您的專屬 AI 教練。本局為 ${this.boardSize}x${this.boardSize} 棋盤，您執${playerColorStr}${handicapStr}，貼目為 ${this.komi} 目。<br><br>👉 您可以隨時點擊「⚖️ 算目整地」來結算勝負，或點擊「🏳️ 投子」讓我為您總結。`, "tutor");
+                this.app.drawBoard();
+
+                // 若未設定金鑰，給予額外提醒
+                if (!localStorage.getItem('gemini_api_key')) {
+                    this.app.addMessage("⚠️ <b>重要提醒：</b>系統偵測到您尚未綁定 API 金鑰。在您落子前，請點擊上方的「🔑 API 金鑰」進行本地安全設定，否則 AI 無法回應。", "system");
+                } else if (this.app.logic.currentPlayer === this.aiColor) {
+                    this.aiPlayMove("開局第一手，白棋在此佈局。");
+                }
+            }
+
+            placeHandicapStones() {
+                const stars19 = [[3, 15], [15, 3], [15, 15], [3, 3], [9, 9], [9, 3], [9, 15], [3, 9], [15, 9]];
+                const stars13 = [[3, 9], [9, 3], [9, 9], [3, 3], [6, 6], [6, 3], [6, 9], [3, 6], [9, 6]];
+                const stars9 = [[2, 6], [6, 2], [6, 6], [2, 2], [4, 4], [4, 2], [4, 6], [2, 4], [6, 4]];
+
+                let targetStars = this.boardSize === 19 ? stars19 : (this.boardSize === 13 ? stars13 : stars9);
+                let count = Math.min(this.handicap, targetStars.length);
+
+                for (let i = 0; i < count; i++) {
+                    this.app.logic.placeStone(targetStars[i][0], targetStars[i][1], BLACK);
+                }
+            }
+
+            async resignGame(customScoreResult = null) {
+                if (this.isGameOver || this.isThinking) return;
+                if (!this.checkAPIKeyGuard()) return;
+
+                this.isGameOver = true;
+                this.isThinking = true;
+
+                const thinkingId = this.app.addMessage("<i>導師正在進行終局結算與覆盤分析...</i>", "tutor", false, true);
+                const boardDesc = this.app.logic.serializeBoard();
+
+                let prompt = `對局結束。`;
+                if (customScoreResult) {
+                    prompt += `對局已透過系統算目完成，結果為：\n${customScoreResult}\n`;
+                } else {
+                    prompt += `學生選擇了「投降 (Resign)」。\n`;
+                }
+
+                prompt += `
+最終盤面（${this.boardSize}x${this.boardSize}）：
+${boardDesc}
+
+【任務要求】
+請身為九段導師，對這盤棋進行「終局總結指導」。
+1. 點評雙方的優劣勢區域（具體指出座標或方位）。
+2. 給予學生溫暖的鼓勵與後續學習建議。
+不要輸出 JSON，直接輸出包含 HTML 標籤排版的口語化文字，絕對禁止使用任何 Markdown 符號（如 ** 或 #）。
+`;
+                const sysPrompt = "你是一位極具耐心、擁有職業九段水準的圍棋導師。請用專業、溫暖鼓勵的語氣進行覆盤總結。絕不使用 Markdown 符號。";
+                const aiResponse = await callGemini(prompt, false, sysPrompt);
+
+                this.app.updateMessage(thinkingId, "🏳️ <b>終局總結：</b><br>" + cleanMarkdown(aiResponse), false);
+                this.app.addMessage("棋局已結束。您可以點擊右上角的「確認並開局」展開新的一局！", "system");
+                this.isThinking = false;
+            }
+
+            async handleHint() {
+                if (this.isThinking || this.isGameOver || this.app.isScoringPhase) return;
+                if (!this.checkAPIKeyGuard()) return;
+
+                this.isThinking = true;
+                const thinkingId = this.app.addMessage("<i>導師正在進行全局掃描，為您尋找最佳選點...</i>", "tutor", false, true);
+
+                const boardDesc = this.app.logic.serializeBoard();
+                const myColorStr = this.playerColor === BLACK ? "黑" : "白";
+
+                const prompt = `
+您是一位職業九段的圍棋導師。目前與學生下 ${this.boardSize}x${this.boardSize} 指導棋。
+全局盤面狀態（標準座標系）：
+${boardDesc}
+
+現在輪到學生（執${myColorStr}），他請求「戰術提示」。
+【任務要求】
+1. 評估全局，找出對${myColorStr}棋目前價值最大的座標點。
+2. 說明戰略意圖（結合死活、厚薄或官子大小）。
+
+嚴格回傳 JSON：
+{
+  "recommendedMove": {"r": 行索引(0-${this.boardSize - 1}), "c": 列索引(0-${this.boardSize - 1})},
+  "explanation": "給學生的分析（可含 <b>, <br>，絕對禁止使用 markdown 符號）"
+}
+`;
+                const aiResponseJSON = await callGemini(prompt, true);
+
+                try {
+                    if (!aiResponseJSON) throw new Error("Empty AI response");
+                    const aiResult = JSON.parse(aiResponseJSON);
+                    if (!aiResult || typeof aiResult !== 'object') throw new Error("Invalid AI response");
+
+                    if (aiResult.recommendedMove &&
+                        aiResult.recommendedMove.r >= 0 && aiResult.recommendedMove.r < this.boardSize &&
+                        aiResult.recommendedMove.c >= 0 && aiResult.recommendedMove.c < this.boardSize &&
+                        this.app.logic.board[aiResult.recommendedMove.r][aiResult.recommendedMove.c] === EMPTY) {
+
+                        this.app.startHintAnimation(aiResult.recommendedMove.r, aiResult.recommendedMove.c);
+                        const coordStr = this.app.logic.getCoordStr(aiResult.recommendedMove.r, aiResult.recommendedMove.c);
+                        this.app.updateMessage(thinkingId, `💡 <b>戰術提示：建議您下在 ${coordStr}</b><br>${cleanMarkdown(aiResult.explanation)}`, false);
+                    } else {
+                        throw new Error("Invalid coordinate");
+                    }
+                } catch (e) {
+                    this.app.updateMessage(thinkingId, "💡 <b>戰術提示：</b><br>局面複雜，建議您依直覺鞏固地盤或朝空曠處發展。", false);
+                }
+
+                this.isThinking = false;
+            }
+
+            async playerMoved(r, c) {
+                if (this.isThinking || this.isGameOver) return;
+                this.isThinking = true;
+
+                this.app.clearHint();
+                const coordStr = this.app.logic.getCoordStr(r, c);
+                const thinkingId = this.app.addMessage(`<i>AI 正在評估您的落子 ${coordStr}，並思考應對...</i>`, "tutor", false, true);
+
+                await this.aiPlayMove(null, r, c, coordStr, thinkingId);
+            }
+
+            async playerPassed() {
+                if (this.isThinking || this.isGameOver) return;
+                if (!this.checkAPIKeyGuard()) return;
+
+                this.isThinking = true;
+                this.app.clearHint();
+                const thinkingId = this.app.addMessage(`<i>您選擇了虛手(PASS)。AI 思考中...</i>`, "tutor", false, true);
+
+                await this.aiPlayMove(null, -1, -1, "PASS", thinkingId);
+            }
+
+            async aiPlayMove(openingMsg = null, playerR = -1, playerC = -1, playerCoordStr = "", thinkingId = null) {
+                const boardDesc = this.app.logic.serializeBoard();
+                const aiColorStr = this.aiColor === BLACK ? "黑" : "白";
+                const playerColorStr = this.playerColor === BLACK ? "黑" : "白";
+
+                let prompt = `
+您是一位職業九段的圍棋 AI。正在與學生進行 ${this.boardSize}x${this.boardSize} 指導棋。
+目前的盤面（標準座標系）：
+${boardDesc}
+`;
+                if (playerR === -1 && playerC === -1 && !openingMsg) {
+                    prompt += `\n學生剛剛選擇了 PASS (虛手)。`;
+                } else if (!openingMsg) {
+                    prompt += `\n學生剛剛執${playerColorStr}，落子於：${playerCoordStr}。`;
+                }
+
+                prompt += `
+【任務要求】
+1. ${openingMsg ? "簡單說一句開場白。" : `詳細點評學生剛剛這手${playerColorStr}棋。請分析其優缺點、戰略意圖，以及對局部死活和全局勢力的影響（約 100-150 字）。若學生PASS，請評估是否該結束遊戲。`}
+2. 作為對手（${aiColorStr}棋），決定您下一步最佳落子座標 (r, c 分別為 0~${this.boardSize - 1} 整數)。若覺得雙方已無棋可下，也可選擇 pass (r=-1, c=-1)。
+3. 🚨【重要】若您判斷盤面已經無力回天、己方落後差距過大而決定認輸，請將 isResigning 設為 true。
+4. 詳細解說您（AI）這手棋的戰略意圖。包含為什麼選擇這個選點、預期的後續變化，以及這手棋如何配合全局佈局（約 100-150 字）。若選擇認輸，請在 feedback 中發表投降宣言，並在 aiExplanation 寫出終局總結。
+
+請嚴格回傳以下 JSON 格式 (不可使用任何 Markdown 符號，請使用 HTML 標籤如 <b>, <br> 進行重點排版)：
+{
+  "feedback": "對學生的詳細分析與點評 / 若認輸則是認輸宣言",
+  "aiMove": {"r": 行索引, "c": 列索引},
+  "aiExplanation": "AI 落子的詳細戰略解說 / 若認輸則是終局總結",
+  "isResigning": false
+}
+`;
+                const aiResponseJSON = await callGemini(prompt, true);
+
+                let aiResult = null;
+                try {
+                    if (!aiResponseJSON) {
+                        // 當 API Key 不存在或授權失敗時，防呆攔截退回玩家狀態
+                        this.app.updateMessage(thinkingId, "⚠️ <b>對局中斷：</b><br>AI 導師無法取得有效連線（請檢查右上角 API 金鑰設定）。已退回您的回合。", true);
+                        this.isThinking = false;
+                        this.app.logic.currentPlayer = this.playerColor; // 回退控制權
+                        return;
+                    }
+                    aiResult = JSON.parse(aiResponseJSON);
+                    if (!aiResult || typeof aiResult !== 'object') throw new Error("Invalid AI response");
+                } catch (e) {
+                    const fallback = this.app.logic.getValidFallbackMove();
+                    aiResult = {
+                        feedback: "局勢發展平穩。",
+                        aiMove: fallback || { r: -1, c: -1 },
+                        aiExplanation: "我決定在此佈局。",
+                        isResigning: false
+                    };
+                }
+
+                if (aiResult.isResigning) {
+                    this.isGameOver = true;
+                    const feedbackHTML = `
+                        <div class="mb-2 text-rose-700"><b>🏳️ 導師判斷局勢已定，決定投子認輸：</b><br>${cleanMarkdown(aiResult.feedback)}</div>
+                        <div class="mt-3 pt-3 border-t border-slate-200"><b>終局總結：</b><br>${cleanMarkdown(aiResult.aiExplanation)}</div>
+                    `;
+                    if (thinkingId) {
+                        this.app.updateMessage(thinkingId, feedbackHTML, false);
+                    } else {
+                        this.app.addMessage(feedbackHTML, "tutor");
+                    }
+                    this.app.addMessage("棋局已結束。您可以點擊右上角的「確認並開局」展開新的一局！", "system");
+                    this.isThinking = false;
+                    return;
+                }
+
+                const aiMoveCoord = (aiResult.aiMove.r === -1) ? "PASS" : this.app.logic.getCoordStr(aiResult.aiMove.r, aiResult.aiMove.c);
+
+                const feedbackHTML = `
+                    <div class="mb-2"><b>🎯 導師點評：</b><br>${cleanMarkdown(aiResult.feedback)}</div>
+                    <div class="mt-3 pt-3 border-t border-slate-200 text-indigo-900"><b>${this.aiColor === BLACK ? '⚫' : '⚪'} AI 落子於 ${aiMoveCoord}：</b><br>${cleanMarkdown(aiResult.aiExplanation)}</div>
+                `;
+
+                if (thinkingId) {
+                    this.app.updateMessage(thinkingId, feedbackHTML, false);
+                } else {
+                    this.app.addMessage(feedbackHTML, "tutor");
+                }
+
+                if (aiResult.aiMove.r !== -1) {
+                    const wr = aiResult.aiMove.r;
+                    const wc = aiResult.aiMove.c;
+                    const res = this.app.logic.placeStone(wr, wc, this.aiColor);
+
+                    if (res.success) {
+                        this.app.setLastMoveHighlight(wr, wc);
+                        this.app.drawBoard();
+                        this.app.logic.currentPlayer = this.playerColor;
+                    } else {
+                        const fallback = this.app.logic.getValidFallbackMove();
+                        if (fallback) {
+                            this.app.logic.placeStone(fallback.r, fallback.c, this.aiColor);
+                            this.app.setLastMoveHighlight(fallback.r, fallback.c);
+                            this.app.drawBoard();
+                            this.app.addMessage(`(AI 座標修正) AI 實際落子於 ${this.app.logic.getCoordStr(fallback.r, fallback.c)}。`, "tutor", true);
+                            this.app.logic.currentPlayer = this.playerColor;
+                        } else {
+                            this.app.addMessage("棋盤似乎已經沒有合法落子點。雙方皆無法落子，建議點擊「算目整地」或「投子」進行結算。", "system");
+                        }
+                    }
+                } else {
+                    this.app.logic.currentPlayer = this.playerColor;
+                    this.app.addMessage(`AI 選擇了 PASS (虛手)。若您也認為無棋可下，可點擊「算目整地」進行結算。`, "system");
+                }
+
+                this.moveCount++;
+                this.isThinking = false;
+            }
+
+            async handleUserQuery(query) {
+                if (this.isThinking || !query.trim() || this.isGameOver) return;
+                if (!this.checkAPIKeyGuard()) return;
+
+                this.app.addMessage(query, "user");
+                this.isThinking = true;
+
+                const thinkingId = this.app.addMessage("<i>導師解惑中...</i>", "tutor", false, true);
+                const boardDesc = this.app.logic.serializeBoard();
+
+                const prompt = `
+                    學生在 ${this.boardSize}x${this.boardSize} 實戰對局中發問。
+                    目前盤面（標準座標系）：
+                    ${boardDesc}
+                    
+                    學生的問題是：「${query}」
+                    請以專業指導棋教練的身分為他解答，結合當前盤面局勢分析。絕對禁止使用 Markdown 符號。
+                `;
+
+                const sysPrompt = "你是一位極具耐心、擁有職業九段水準的圍棋導師。請用專業、鼓勵的語氣進行戰術討論。絕不使用 Markdown。";
+                const aiResponse = await callGemini(prompt, false, sysPrompt);
+
+                if (aiResponse) {
+                    this.app.updateMessage(thinkingId, cleanMarkdown(aiResponse), false);
+                } else {
+                    this.app.updateMessage(thinkingId, "⚠️ <b>無法取得回應：</b>請檢查您的網路或重新設定「🔑 API 金鑰」。", true);
+                }
+
+                this.isThinking = false;
+            }
+        }
+
+        // ==========================================
+        // 應用程式控制器 (UI/UX 與動畫渲染)
+        // ==========================================
+        class GoTutorApp {
+            constructor() {
+                this.logic = new GoLogic();
+                this.engine = new TeachingGameEngine(this);
+
+                this.hintPoint = null;
+                this.hintAnimationId = null;
+                this.showCoords = true;
+
+                this.lastMove = null;
+                this.highlightAnimId = null;
+
+                // 算目系統狀態
+                this.isScoringPhase = false;
+                this.deadStones = new Set();
+                this.territoryMap = null;
+
+                this.hoverCoordText = document.getElementById('hover-coord-text');
+                this.toggleCoordsBtn = document.getElementById('toggle-coords-btn');
+                this.coordsStatusIcon = document.getElementById('coords-status-icon');
+
+                // API Key Modal DOM 元素
+                this.apiModal = document.getElementById('api-modal');
+                this.apiKeyInput = document.getElementById('api-key-input');
+                this.apiStatusText = document.getElementById('api-status-text');
+
+                if (canvas) {
+                    canvas.addEventListener('click', this.onClick.bind(this));
+                    canvas.addEventListener('mousemove', this.onMouseMove.bind(this));
+                    canvas.addEventListener('mouseleave', () => {
+                        if (this.hoverCoordText) this.hoverCoordText.innerText = "--";
+                    });
+                }
+
+                window.addEventListener('resize', this.resizeBoard.bind(this));
+
+                document.getElementById('apply-settings-btn')?.addEventListener('click', () => this.engine.applySettingsAndStart());
+                document.getElementById('handicap')?.addEventListener('change', () => this.engine.handleHandicapChange());
+
+                hintBtn?.addEventListener('click', () => this.engine.handleHint());
+                resignBtn?.addEventListener('click', () => this.engine.resignGame());
+
+                passBtn?.addEventListener('click', () => {
+                    if (this.logic.currentPlayer !== this.engine.playerColor || this.engine.isThinking || this.engine.isGameOver || this.isScoringPhase) return;
+                    this.logic.currentPlayer = this.engine.aiColor;
+                    this.engine.playerPassed();
+                });
+
+                // --- 算目整地按鈕事件 ---
+                scoreBtn?.addEventListener('click', () => this.enterScoringPhase());
+                cancelScoreBtn?.addEventListener('click', () => this.exitScoringPhase());
+                confirmScoreBtn?.addEventListener('click', () => this.confirmScore());
+
+                this.toggleCoordsBtn?.addEventListener('click', () => {
+                    this.showCoords = !this.showCoords;
+                    if (this.coordsStatusIcon) this.coordsStatusIcon.innerText = this.showCoords ? "✅" : "❌";
+                    this.resizeBoard();
+                });
+
+                // --- 本地 API 金鑰管理機制 (Local Storage) ---
+                apiKeyBtn?.addEventListener('click', () => this.openApiModal());
+                document.getElementById('close-api-btn')?.addEventListener('click', () => this.closeApiModal());
+                document.getElementById('save-api-btn')?.addEventListener('click', () => this.saveApiKey());
+                document.getElementById('clear-api-btn')?.addEventListener('click', () => this.clearApiKey());
+
+                const queryInput = document.getElementById('user-query');
+                const askBtn = document.getElementById('ask-btn');
+                const submitQuery = () => {
+                    if (queryInput && queryInput.value) {
+                        this.engine.handleUserQuery(queryInput.value);
+                        queryInput.value = '';
+                    }
+                };
+                askBtn?.addEventListener('click', submitQuery);
+                queryInput?.addEventListener('keypress', (e) => { if (e.key === 'Enter') submitQuery(); });
+
+                // 系統初始化啟動
+                this.engine.applySettingsAndStart();
+            }
+
+            // --- API 金鑰介面邏輯 ---
+            updateApiStatus() {
+                const key = localStorage.getItem('gemini_api_key');
+                if (key) {
+                    this.apiStatusText.innerHTML = "✅ 已加密儲存於本地";
+                    this.apiStatusText.className = "text-sm font-medium text-emerald-600";
+                    this.apiKeyInput.value = key;
+                } else {
+                    this.apiStatusText.innerHTML = "❌ 尚未設定金鑰";
+                    this.apiStatusText.className = "text-sm font-medium text-rose-500";
+                    this.apiKeyInput.value = "";
+                }
+            }
+
+            openApiModal() {
+                this.updateApiStatus();
+                this.apiModal.classList.remove('hidden');
+                this.apiModal.classList.add('flex');
+            }
+
+            closeApiModal() {
+                this.apiModal.classList.add('hidden');
+                this.apiModal.classList.remove('flex');
+            }
+
+            saveApiKey() {
+                const val = this.apiKeyInput.value.trim();
+                if (val) {
+                    localStorage.setItem('gemini_api_key', val);
+                    this.updateApiStatus();
+                    this.apiStatusText.innerHTML = "🎉 儲存成功！";
+                    // 成功後自動關閉視窗
+                    setTimeout(() => this.closeApiModal(), 800);
+                }
+            }
+
+            clearApiKey() {
+                localStorage.removeItem('gemini_api_key');
+                this.updateApiStatus();
+            }
+
+            // --- 算目模式控制 ---
+            enterScoringPhase() {
+                if (this.engine.isThinking || this.engine.isGameOver) return;
+                this.isScoringPhase = true;
+
+                document.getElementById('main-controls').classList.add('hidden');
+                document.getElementById('main-controls').classList.remove('flex');
+                document.getElementById('scoring-controls').classList.remove('hidden');
+                document.getElementById('scoring-controls').classList.add('flex');
+                document.getElementById('score-preview').classList.remove('hidden');
+
+                this.addMessage(`進入整地模式：請點擊盤面上您認為的「死子」進行標記。標記完成後請點擊右上角「確認結算勝負」。`, "system");
+
+                // 初步計算預覽
+                this.updateScorePreview();
+            }
+
+            exitScoringPhase() {
+                this.isScoringPhase = false;
+                this.deadStones.clear();
+                this.territoryMap = null;
+
+                document.getElementById('scoring-controls').classList.add('hidden');
+                document.getElementById('scoring-controls').classList.remove('flex');
+                document.getElementById('main-controls').classList.remove('hidden');
+                document.getElementById('main-controls').classList.add('flex');
+                document.getElementById('score-preview').classList.add('hidden');
+
+                this.drawBoard();
+            }
+
+            updateScorePreview() {
+                const scoreResult = this.logic.calculateScore(this.engine.komi, this.deadStones);
+                this.territoryMap = scoreResult.territoryMap;
+
+                const previewEl = document.getElementById('score-preview');
+                previewEl.innerHTML = `黑: ${scoreResult.totalBlack} 目 | 白: ${scoreResult.totalWhite} 目`;
+
+                this.drawBoard();
+            }
+
+            confirmScore() {
+                const scoreResult = this.logic.calculateScore(this.engine.komi, this.deadStones);
+                this.isScoringPhase = false;
+
+                document.getElementById('scoring-controls').classList.add('hidden');
+                document.getElementById('scoring-controls').classList.remove('flex');
+                document.getElementById('score-preview').classList.add('hidden');
+
+                const resultStr = `結算完成！<br>黑棋總數 (子+目): <b>${scoreResult.totalBlack}</b><br>白棋總數 (子+目+貼目): <b>${scoreResult.totalWhite}</b><br><span class="text-indigo-700 font-bold text-lg mt-1 block">🏆 判定：${scoreResult.winner} 勝 ${scoreResult.diff} 目</span>`;
+
+                this.addMessage(resultStr, "system");
+
+                // 將結果送給 AI 進行終局總結
+                const summaryForAI = `黑棋總數: ${scoreResult.totalBlack}, 白棋總數: ${scoreResult.totalWhite}, 判定：${scoreResult.winner} 勝 ${scoreResult.diff} 目。`;
+                this.engine.resignGame(summaryForAI);
+            }
+
+            setLastMoveHighlight(r, c) {
+                this.lastMove = { r, c, expires: Date.now() + 3000 };
+                if (!this.highlightAnimId) {
+                    const animate = () => {
+                        if (!this.lastMove) {
+                            this.highlightAnimId = null;
+                            return;
+                        }
+                        if (Date.now() > this.lastMove.expires) {
+                            this.drawBoard();
+                            this.highlightAnimId = null;
+                            return;
+                        }
+                        this.drawBoard();
+                        this.highlightAnimId = requestAnimationFrame(animate);
+                    };
+                    animate();
+                }
+            }
+
+            startHintAnimation(r, c) {
+                this.hintPoint = { r, c };
+                if (!this.hintAnimationId) {
+                    const animate = () => {
+                        if (!this.hintPoint) return;
+                        this.drawBoard();
+                        this.hintAnimationId = requestAnimationFrame(animate);
+                    };
+                    animate();
+                }
+            }
+
+            clearHint() {
+                this.hintPoint = null;
+                if (this.hintAnimationId) {
+                    cancelAnimationFrame(this.hintAnimationId);
+                    this.hintAnimationId = null;
+                }
+                this.drawBoard();
+            }
+
+            resizeBoard() {
+                if (!canvas) return;
+                const container = canvas.parentElement.parentElement;
+                let minDimension = Math.min(container.clientWidth || 600, container.clientHeight || 600) - 20;
+                minDimension = Math.max(minDimension, 300);
+
+                BOARD_DIM = Math.min(minDimension, 800);
+
+                MARGIN = this.showCoords ? 25 : (BOARD_DIM * 0.04);
+                CELL_SIZE = (BOARD_DIM - 2 * MARGIN) / (this.logic.size - 1);
+
+                canvas.width = BOARD_DIM;
+                canvas.height = BOARD_DIM;
+                this.drawBoard();
+            }
+
+            clearChat() {
+                if (chatBox) chatBox.innerHTML = '';
+            }
+
+            addMessage(text, type = "tutor", isWarning = false, isTemporary = false) {
+                if (!chatBox) return;
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'chat-enter flex flex-col';
+                const msgId = 'msg-' + Date.now() + Math.random().toString(36).substr(2, 9);
+                msgDiv.id = msgId;
+
+                if (type === "system") {
+                    msgDiv.innerHTML = `<div class="mx-auto bg-slate-200 text-slate-700 border border-slate-300 text-xs font-bold px-4 py-1.5 rounded-sm tracking-wider my-3 shadow-sm text-center leading-relaxed max-w-[90%]">${text}</div>`;
+                } else if (type === "user") {
+                    msgDiv.innerHTML = `
+                        <div class="flex justify-end mb-2">
+                            <div class="bg-indigo-600 text-white p-3.5 rounded-xl rounded-tr-sm shadow-sm text-sm leading-relaxed max-w-[85%]">
+                                ${text}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    const bgClass = isWarning ? 'bg-amber-50 text-amber-900 border border-amber-200' : 'bg-slate-50 text-slate-800 border border-slate-200';
+                    const icon = isWarning ? '🤔' : (isTemporary ? '⏳' : '👨‍🏫');
+                    msgDiv.innerHTML = `
+                        <div class="flex items-start mb-2">
+                            <span class="text-xl mr-3 mt-1">${icon}</span>
+                            <div class="${bgClass} p-3.5 rounded-xl rounded-tl-sm shadow-sm text-sm leading-relaxed w-full">
+                                ${text}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                chatBox.appendChild(msgDiv);
+                chatBox.scrollTop = chatBox.scrollHeight;
+                return msgId;
+            }
+
+            updateMessage(msgId, newText, isWarning = false) {
+                const msgDiv = document.getElementById(msgId);
+                if (msgDiv) {
+                    const bgClass = isWarning ? 'bg-amber-50 text-amber-900 border border-amber-200' : 'bg-slate-50 text-slate-800 border border-slate-200';
+                    const icon = isWarning ? '🤔' : '👨‍🏫';
+                    msgDiv.innerHTML = `
+                        <div class="flex items-start mb-2 chat-enter">
+                            <span class="text-xl mr-3 mt-1">${icon}</span>
+                            <div class="${bgClass} p-3.5 rounded-xl rounded-tl-sm shadow-sm text-sm leading-relaxed w-full">
+                                ${newText}
+                            </div>
+                        </div>
+                    `;
+                    if (chatBox) chatBox.scrollTop = chatBox.scrollHeight;
+                }
+            }
+
+            drawBoard() {
+                if (!ctx || !canvas) return;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // 背景格線
+                ctx.beginPath();
+                ctx.strokeStyle = '#5c4033';
+                ctx.lineWidth = 1.0;
+                for (let i = 0; i < this.logic.size; i++) {
+                    const pos = MARGIN + i * CELL_SIZE;
+                    ctx.moveTo(pos, MARGIN); ctx.lineTo(pos, BOARD_DIM - MARGIN);
+                    ctx.moveTo(MARGIN, pos); ctx.lineTo(BOARD_DIM - MARGIN, pos);
+                }
+                ctx.stroke();
+
+                if (this.showCoords) {
+                    ctx.fillStyle = '#6b7280';
+                    ctx.font = '11px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+
+                    for (let i = 0; i < this.logic.size; i++) {
+                        let cx = MARGIN + i * CELL_SIZE;
+                        ctx.fillText(COL_LABELS[i], cx, MARGIN - 12);
+                        ctx.fillText(COL_LABELS[i], cx, BOARD_DIM - MARGIN + 12);
+                        let cy = MARGIN + i * CELL_SIZE;
+                        let rowNum = (this.logic.size - i).toString();
+                        ctx.fillText(rowNum, MARGIN - 14, cy);
+                        ctx.fillText(rowNum, BOARD_DIM - MARGIN + 14, cy);
+                    }
+                }
+
+                // 星位
+                const getStars = (size) => {
+                    if (size === 19) return [[3, 3], [3, 9], [3, 15], [9, 3], [9, 9], [9, 15], [15, 3], [15, 9], [15, 15]];
+                    if (size === 13) return [[3, 3], [3, 9], [6, 6], [9, 3], [9, 9]];
+                    if (size === 9) return [[2, 2], [2, 6], [4, 4], [6, 2], [6, 6]];
+                    return [];
+                };
+
+                ctx.fillStyle = '#3e2723';
+                getStars(this.logic.size).forEach(([r, c]) => {
+                    const x = MARGIN + c * CELL_SIZE;
+                    const y = MARGIN + r * CELL_SIZE;
+                    ctx.beginPath(); ctx.arc(x, y, 2.5, 0, 2 * Math.PI); ctx.fill();
+                });
+
+                // --- 繪製整地領地預覽方塊 ---
+                if ((this.isScoringPhase || this.engine.isGameOver) && this.territoryMap) {
+                    for (let r = 0; r < this.logic.size; r++) {
+                        for (let c = 0; c < this.logic.size; c++) {
+                            if (this.territoryMap[r][c] !== 0 && this.territoryMap[r][c] !== 3) { // 非空點且非單官
+                                const x = MARGIN + c * CELL_SIZE;
+                                const y = MARGIN + r * CELL_SIZE;
+                                const size = CELL_SIZE * 0.45;
+
+                                // 黑地畫暗黑方塊，白地畫白色方塊
+                                ctx.fillStyle = this.territoryMap[r][c] === BLACK ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)';
+                                ctx.fillRect(x - size / 2, y - size / 2, size, size);
+                            }
+                        }
+                    }
+                }
+
+                if (this.logic.koPoint && !this.isScoringPhase) {
+                    const kx = MARGIN + this.logic.koPoint.c * CELL_SIZE;
+                    const ky = MARGIN + this.logic.koPoint.r * CELL_SIZE;
+                    ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.rect(kx - CELL_SIZE / 2.5, ky - CELL_SIZE / 2.5, CELL_SIZE * 0.8, CELL_SIZE * 0.8);
+                    ctx.stroke();
+                }
+
+                if (this.hintPoint && !this.isScoringPhase) {
+                    const hx = MARGIN + this.hintPoint.c * CELL_SIZE;
+                    const hy = MARGIN + this.hintPoint.r * CELL_SIZE;
+
+                    const pulse = Math.abs(Math.sin(Date.now() / 400));
+                    const currentRadius = CELL_SIZE * 0.3 + pulse * (CELL_SIZE * 0.25);
+                    const currentAlpha = 0.4 + pulse * 0.4;
+
+                    ctx.beginPath();
+                    ctx.arc(hx, hy, currentRadius, 0, 2 * Math.PI);
+                    ctx.fillStyle = `rgba(245, 158, 11, ${currentAlpha})`;
+                    ctx.fill();
+
+                    ctx.beginPath();
+                    ctx.arc(hx, hy, CELL_SIZE * 0.55, 0, 2 * Math.PI);
+                    ctx.strokeStyle = `rgba(245, 158, 11, ${currentAlpha + 0.2})`;
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+
+                // 畫棋子
+                for (let r = 0; r < this.logic.size; r++) {
+                    for (let c = 0; c < this.logic.size; c++) {
+                        if (this.logic.board[r][c] !== EMPTY) {
+                            const x = MARGIN + c * CELL_SIZE;
+                            const y = MARGIN + r * CELL_SIZE;
+                            const radius = CELL_SIZE * 0.48;
+
+                            // 若在整地模式且被標記為死子，設定透明度
+                            const isDead = this.deadStones.has(`${r},${c}`);
+                            ctx.globalAlpha = isDead ? 0.3 : 1.0;
+
+                            ctx.beginPath();
+                            ctx.arc(x, y, radius, 0, 2 * Math.PI);
+
+                            const gradient = ctx.createRadialGradient(x - radius / 3, y - radius / 3, radius / 10, x, y, radius);
+                            if (this.logic.board[r][c] === BLACK) {
+                                gradient.addColorStop(0, '#555'); gradient.addColorStop(1, '#0b0b0b');
+                                ctx.shadowColor = isDead ? 'transparent' : 'rgba(0, 0, 0, 0.6)';
+                            } else {
+                                gradient.addColorStop(0, '#fff'); gradient.addColorStop(1, '#d4d4d4');
+                                ctx.shadowColor = isDead ? 'transparent' : 'rgba(0, 0, 0, 0.3)';
+                            }
+
+                            ctx.shadowBlur = isDead ? 0 : 4; ctx.shadowOffsetX = 1.5; ctx.shadowOffsetY = 1.5;
+                            ctx.fillStyle = gradient; ctx.fill();
+                            ctx.shadowColor = 'transparent';
+
+                            ctx.globalAlpha = 1.0;
+
+                            // 繪製死子紅色 X 標記
+                            if (isDead) {
+                                ctx.beginPath();
+                                ctx.strokeStyle = 'rgba(239, 68, 68, 0.9)';
+                                ctx.lineWidth = 3;
+                                const s = CELL_SIZE * 0.3;
+                                ctx.moveTo(x - s, y - s); ctx.lineTo(x + s, y + s);
+                                ctx.moveTo(x + s, y - s); ctx.lineTo(x - s, y + s);
+                                ctx.stroke();
+                            }
+                        }
+                    }
+                }
+
+                // 最新落子標記與閃爍動畫
+                if (this.lastMove && this.lastMove.r !== -1 && !this.isScoringPhase) {
+                    const lx = MARGIN + this.lastMove.c * CELL_SIZE;
+                    const ly = MARGIN + this.lastMove.r * CELL_SIZE;
+
+                    const timeLeft = this.lastMove.expires - Date.now();
+                    if (timeLeft > 0) {
+                        const alpha = 0.3 + 0.7 * Math.abs(Math.sin(Date.now() / 150));
+                        ctx.beginPath();
+                        ctx.arc(lx, ly, CELL_SIZE * 0.7, 0, 2 * Math.PI);
+                        ctx.strokeStyle = `rgba(239, 68, 68, ${alpha})`;
+                        ctx.lineWidth = 3;
+                        ctx.stroke();
+                    }
+
+                    ctx.beginPath();
+                    ctx.arc(lx, ly, CELL_SIZE * 0.16, 0, 2 * Math.PI);
+                    ctx.fillStyle = this.logic.board[this.lastMove.r][this.lastMove.c] === BLACK ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.8)';
+                    ctx.fill();
+                }
+            }
+
+            onMouseMove(event) {
+                if (!canvas || !this.hoverCoordText) return;
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+
+                const x = (event.clientX - rect.left) * scaleX;
+                const y = (event.clientY - rect.top) * scaleY;
+
+                const c = Math.round((x - MARGIN) / CELL_SIZE);
+                const r = Math.round((y - MARGIN) / CELL_SIZE);
+
+                if (r >= 0 && r < this.logic.size && c >= 0 && c < this.logic.size) {
+                    this.hoverCoordText.innerText = this.logic.getCoordStr(r, c);
+                } else {
+                    this.hoverCoordText.innerText = "--";
+                }
+            }
+
+            onClick(event) {
+                if (!canvas) return;
+
+                // 落子前，進行金鑰防呆檢查
+                if (!this.isScoringPhase && !localStorage.getItem('gemini_api_key')) {
+                    this.addMessage("⚠️ <b>系統提示：</b>對弈需要 AI 支援，請先點擊畫面上方的「🔑 API 金鑰」設定您的金鑰。", "system");
+                    // 自動彈出設定框
+                    this.openApiModal();
+                    return;
+                }
+
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+
+                const x = (event.clientX - rect.left) * scaleX;
+                const y = (event.clientY - rect.top) * scaleY;
+
+                const c = Math.round((x - MARGIN) / CELL_SIZE);
+                const r = Math.round((y - MARGIN) / CELL_SIZE);
+
+                if (r >= 0 && r < this.logic.size && c >= 0 && c < this.logic.size) {
+
+                    // 若在整地模式，點擊代表標記死子
+                    if (this.isScoringPhase) {
+                        if (this.logic.board[r][c] !== EMPTY) {
+                            const key = `${r},${c}`;
+                            if (this.deadStones.has(key)) {
+                                this.deadStones.delete(key);
+                            } else {
+                                this.deadStones.add(key);
+                            }
+                            this.updateScorePreview(); // 重新計算並繪製
+                        }
+                        return;
+                    }
+
+                    // 正常對局模式
+                    if (this.logic.currentPlayer !== this.engine.playerColor || this.engine.isThinking || this.engine.isGameOver) return;
+
+                    const result = this.logic.placeStone(r, c);
+                    if (!result.success) {
+                        this.addMessage(`⚠️ 非法落子：${result.msg}`, "tutor", true);
+                        return;
+                    }
+
+                    this.lastMove = { r, c, expires: 0 };
+                    this.drawBoard();
+                    setTimeout(() => this.engine.playerMoved(r, c), 50);
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            window.app = new GoTutorApp();
+        });
+
+    </script>
+</body>
+
+</html>
