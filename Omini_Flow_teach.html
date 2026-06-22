@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Omni x Flow：AI 影音工作流自學與實戰教學網頁</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            900: '#4c1d95',
+                        },
+                        cyber: {
+                            blue: '#3b82f6',
+                            green: '#10b981',
+                            pink: '#ec4899',
+                            dark: '#0f172a',
+                            light: '#1e293b'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans TC', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap"
+        rel="stylesheet">
+    <style>
+        /* 提升全局閱讀舒適度，設定較大字型尺寸與優良行高 */
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            font-size: 16px;
+        }
+
+        /* 客製化捲動軸 */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-brand-500 selection:text-white leading-relaxed">
+
+    <!-- Navigation Bar -->
+    <nav class="sticky top-0 z-50 backdrop-blur-md bg-slate-950/90 border-b border-slate-800 py-2">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-18">
+                <div class="flex items-center space-x-3">
+                    <div
+                        class="w-12 h-12 rounded-xl bg-gradient-to-tr from-brand-600 to-cyber-blue flex items-center justify-center shadow-lg shadow-brand-500/20">
+                        <i class="fa-solid fa-play text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <span
+                            class="font-black text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-cyber-blue text-xl tracking-wider">OMNI
+                            x FLOW</span>
+                        <span
+                            class="hidden sm:inline-block text-sm text-slate-400 ml-3 border-l border-slate-700 pl-3">AI
+                            影音自學與課程整合教材</span>
+                    </div>
+                </div>
+                <div class="hidden xl:flex space-x-6 text-base font-semibold">
+                    <a href="#prep" class="text-slate-300 hover:text-white transition">課前準備</a>
+                    <a href="#module1" class="text-slate-300 hover:text-white transition">模組一：平台與計價</a>
+                    <a href="#module2" class="text-slate-300 hover:text-white transition">模組二：Omni 影片</a>
+                    <a href="#module3" class="text-slate-300 hover:text-white transition">模組三：Flow 影音編輯</a>
+                    <a href="#module4" class="text-slate-300 hover:text-white transition">模組四：自動商業實戰</a>
+                    <a href="#quiz-cert" class="text-slate-300 hover:text-white transition">成果驗收 & 證書</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="flex flex-col items-end">
+                        <span class="text-xs text-slate-400">閱讀完成進度</span>
+                        <span id="global-progress-percent" class="text-base font-extrabold text-cyber-green">0%</span>
+                    </div>
+                    <div class="w-24 bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                        <div id="global-progress-bar"
+                            class="bg-gradient-to-r from-brand-500 to-cyber-green h-full transition-all duration-300"
+                            style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Header -->
+    <header
+        class="relative overflow-hidden py-24 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 border-b border-slate-800">
+        <div
+            class="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl">
+        </div>
+        <div
+            class="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-cyber-blue/10 rounded-full blur-3xl">
+        </div>
+
+        <div class="max-w-5xl mx-auto px-4 text-center relative z-10">
+            <span
+                class="px-4 py-1.5 rounded-full text-sm font-bold bg-brand-500/15 border border-brand-500/30 text-brand-300 uppercase tracking-widest inline-block mb-6 animate-pulse">
+                🚀 2026 最新 AI 影音自動化實戰全書
+            </span>
+            <h1 class="text-5xl md:text-7xl font-black tracking-tight text-white mb-8 leading-tight">
+                Google Omni x Flow <br>
+                <span
+                    class="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 via-purple-400 to-cyber-blue">
+                    解鎖你的 AI 影音工作流
+                </span>
+            </h1>
+            <p class="text-lg md:text-2xl text-slate-300 max-w-4xl mx-auto mb-10 leading-relaxed font-normal">
+                本網頁整合《初學者自學手冊》與《完整課程教材》，提供最清晰、字體友善的自學指引。我們將深度解析 Google 多模態大腦、Veo 頂級生成模型與 Flow 工作室，協助您快速產出 60 秒商業級短影音！
+            </p>
+            <div class="flex flex-wrap justify-center gap-6">
+                <a href="#prep"
+                    class="px-8 py-4 rounded-xl bg-brand-600 hover:bg-brand-700 text-lg font-bold shadow-lg shadow-brand-500/20 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-graduation-cap text-xl"></i>
+                    <span>開始自學之旅</span>
+                </a>
+                <a href="#quiz-cert"
+                    class="px-8 py-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-lg font-bold border border-slate-700 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-award text-yellow-400 text-xl"></i>
+                    <span>直接挑戰成果證書</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Global Floating Alerts for copy notification -->
+    <div id="toast"
+        class="fixed bottom-8 right-8 z-50 transform translate-y-20 opacity-0 transition-all duration-300 ease-out pointer-events-none">
+        <div
+            class="bg-slate-900 border border-cyber-green text-cyber-green px-6 py-4 rounded-xl shadow-2xl flex items-center space-x-3">
+            <i class="fa-solid fa-circle-check text-2xl"></i>
+            <span class="font-semibold text-base">已成功複製提示詞！隨時可至平台貼上。</span>
+        </div>
+    </div>
+
+    <!-- Main Content Area (Focused Single Column for Premium Reading Experience) -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div class="space-y-16">
+
+            <!-- Section: Prep & Objectives Integrated -->
+            <section id="prep"
+                class="bg-slate-900 border border-slate-800 rounded-3xl p-8 md:p-10 shadow-xl relative overflow-hidden space-y-8">
+                <div class="absolute top-0 right-0 w-24 h-24 bg-brand-500/10 rounded-bl-full pointer-events-none"></div>
+                <div class="flex items-center space-x-4">
+                    <div class="w-14 h-14 rounded-2xl bg-brand-500/20 flex items-center justify-center text-brand-400">
+                        <i class="fa-solid fa-clipboard-list text-3xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-black text-white">課前準備與學習目標</h2>
+                        <p class="text-base text-slate-400 mt-1">確保高效率自學的基石</p>
+                    </div>
+                </div>
+
+                <!-- 3-Column Structured Layout inside Prep -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-base">
+
+                    <!-- Integrated Core Objectives -->
+                    <div class="p-6 bg-slate-950 rounded-2xl border border-brand-500/30 space-y-4">
+                        <div class="flex items-center space-x-2 text-brand-300 font-bold text-lg mb-1">
+                            <i class="fa-solid fa-bullseye text-brand-400 text-xl"></i>
+                            <span>課程核心學習目標</span>
+                        </div>
+                        <ul class="space-y-3 text-slate-300 text-sm leading-relaxed">
+                            <li class="flex items-start space-x-2">
+                                <i class="fa-solid fa-check text-brand-500 mt-1 flex-shrink-0"></i>
+                                <span><strong>掌握核心技術</strong>：理解 Google 視覺與影片生成底層邏輯與計價。</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <i class="fa-solid fa-check text-brand-500 mt-1 flex-shrink-0"></i>
+                                <span><strong>精通多模態</strong>：熟練運用文生影、圖生影與跨平台整合。</span>
+                            </li>
+                            <li class="flex items-start space-x-2">
+                                <i class="fa-solid fa-check text-brand-500 mt-1 flex-shrink-0"></i>
+                                <span><strong>建立自動化</strong>：利用 Flow 編輯平台剪輯出專業短影音。</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Hardware & Software Recommendations -->
+                    <div
+                        class="p-6 bg-slate-950 rounded-2xl border border-slate-800/80 space-y-4 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center space-x-2 text-cyber-blue font-bold text-lg mb-1">
+                                <i class="fa-solid fa-laptop text-xl"></i>
+                                <span>硬體與軟體建議</span>
+                            </div>
+                            <p class="text-slate-300 text-sm leading-relaxed font-normal">
+                                建議使用桌上型電腦或筆記型電腦。瀏覽器請務必使用最新版 <strong>Google Chrome 瀏覽器</strong>，以提供最完整、最穩定的 Google Web AI
+                                生成與編輯效能。
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Accounts Checklist & Trigger Link -->
+                    <div
+                        class="p-6 bg-slate-950 rounded-2xl border border-slate-800/80 space-y-4 flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center space-x-2 text-emerald-400 font-bold text-lg mb-1">
+                                <i class="fa-solid fa-user-lock text-xl"></i>
+                                <span>帳號權限準備</span>
+                            </div>
+                            <p class="text-slate-300 text-sm leading-relaxed font-normal mb-4">
+                                需準備一個有效的 <strong>Google 帳號</strong>（用於登入 Flow 平台及 Google AI Studio），以及
+                                <strong>Nanobanana 平台</strong> 的存取與生圖權限（用於生成精細母圖）。
+                            </p>
+                        </div>
+                        <a href="https://www.nanobanana.com/" target="_blank"
+                            class="inline-flex items-center justify-center px-5 py-3 bg-slate-900 hover:bg-slate-800 text-sm font-bold text-cyber-blue rounded-xl border border-slate-800 transition space-x-2 w-full mt-2">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            <span>前往 Nanobanana 平台 🔗</span>
+                        </a>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Module 1 -->
+            <section id="module1"
+                class="bg-slate-900 border border-slate-800 rounded-3xl p-8 md:p-10 shadow-xl space-y-8">
+                <div
+                    class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-800">
+                    <div class="flex items-center space-x-4">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-violet-500/20 flex items-center justify-center text-violet-400">
+                            <span class="font-black text-2xl">M1</span>
+                        </div>
+                        <div>
+                            <h2 class="text-3xl font-black text-white">模組一：重要設定與使用次數說明</h2>
+                            <p class="text-base text-slate-400 mt-1">掌握三大核心架構概念與資產配額管制</p>
+                        </div>
+                    </div>
+                    <span
+                        class="px-4 py-2 rounded-full text-sm font-semibold bg-violet-500/10 border border-violet-500/30 text-violet-300 self-start md:self-center">
+                        ⏱️ 預計時間：30 分鐘
+                    </span>
+                </div>
+
+                <!-- Tech Concepts Blocks -->
+                <div class="space-y-6">
+                    <h3 class="text-2xl font-bold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-brain text-violet-400 text-xl"></i>
+                        <span>1. Google 的 Omni、Veo 與 Flow 是什麼？能做什麼？</span>
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div
+                            class="p-6 bg-slate-950 rounded-2xl border border-slate-800 hover:border-violet-500/30 transition flex flex-col justify-between space-y-4">
+                            <div>
+                                <h4 class="font-bold text-violet-300 text-lg mb-2 flex items-center space-x-2">
+                                    <span class="w-3 h-3 rounded-full bg-violet-500"></span>
+                                    <span>Google Omni</span>
+                                </h4>
+                                <p class="text-sm text-slate-400 leading-relaxed font-normal">
+                                    底層的多模態理解與生成架構。具備原生處理文本、語音、圖像與影片的能力。它是工作流中的「大腦」，負責邏輯推理、提示詞優化與風格規劃。
+                                </p>
+                            </div>
+                            <a href="https://aistudio.google.com/" target="_blank"
+                                class="inline-flex items-center justify-center w-full px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-sm font-semibold text-violet-300 rounded-xl border border-slate-800 transition space-x-1">
+                                <span>開啟 Google AI Studio 控制台 🔗</span>
+                            </a>
+                        </div>
+                        <div
+                            class="p-6 bg-slate-950 rounded-2xl border border-slate-800 hover:border-blue-500/30 transition flex flex-col justify-between space-y-4">
+                            <div>
+                                <h4 class="font-bold text-blue-300 text-lg mb-2 flex items-center space-x-2">
+                                    <span class="w-3 h-3 rounded-full bg-blue-500"></span>
+                                    <span>Google Veo</span>
+                                </h4>
+                                <p class="text-sm text-slate-400 leading-relaxed font-normal">
+                                    Google 頂級的影片生成模型。專注於高畫質（1080p及以上）、高影格率、具備物理世界規律（如重力、流體力學）的擬真或特定風格影片生成。
+                                </p>
+                            </div>
+                            <a href="https://deepmind.google/technologies/veo/" target="_blank"
+                                class="inline-flex items-center justify-center w-full px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-sm font-semibold text-blue-300 rounded-xl border border-slate-800 transition space-x-1">
+                                <span>了解 Google Veo 模型細節 🔗</span>
+                            </a>
+                        </div>
+                        <div
+                            class="p-6 bg-slate-950 rounded-2xl border border-slate-800 hover:border-emerald-500/30 transition flex flex-col justify-between space-y-4">
+                            <div>
+                                <h4 class="font-bold text-emerald-300 text-lg mb-2 flex items-center space-x-2">
+                                    <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                                    <span>Google Flow</span>
+                                </h4>
+                                <p class="text-sm text-slate-400 leading-relaxed font-normal">
+                                    影音編輯工作室平台。專為創作者與開發者設計，將 Omni 的理解力與 Veo 的生成力封裝至視覺化工作流程中，提供時間軸編輯、素材管理與協同功能。
+                                </p>
+                            </div>
+                            <a href="https://cloud.google.com/vertex-ai" target="_blank"
+                                class="inline-flex items-center justify-center w-full px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-sm font-semibold text-emerald-300 rounded-xl border border-slate-800 transition space-x-1">
+                                <span>探索 Vertex AI 企業工作流 🔗</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing Table -->
+                <div class="space-y-4">
+                    <h3 class="text-2xl font-bold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-coins text-yellow-400 text-xl"></i>
+                        <span>2. 計價機制與版本次數說明</span>
+                    </h3>
+                    <p class="text-base text-slate-300 leading-relaxed">
+                        <strong>重要觀念：</strong>AI 影音生成屬於高運算成本任務。理解點數與額度分配是控管成本的關鍵。
+                    </p>
+                    <div class="overflow-x-auto rounded-2xl border border-slate-800">
+                        <table class="w-full text-left border-collapse text-base">
+                            <thead class="bg-slate-950 text-slate-300 uppercase">
+                                <tr>
+                                    <th class="p-5 border-b border-slate-800 font-extrabold">帳戶級別</th>
+                                    <th class="p-5 border-b border-slate-800 font-extrabold">計價模式</th>
+                                    <th class="p-5 border-b border-slate-800 font-extrabold">Omni 使用額度</th>
+                                    <th class="p-5 border-b border-slate-800 font-extrabold">Veo / Flow 影片額度</th>
+                                    <th class="p-5 border-b border-slate-800 font-extrabold">適合對象</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800 bg-slate-900/40">
+                                <tr class="hover:bg-slate-800/30 transition">
+                                    <td class="p-5 font-bold text-violet-300">體驗版 (Free Tier)</td>
+                                    <td class="p-5 text-slate-300">每日免費點數</td>
+                                    <td class="p-5 text-slate-400">限制每分鐘請求數 (RPM)</td>
+                                    <td class="p-5 text-slate-400">每日有限生成次數（具浮水印）</td>
+                                    <td class="p-5 text-slate-400">個人愛好者、初學者</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/30 transition">
+                                    <td class="p-5 font-bold text-cyber-blue">專業版 (Pro Tier)</td>
+                                    <td class="p-5 text-slate-300">固定月費制</td>
+                                    <td class="p-5 text-slate-400">高優先權、無低速限制</td>
+                                    <td class="p-5 text-slate-400">每月固定高階點數（優先渲染）</td>
+                                    <td class="p-5 text-slate-400">獨立創作者、行銷人員</td>
+                                </tr>
+                                <tr class="hover:bg-slate-800/30 transition">
+                                    <td class="p-5 font-bold text-cyber-green">企業版 (Vertex AI API)</td>
+                                    <td class="p-5 text-slate-300">依 Token/秒數計價</td>
+                                    <td class="p-5 text-slate-400">按實際輸入/輸出 Token 計費</td>
+                                    <td class="p-5 text-slate-400">按生成影片秒數與解析度計費</td>
+                                    <td class="p-5 text-slate-400">軟體工程師、企業工作流整合</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Step-by-Step Interactive Guide -->
+                <div class="bg-slate-950 p-6 md:p-8 rounded-2xl border border-slate-800 space-y-6">
+                    <h3 class="text-xl font-bold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-route text-violet-400"></i>
+                        <span>動手實作：登入與額度管理</span>
+                    </h3>
+
+                    <!-- Timeline Step Nodes -->
+                    <div class="space-y-8 relative border-l-2 border-slate-800 pl-8 ml-4">
+                        <!-- Step 1 -->
+                        <div class="relative">
+                            <span
+                                class="absolute -left-[45px] top-0.5 bg-violet-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-lg shadow-violet-500/20">1</span>
+                            <h4 class="font-bold text-slate-200 text-lg">登入 Google AI Studio / Flow 平台</h4>
+                            <ol class="list-decimal list-inside text-base text-slate-300 mt-3 space-y-2">
+                                <li>開啟 Chrome 瀏覽器，導航至 Google Flow 官方網站（或 Google AI Studio 介面）。</li>
+                                <li>點擊右上角的 <strong class="text-white bg-slate-800 px-2 py-0.5 rounded text-sm">[Sign In
+                                        / 登入]</strong>，選擇您的 Google 帳號進行連動。</li>
+                                <li>首次登入請勾選同意使用者條款，點擊 <strong
+                                        class="text-white bg-slate-800 px-2 py-0.5 rounded text-sm">[Accept /
+                                        同意]</strong> 進入主控制台。</li>
+                            </ol>
+                        </div>
+                        <!-- Step 2 -->
+                        <div class="relative">
+                            <span
+                                class="absolute -left-[45px] top-0.5 bg-violet-600 text-white w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold shadow-lg shadow-violet-500/20">2</span>
+                            <h4 class="font-bold text-slate-200 text-lg">檢查與管理您的 AI 生成額度</h4>
+                            <ol class="list-decimal list-inside text-base text-slate-300 mt-3 space-y-2">
+                                <li>在主控制台介面，尋找右上角或左下角的 <strong
+                                        class="text-white bg-slate-800 px-2 py-0.5 rounded text-sm">[Settings /
+                                        設定]</strong>（通常呈現為齒輪圖示）。</li>
+                                <li>點擊 <strong class="text-white bg-slate-800 px-2 py-0.5 rounded text-sm">[Usage &
+                                        Billing / 使用量與計費]</strong> 標籤頁。</li>
+                                <li><strong>確認當前方案</strong>：畫面會顯示您目前的級別（如：Free Tier 或 Pro Tier）。</li>
+                                <li><strong>解讀額度表</strong>：找到 <strong
+                                        class="text-white bg-slate-800 px-2 py-0.5 rounded text-sm">Veo / Flow Video
+                                        Tokens</strong> 欄位，確認今日剩餘可用次數（例如：15 / 20 次）。</li>
+                            </ol>
+                            <div
+                                class="mt-5 p-5 bg-yellow-500/10 border border-yellow-500/30 rounded-2xl text-sm text-yellow-300 leading-relaxed">
+                                <i class="fa-solid fa-triangle-exclamation mr-1.5 text-lg"></i>
+                                <strong>注意：</strong>AI 影片生成是以「秒數」或「渲染點數」扣除，初學者請務必先用預設的「低解析度/短秒數（如4秒）」進行測試，避免快速耗盡額度。
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Module 2 -->
+            <section id="module2"
+                class="bg-slate-900 border border-slate-800 rounded-3xl p-8 md:p-10 shadow-xl space-y-8">
+                <div
+                    class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-800">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-14 h-14 rounded-2xl bg-sky-500/20 flex items-center justify-center text-sky-400">
+                            <span class="font-black text-2xl">M2</span>
+                        </div>
+                        <div>
+                            <h2 class="text-3xl font-black text-white">模組二：Omni 影片生成直達車</h2>
+                            <p class="text-base text-slate-400 mt-1">精通文生影、範本套用、與高階圖生影 (Image-to-Video) 技巧</p>
+                        </div>
+                    </div>
+                    <span
+                        class="px-4 py-2 rounded-full text-sm font-semibold bg-sky-500/10 border border-sky-500/30 text-sky-300 self-start md:self-center">
+                        ⏱️ 預計時間：60 分鐘
+                    </span>
+                </div>
+
+                <!-- Project Case 1 -->
+                <div class="bg-slate-950 p-6 md:p-8 rounded-2xl border border-slate-800 space-y-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <h3 class="text-xl font-bold text-sky-300 flex items-center space-x-2">
+                            <span class="px-3 py-1 bg-sky-500/20 text-sky-400 rounded-lg text-sm">實作 1</span>
+                            <span>文生影（Text-to-Video）── 端午節賽龍舟遊戲動畫</span>
+                        </h3>
+                        <span class="text-sm text-slate-400 font-semibold">核心觀念：動態物理模擬與群體動畫控制</span>
+                    </div>
+
+                    <div
+                        class="p-5 bg-slate-900 rounded-xl border border-slate-800 text-sm md:text-base text-slate-300">
+                        <strong>[步驟引導]</strong> 進入 Omni 生成面板 ──&gt; 切換至【Video】模式 ──&gt; 輸入提示詞 ──&gt; 調整動態強度 ──&gt; 點擊生成
+                    </div>
+
+                    <!-- Prompt Card with One-click Copy -->
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-slate-300 flex items-center space-x-2">
+                                <i class="fa-solid fa-keyboard text-lg"></i>
+                                <span>龍舟動畫黃金英文提示詞 (AI 英文理解度最高)</span>
+                            </span>
+                            <button onclick="copyPrompt('prompt-dragon')"
+                                class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-sm font-bold transition flex items-center space-x-2 shadow-lg shadow-brand-500/10">
+                                <i class="fa-solid fa-copy"></i>
+                                <span>複製英文提示詞</span>
+                            </button>
+                        </div>
+                        <p id="prompt-dragon"
+                            class="text-base text-slate-200 italic font-mono bg-slate-950 p-4 rounded-xl border border-slate-800/80 leading-relaxed">
+                            A traditional Taiwanese Dragon Boat Festival race, stylized 3D animation, close-up shot of a
+                            vibrant dragon boat splashing through high-energy river waves, energetic oarsmen moving in
+                            perfect sync, cinematic lighting.</p>
+                        <p
+                            class="text-sm text-slate-400 pl-4 border-l-4 border-sky-500 mt-2 font-normal leading-relaxed">
+                            <strong>💡 中文對照：</strong>一場傳統的台灣端午節龍舟賽，3D 動畫風格，一艘充滿活力的龍舟衝破洶湧河浪的特寫鏡頭，充滿能量的划手們動作完美同步，電影級光影。
+                        </p>
+                    </div>
+
+                    <!-- Param Simulator (Interactive Feature) -->
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-4">
+                        <span class="text-sm font-bold text-slate-300 block">🛠️ 右側進階面板參數調整 (模擬滑桿)</span>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                            <div>
+                                <label class="block text-slate-300 font-semibold mb-2">Duration (時長)</label>
+                                <select
+                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-sky-500">
+                                    <option>4 seconds / 4秒 (推薦：生成快)</option>
+                                    <option>8 seconds / 8秒</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 font-semibold mb-2">Aspect Ratio (畫面比例)</label>
+                                <select
+                                    class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-slate-200 focus:outline-none focus:border-sky-500">
+                                    <option>16:9 橫式</option>
+                                    <option>9:16 直式</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-slate-300 font-semibold mb-2">Motion Strength (動態強度): <span
+                                        id="val-motion" class="text-sky-400 font-extrabold text-base">7</span></label>
+                                <input type="range" min="1" max="10" value="7"
+                                    class="w-full accent-sky-500 h-2 bg-slate-800 rounded-lg cursor-pointer"
+                                    oninput="document.getElementById('val-motion').innerText = this.value; updateMotionWarning(this.value)">
+                                <p id="motion-tip" class="text-xs text-yellow-400 mt-2 font-semibold">強度 7
+                                    具高度動態感，可讓水花與划槳展現力量！</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-sm text-slate-300 space-y-3 mt-3 leading-relaxed font-normal">
+                        <p><strong>4. 執行渲染與等待：</strong>點擊右下角 <strong
+                                class="text-white bg-slate-800 px-2 py-0.5 rounded">[Generate / 生成影片]</strong>，深度學習運算約需
+                            1~2 分鐘。生成後點擊右下角下載 .mp4 檔。</p>
+                        <p class="text-emerald-400"><i
+                                class="fa-solid fa-circle-question mr-1 text-lg"></i><strong>新手檢驗點：</strong>播放下載的影片，觀察龍舟在衝浪時，船身有沒有出現奇怪的融化或穿幫現象？若有，嘗試將動態強度降回
+                            5 重新生成，並配合負面提示詞（Negative Prompt）排除「deformation, melted objects」。</p>
+                    </div>
+                </div>
+
+                <!-- Project Case 2 -->
+                <div class="bg-slate-950 p-6 md:p-8 rounded-2xl border border-slate-800 space-y-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <h3 class="text-xl font-bold text-sky-300 flex items-center space-x-2">
+                            <span class="px-3 py-1 bg-sky-500/20 text-sky-400 rounded-lg text-sm">實作 2</span>
+                            <span>模模版應用 ── 玉山登頂與太空人（以東方美學與寫實山嶽為例）</span>
+                        </h3>
+                        <span class="text-sm text-slate-400 font-semibold">核心觀念：利用預設風格模版鎖定構圖與高質感渲染</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="p-5 bg-slate-900 rounded-xl border border-slate-800 text-sm space-y-2">
+                            <span class="font-bold text-slate-200 text-base flex items-center"><i
+                                    class="fa-solid fa-magnifying-glass text-sky-400 mr-2"></i>第一步：尋找模版與太空人概念</span>
+                            <p class="text-slate-400 leading-relaxed font-normal">
+                                在首頁向下滾動找到 <strong>[Official Templates / 官方模版庫]</strong>。可選擇「極致寫實 /
+                                Sci-Fi」模版生成太空人緩步登上月球表面分鏡，體驗高階漫反射光線與擬真低重力動態。
+                            </p>
+                        </div>
+                        <div class="p-5 bg-slate-900 rounded-xl border border-slate-800 text-sm space-y-2">
+                            <span class="font-bold text-slate-200 text-base flex items-center"><i
+                                    class="fa-solid fa-mountain text-emerald-400 mr-2"></i>第二步：台灣地標玉山融合</span>
+                            <p class="text-slate-400 leading-relaxed font-normal">
+                                或點擊 <strong>[Ink Wash Aesthetic / 東方水墨風格]</strong> 或 <strong>[Cinematic Landscape /
+                                    紀實山嶽攝影]</strong> 模版，系統會自動載入底層的風格控制參數。
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Prompt Card with One-click Copy -->
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-slate-300 flex items-center space-x-2">
+                                <i class="fa-solid fa-pen-to-square text-lg"></i>
+                                <span>在預設提示詞後方，補充輸入核心變數 (玉山主體)：</span>
+                            </span>
+                            <button onclick="copyPrompt('prompt-yushan')"
+                                class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-sm font-bold transition flex items-center space-x-2 shadow-lg shadow-brand-500/10">
+                                <i class="fa-solid fa-copy"></i>
+                                <span>複製英文變數</span>
+                            </button>
+                        </div>
+                        <p id="prompt-yushan"
+                            class="text-base text-slate-200 italic font-mono bg-slate-950 p-4 rounded-xl border border-slate-800/80 leading-relaxed">
+                            , Taiwan's Yushan peak at sunrise, sea of clouds rolling below the mountain, gold sunlight
+                            piercing through the mist, photorealistic landscape photography aesthetic.</p>
+                        <p
+                            class="text-sm text-slate-400 pl-4 border-l-4 border-sky-500 mt-2 font-normal leading-relaxed">
+                            <strong>💡 中文對照：</strong>，台灣玉山主峰日出，翻騰在山腳下的雲海，金色陽光穿透薄霧，寫實的山岳攝影美學。
+                        </p>
+                    </div>
+
+                    <div class="p-5 bg-slate-900 rounded-xl border border-slate-800 text-sm space-y-4">
+                        <span class="font-bold text-slate-200 text-base block"><i
+                                class="fa-solid fa-video text-sky-400 mr-2"></i>第三步：設定運鏡指令（Camera Control）</span>
+                        <p class="text-slate-300 leading-relaxed font-normal">
+                            在進階面板中找到 <strong>[Camera Movement / 鏡頭軌跡]</strong>。勾選 <strong>[Pan Left / 向左平移]</strong> 與
+                            <strong>[Zoom Out / 緩慢拉遠]</strong>。這能營造出站在高山俯瞰雲海的壯闊感。
+                        </p>
+                        <span class="text-emerald-400 block font-semibold"><i
+                                class="fa-solid fa-lightbulb mr-1.5 text-lg"></i><strong>實作技巧：</strong>在模版結構內修改變數（例如將
+                            Yushan 改為 Alishan），理解模版是如何在維持「寫實紀實攝影風格」或「東方水墨風格」不變的情況下更換地標。</span>
+                    </div>
+                </div>
+
+                <!-- Project Case 3 -->
+                <div class="bg-slate-950 p-6 md:p-8 rounded-2xl border border-slate-800 space-y-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <h3 class="text-xl font-bold text-sky-300 flex items-center space-x-2">
+                            <span class="px-3 py-1 bg-sky-500/20 text-sky-400 rounded-lg text-sm">實作 3</span>
+                            <span>圖生影（Image-to-Video）── Nanobanana 精細生圖轉影片</span>
+                        </h3>
+                        <span class="text-sm text-slate-400 font-semibold">核心觀念：結構控制 (Structure Preservation)</span>
+                    </div>
+
+                    <p class="text-base text-slate-300 leading-relaxed">
+                        <strong>為什麼需要圖生影？</strong> 為了解決 AI
+                        直接生成影片時，精細人物特徵、霓虹招牌文字容易走樣與融化的問題。我們先用精細生圖工具（Nanobanana）定格第一幀畫面（First Frame），再讓 AI 負責物理與光影動態。
+                    </p>
+
+                    <div
+                        class="p-5 bg-slate-900 rounded-xl border border-slate-800 text-sm md:text-base text-slate-300">
+                        <strong>[工作流程]</strong> 1. 在 Nanobanana 生成靜態圖 ──&gt; 2. 下載圖片 ──&gt; 3. 上傳至 Omni ──&gt; 4.
+                        輸入動態引導詞 ──&gt; 5. 生成影片
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Left Phase -->
+                        <div class="p-5 bg-slate-900 rounded-xl border border-slate-800 space-y-3">
+                            <span class="font-bold text-slate-200 text-base flex items-center space-x-2">
+                                <i class="fa-solid fa-camera text-sky-400"></i>
+                                <span>第一階段：獲取母圖 (Nanobanana)</span>
+                            </span>
+                            <p class="text-sm text-slate-400 leading-relaxed font-normal">
+                                登入 Nanobanana 帳號，輸入富有台灣在地風情的靜態圖提示詞，下載高解析度原圖。
+                            </p>
+                            <div
+                                class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 flex items-center justify-between mt-3 gap-2">
+                                <span id="prompt-nanobanana"
+                                    class="italic text-slate-300 overflow-hidden text-ellipsis whitespace-nowrap text-sm">A
+                                    nostalgic Taiwan old street at rainy night, glowing neon signs, wet asphalt road
+                                    reflecting lights, highly detailed, 8k.</span>
+                                <button onclick="copyPrompt('prompt-nanobanana')"
+                                    class="p-2 px-3 rounded-lg bg-brand-600 hover:bg-brand-700 font-bold transition text-xs flex-shrink-0">複製英文</button>
+                            </div>
+                            <p
+                                class="text-xs text-slate-400 pl-3 border-l-2 border-sky-500 mt-2 font-normal leading-relaxed">
+                                <strong>💡 中文對照：</strong>雨夜中充滿懷舊風情的台灣老街，發光的霓虹招牌，潮濕的瀝青路面反射著光芒，極致細節，8K解析度。
+                            </p>
+                        </div>
+                        <!-- Right Phase -->
+                        <div class="p-5 bg-slate-900 rounded-xl border border-slate-800 space-y-3">
+                            <span class="font-bold text-slate-200 text-base flex items-center space-x-2">
+                                <i class="fa-solid fa-film text-emerald-400"></i>
+                                <span>第二與三階段：匯入 Omni 與動態引導</span>
+                            </span>
+                            <p class="text-sm text-slate-400 leading-relaxed font-normal">
+                                在 Omni 中切換至 <strong>[Image to Video]</strong> 上傳圖片。此時<strong>不需要</strong>再次描繪老街，只需告訴
+                                AI「什麼東西要動起來」以及鏡頭運動。
+                            </p>
+                            <div
+                                class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 flex items-center justify-between mt-3 gap-2">
+                                <span id="prompt-rain"
+                                    class="italic text-slate-300 overflow-hidden text-ellipsis whitespace-nowrap text-sm">Gentle
+                                    rain falling on the street, neon lights subtly flickering, camera slowly moving
+                                    forward.</span>
+                                <button onclick="copyPrompt('prompt-rain')"
+                                    class="p-2 px-3 rounded-lg bg-brand-600 hover:bg-brand-700 font-bold transition text-xs flex-shrink-0">複製英文</button>
+                            </div>
+                            <p
+                                class="text-xs text-slate-400 pl-3 border-l-2 border-emerald-500 mt-2 font-normal leading-relaxed">
+                                <strong>💡 中文對照：</strong>細雨飄落在街道上，霓虹燈微弱地閃爍，鏡頭緩慢向前推進。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Module 3 -->
+            <section id="module3"
+                class="bg-slate-900 border border-slate-800 rounded-3xl p-8 md:p-10 shadow-xl space-y-8">
+                <div
+                    class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-800">
+                    <div class="flex items-center space-x-4">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                            <span class="font-black text-2xl">M3</span>
+                        </div>
+                        <div>
+                            <h2 class="text-3xl font-black text-white">模組三：Flow 影音編輯工作室平台</h2>
+                            <p class="text-base text-slate-400 mt-1">熟稔多軌剪輯介面與一體化 AI 創作系統</p>
+                        </div>
+                    </div>
+                    <span
+                        class="px-4 py-2 rounded-full text-sm font-semibold bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 self-start md:self-center">
+                        ⏱️ 預計時間：60 分鐘
+                    </span>
+                </div>
+
+                <!-- Flow UI & Settings -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-4">
+                        <h3 class="font-bold text-white text-lg flex items-center space-x-2">
+                            <i class="fa-solid fa-gears text-emerald-400 text-xl"></i>
+                            <span>1. 帳號登入與環境優化設定</span>
+                        </h3>
+                        <ul class="list-disc list-inside text-slate-300 space-y-2 text-sm leading-relaxed font-normal">
+                            <li>點擊官方連結，完成帳號權限開通進入 Flow 工作室首頁。</li>
+                            <li><strong>調整渲染解析度</strong>：預設設定為 1080p (Full HD) 或更高。</li>
+                            <li><strong>硬體加速</strong>：確認在進階設定中開啟「Hardware Acceleration」以優化流暢度。</li>
+                            <li><strong>路徑管理</strong>：設定專案與暫存檔的預設儲存路徑。</li>
+                        </ul>
+                    </div>
+                    <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-4">
+                        <h3 class="font-bold text-white text-lg flex items-center space-x-2">
+                            <i class="fa-solid fa-layer-group text-sky-400 text-xl"></i>
+                            <span>2. 使用介面 (UI) 的三大核心區域</span>
+                        </h3>
+                        <ul class="list-disc list-inside text-slate-300 space-y-2 text-sm leading-relaxed font-normal">
+                            <li><strong>左側【工具與資產庫】</strong>：管理上傳素材、快速存取 AI 生圖生影入口與歷史。</li>
+                            <li><strong>中央【即時預覽視窗】</strong>：播放剪輯半成品，支援即時快照與分鏡標記。</li>
+                            <li><strong>下方【多軌時間軸 (Timeline)】</strong>：核心區。包含視訊軌、音訊軌、字幕文字軌。</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Interactive Mock Timeline Simulator -->
+                <div class="bg-slate-950 p-6 md:p-8 rounded-2xl border border-slate-800 space-y-5">
+                    <h3 class="text-base font-bold text-slate-200 flex items-center space-x-2">
+                        <i class="fa-solid fa-sliders text-emerald-400 text-lg"></i>
+                        <span>互動式【多軌時間軸】模擬操作面板</span>
+                    </h3>
+                    <p class="text-sm text-slate-400 leading-relaxed font-normal">
+                        點擊時間軸中的音軌或視訊軌按鈕，模擬實作裁剪、對齊、或加入素材！
+                    </p>
+
+                    <!-- Timeline UI Structure -->
+                    <div class="bg-slate-900 rounded-xl p-5 border border-slate-800 space-y-4">
+                        <!-- Visual Playhead Ruler -->
+                        <div
+                            class="flex items-center text-[11px] text-slate-500 font-mono border-b border-slate-800 pb-2">
+                            <div class="w-24 font-bold">軌道類型</div>
+                            <div class="flex-1 flex justify-between px-3">
+                                <span>00:00</span>
+                                <span>00:05</span>
+                                <span>00:10</span>
+                                <span>00:15</span>
+                                <span>00:20</span>
+                            </div>
+                        </div>
+                        <!-- Video Track -->
+                        <div class="flex items-center">
+                            <div class="w-24 text-sm font-bold text-sky-300">🎥 視訊軌 1</div>
+                            <div class="flex-1 flex space-x-2 px-3">
+                                <div id="sim-video1"
+                                    class="bg-sky-600/60 border border-sky-400 text-white rounded-lg p-2 text-xs w-2/5 flex justify-between items-center cursor-pointer hover:bg-sky-500 transition">
+                                    <span class="truncate">🌱 縮時綠豆發芽.mp4</span>
+                                    <span
+                                        class="text-[10px] bg-sky-900 px-1.5 py-0.5 rounded flex-shrink-0 ml-1">4秒</span>
+                                </div>
+                                <div id="sim-video2"
+                                    class="bg-indigo-600/60 border border-indigo-400 text-white rounded-lg p-2 text-xs w-3/5 flex justify-between items-center cursor-pointer hover:bg-indigo-500 transition">
+                                    <span class="truncate">⚽ 足球凌空頭槌.mp4</span>
+                                    <span
+                                        class="text-[10px] bg-indigo-900 px-1.5 py-0.5 rounded flex-shrink-0 ml-1">5秒</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Audio Track -->
+                        <div class="flex items-center">
+                            <div class="w-24 text-sm font-bold text-emerald-300">🎵 音訊軌 1</div>
+                            <div class="flex-1 flex px-3">
+                                <div id="sim-audio"
+                                    class="bg-emerald-600/40 border border-emerald-400 text-white rounded-lg p-2 text-xs w-4/5 flex justify-between items-center cursor-pointer hover:bg-emerald-500 transition">
+                                    <span class="truncate">🎙️ 專業中文中文旁白.wav</span>
+                                    <span
+                                        class="text-[10px] bg-emerald-900 px-1.5 py-0.5 rounded flex-shrink-0 ml-1">10秒</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Text Track -->
+                        <div class="flex items-center">
+                            <div class="w-24 text-sm font-bold text-yellow-300">💬 字幕軌 1</div>
+                            <div class="flex-1 flex px-3 space-x-4">
+                                <div
+                                    class="bg-yellow-600/30 border border-yellow-400 text-white rounded-lg p-2 text-[10px] w-1/2 text-center truncate">
+                                    這是一顆綠豆破土而出的瞬間...
+                                </div>
+                                <div
+                                    class="bg-yellow-600/30 border border-yellow-400 text-white rounded-lg p-2 text-[10px] w-1/2 text-center truncate">
+                                    緊接著是世界盃最精彩的頭槌進球！
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons inside Simulator -->
+                    <div class="flex flex-wrap gap-3 justify-center">
+                        <button onclick="simulateTimeline('trim')"
+                            class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 border border-slate-700 transition font-bold shadow-sm">
+                            <i class="fa-solid fa-scissors mr-1.5 text-red-400"></i>
+                            模擬「縮剪綠豆影片長度」
+                        </button>
+                        <button onclick="simulateTimeline('sync')"
+                            class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 border border-slate-700 transition font-bold shadow-sm">
+                            <i class="fa-solid fa-arrows-left-right-to-line mr-1.5 text-emerald-400"></i>
+                            模擬「一鍵自動音視訊同步對齊」
+                        </button>
+                        <button onclick="simulateTimeline('reset')"
+                            class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm text-slate-300 border border-slate-700 transition font-bold shadow-sm">
+                            <i class="fa-solid fa-arrow-rotate-left mr-1.5"></i>
+                            重設時間軸
+                        </button>
+                    </div>
+                    <p id="sim-log" class="text-sm text-center text-emerald-400 font-mono italic">提示：點擊上方按鈕，測試影片 and
+                        音訊的編輯行為。</p>
+                </div>
+
+                <!-- Project Case 1: Time-lapse sprout -->
+                <div class="bg-slate-950 p-6 md:p-8 rounded-2xl border border-slate-800 space-y-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <h3 class="text-xl font-bold text-emerald-300 flex items-center space-x-2">
+                            <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg text-sm">實作 1</span>
+                            <span>自然科學縮時攝影 (直接在 Flow 內完成)</span>
+                        </h3>
+                        <span class="text-sm text-slate-400 font-semibold">核心觀念：掌握時間跨度（Time-lapse）在影片中的表現</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-2">
+                            <span class="font-bold text-slate-200 text-base block">🎥 1~2. 內建 AI 生成面板</span>
+                            <p class="text-slate-400 leading-relaxed font-normal">
+                                在左側面板點擊 <strong>[AI Generation]</strong> -&gt; 選擇
+                                <strong>[Video]</strong>，輸入下方的植物發芽縮時提示詞，時長設為 5 秒，風格設定為寫實科學紀錄片風格。
+                            </p>
+                        </div>
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-2">
+                            <span class="font-bold text-slate-200 text-base block">🖱️ 3~5. 推進時間軸與剪裁</span>
+                            <p class="text-slate-400 leading-relaxed font-normal">
+                                生成完畢後，用滑鼠左鍵按住影片縮圖，<strong>拖曳 (Drag and Drop)</strong> 下降到 Video Track 1 最前端 (00:00
+                                處)。移動游標到影片右側邊緣，變成雙向箭頭後往左拖拉，即可剪掉不想要的結尾。
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Prompt Card with One-click Copy -->
+                    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm font-bold text-slate-300 flex items-center space-x-2">
+                                <i class="fa-solid fa-leaf text-lg"></i>
+                                <span>發芽縮時提示詞 (植物成長科學紀錄)</span>
+                            </span>
+                            <button onclick="copyPrompt('prompt-sprout')"
+                                class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-sm font-bold transition flex items-center space-x-2 shadow-lg shadow-brand-500/10">
+                                <i class="fa-solid fa-copy"></i>
+                                <span>複製英文提示詞</span>
+                            </button>
+                        </div>
+                        <p id="prompt-sprout"
+                            class="text-base text-slate-200 italic font-mono bg-slate-950 p-4 rounded-xl border border-slate-800/80 leading-relaxed">
+                            Macro time-lapse photography, a single bean sprout breaking through dark rich soil, growing
+                            towards the bright sunlight, 4k, realistic botanical science document.</p>
+                        <p
+                            class="text-sm text-slate-400 pl-4 border-l-4 border-emerald-500 mt-2 font-normal leading-relaxed">
+                            <strong>💡 中文對照：</strong>微距縮時攝影，一粒豆芽破開肥沃的黑土，朝著明亮的陽光生長，4K解析度，寫實的植物科學紀錄片風格。
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Project Case 2: World cup header -->
+                <div class="bg-slate-950 p-6 md:p-8 rounded-2xl border border-slate-800 space-y-5">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <h3 class="text-xl font-bold text-emerald-300 flex items-center space-x-2">
+                            <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg text-sm">實作 2</span>
+                            <span>世界盃足球賽進球時刻 (平台內「圖生影」整合)</span>
+                        </h3>
+                        <span class="text-sm text-slate-400 font-semibold">核心觀念：高強度動態捕捉與關鍵信號</span>
+                    </div>
+
+                    <p class="text-base text-slate-300">
+                        學會利用 Flow 的一體化功能，直接在編輯平台內先「生圖」，再於「原位」將其動畫化為影片。
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- Image Prompts -->
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
+                            <span class="font-bold text-slate-200 text-base flex items-center space-x-2">
+                                <i class="fa-solid fa-image text-sky-400"></i>
+                                <span>第一步：生圖 (AI Generation &gt; Image)</span>
+                            </span>
+                            <p class="text-sm text-slate-400 leading-relaxed font-normal">在內建生圖模組中生成高張力的頭槌瞬間：</p>
+                            <div
+                                class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 flex items-center justify-between mt-3 gap-2">
+                                <span id="prompt-soccer-img"
+                                    class="italic text-slate-300 overflow-hidden text-ellipsis whitespace-nowrap text-sm">A
+                                    soccer player leaping high for a powerful header animation style, stadium lights
+                                    background, intense expression.</span>
+                                <button onclick="copyPrompt('prompt-soccer-img')"
+                                    class="p-2 px-3 rounded-lg bg-brand-600 hover:bg-brand-700 font-bold transition text-xs flex-shrink-0">複製英文</button>
+                            </div>
+                            <p
+                                class="text-xs text-slate-400 pl-3 border-l-2 border-sky-500 mt-2 font-normal leading-relaxed">
+                                <strong>💡 中文對照：</strong>一名足球員高高躍起進行強力頭槌，動畫風格，背景為體育場燈光，表情專注而強烈。
+                            </p>
+                        </div>
+
+                        <!-- Video Prompt -->
+                        <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 space-y-3">
+                            <span class="font-bold text-slate-200 text-base flex items-center space-x-2">
+                                <i class="fa-solid fa-wand-magic-sparkles text-violet-400"></i>
+                                <span>二~四步：原位動畫與運鏡</span>
+                            </span>
+                            <p class="text-sm text-slate-400 leading-relaxed font-normal">在生成的縮圖上點擊 <strong
+                                    class="text-white bg-slate-800 px-2 py-0.5 rounded">[Animate /
+                                    動畫化]</strong>，並補上動態提示詞：</p>
+                            <div
+                                class="bg-slate-950 p-3 rounded-xl border border-slate-800/80 flex items-center justify-between mt-3 gap-2">
+                                <span id="prompt-soccer-vid"
+                                    class="italic text-slate-300 overflow-hidden text-ellipsis whitespace-nowrap text-sm">The
+                                    player heads the ball into the top corner of the net, soccer net stretching
+                                    violently, dramatic slow motion, stadium dust flying.</span>
+                                <button onclick="copyPrompt('prompt-soccer-vid')"
+                                    class="p-2 px-3 rounded-lg bg-brand-600 hover:bg-brand-700 font-bold transition text-xs flex-shrink-0">複製英文</button>
+                            </div>
+                            <p
+                                class="text-xs text-slate-400 pl-3 border-l-2 border-violet-500 mt-2 font-normal leading-relaxed">
+                                <strong>💡 中文對照：</strong>球員將球頂入球網的死角，球網劇烈拉扯，戲劇性的慢動作，體育場塵土飛揚。
+                            </p>
+                        </div>
+                    </div>
+
+                    <p class="text-sm text-slate-300 leading-relaxed font-normal">
+                        <strong>排版導出：</strong>完成後，同樣將這段充滿爆發力的足球影片，拖曳到時間軸中，緊跟在剛剛的科學縮時影片之後，並可於時間軸加入轉場特效（Transition），完成震撼的短片片段。
+                    </p>
+                </div>
+            </section>
+
+            <!-- Module 4 -->
+            <section id="module4"
+                class="bg-slate-900 border border-slate-800 rounded-3xl p-8 md:p-10 shadow-xl space-y-8">
+                <div
+                    class="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-800">
+                    <div class="flex items-center space-x-4">
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-fuchsia-500/20 flex items-center justify-center text-fuchsia-400">
+                            <span class="font-black text-2xl">M4</span>
+                        </div>
+                        <div>
+                            <h2 class="text-3xl font-black text-white">模組四：進階全自動化工作流實戰</h2>
+                            <p class="text-base text-slate-400 mt-1">跨平台整合與商業實戰（15分鐘內產出商業級短影音）</p>
+                        </div>
+                    </div>
+                    <span
+                        class="px-4 py-2 rounded-full text-sm font-semibold bg-fuchsia-500/10 border border-fuchsia-500/30 text-fuchsia-300 self-start md:self-center">
+                        ⏱️ 預計時間：60 分鐘
+                    </span>
+                </div>
+
+                <!-- Tech upgrades -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Tech 1 -->
+                    <div
+                        class="bg-slate-950 p-6 md:p-8 rounded-2xl border border-slate-800 space-y-4 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <h3 class="font-bold text-white text-lg flex items-center space-x-2">
+                                <i class="fa-solid fa-microphone-lines text-fuchsia-400"></i>
+                                <span>1. 聲音的靈魂配對：AI 語音 SSML 調優與音訊對齊</span>
+                            </h3>
+                            <p class="text-sm text-slate-400 leading-relaxed font-normal">
+                                高質感的影片必須搭配精準的聲音。在 Google Text-to-Speech (TTS) 等工具中，傳統文字轉語音容易顯得機械化。
+                                <br><br>
+                                <strong>SSML (語音合成標記語言) 技巧：</strong>
+                                使用 SSML 標籤可以精確控制 AI 發音的語速、停頓與重音。例如：
+                                <code>&lt;break time="500ms"/&gt;</code> 可模擬人類自然的呼吸換氣；
+                                <code>&lt;prosody rate="95%"&gt;</code> 能減緩語速以提升資訊傳遞的專業感。
+                            </p>
+                        </div>
+                        <div class="pt-4 space-y-3">
+                            <a href="https://cloud.google.com/text-to-speech" target="_blank"
+                                class="inline-flex items-center justify-center w-full px-4 py-3 bg-slate-900 hover:bg-slate-800 text-sm font-bold text-fuchsia-300 rounded-xl border border-slate-800 transition">
+                                <span>開啟 Google Text-to-Speech 🔗</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Tech 2 -->
+                    <div
+                        class="bg-slate-950 p-6 md:p-8 rounded-2xl border border-slate-800 space-y-4 flex flex-col justify-between">
+                        <div class="space-y-3">
+                            <h3 class="font-bold text-white text-lg flex items-center space-x-2">
+                                <i class="fa-solid fa-clapperboard text-sky-400"></i>
+                                <span>2. 「導演模式 (Director Mode)」連續分鏡</span>
+                            </h3>
+                            <p class="text-sm text-slate-400 leading-relaxed font-normal">
+                                如何用 AI 說一個完整的故事，而不是只有零碎、突兀的 5 秒片段？這需要高度的角色與視覺一致性。
+                                <br><br>
+                                <strong>種子值控制 (Seed Control)</strong>：在 Flow 的影片生成面板中手動固定 Seed 參數（如：Seed =
+                                284059），使同一位角色在更換運鏡提示詞（例如從特寫 Close-up 改為遠景 Wide Shot）後，長相、服飾與美術風格依然保持高度一致。
+                                <br><br>
+                                <strong>首尾幀鏡頭接續 (Keyframe Conditioning)</strong>：將 Segment A 影片的「最後一影格 (Last
+                                Frame)」下載並上傳作為 Segment B 影片的「初始影格 (First Frame)」，即可實現物理規則完全連貫的無縫長鏡頭。
+                            </p>
+                        </div>
+                        <div class="pt-4">
+                            <span class="text-sm text-emerald-400 font-semibold block"><i
+                                    class="fa-solid fa-lightbulb"></i> 提示：Seed 鎖定是製作多鏡頭連續廣告片（Storyboard）的核心技巧。</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SOP Visual Flow Chart and step details -->
+                <div class="bg-slate-950 p-6 md:p-8 rounded-2xl border border-slate-800 space-y-8">
+                    <h3 class="text-2xl font-bold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-network-wired text-fuchsia-400"></i>
+                        <span>3. 終極商業實戰：60秒 AI 商業短影音全自動化 SOP</span>
+                    </h3>
+
+                    <p class="text-base text-slate-300 leading-relaxed">
+                        以下是 60 秒「台灣之美旅遊推廣」商業短片的完整全自動化工作流 SOP。我們為<strong>每一個步驟</strong>都提供了高產值的黃金提示詞或程式碼，請依序複製使用！
+                    </p>
+
+                    <!-- Step 1 Details -->
+                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <h4 class="font-bold text-lg text-fuchsia-300 flex items-center space-x-2">
+                                <span
+                                    class="w-6 h-6 rounded-full bg-fuchsia-600 text-white flex items-center justify-center text-xs">1</span>
+                                <span>步驟 1：大腦思考 ── 用 Gemini 生成高質感腳本與語意分鏡</span>
+                            </h4>
+                            <button onclick="copyPrompt('sop-prompt-s1')"
+                                class="px-4 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-sm font-bold transition flex items-center space-x-2 shadow-lg shadow-brand-500/10">
+                                <i class="fa-solid fa-copy"></i>
+                                <span>複製中文指令</span>
+                            </button>
+                        </div>
+                        <p class="text-sm text-slate-300 leading-relaxed font-normal">
+                            <strong>實作引導：</strong>將以下指令貼入 Gemini 或 Flow 內建的 AI 寫手面板，快速架構 5 段風格、調性高度一致的分鏡。
+                        </p>
+                        <p id="sop-prompt-s1"
+                            class="text-base text-slate-200 italic font-mono bg-slate-950 p-4 rounded-xl border border-slate-800/80 leading-relaxed">
+                            請幫我設計一個 60 秒的「台灣之美旅遊推廣」精緻短片腳本。我需要 5 個分鏡，風格皆為「電影級寫實風景與高階漫反射光影 (Cinematic
+                            Photorealistic)」。請分別為這 5 個分鏡提供：1. 英文生圖提示詞 (給 Nanobanana 使用)、2. 英文動態引導與鏡頭控制提示詞 (給 Veo/Omni
+                            使用)、3. 對應的繁體中文旁白口白。</p>
+                    </div>
+
+                    <!-- Step 2 Details -->
+                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+                        <h4 class="font-bold text-lg text-sky-300 flex items-center space-x-2">
+                            <span
+                                class="w-6 h-6 rounded-full bg-sky-600 text-white flex items-center justify-center text-xs">2</span>
+                            <span>步驟 2：視覺定位 ── 5 大分鏡 Nanobanana 批量生圖提示詞</span>
+                        </h4>
+                        <p class="text-sm text-slate-300 leading-relaxed font-normal">
+                            <strong>實作引導：</strong>進入 Nanobanana，分別貼入以下 5 個地標提示詞，生成 5 張頂級質感的靜態主圖。
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                            <!-- Scene 1 -->
+                            <div
+                                class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-2">
+                                <div>
+                                    <span class="text-xs text-slate-400 font-bold uppercase block">分鏡一：台北 101</span>
+                                    <p id="sop-prompt-s2-1"
+                                        class="text-xs italic text-slate-300 font-mono mt-1 overflow-hidden text-ellipsis line-clamp-3">
+                                        A majestic panoramic view of Taipei 101 at sunset, glowing neon city lights,
+                                        dramatic golden hour sky with moving clouds, cinematic photography, 8k.</p>
+                                </div>
+                                <button onclick="copyPrompt('sop-prompt-s2-1')"
+                                    class="p-1 px-3 rounded bg-brand-600 hover:bg-brand-700 text-xs font-semibold mt-2 w-full">複製英文</button>
+                            </div>
+                            <!-- Scene 2 -->
+                            <div
+                                class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-2">
+                                <div>
+                                    <span class="text-xs text-slate-400 font-bold uppercase block">分鏡二：九份山城</span>
+                                    <p id="sop-prompt-s2-2"
+                                        class="text-xs italic text-slate-300 font-mono mt-1 overflow-hidden text-ellipsis line-clamp-3">
+                                        Nostalgic Jiufen old street at dusk, red lanterns glowing warmly, wet
+                                        cobblestone stairs reflecting the cozy ambient lights, highly detailed, 8k.</p>
+                                </div>
+                                <button onclick="copyPrompt('sop-prompt-s2-2')"
+                                    class="p-1 px-3 rounded bg-brand-600 hover:bg-brand-700 text-xs font-semibold mt-2 w-full">複製英文</button>
+                            </div>
+                            <!-- Scene 3 -->
+                            <div
+                                class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-2">
+                                <div>
+                                    <span class="text-xs text-slate-400 font-bold uppercase block">分鏡三：太魯閣峽谷</span>
+                                    <p id="sop-prompt-s2-3"
+                                        class="text-xs italic text-slate-300 font-mono mt-1 overflow-hidden text-ellipsis line-clamp-3">
+                                        Majestic Taroko Gorge, steep marble cliffs, a turquoise rapid river rushing
+                                        below, morning mist swirling through the canyon, photorealistic, 8k.</p>
+                                </div>
+                                <button onclick="copyPrompt('sop-prompt-s2-3')"
+                                    class="p-1 px-3 rounded bg-brand-600 hover:bg-brand-700 text-xs font-semibold mt-2 w-full">複製英文</button>
+                            </div>
+                            <!-- Scene 4 -->
+                            <div
+                                class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-2">
+                                <div>
+                                    <span class="text-xs text-slate-400 font-bold uppercase block">分鏡四：日月潭</span>
+                                    <p id="sop-prompt-s2-4"
+                                        class="text-xs italic text-slate-300 font-mono mt-1 overflow-hidden text-ellipsis line-clamp-3">
+                                        Serene Sun Moon Lake at sunrise, calm water reflecting a single traditional
+                                        wooden boat, layered mountains in the misty background, ethereal landscape, 8k.
+                                    </p>
+                                </div>
+                                <button onclick="copyPrompt('sop-prompt-s2-4')"
+                                    class="p-1 px-3 rounded bg-brand-600 hover:bg-brand-700 text-xs font-semibold mt-2 w-full">複製英文</button>
+                            </div>
+                            <!-- Scene 5 -->
+                            <div
+                                class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-2">
+                                <div>
+                                    <span class="text-xs text-slate-400 font-bold uppercase block">分鏡五：台南廟宇</span>
+                                    <p id="sop-prompt-s2-5"
+                                        class="text-xs italic text-slate-300 font-mono mt-1 overflow-hidden text-ellipsis line-clamp-3">
+                                        A beautiful traditional temple in Tainan at night, glowing yellow lantern
+                                        lights, gentle incense smoke swirling in the air, rich cultural details, 8k.</p>
+                                </div>
+                                <button onclick="copyPrompt('sop-prompt-s2-5')"
+                                    class="p-1 px-3 rounded bg-brand-600 hover:bg-brand-700 text-xs font-semibold mt-2 w-full">複製英文</button>
+                            </div>
+                        </div>
+                        <p
+                            class="text-sm text-slate-400 pl-4 border-l-4 border-sky-500 mt-2 font-normal leading-relaxed">
+                            <strong>💡 中文對照 (1-5)：</strong>1. 台北101日落壯麗全景；2. 傍晚九份老街溫慢紅燈籠；3. 太魯閣大理石峭壁與急流；4. 日出日月潭山霧與木船；5.
+                            夜間台南傳統廟宇燈籠與香煙。
+                        </p>
+                    </div>
+
+                    <!-- Step 3 Details -->
+                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+                        <h4 class="font-bold text-lg text-violet-300 flex items-center space-x-2">
+                            <span
+                                class="w-6 h-6 rounded-full bg-violet-600 text-white flex items-center justify-center text-xs">3</span>
+                            <span>步驟 3：賦予靈魂 ── Omni/Veo 5 大鏡頭「圖生影」動態與運鏡提示詞</span>
+                        </h4>
+                        <p class="text-sm text-slate-300 leading-relaxed font-normal">
+                            <strong>實作引導：</strong>在 Omni 影片生成介面，上傳對應地標圖片後，分別貼入以下引導詞，鎖定結構並產生物理動態。
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                            <!-- Motion 1 -->
+                            <div
+                                class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-2">
+                                <div>
+                                    <span class="text-xs text-slate-400 font-bold uppercase block">台北101 動態</span>
+                                    <p id="sop-prompt-s3-1"
+                                        class="text-xs italic text-slate-300 font-mono mt-1 overflow-hidden text-ellipsis line-clamp-3">
+                                        Time-lapse of city traffic light trails moving below, sunset clouds slowly
+                                        flowing across the sky, subtle camera zoom out.</p>
+                                </div>
+                                <button onclick="copyPrompt('sop-prompt-s3-1')"
+                                    class="p-1 px-3 rounded bg-brand-600 hover:bg-brand-700 text-xs font-semibold mt-2 w-full">複製英文</button>
+                            </div>
+                            <!-- Motion 2 -->
+                            <div
+                                class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-2">
+                                <div>
+                                    <span class="text-xs text-slate-400 font-bold uppercase block">九份老街 動態</span>
+                                    <p id="sop-prompt-s3-2"
+                                        class="text-xs italic text-slate-300 font-mono mt-1 overflow-hidden text-ellipsis line-clamp-3">
+                                        Gentle breeze swaying the red lanterns, rain drops falling onto the street, warm
+                                        lights flickering softly, slow horizontal pan.</p>
+                                </div>
+                                <button onclick="copyPrompt('sop-prompt-s3-2')"
+                                    class="p-1 px-3 rounded bg-brand-600 hover:bg-brand-700 text-xs font-semibold mt-2 w-full">複製英文</button>
+                            </div>
+                            <!-- Motion 3 -->
+                            <div
+                                class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-2">
+                                <div>
+                                    <span class="text-xs text-slate-400 font-bold uppercase block">太魯閣 動態</span>
+                                    <p id="sop-prompt-s3-3"
+                                        class="text-xs italic text-slate-300 font-mono mt-1 overflow-hidden text-ellipsis line-clamp-3">
+                                        Water rushing violently over the smooth marble rocks, mist slowly rising, camera
+                                        slowly gliding forward through the gorge.</p>
+                                </div>
+                                <button onclick="copyPrompt('sop-prompt-s3-3')"
+                                    class="p-1 px-3 rounded bg-brand-600 hover:bg-brand-700 text-xs font-semibold mt-2 w-full">複製英文</button>
+                            </div>
+                            <!-- Motion 4 -->
+                            <div
+                                class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-2">
+                                <div>
+                                    <span class="text-xs text-slate-400 font-bold uppercase block">日月潭 動態</span>
+                                    <p id="sop-prompt-s3-4"
+                                        class="text-xs italic text-slate-300 font-mono mt-1 overflow-hidden text-ellipsis line-clamp-3">
+                                        Soft morning light piercing through clouds, lake mist gently swirling and
+                                        dispersing, wooden boat rocking on ripples.</p>
+                                </div>
+                                <button onclick="copyPrompt('sop-prompt-s3-4')"
+                                    class="p-1 px-3 rounded bg-brand-600 hover:bg-brand-700 text-xs font-semibold mt-2 w-full">複製英文</button>
+                            </div>
+                            <!-- Motion 5 -->
+                            <div
+                                class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between space-y-2">
+                                <div>
+                                    <span class="text-xs text-slate-400 font-bold uppercase block">台南廟宇 動態</span>
+                                    <p id="sop-prompt-s3-5"
+                                        class="text-xs italic text-slate-300 font-mono mt-1 overflow-hidden text-ellipsis line-clamp-3">
+                                        Incense smoke slowly rising and curling in the air, glowing lantern lights
+                                        subtly breathing, cinematic camera orbit.</p>
+                                </div>
+                                <button onclick="copyPrompt('sop-prompt-s3-5')"
+                                    class="p-1 px-3 rounded bg-brand-600 hover:bg-brand-700 text-xs font-semibold mt-2 w-full">複製英文</button>
+                            </div>
+                        </div>
+                        <p
+                            class="text-sm text-slate-400 pl-4 border-l-4 border-sky-500 mt-2 font-normal leading-relaxed">
+                            <strong>💡 中文對照 (1-5)：</strong>1. 車流燈海軌跡，日落雲彩飄動；2. 微風吹拂燈籠，雨滴落下；3. 激流拍打岩石，河水奔騰運鏡；4.
+                            晨光穿雲，湖面煙雨緩慢消散；5. 香煙在空中緩緩繚繞，鏡頭環繞運鏡。
+                        </p>
+                    </div>
+
+                    <!-- Step 4 Details -->
+                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-4">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <h4 class="font-bold text-lg text-emerald-300 flex items-center space-x-2">
+                                <span
+                                    class="w-6 h-6 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs">4</span>
+                                <span>步驟 4：聽覺盛宴 ── 60秒旁白語音 SSML 合成程式碼</span>
+                            </h4>
+                            <button onclick="copyPrompt('sop-prompt-s4-ssml')"
+                                class="px-4 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-sm font-bold transition flex items-center space-x-2 shadow-lg shadow-brand-500/10">
+                                <i class="fa-solid fa-copy"></i>
+                                <span>複製 SSML 程式碼</span>
+                            </button>
+                        </div>
+                        <p class="text-sm text-slate-300 leading-relaxed font-normal">
+                            <strong>實作引導：</strong>複製下方 SSML 代碼，直接貼入 Google Text-to-Speech (TTS)
+                            的代碼模式中。該代碼已預先設定好完美的台灣男聲、語速減緩與分鏡停頓時間，合成效果極為自然。
+                        </p>
+                        <pre id="sop-prompt-s4-ssml"
+                            class="text-sm text-slate-200 font-mono bg-slate-950 p-4 rounded-xl border border-slate-800/80 overflow-x-auto leading-relaxed">&lt;speak&gt;
+  &lt;voice name="cmn-TW-Standard-B"&gt;
+    &lt;prosody rate="93%" pitch="-1st"&gt;
+      歡迎來到台灣，這是一趟觸動靈魂的旅程。
+      &lt;break time="1200ms"/&gt;
+      在台北，現代科技與繁華的霓虹在夕陽中閃耀。
+      &lt;break time="1200ms"/&gt;
+      走入九份，微雨與大紅燈籠訴說著山城的古老故事。
+      &lt;break time="1200ms"/&gt;
+      看太魯閣驚心動魄的岩壁峭壁與碧綠溪水。
+      &lt;break time="1200ms"/&gt;
+      聽日月潭日出時，在晨霧中盪漾的小舟細語。
+      &lt;break time="1200ms"/&gt;
+      最後，在台南古寺的裊裊薰香中，尋回心靈的寧靜。
+    &lt;/prosody&gt;
+  &lt;/voice&gt;
+&lt;/speak&gt;</pre>
+                    </div>
+
+                    <!-- Step 5 Details -->
+                    <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 space-y-3 text-sm">
+                        <h4 class="font-bold text-lg text-yellow-400 flex items-center space-x-2">
+                            <span
+                                class="w-6 h-6 rounded-full bg-yellow-500 text-slate-950 flex items-center justify-center text-xs">5</span>
+                            <span>步驟 5：完美匯出 ── 一鍵智慧字幕與 1080p 30fps 渲染</span>
+                        </h4>
+                        <p class="text-slate-300 leading-relaxed text-base font-normal">
+                            <strong>收尾工作：</strong>在 Flow 編輯平台中，將上述生成的 5 段影片、SSML 音訊音軌、以及環境背景配樂依序在時間軸排列好。
+                            <br><br>
+                            點擊選取音軌，使用 Flow 的 <strong>[Auto-Captioning / 自動智慧字幕]</strong> 選擇【Traditional Chinese
+                            繁體中文】，幾秒鐘內即可全自動產生卡點精準的繁中特效字幕！預覽無誤後，即可點擊右上角藍色按鈕以 1080p、30fps、H.264 MP4 規格導出作品！
+                        </p>
+                    </div>
+                </div>
+
+                <div
+                    class="p-6 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl text-base text-emerald-400 space-y-2">
+                    <span class="font-bold block text-lg"><i class="fa-solid fa-award mr-2"></i>結業成果物要求：</span>
+                    <p class="leading-relaxed font-normal">
+                        學員需獨立完成一支包含「旁白、配樂、動態畫面、標準字幕與品牌 Logo」的 60 秒完整影音作品（推薦 1080x1920 直式影片，用於 Reels、Shorts 或
+                        TikTok），正式解鎖個人或企業的 AI 影音頂尖生產力。
+                    </p>
+                </div>
+            </section>
+
+            <!-- Module: Quiz & Certificate (Enhanced Interactive Segment) -->
+            <section id="quiz-cert"
+                class="bg-slate-900 border-2 border-brand-500 rounded-3xl p-8 md:p-10 shadow-2xl relative overflow-hidden space-y-8">
+                <!-- Background aura -->
+                <div class="absolute -top-12 -left-12 w-48 h-48 bg-brand-500/20 rounded-full blur-2xl"></div>
+                <div class="absolute -bottom-12 -right-12 w-48 h-48 bg-cyber-blue/20 rounded-full blur-2xl"></div>
+
+                <div class="flex items-center space-x-4 pb-6 border-b border-slate-800 relative z-10">
+                    <div
+                        class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-brand-600 to-fuchsia-600 flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
+                        <i class="fa-solid fa-award text-3xl"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-3xl font-black text-white">自學成果驗收：隨堂小測與證書</h2>
+                        <p class="text-base text-slate-400 mt-1">測試您對 Google Omni x Flow 影音工作流的理解</p>
+                    </div>
+                </div>
+
+                <!-- 4-Question Interactive Quiz (Fixed Option Leaks - Clean Edition) -->
+                <div class="space-y-6 relative z-10">
+                    <h3 class="text-2xl font-bold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-circle-question text-brand-400 text-xl"></i>
+                        <span>1. 觀念隨堂測驗 (4題 ── 無提示專業版)</span>
+                    </h3>
+
+                    <div class="space-y-6">
+                        <!-- Q1 -->
+                        <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-4">
+                            <p class="text-base font-bold text-slate-200">Q1. 在 Omni 影片生成工具鏈中，專注於「高畫質、具備物理世界規律影片」的模型是？
+                            </p>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <button onclick="checkQuiz(1, 'A')"
+                                    class="quiz-opt-1 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-brand-500 text-sm text-left transition font-semibold">A.
+                                    Google Omni</button>
+                                <button onclick="checkQuiz(1, 'B')"
+                                    class="quiz-opt-1 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-brand-500 text-sm text-left transition font-semibold">B.
+                                    Google Veo</button>
+                                <button onclick="checkQuiz(1, 'C')"
+                                    class="quiz-opt-1 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-brand-500 text-sm text-left transition font-semibold">C.
+                                    Nanobanana</button>
+                            </div>
+                            <p id="quiz-ans-1" class="hidden text-sm font-bold mt-3"></p>
+                        </div>
+
+                        <!-- Q2 -->
+                        <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-4">
+                            <p class="text-base font-bold text-slate-200">Q2. 下列關於「圖生影
+                                (Image-to-Video)」提示詞撰寫，哪一項觀念是「最正確」的？</p>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <button onclick="checkQuiz(2, 'A')"
+                                    class="quiz-opt-2 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-brand-500 text-sm text-left transition font-semibold">A.
+                                    必須再次完整描繪圖片上已有的事物</button>
+                                <button onclick="checkQuiz(2, 'B')"
+                                    class="quiz-opt-2 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-brand-500 text-sm text-left transition font-semibold">B.
+                                    隨便寫什麼都不會影響影片的連貫性</button>
+                                <button onclick="checkQuiz(2, 'C')"
+                                    class="quiz-opt-2 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-brand-500 text-sm text-left transition font-semibold">C.
+                                    專注描述「什麼動起來」與「運鏡軌跡」</button>
+                            </div>
+                            <p id="quiz-ans-2" class="hidden text-sm font-bold mt-3"></p>
+                        </div>
+
+                        <!-- Q3 -->
+                        <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-4">
+                            <p class="text-base font-bold text-slate-200">Q3. 在 Flow 平台中，如何讓影片畫面的剪接點完美契合中文旁白口白？</p>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <button onclick="checkQuiz(3, 'A')"
+                                    class="quiz-opt-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-brand-500 text-sm text-left transition font-semibold">A.
+                                    使用時間軸 [Sync / 自動對齊] 功能</button>
+                                <button onclick="checkQuiz(3, 'B')"
+                                    class="quiz-opt-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-brand-500 text-sm text-left transition font-semibold">B.
+                                    用滑鼠手動一幀一幀拖曳對齊，沒有捷徑</button>
+                                <button onclick="checkQuiz(3, 'C')"
+                                    class="quiz-opt-3 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-brand-500 text-sm text-left transition font-semibold">C.
+                                    影片只要下載下來就能自動在本地播放對齊</button>
+                            </div>
+                            <p id="quiz-ans-3" class="hidden text-sm font-bold mt-3"></p>
+                        </div>
+
+                        <!-- Q4 -->
+                        <div class="bg-slate-950 p-6 rounded-2xl border border-slate-800 space-y-4">
+                            <p class="text-base font-bold text-slate-200">Q4. 如何在多鏡頭連續分鏡（導演模式）中，確保同一個角色的長相特徵不失真？</p>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <button onclick="checkQuiz(4, 'A')"
+                                    class="quiz-opt-4 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-brand-500 text-sm text-left transition font-semibold">A.
+                                    每次生圖都隨機生成，靠運氣挑選</button>
+                                <button onclick="checkQuiz(4, 'B')"
+                                    class="quiz-opt-4 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-brand-500 text-sm text-left transition font-semibold">B.
+                                    透過鎖定 Seed (種子值) 進行生成</button>
+                                <button onclick="checkQuiz(4, 'C')"
+                                    class="quiz-opt-4 p-4 rounded-xl bg-slate-900 border border-slate-800 hover:border-brand-500 text-sm text-left transition font-semibold">C.
+                                    利用高解析度渲染把所有臉部細節洗掉</button>
+                            </div>
+                            <p id="quiz-ans-4" class="hidden text-sm font-bold mt-3"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Beautiful Interactive Certificate Maker -->
+                <div class="bg-slate-950 p-6 md:p-8 rounded-2xl border border-slate-800 space-y-6 relative z-10">
+                    <div class="text-center space-y-3">
+                        <h3
+                            class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-medal text-3xl text-yellow-400 animate-bounce"></i>
+                            <span>2. AI 影音大師結業證書產生器</span>
+                        </h3>
+                        <p class="text-sm text-slate-400">完成上方自學進度並通過隨堂測驗，即可產生專屬您的 2026 AI 影音結業證書！</p>
+                    </div>
+
+                    <!-- Name input and triggers -->
+                    <div class="max-w-md mx-auto space-y-4">
+                        <div class="flex space-x-3">
+                            <input id="cert-name" type="text" placeholder="請輸入您的真實姓名"
+                                class="flex-1 bg-slate-900 border border-slate-800 focus:border-brand-500 rounded-xl px-5 py-3 text-base text-slate-100 placeholder-slate-500 focus:outline-none">
+                            <button onclick="generateCertificate()"
+                                class="px-6 py-3 rounded-xl bg-gradient-to-r from-brand-600 to-fuchsia-600 hover:from-brand-500 hover:to-fuchsia-500 text-base font-bold shadow-lg shadow-brand-500/20 transition">
+                                產生證書
+                            </button>
+                        </div>
+                        <div class="flex justify-center">
+                            <button id="btn-download-cert" onclick="downloadCertificate()"
+                                class="hidden px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-sm font-bold text-white transition space-x-2">
+                                <i class="fa-solid fa-file-arrow-down text-lg"></i>
+                                <span>下載證書 PNG 檔</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Hidden canvas and visible preview of Certificate -->
+                    <div class="flex justify-center">
+                        <div id="cert-wrapper"
+                            class="hidden border-4 border-yellow-500/40 p-1 bg-slate-950 rounded-2xl overflow-hidden shadow-2xl max-w-full">
+                            <canvas id="cert-canvas" width="800" height="550"
+                                class="max-w-full h-auto bg-slate-900 rounded-xl"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer of the page -->
+    <footer class="bg-slate-950 border-t border-slate-900 py-16 mt-24 text-center text-sm text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 space-y-4 leading-relaxed">
+            <p class="text-slate-400">💡 <strong>自學成功的座右銘：</strong> AI
+                影音創作就像堆積木。先學會單一積木（文生影、圖生影）怎麼造，再學會用時間軸把他們黏起來。反覆練習，掌握這套高產值工作流！</p>
+            <p>© 2026 Google Omni x Flow 影音自學與整合教育計畫. 保留所有文本與智慧呈現創作者權益.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic Section -->
+    <script>
+        // Custom notification Toast helper
+        function showToast(message, isSuccess = true) {
+            const toast = document.getElementById('toast');
+            const icon = toast.querySelector('i');
+            const span = toast.querySelector('span');
+
+            span.innerText = message;
+            if (isSuccess) {
+                toast.firstElementChild.className = "bg-slate-900 border border-cyber-green text-cyber-green px-6 py-4 rounded-xl shadow-2xl flex items-center space-x-3";
+                icon.className = "fa-solid fa-circle-check text-2xl";
+            } else {
+                toast.firstElementChild.className = "bg-slate-900 border border-red-500 text-red-500 px-6 py-4 rounded-xl shadow-2xl flex items-center space-x-3";
+                icon.className = "fa-solid fa-triangle-exclamation text-2xl";
+            }
+
+            // Slide in animation
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // Copy prompting code helper (one-click copy)
+        function copyPrompt(elementId) {
+            const element = document.getElementById(elementId);
+            let textToCopy = element.innerText;
+
+            // Create fallback input element
+            const tempInput = document.createElement("textarea");
+            tempInput.value = textToCopy;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast("提示詞複製成功！已複製到您的剪貼簿。");
+                } else {
+                    showToast("複製失敗，請手動複製。", false);
+                }
+            } catch (err) {
+                showToast("複製失敗，請手動複製。", false);
+            }
+
+            document.body.removeChild(tempInput);
+        }
+
+        // Update Motion Warning details
+        function updateMotionWarning(val) {
+            const text = document.getElementById('motion-tip');
+            if (val >= 8) {
+                text.innerText = `警告：強度 ${val} 極高！可能導致畫面部分物件形變或不合常理融化。`;
+                text.className = "text-xs text-red-400 mt-2 font-semibold";
+            } else if (val <= 4) {
+                text.innerText = `強度 ${val} 動態偏慢。適合微風拂面或精緻鏡頭。`;
+                text.className = "text-xs text-sky-400 mt-2 font-semibold";
+            } else {
+                text.innerText = `強度 ${val} 具高度動態感，可讓水花與划槳展現力量！`;
+                text.className = "text-xs text-yellow-400 mt-2 font-semibold";
+            }
+        }
+
+        // Global Auto Reading Progress tracking on window scroll
+        window.addEventListener('scroll', () => {
+            const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = Math.round((winScroll / height) * 100);
+            document.getElementById('global-progress-percent').innerText = scrolled + "%";
+            document.getElementById('global-progress-bar').style.width = scrolled + "%";
+        });
+
+        // Timeline simulator behavior logic
+        function simulateTimeline(action) {
+            const video1 = document.getElementById('sim-video1');
+            const video2 = document.getElementById('sim-video2');
+            const audio = document.getElementById('sim-audio');
+            const log = document.getElementById('sim-log');
+
+            if (action === 'trim') {
+                video1.style.width = '20%';
+                video1.querySelector('span:last-child').innerText = '2秒';
+                log.innerText = "操作成功！您已將【綠豆發芽】影片右側成功向左縮剪裁切至 2 秒長度。";
+                log.className = "text-sm text-center text-sky-400 font-mono italic mt-2";
+            } else if (action === 'sync') {
+                video1.style.width = '35%';
+                video2.style.width = '45%';
+                audio.style.width = '80%';
+                log.innerText = "操作成功！已啟用【Auto-Sync】，視訊播放切點已完美卡在旁白的停頓與重拍上。";
+                log.className = "text-sm text-center text-emerald-400 font-mono italic mt-2";
+            } else if (action === 'reset') {
+                video1.style.width = '40%';
+                video1.querySelector('span:last-child').innerText = '4秒';
+                video2.style.width = '60%';
+                audio.style.width = '80%';
+                log.innerText = "時間軸狀態已還原為初始設定。";
+                log.className = "text-sm text-center text-slate-400 font-mono italic mt-2";
+            }
+        }
+
+        // Quiz scoring & feedback system (Clean validation without answer leakage in options)
+        function checkQuiz(questionNum, option) {
+            const ansText = document.getElementById(`quiz-ans-${questionNum}`);
+            const buttons = document.querySelectorAll(`.quiz-opt-${questionNum}`);
+
+            // Reset buttons styling in this pool
+            buttons.forEach(btn => {
+                btn.className = `quiz-opt-${questionNum} p-4 rounded-xl bg-slate-900 border border-slate-800 text-sm text-left text-slate-300 transition font-semibold w-full`;
+            });
+
+            // Mark correct & feedback texts
+            let isCorrect = false;
+            let feedback = "";
+
+            if (questionNum === 1) {
+                if (option === 'B') { isCorrect = true; feedback = "正確！Google Veo 是專為高品質與符合物理定律的影片而設計。"; }
+                else { feedback = "回答錯誤，請再讀一次課程教材！提示：Google Veo 是專門的頂級物理影片模型。"; }
+            } else if (questionNum === 2) {
+                if (option === 'C') { isCorrect = true; feedback = "正確！在圖生影中不需要重複圖片內容，應聚焦於鏡頭運動與動態要素（如光影變化）。"; }
+                else { feedback = "回答錯誤！圖生影切忌在提示詞重複描繪靜態細節，應聚焦於鏡頭軌跡與微動態。"; }
+            } else if (questionNum === 3) {
+                if (option === 'A') { isCorrect = true; feedback = "正確！Flow 內置的 [Sync / 自動對齊] 鍵可全自動分析音訊與影片節奏進行匹配。"; }
+                else { feedback = "回答錯誤！雖然可以手動調整，但 Flow 提供了一鍵自動 [Sync] 完美卡點功能。"; }
+            } else if (questionNum === 4) {
+                if (option === 'B') { isCorrect = true; feedback = "正確！固定 Seed (種子值) 並配合前影格控制，是維持跨分鏡角色與場景連貫性的核心技巧。"; }
+                else { feedback = "回答錯誤！鎖定 Seed（種子值）是跨分鏡保持主體長相服裝不變的標準業界做法。"; }
+            }
+
+            ansText.innerText = feedback;
+            ansText.className = isCorrect ? "text-sm font-bold mt-3 text-cyber-green" : "text-sm font-bold mt-3 text-red-400";
+            ansText.classList.remove('hidden');
+
+            // Find current clicked button and color it
+            event.currentTarget.className = isCorrect
+                ? `quiz-opt-${questionNum} p-4 rounded-xl bg-emerald-950 border border-emerald-500 text-sm text-left text-emerald-300 transition font-semibold w-full`
+                : `quiz-opt-${questionNum} p-4 rounded-xl bg-red-950 border border-red-500 text-sm text-left text-red-300 transition font-semibold w-full`;
+        }
+
+        // Canvas-based real-time certificate generator
+        function generateCertificate() {
+            const name = document.getElementById('cert-name').value.trim();
+            if (!name) {
+                showToast("請輸入姓名，以便為您量身打造專屬證書！", false);
+                return;
+            }
+
+            const canvas = document.getElementById('cert-canvas');
+            const ctx = canvas.getContext('2d');
+            const wrapper = document.getElementById('cert-wrapper');
+            const downloadBtn = document.getElementById('btn-download-cert');
+
+            // Draw base styled certificate layout
+            // Background
+            ctx.fillStyle = '#0f172a'; // Slate 900
+            ctx.fillRect(0, 0, 800, 550);
+
+            // Double borders
+            ctx.strokeStyle = '#d97706'; // Gold/Amber border
+            ctx.lineWidth = 6;
+            ctx.strokeRect(20, 20, 760, 510);
+
+            ctx.strokeStyle = '#4c1d95'; // Purple dark border
+            ctx.lineWidth = 2;
+            ctx.strokeRect(30, 30, 740, 490);
+
+            // Corner decorations
+            ctx.fillStyle = '#d97706';
+            ctx.fillRect(15, 15, 30, 30);
+            ctx.fillRect(755, 15, 30, 30);
+            ctx.fillRect(15, 505, 30, 30);
+            ctx.fillRect(755, 505, 30, 30);
+
+            // Text Header
+            ctx.fillStyle = '#f8fafc';
+            ctx.font = 'bold 36px "Noto Sans TC", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('AI 影音工作流自學大師證書', 400, 110);
+
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '14px "Noto Sans TC", sans-serif';
+            ctx.fillText('CERTIFICATE OF AI VIDEO WORKFLOW MASTERY', 400, 140);
+
+            // Subtitle
+            ctx.fillStyle = '#a78bfa';
+            ctx.font = '16px "Noto Sans TC", sans-serif';
+            ctx.fillText('茲證明學員', 400, 200);
+
+            // Student Name
+            ctx.fillStyle = '#fbbf24'; // Vivid Gold
+            ctx.font = 'bold 42px "Noto Sans TC", sans-serif';
+            ctx.fillText(name, 400, 260);
+
+            // Achievement context
+            ctx.fillStyle = '#e2e8f0';
+            ctx.font = '16px "Noto Sans TC", sans-serif';
+            ctx.fillText('已成功修畢 Google Omni x Flow 影音工作流自學課程所有核心單元，', 400, 320);
+            ctx.fillText('並成功掌握文生影、高階圖生影、導演級鏡頭操作、與 Flow 平台商業級自動化剪輯技術，', 400, 350);
+            ctx.fillText('特頒此證，以茲鼓勵。', 400, 380);
+
+            // Footer Signature section
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(150, 460);
+            ctx.lineTo(330, 460);
+            ctx.moveTo(470, 460);
+            ctx.lineTo(650, 460);
+            ctx.stroke();
+
+            ctx.fillStyle = '#64748b';
+            ctx.font = '12px "Noto Sans TC", sans-serif';
+            ctx.fillText('自學導師暨評審委員會', 240, 480);
+            ctx.fillText('發行日期：2026年 6月 22日', 560, 480);
+
+            ctx.fillStyle = '#fbbf24';
+            ctx.font = 'italic bold 22px "Inter", sans-serif';
+            ctx.fillText('Google Omni x Flow', 240, 440);
+            ctx.fillStyle = '#22c55e';
+            ctx.fillText('APPROVED 2026', 560, 440);
+
+            // Reveal Preview Wrapper and button
+            wrapper.classList.remove('hidden');
+            downloadBtn.classList.remove('hidden');
+            showToast("結業證書產生成功！您可在下方預覽並下載保存。");
+        }
+
+        // Export canvas as image for local download
+        function downloadCertificate() {
+            const canvas = document.getElementById('cert-canvas');
+            const dataUrl = canvas.toDataURL("image/png");
+
+            // Mock clicking a dynamic link to trigger download
+            const tempLink = document.createElement('a');
+            tempLink.download = 'AI_影音工作流結業證書.png';
+            tempLink.href = dataUrl;
+            document.body.appendChild(tempLink);
+            tempLink.click();
+            document.body.removeChild(tempLink);
+            showToast("成功下載高畫質結業證書 PNG！恭喜畢業！");
+        }
+    </script>
+</body>
+
+</html>
