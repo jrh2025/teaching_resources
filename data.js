@@ -226,6 +226,16 @@ window.APP_DATA = {
       "icon": "Scissors",
       "color": "orange",
       "grade": "小程式"
+    },
+    {
+      "id": "item_1782278953408",
+      "title": "智慧語音合成工作室",
+      "category": "小程式",
+      "description": "雙效驅動的極簡文字轉語音（TTS）平台，透過 100% 純前端靜態架構，完美融合本地發音組件與 Gemini 頂級 AI 雲端核心，解決傳統語音合成工具隱私外洩與音色單一的問題。\n",
+      "link": "TTS_Studio.html",
+      "icon": "Music2",
+      "color": "slate",
+      "grade": "小程式"
     }
   ]
 };
