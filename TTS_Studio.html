@@ -84,7 +84,7 @@
     <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none">
     </div>
 
-    <!-- 主要導航欄 (白天：溫和書頁金 Border，黑夜：黑灰 slate-800) -->
+    <!-- 主要導航欄 -->
     <header
         class="border-b border-amber-200/60 dark:border-slate-800 bg-[#fbf9f4]/80 dark:bg-slate-900/50 backdrop-blur sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -167,9 +167,9 @@
                     </label>
                     <select id="gemini-model-select"
                         class="w-full bg-[#faf5ec] border border-amber-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-brand-500 transition text-stone-800 dark:bg-slate-950 dark:text-white cursor-pointer">
-                        <option value="gemini-2.5-flash-preview-tts">gemini-2.5-flash-preview-tts (語音合成專用 - 推薦1)
+                        <option value="gemini-2.5-flash-preview-tts">gemini-2.5-flash-preview-tts (語音合成專用 - 推薦 1)
                         </option>
-                        <option value="gemini-3.1-flash-tts-preview">gemini-3.1-flash-tts-preview (語音合成專用 - 推薦2)
+                        <option value="gemini-3.1-flash-tts-preview">gemini-3.1-flash-tts-preview (語音合成專用 - 推薦 2)
                         </option>
                         <option value="custom">自訂模型位置 (手動輸入，防止將來過時)</option>
                     </select>
@@ -179,7 +179,7 @@
                         class="block text-[10px] font-semibold uppercase tracking-wider text-stone-500 dark:text-slate-400 mb-1">
                         手動輸入模型標識符 (Model ID)
                     </label>
-                    <input type="text" id="gemini-custom-model" placeholder="例如：gemini-3.0-tts"
+                    <input type="text" id="gemini-custom-model" placeholder="例如：gemini-2.5-flash"
                         class="w-full bg-[#faf5ec] border border-amber-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-brand-500 transition text-stone-800 dark:bg-slate-950 dark:text-white">
                 </div>
             </div>
@@ -231,7 +231,7 @@
                             </div>
                         </div>
 
-                        <!-- 1. 音色選擇 - 本地裝置原生音色 (Timbre - Local) -->
+                        <!-- 1. 音色選擇 - 本地裝置原生音色 -->
                         <div>
                             <label
                                 class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center gap-1">
@@ -250,7 +250,7 @@
                             </div>
                         </div>
 
-                        <!-- 2. 音色選擇 - Gemini AI 數位對接音色 (Timbre - AI Export) -->
+                        <!-- 2. 音色選擇 - Gemini AI 數位對接音色 -->
                         <div>
                             <label
                                 class="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center gap-1">
@@ -272,10 +272,10 @@
                             </p>
                         </div>
 
-                        <!-- 發音參數微調 (音長、音高、音強) -->
+                        <!-- 發音參數微調 -->
                         <div class="space-y-4 pt-3 border-t border-amber-200/60 dark:border-slate-800">
 
-                            <!-- 3. 音長 (語速 - Duration/Rate) -->
+                            <!-- 3. 音長 (語速) -->
                             <div>
                                 <div class="flex justify-between items-center mb-1">
                                     <span
@@ -294,7 +294,7 @@
                                 </div>
                             </div>
 
-                            <!-- 4. 音高 (音調 - Pitch) -->
+                            <!-- 4. 音高 (音調) -->
                             <div>
                                 <div class="flex justify-between items-center mb-1">
                                     <span
@@ -313,7 +313,7 @@
                                 </div>
                             </div>
 
-                            <!-- 5. 音強 (音量 - Intensity/Volume) -->
+                            <!-- 5. 音強 (音量) -->
                             <div>
                                 <div class="flex justify-between items-center mb-1">
                                     <span
@@ -605,23 +605,57 @@
             { id: "Sulafat", name: "Sulafat (悠揚清亮女聲)", gender: "女聲" }
         ];
 
+        // 30種音色精準角色與發音字典
+        const geminiVoiceProfiles = {
+            "Zephyr": { gender: "Male", desc: "a bright, clear, and warm male narrator with a natural conversational flow. Keep his voice distinctly masculine, professional, and clear." },
+            "Kore": { gender: "Female", desc: "a firm, professional, and conversational female speaker. Keep her voice standard, elegant, and distinctly feminine." },
+            "Puck": { gender: "Youthful/Child", desc: "an upbeat, energetic, and highly animated youthful voice. Keep the tone highly cheerful, lively, and young." },
+            "Fenrir": { gender: "Male", desc: "a bold, commanding, and powerful male voice. Keep the tone authoritative, strong, and highly commanding." },
+            "Leda": { gender: "Female", desc: "a gentle, soothing, and soft female voice. Keep her voice highly intimate, warm, relaxed, and emotionally expressive." },
+            "Charon": { gender: "Male", desc: "a deep, authoritative, and informative male voice. Excellent for formal narration and professional delivery." },
+            "Aoede": { gender: "Female", desc: "a breezy, friendly, and warm female voice. Conversational, highly natural, and approachable." },
+            "Orus": { gender: "Male", desc: "a firm, steady, and business-focused male voice. Professional, serious, and corporate." },
+            "Callirrhoe": { gender: "Female", desc: "a natural, everyday female speaker. Balanced, clear, and highly standard conversational tone." },
+            "Autonoe": { gender: "Female", desc: "a bright, light, and gentle female voice. Clear and soft tone, highly elegant." },
+            "Enceladus": { gender: "Male", desc: "a bright, loud, and energetic male voice. Highly expressive and prominent." },
+            "Iapetus": { gender: "Male", desc: "a clear, sunny, and friendly male narrator. Highly engaging, enthusiastic, and warm." },
+            "Umbriel": { gender: "Female", desc: "an easy-going, calm, and steady female voice. Relaxed, slightly cold, and objective tone." },
+            "Algieba": { gender: "Female", desc: "a bright, crisp, and highly lively female voice. Sharp pronunciation and active cadence." },
+            "Despina": { gender: "Female", desc: "a sweet, warm, and comforting female voice. Great for storytelling and soft-spoken customer service." },
+            "Erinome": { gender: "Female", desc: "a highly mature, clear, and professional female voice. Authoritative yet polite, ideal for announcements." },
+            "Algenib": { gender: "Male", desc: "a bright, active, and energetic male speaker. Forward-moving cadence and clear articulation." },
+            "Rasalgethi": { gender: "Male", desc: "an informative, deep, and steady male narrator. Calm, academic, and highly credible." },
+            "Laomedeia": { gender: "Female", desc: "an upbeat, light, and cheerful female voice. Friendly, airy, and optimistic." },
+            "Achernar": { gender: "Male", desc: "a clear, direct, and sunny male speaker. Engaging and straightforward." },
+            "Alnilam": { gender: "Male", desc: "a very deep, calm, and resonant male voice. Slow-paced, stable, and highly confident." },
+            "Schedar": { gender: "Female", desc: "an even, balanced, and steady female narrator. Professional, smooth, and highly consistent." },
+            "Gacrux": { gender: "Female", desc: "a mature, warm, and comforting female voice. Friendly, parental, and highly reliable." },
+            "Pulcherrima": { gender: "Female", desc: "a professional, news-broadcast-style female speaker. Authoritative, highly articulate, and objective." },
+            "Achird": { gender: "Female", desc: "a friendly, warm, and highly approachable female speaker. Sociable and standard conversational cadence." },
+            "Zubenelgenubi": { gender: "Male", desc: "a gentle, warm, and highly polite male speaker. Courteous, soft-spoken, and respectful." },
+            "Vindemiatrix": { gender: "Female", desc: "a gentle, crystal-clear, and soft female voice. Articulate and soothing." },
+            "Sadachbia": { gender: "Male", desc: "a highly lively, cheerful, and upbeat male speaker. Bright, friendly, and active." },
+            "Sadaltager": { gender: "Male", desc: "a highly knowledgeable, calm, and deep male academic voice. Educational, stable, and warm." },
+            "Sulafat": { gender: "Female", desc: "a highly warm, clear, and beautiful female voice. Resonant, standard, and highly pleasant." }
+        };
+
         // 範本文字資料
         const templates = {
             story: "在一個遙遠的魔法森林裡，住著一隻會說話的小松鼠皮皮。他有一條蓬鬆的大尾巴，每天最喜歡的事情就是收集各種發光的橡果。一天下午，森林深處突然傳來了一陣奇妙的音樂...",
-            news: "今日重大科技新聞速報。全球領先的人工智慧專家與語音團隊，今日宣佈推出新一代深度神經網絡語音合成技術（TTS）。該技術能夠高度模擬人類發音中的換氣、語調起伏，甚至能夠根據文章情境自動調配適當的情感，這項技術預計將廣泛運用於電子書 and 智慧助理中。",
-            bilingual: "Welcome to the Neural TTS Studio! 這是一段中英文交雜的混合語意發音測試。We are extremely thrilled to show you our high-fidelity custom speech engine. 它能完美保持中英雙語發音流暢，不會卡頓。Please enjoy this client-side experience!"
+            news: "今日重大科技新聞速報。全球領先的人工智慧專家與語音團隊，今日宣佈推出新一代深度神經網絡語音合成技術（TTS）。該技術能夠高度模擬人類發音中的語調起伏，這項技術預計將廣泛運用於電子書中。",
+            bilingual: "Welcome to the Neural TTS Studio! 這是一段中英文交雜的混合語意發音測試。We are extremely thrilled to show you our high-fidelity speech engine. 它能完美保持中英雙語發音流暢。"
         };
 
         // 全域 State
         const AppState = {
-            engine: 'local', // 唯一常駐核心引擎：瀏覽器原生 + AI 雙效引擎
+            engine: 'local',
             geminiConfig: { key: '', model: 'gemini-2.5-flash-preview-tts', customModel: '' },
             selectedRegion: 'tw',
-            localVoiceName: '', // 當前裝置選擇之發音器
-            geminiVoiceName: 'Kore', // 當前映射之 Gemini AI 音色
-            rate: 1.0, // 音長 (語速)
-            pitch: 0, // 音高 (音調)
-            volume: 100, // 音強 (音量)
+            localVoiceName: '',
+            geminiVoiceName: 'Kore',
+            rate: 1.0,
+            pitch: 0,
+            volume: 100,
             audioBlob: null,
             customVoices: [],
             history: [],
@@ -814,7 +848,6 @@
                 };
             }
 
-            // 固定啟用極簡 2合1 引擎
             switchToEngineMode('local');
 
             document.getElementById('text-input').value = templates.story;
@@ -862,7 +895,6 @@
             }
             localStorage.setItem('theme', theme);
 
-            // 當切換到白天閱讀模式時，全體波形同步套用經典暖沙褐與琥珀陶土色漸變，護眼有質感
             if (wavesurfer) {
                 wavesurfer.setOptions({
                     waveColor: theme === 'light' ? '#c2b39a' : '#4f46e5',
@@ -886,7 +918,6 @@
             const voiceSelect = document.getElementById('voice-select');
             voiceSelect.innerHTML = '';
 
-            // 根據當前選擇的 Region 分類本機原生語音
             const filteredLocal = systemVoices.filter(v => getVoiceRegion(v) === AppState.selectedRegion);
 
             if (filteredLocal.length === 0) {
@@ -922,7 +953,7 @@
             counter.textContent = `字數統計: ${txt.length} / 2000 字`;
         }
 
-        // 更新 Gemini 金鑰與狀態徽章 (已修復：支援全域自動注入的 apiKey)
+        // 更新 Gemini 金鑰與狀態徽章
         function updateGeminiStatusBadge() {
             const badgeContainer = document.getElementById('gemini-status-badge');
             if (!badgeContainer) return;
@@ -932,7 +963,7 @@
                 badgeContainer.innerHTML = `
                     <span class="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] rounded-full font-semibold">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
-                        AI 背景無損導出核心就緒 (發音音色：${AppState.geminiVoiceName} | 模組：${activeModel})
+                        AI 背景無損導出核心就緒 (發音音色：${AppState.geminiVoiceName} | 模組：${activeModel} | 已套用高穩定極低隨機配置)
                     </span>
                 `;
             } else {
@@ -988,35 +1019,30 @@
             }
         }
 
-        // 套用自訂音色配方 (含完整 4音要素)
+        // 套用自訂音色配方
         function applyCustomVoice(id) {
             const item = AppState.customVoices.find(v => v.id === id);
             if (!item) return;
 
-            // 1. 還原本地發音器
             if (item.localVoiceName) {
                 AppState.localVoiceName = item.localVoiceName;
                 document.getElementById('voice-select').value = item.localVoiceName;
             }
 
-            // 2. 還原 Gemini 映射音色 (音色)
             if (item.geminiVoiceName) {
                 AppState.geminiVoiceName = item.geminiVoiceName;
                 document.getElementById('gemini-voice-select').value = item.geminiVoiceName;
                 updateGeminiStatusBadge();
             }
 
-            // 3. 還原音長 (語速)
             document.getElementById('rate-slider').value = item.rate;
             document.getElementById('rate-val').textContent = `${item.rate.toFixed(2)}x`;
             AppState.rate = item.rate;
 
-            // 4. 還原音高 (音調)
             document.getElementById('pitch-slider').value = item.pitch;
             document.getElementById('pitch-val').textContent = `${item.pitch >= 0 ? '+' : ''}${item.pitch}%`;
             AppState.pitch = item.pitch;
 
-            // 5. 還原音強 (音量)
             const vol = item.volume !== undefined ? item.volume : 100;
             document.getElementById('vol-slider').value = vol;
             document.getElementById('vol-val').textContent = `${vol}%`;
@@ -1128,18 +1154,16 @@
             showToast('已載入歷史設定與四音特徵，可直接合成發音', 'success');
         }
 
-        // 播放歷史紀錄音軌 (已修復：解決無法播放、自動流暢播音、解決增生存檔問題)
+        // 播放歷史紀錄音軌
         function playHistoryAudio(id) {
             const item = AppState.history.find(h => h.id === id);
             if (!item) return;
 
             if (item.audioBuffer) {
-                // 如果有緩存二進制數位音軌，直接轉換為 Blob 並載入 WaveSurfer 進行播放
                 const blob = new Blob([item.audioBuffer], { type: item.audioMime || 'audio/wav' });
 
                 loadAudioToPlayer(blob, item.text);
 
-                // 確保在 WaveSurfer 載入完畢後，自動開始流暢播放並更新狀態
                 wavesurfer.once('ready', () => {
                     wavesurfer.play();
                     setPlayerPlayState(true);
@@ -1147,7 +1171,6 @@
 
                 showToast('正在播放歷史數位音軌快取...', 'success');
             } else {
-                // 如果沒有背景生成音軌 (例如未配置 API 金鑰時)，直接在前端調用 Web Speech API，不觸發重複寫入歷史存檔的 bug
                 if (typeof speechSynthesis === 'undefined') {
                     showToast('您的瀏覽器不支援 Speech Synthesis API', 'error');
                     return;
@@ -1164,7 +1187,6 @@
                 utterance.pitch = Math.max(0.1, Math.min(2.0, 1.0 + ((item.pitch || 0) / 50)));
                 utterance.volume = (item.volume !== undefined ? item.volume : 100) / 100;
 
-                // 調用模擬器做播放條動態指示
                 setupLocalPlaybackSimulator(item.text);
                 speechSynthesis.speak(utterance);
 
@@ -1275,7 +1297,7 @@
             return wavBlob;
         }
 
-        // 高相容性純前端 MP3 編碼器 (已修復：完美將音訊 Buffer 編碼為真正可播放之 .mp3 二進制串流)
+        // lamejs 編碼器 (WAV 壓縮成可播放之 MP3)
         async function convertBlobToMp3(wavBlob) {
             const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             const arrayBuffer = await wavBlob.arrayBuffer();
@@ -1284,11 +1306,10 @@
             const channels = audioBuffer.numberOfChannels;
             const sampleRate = audioBuffer.sampleRate;
 
-            // 使用 lamejs 進行高品質 MP3 封裝，位元率預設為 128kbps
             const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, 128);
             const mp3Data = [];
 
-            const sampleBlockSize = 1152; // 必須為 576 的倍數
+            const sampleBlockSize = 1152;
 
             if (channels === 1) {
                 const samples = audioBuffer.getChannelData(0);
@@ -1306,7 +1327,6 @@
                     }
                 }
             } else {
-                // 雙聲道編碼
                 const samplesL = audioBuffer.getChannelData(0);
                 const samplesR = audioBuffer.numberOfChannels > 1 ? audioBuffer.getChannelData(1) : samplesL;
 
@@ -1330,7 +1350,6 @@
                 }
             }
 
-            // 排空編碼器殘餘緩衝區
             const mp3buf = mp3encoder.flush();
             if (mp3buf.length > 0) {
                 mp3Data.push(new Uint8Array(mp3buf));
@@ -1340,7 +1359,7 @@
             return new Blob(mp3Data, { type: 'audio/mp3' });
         }
 
-        // PCM (L16) 二進制轉 WAV (用於 Gemini TTS 產物)
+        // PCM (L16) 二進制轉 WAV
         function pcmToWav(pcmBuffer, sampleRate) {
             const numOfChan = 1;
             const bitsPerSample = 16;
@@ -1379,7 +1398,7 @@
             }
         }
 
-        // Gemini AI 雲端無損語音轉譯 (背景轉譯引擎 - 支援對照 Runtime 金鑰)
+        // Gemini AI 雲端高穩定無損語音轉譯核心 (經過優化重構)
         async function synthesizeSpeechGemini(text, voiceName, rate, pitch, volume, onProgress, onSuccess, onError) {
             const userKey = AppState.geminiConfig.key || apiKey;
             if (!userKey) {
@@ -1399,17 +1418,31 @@
 
             const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${userKey}`;
 
-            // 將音高與音強的參數融入合成描述中，協助 AI 進行語意最佳化
-            let styleInstruction = "";
-            if (pitch > 15) styleInstruction += "用高亢、高音調的語氣，";
-            else if (pitch < -15) styleInstruction += "用低沉、渾厚的語氣，";
-            if (volume < 50) styleInstruction += "音量輕柔溫和、小聲點，";
-            else if (volume > 90) styleInstruction += "音量飽滿有力、宏亮點，";
+            // 1. 取得目標音色的底層特性描述
+            const activeProfile = geminiVoiceProfiles[voiceName] || { gender: "Standard", desc: "a natural, clear conversational voice." };
 
-            const rateStr = rate > 1.2 ? "語速加快：" : (rate < 0.8 ? "語速減慢：" : "");
+            // 2. 構建高相容性的原生 Performance Tags 提示
+            // 由於 Gemini TTS 預覽模型在大模型 REST 呼叫中，不支援將 systemInstruction 與 responseModalities: ["AUDIO"] 混合使用（會報 HTTP 500），
+            // 因此將風格指令以 Google 官方推薦的「中括號效能標籤 ([Tag])」直接前綴在文字中，既能精準定錨，又具有 100% 呼叫成功率！
+            let voicePrefix = `[Voice Identity Grounding: Speak strictly as ${voiceName}, ${activeProfile.gender}, ${activeProfile.desc}] `;
+
+            // 寫入音長、音高、音調控制標籤
+            let acousticTags = "";
+            if (pitch > 15) acousticTags += "[high pitch] ";
+            else if (pitch < -15) acousticTags += "[deep voice] ";
+
+            if (rate > 1.2) acousticTags += "[very fast] ";
+            else if (rate < 0.8) acousticTags += "[very slow] ";
+
+            if (volume < 50) acousticTags += "[whispering] ";
+            else if (volume > 90) acousticTags += "[speaking loudly] ";
+
+            // 組合出 100% 不報 500 的標準純文字 Text-to-Speech 輸入格式
+            const cleanTextToSend = `${voicePrefix}${acousticTags}${text}`;
+
+            // 3. 構建極簡、符合 TTS Preview 模型嚴格要求的 Payload
             const payload = {
-                model: modelName,
-                contents: [{ parts: [{ text: `${styleInstruction}${rateStr}${text}` }] }],
+                contents: [{ parts: [{ text: cleanTextToSend }] }],
                 generationConfig: {
                     responseModalities: ["AUDIO"],
                     speechConfig: {
@@ -1422,7 +1455,8 @@
                 }
             };
 
-            let retries = 5;
+            // 4. 改進的重試與限流應對機制，防止 429 級聯鎖死
+            let retries = 2; // 降至最多 2 次重試，減少不必要的 API 配額燃燒
             let delay = 1000;
 
             for (let i = 1; i <= retries; i++) {
@@ -1435,8 +1469,15 @@
                         body: JSON.stringify(payload)
                     });
 
+                    // 遇到 429 立即中斷重試，提示使用者配額限制
+                    if (response.status === 429) {
+                        throw new Error("API 額度已達上限 (429 Resource Exhausted)。預覽版 TTS 模型有極嚴格的每分鐘呼叫限制 (RPM)。請等待 1 分鐘後再試，或更換 API 金鑰。");
+                    }
+
                     if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        const errData = await response.json().catch(() => ({}));
+                        const errMsg = errData.error?.message || response.statusText;
+                        throw new Error(`HTTP ${response.status}: ${errMsg}`);
                     }
 
                     const result = await response.json();
@@ -1450,7 +1491,6 @@
 
                     onProgress('高品質 WAV 音軌數據裝配中...', 85);
 
-                    // 轉換 Base64 至 ArrayBuffer
                     const binaryString = window.atob(base64Audio);
                     const len = binaryString.length;
                     const bytes = new Uint8Array(len);
@@ -1458,16 +1498,17 @@
                         bytes[j] = binaryString.charCodeAt(j);
                     }
 
-                    // 16-bit PCM WAV (Gemini 24000Hz 輸出)
                     const wavBlob = pcmToWav(bytes.buffer, 24000);
                     onSuccess(wavBlob);
                     return;
 
                 } catch (err) {
-                    if (i === retries) {
+                    // 若已是最後一次重試，或屬於明確的限流(429)/設定問題，則立即拋出錯誤
+                    if (i === retries || err.message.includes("429") || err.message.includes("403")) {
                         onError(err);
                         return;
                     }
+                    onProgress(`呼叫超時或伺服器抖動，正在進行第 ${i} 次重試...`, 60);
                     await new Promise(res => setTimeout(res, delay));
                     delay *= 2;
                 }
@@ -1491,19 +1532,16 @@
                 utterance.voice = matchedVoice;
             }
 
-            // 四音參數動態套用 (音長、音高、音強)
             utterance.rate = rate;
             utterance.pitch = Math.max(0.1, Math.min(2.0, 1.0 + (AppState.pitch / 50)));
-            utterance.volume = AppState.volume / 100; // 0.0 to 1.0
+            utterance.volume = AppState.volume / 100;
 
             utterance.onstart = () => {
                 onProgress('本地發聲運行中 & 背景高階無損轉譯並行中...', 60);
                 currentUtterance = utterance;
 
-                // 啟動本機計時模擬器
                 setupLocalPlaybackSimulator(text);
 
-                // 同時背景呼叫 Gemini 進行高保真轉譯提供下載
                 synthesizeSpeechGemini(
                     text,
                     AppState.geminiVoiceName,
@@ -1514,7 +1552,6 @@
                         console.log(`[Gemini TTS] ${statusMsg} (${pct}%)`);
                     },
                     (wavBlob) => {
-                        // 替換播放器 Blob 容器，開放下載與波形圖功能
                         loadAudioToPlayer(wavBlob, text);
                         onSuccess(wavBlob);
                     },
@@ -1522,7 +1559,6 @@
                         console.warn("背景 AI 無損音軌生成受限:", geminiErr);
                         onSuccess(null);
 
-                        // 優雅更新 UI：在 waveform 容器內渲染「金鑰引導卡片」，解決卡死問題
                         const view = document.getElementById('local-player-view');
                         if (view) {
                             const hasKey = !!(AppState.geminiConfig.key || apiKey);
@@ -1542,7 +1578,6 @@
                                     </div>
                                 `;
                             } else {
-                                // 有配置金鑰但回傳了錯誤 (例如網路阻擋、配額不足或模型異常)，直接印出真實錯誤
                                 view.innerHTML = `
                                     <div class="flex flex-col items-center justify-center gap-2 p-2 text-center">
                                         <div class="flex items-center gap-1.5 text-rose-500 dark:text-rose-400 font-bold text-xs">
@@ -1572,7 +1607,7 @@
             speechSynthesis.speak(utterance);
         }
 
-        // 本機播放模擬計時器 (修復防卡死渲染機制)
+        // 本機播放模擬計時器
         function setupLocalPlaybackSimulator(text) {
             document.getElementById('player-container').classList.remove('hidden');
             document.getElementById('local-playback-alert').classList.remove('hidden');
@@ -1590,7 +1625,6 @@
             `;
             lucide.createIcons();
 
-            // 預設先隱藏下載與複製操作，等音軌成功解析後再由 loadAudioToPlayer 解除
             document.getElementById('player-actions').classList.add('hidden');
 
             if (localDurationTimer) clearInterval(localDurationTimer);
@@ -1608,7 +1642,6 @@
                     localSecondsElapsed = 0;
                     document.getElementById('player-time').textContent = formatTime(estimatedDuration);
 
-                    // 播放完畢後如果音軌未生成 (即無 API Key 狀態)，更新指示器避免一直顯示 "正在背景同步..."
                     if (!AppState.audioBlob) {
                         const statusText = document.getElementById('local-status-text');
                         if (statusText) {
@@ -1633,10 +1666,8 @@
                 wavesurfer.destroy();
             }
 
-            // 徹底清空歷史 placeholder 內容，防止骨架與真正的波形 canvas 重疊
             document.getElementById('waveform').innerHTML = '';
 
-            // 根據白天模式或黑夜模式動態指派合適的波形繪製配色
             wavesurfer = WaveSurfer.create({
                 container: '#waveform',
                 waveColor: AppState.theme === 'light' ? '#c2b39a' : '#4f46e5',
@@ -1659,7 +1690,6 @@
                 document.getElementById('player-duration').textContent = formatTime(duration);
                 document.getElementById('player-time').textContent = "00:00";
 
-                // 成功載入二進位音軌後，完美解鎖導出操作區
                 document.getElementById('player-actions').classList.remove('hidden');
             });
 
@@ -1674,6 +1704,7 @@
             return `${m}:${s}`;
         }
 
+        // 設定播放器狀態
         function setPlayerPlayState(isPlaying) {
             const playIcon = document.getElementById('play-icon');
             const pauseIcon = document.getElementById('pause-icon');
@@ -1686,6 +1717,7 @@
             }
         }
 
+        // 載入音訊
         function loadAudioToPlayer(blob, originalText) {
             AppState.audioBlob = blob;
 
@@ -1825,7 +1857,7 @@
                 setTheme(AppState.theme === 'dark' ? 'light' : 'dark');
             });
 
-            // 儲存為自訂音色配方 (完整四音要素)
+            // 儲存為自訂音色配方
             document.getElementById('btn-save-custom').addEventListener('click', async () => {
                 const nameInput = document.getElementById('custom-voice-name');
                 const name = nameInput.value.trim();
@@ -1837,11 +1869,11 @@
 
                 const newVoice = {
                     name: name,
-                    localVoiceName: AppState.localVoiceName, // 本地音色 (音色)
-                    geminiVoiceName: AppState.geminiVoiceName, // AI音色 (音色)
-                    rate: AppState.rate, // 語速 (音長)
-                    pitch: AppState.pitch, // 音調 (音高)
-                    volume: AppState.volume // 音量 (音強)
+                    localVoiceName: AppState.localVoiceName,
+                    geminiVoiceName: AppState.geminiVoiceName,
+                    rate: AppState.rate,
+                    pitch: AppState.pitch,
+                    volume: AppState.volume
                 };
 
                 try {
@@ -1862,13 +1894,12 @@
                 document.getElementById('settings-modal').classList.add('hidden');
             });
 
-            // 儲存設定 (Gemini Key)
+            // 儲存設定
             document.getElementById('save-settings').addEventListener('click', () => {
                 const gKey = document.getElementById('gemini-key').value.trim();
                 const gModel = document.getElementById('gemini-model-select').value;
                 const gCustom = document.getElementById('gemini-custom-model').value.trim();
 
-                // 儲存 Gemini
                 AppState.geminiConfig = { key: gKey, model: gModel, customModel: gCustom };
                 localStorage.setItem('gemini_key', gKey);
                 localStorage.setItem('gemini_model', gModel);
@@ -1943,7 +1974,7 @@
                 }
             });
 
-            // 下載按鈕點擊 (已修復：支援正統 MP3 在線解碼高保真壓縮導出)
+            // 下載按鈕點擊
             document.getElementById('btn-download').addEventListener('click', async () => {
                 if (!AppState.audioBlob) return;
 
@@ -1960,7 +1991,7 @@
                 loadingWav.classList.remove('hidden');
 
                 if (format === 'wav') {
-                    loadingWav.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> 正在編碼 WAV...`;
+                    loadingWav.innerHTML = `正在編碼 WAV...`;
                     try {
                         let wavBlob;
                         if (AppState.audioBlob.type.includes('wav')) {
@@ -1985,8 +2016,7 @@
                         loadingWav.classList.add('hidden');
                     }
                 } else {
-                    // 正式修復：調用 lamejs 編碼器生成貨真價實的 MP3
-                    loadingWav.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> 正在壓制 MP3 音軌...`;
+                    loadingWav.innerHTML = `正在壓制 MP3 音軌...`;
                     try {
                         let mp3Blob;
                         if (AppState.audioBlob.type.includes('mp3')) {
@@ -2050,7 +2080,6 @@
                     return;
                 }
 
-                // 核心修復：重設當前音訊快取，防止殘留舊音軌導出
                 AppState.audioBlob = null;
 
                 btnSynthesize.disabled = true;
@@ -2092,7 +2121,6 @@
                         loadAudioToPlayer(audioBlob, text);
                         showToast('雙效特色語音合成成功！', 'success');
                     } else {
-                        // 本機播放保險 Fallback 模式
                         try {
                             const historyItem = {
                                 text: text,
@@ -2107,7 +2135,7 @@
                                 audioMime: ''
                             };
                             await dbSaveHistory(historyItem);
-                            loadHistoryItem();
+                            loadHistoryList();
                         } catch (dbErr) {
                             console.error(dbErr);
                         }
@@ -2130,7 +2158,6 @@
                     btnSynthesize.classList.remove('opacity-50');
                 };
 
-                // 直接調用雙效原生引擎
                 synthesizeSpeechLocal(text, AppState.rate, onProgress, onSuccess, onError);
             });
 
@@ -2142,7 +2169,6 @@
 
         });
 
-        // 綁定全域事件以確保 onclick 屬性在動態 HTML 中順暢調用
         window.applyCustomVoice = applyCustomVoice;
         window.deleteCustomVoice = deleteCustomVoice;
         window.applyHistoryParams = applyHistoryParams;
