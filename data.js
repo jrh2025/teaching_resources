@@ -236,6 +236,16 @@ window.APP_DATA = {
       "icon": "Music2",
       "color": "slate",
       "grade": "小程式"
+    },
+    {
+      "id": "item_1785138317901",
+      "title": "《MeowTravelSudoku》貓咪環球之旅",
+      "category": "遊戲",
+      "description": "《MeowTravelSudoku》是一款結合益智解謎與環球主題的網頁遊戲，提供豐富的休閒思考體驗。\n五種經典玩法：集結數獨、獨居棋、五子棋、貓咪快逃與交通疏導，滿足多元解謎需求。\n環球冒險地圖：設有台北、東京、巴黎、紐約等 14 個城市站點，結合城市地標進行關卡探索。\n進度與收集機制：包含全球郵票集郵、同伴貓咪收集、造型衣櫥更換及成就星數累積。\n自動儲存進度：支援遊戲進度即時自動保存，方便隨時接續遊玩。",
+      "link": "meowtravelsudoku.html",
+      "icon": "Gamepad2",
+      "color": "orange",
+      "grade": "遊戲"
     }
   ]
 };

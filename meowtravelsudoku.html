@@ -1,0 +1,2422 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>MeowTravelSudoku - 貓咪環球五玩法之旅</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        html, body {
+            height: 100dvh;
+            width: 100vw;
+            overflow: hidden;
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fbcfe8 100%);
+        }
+
+        /* Sudoku Grid Borders */
+        .sudoku-cell {
+            position: relative;
+            transition: all 0.12s ease-in-out;
+        }
+
+        .sudoku-cell:nth-child(3n) {
+            border-right-width: 3px !important;
+            border-right-color: #78350f !important;
+        }
+        .sudoku-cell:nth-child(9n) {
+            border-right-width: 1px !important;
+        }
+
+        .sudoku-row:nth-child(3n) .sudoku-cell {
+            border-bottom-width: 3px !important;
+            border-bottom-color: #78350f !important;
+        }
+
+        /* Queens Region Color Palette */
+        .q-region-0 { background-color: #fef08a; border-color: #ca8a04; color: #713f12; }
+        .q-region-1 { background-color: #bbf7d0; border-color: #16a34a; color: #14532d; }
+        .q-region-2 { background-color: #bfdbfe; border-color: #2563eb; color: #1e3a8a; }
+        .q-region-3 { background-color: #fbcfe8; border-color: #db2777; color: #831843; }
+        .q-region-4 { background-color: #e9d5ff; border-color: #9333ea; color: #581c87; }
+        .q-region-5 { background-color: #fed7aa; border-color: #ea580c; color: #7c2d12; }
+
+        /* Keyframe Animations */
+        @keyframes float-gentle {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-4px) rotate(2deg); }
+        }
+
+        .animate-float {
+            animation: float-gentle 3s ease-in-out infinite;
+        }
+
+        @keyframes meow-bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.12); }
+        }
+
+        .animate-meow {
+            animation: meow-bounce 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .stamp-badge {
+            transform: rotate(-12deg);
+            box-shadow: inset 0 0 0 2px #dc2626;
+        }
+
+        /* Toast Popup */
+        #game-toast {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #fef3c7; }
+        ::-webkit-scrollbar-thumb { background: #f59e0b; border-radius: 8px; }
+    </style>
+</head>
+<body class="h-[100dvh] w-screen flex flex-col justify-between overflow-hidden text-amber-950 p-2 sm:p-3 relative">
+
+    <!-- Notification Toast -->
+    <div id="game-toast" class="fixed top-3 left-1/2 transform -translate-x-1/2 bg-amber-900 text-amber-50 text-xs sm:text-sm font-bold px-4 py-2 rounded-2xl shadow-xl z-50 pointer-events-none opacity-0 translate-y-2 flex items-center gap-1.5 border border-amber-600">
+        <span>🐾</span>
+        <span id="toast-message">訊息提示</span>
+    </div>
+
+    <!-- Header Navigation -->
+    <header class="w-full max-w-2xl mx-auto flex items-center justify-between z-20 shrink-0 pb-1">
+        <div class="flex items-center space-x-2">
+            <div id="btn-skin-header" class="bg-amber-900 text-amber-100 w-9 h-9 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center text-lg sm:text-2xl shadow-md border-2 border-amber-700 cursor-pointer active:scale-95 transition animate-float relative">
+                <span id="header-cat-avatar" class="flex items-center justify-center">🐱</span>
+                <span class="absolute -bottom-1 -right-1 bg-rose-500 text-white text-[9px] px-1 rounded-full font-extrabold border border-white">衣櫥</span>
+            </div>
+            <div>
+                <h1 class="text-base sm:text-2xl font-black tracking-wide text-amber-950 flex items-center gap-1 leading-tight">
+                    MeowTravelSudoku
+                </h1>
+                <p class="text-[10px] sm:text-xs font-bold text-amber-800/80">數獨 ✕ 獨居棋 ✕ 五子棋 ✕ 貓咪快逃 ✕ 交通疏導 🐾</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-1.5 sm:space-x-2">
+            <div class="bg-amber-100/90 border border-amber-300 backdrop-blur-md px-2 py-1 rounded-xl flex items-center space-x-1 shadow-sm">
+                <span class="text-xs sm:text-sm">🐟</span>
+                <span id="fish-coins" class="font-extrabold text-amber-900 text-xs sm:text-sm">50</span>
+            </div>
+
+            <button id="btn-open-skins" class="bg-amber-200/90 hover:bg-amber-300 text-amber-950 px-2 py-1 rounded-xl font-bold text-xs shadow-sm transition flex items-center gap-1">
+                <span>👗</span>
+                <span class="hidden sm:inline">造型</span>
+            </button>
+
+            <button id="btn-rules" class="bg-amber-200/90 hover:bg-amber-300 text-amber-950 p-1.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition">
+                <i class="fa-solid fa-circle-question"></i>
+            </button>
+
+            <button id="btn-passport" class="bg-rose-500 hover:bg-rose-600 active:scale-95 text-white px-2 py-1 sm:px-2.5 sm:py-1 rounded-xl font-bold text-xs flex items-center gap-1 shadow-md transition">
+                <i class="fa-solid fa-passport"></i>
+                <span class="hidden sm:inline">護照</span>
+            </button>
+
+            <button id="btn-reset-save" title="重置進度" class="bg-amber-200/80 hover:bg-rose-200 active:scale-95 text-amber-900 hover:text-rose-700 p-1.5 rounded-xl font-bold text-xs shadow-sm transition">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+
+            <button id="btn-sound" class="bg-amber-200/80 hover:bg-amber-300 active:scale-95 text-amber-900 p-1.5 rounded-xl font-bold text-xs shadow-sm transition">
+                <i id="sound-icon" class="fa-solid fa-volume-high"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="w-full max-w-md sm:max-w-lg mx-auto flex-1 flex flex-col justify-center items-center relative overflow-hidden my-auto">
+
+        <!-- WORLD MAP VIEW -->
+        <div id="view-world-map" class="w-full h-full flex flex-col justify-between items-center space-y-2">
+            
+            <div class="w-full bg-white/80 backdrop-blur-md border-2 sm:border-4 border-amber-800/20 rounded-2xl p-2 sm:p-3 shadow-lg flex-1 flex flex-col justify-between overflow-hidden">
+                
+                <div class="flex justify-between items-center mb-1 shrink-0">
+                    <div>
+                        <h2 class="text-sm sm:text-lg font-black text-amber-950 flex items-center gap-1">
+                            <span>🗺️</span> 環球冒險地圖 (14站點)
+                        </h2>
+                        <p class="text-[9px] sm:text-xs font-semibold text-amber-800">選擇城市，暢玩數獨、獨居棋、五子棋、貓咪快逃或交通疏導！</p>
+                    </div>
+
+                    <div class="bg-amber-200/70 p-0.5 rounded-xl flex items-center border border-amber-300 shrink-0">
+                        <button id="mode-numbers" class="px-2 py-0.5 sm:py-1 rounded-lg font-extrabold text-[10px] sm:text-xs transition bg-amber-800 text-white shadow-sm">
+                            1 2 3 數字
+                        </button>
+                        <button id="mode-cats" class="px-2 py-0.5 sm:py-1 rounded-lg font-extrabold text-[10px] sm:text-xs text-amber-900 transition hover:bg-amber-100">
+                            🐱 貓咪
+                        </button>
+                    </div>
+                </div>
+
+                <div class="relative w-full flex-1 bg-sky-100/90 border-2 border-sky-300 rounded-xl overflow-hidden shadow-inner flex items-center justify-center min-h-[220px]">
+                    <svg class="absolute inset-0 w-full h-full text-emerald-200/70 fill-current pointer-events-none" viewBox="0 0 800 400" preserveAspectRatio="none">
+                        <path d="M80,50 Q180,30 220,100 T150,220 T60,120 Z" />
+                        <path d="M200,210 Q280,240 250,350 T160,320 Z" />
+                        <path d="M370,40 Q460,30 480,110 T390,150 Z" />
+                        <path d="M390,150 Q490,170 470,300 T380,250 Z" />
+                        <path d="M480,50 Q680,30 740,170 T550,200 Z" />
+                        <path d="M630,250 Q740,240 710,350 T620,330 Z" />
+                        <path d="M200,380 L600,380 L650,400 L150,400 Z" />
+                    </svg>
+
+                    <!-- Interactive Map Nodes Container -->
+                    <div id="map-nodes-container" class="absolute inset-0 w-full h-full p-2">
+                        <!-- Populated dynamically via JS renderMap() -->
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 mt-2 text-center shrink-0">
+                    <div class="bg-amber-100/80 p-1.5 rounded-xl border border-amber-200">
+                        <div class="text-[9px] sm:text-[10px] text-amber-800 font-bold">全球集郵</div>
+                        <div id="stat-stamps-count" class="text-xs sm:text-base font-black text-rose-600">0 / 14</div>
+                    </div>
+                    <div class="bg-amber-100/80 p-1.5 rounded-xl border border-amber-200">
+                        <div class="text-[9px] sm:text-[10px] text-amber-800 font-bold">同伴貓咪</div>
+                        <div id="stat-cats-count" class="text-xs sm:text-base font-black text-amber-900">1 / 14</div>
+                    </div>
+                    <div class="bg-amber-100/80 p-1.5 rounded-xl border border-amber-200">
+                        <div class="text-[9px] sm:text-[10px] text-amber-800 font-bold">成就星數</div>
+                        <div id="stat-stars-count" class="text-xs sm:text-base font-black text-amber-600">0 ⭐</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- GAMEPLAY VIEW -->
+        <div id="view-gameplay" class="w-full h-full max-h-full hidden flex-col justify-between items-center max-w-md sm:max-w-lg mx-auto overflow-hidden py-1">
+            
+            <div class="w-full bg-white/90 backdrop-blur-md rounded-xl border border-amber-800/20 px-2.5 py-1.5 shadow-sm flex items-center justify-between shrink-0">
+                <button id="btn-back-map" class="bg-amber-200 hover:bg-amber-300 text-amber-950 px-2 py-1 rounded-lg font-extrabold text-xs flex items-center gap-1 active:scale-95 transition">
+                    <i class="fa-solid fa-arrow-left"></i> 地圖
+                </button>
+
+                <div class="flex items-center gap-1.5">
+                    <span id="current-station-flag" class="text-xl">🥟</span>
+                    <div class="text-left">
+                        <h3 id="current-station-name" class="font-black text-xs sm:text-sm leading-tight text-amber-950">台北, 台灣</h3>
+                        <p id="current-station-diff" class="text-[9px] font-bold text-rose-500">【經典數獨】</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-1.5 text-xs font-black">
+                    <div class="flex items-center gap-0.5 text-amber-800 bg-amber-100 px-2 py-0.5 rounded-lg">
+                        <i class="fa-regular fa-clock text-[10px]"></i>
+                        <span id="game-timer">00:00</span>
+                    </div>
+                    <div id="hearts-container" class="flex items-center gap-0.5 text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-lg border border-rose-200">
+                        <span>❤️</span>
+                        <span id="game-hearts">3/3</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="w-full bg-gradient-to-r from-amber-400 to-rose-400 text-amber-950 rounded-xl px-2 py-1 shadow-sm flex items-center justify-between border border-amber-500/30 my-1 shrink-0">
+                <div class="flex items-center gap-2">
+                    <div id="cat-avatar" class="w-7 h-7 bg-white rounded-full flex items-center justify-center text-lg shadow-inner cursor-pointer animate-meow shrink-0">
+                        🐱
+                    </div>
+                    <div class="overflow-hidden">
+                        <div id="cat-quote" class="text-[11px] font-black text-amber-950 truncate">"喵～準備好探索這個城市了嗎？"</div>
+                    </div>
+                </div>
+                <button id="btn-quick-skin" class="bg-white/80 hover:bg-white text-[10px] font-black px-2 py-0.5 rounded-lg border border-amber-800/20 shrink-0">
+                    換造型 👗
+                </button>
+            </div>
+
+            <!-- Puzzle Board Dynamic Area (FIXED CONTAINER FOR PERFECT SQUARE FIT) -->
+            <div class="flex-1 min-h-0 w-full flex items-center justify-center my-1 overflow-hidden">
+                <div id="board-frame" class="bg-amber-900 p-1.5 sm:p-2 rounded-2xl border-2 border-amber-950 relative shadow-lg flex items-center justify-center w-full max-w-[min(100%,calc(100dvh-250px))] aspect-square max-h-full">
+                    
+                    <div id="puzzle-grid" class="w-full h-full rounded-xl overflow-hidden border border-amber-950">
+                        <!-- Injected dynamically -->
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Sudoku Toolbars -->
+            <div id="sudoku-tools" class="w-full grid grid-cols-4 gap-1 my-1 shrink-0">
+                <button id="tool-erase" class="bg-white/80 hover:bg-white active:scale-95 p-1 rounded-xl border border-amber-800/10 shadow-sm flex flex-col items-center transition">
+                    <i class="fa-solid fa-eraser text-amber-800 text-xs"></i>
+                    <span class="text-[9px] font-bold text-amber-900">擦除</span>
+                </button>
+                <button id="tool-pencil" class="bg-white/80 hover:bg-white active:scale-95 p-1 rounded-xl border border-amber-800/10 shadow-sm flex flex-col items-center transition relative">
+                    <span id="pencil-badge" class="absolute top-1 right-1.5 w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                    <i class="fa-solid fa-pencil text-amber-800 text-xs"></i>
+                    <span class="text-[9px] font-bold text-amber-900">筆記</span>
+                </button>
+                <button id="tool-hint" class="bg-amber-100 hover:bg-amber-200 active:scale-95 p-1 rounded-xl border border-amber-400 shadow-sm flex flex-col items-center transition relative">
+                    <span class="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] font-bold px-1 rounded-full">5🐟</span>
+                    <span class="text-xs">🐾</span>
+                    <span class="text-[9px] font-bold text-amber-900">提示</span>
+                </button>
+                <button id="tool-auto-notes" class="bg-rose-100 hover:bg-rose-200 active:scale-95 p-1 rounded-xl border border-rose-300 shadow-sm flex flex-col items-center transition relative">
+                    <span class="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] font-bold px-1 rounded-full">10🐟</span>
+                    <span class="text-xs">🧹</span>
+                    <span class="text-[9px] font-bold text-rose-950">筆記整理</span>
+                </button>
+            </div>
+
+            <!-- Queens Toolbar -->
+            <div id="queens-tools" class="w-full hidden grid-cols-3 gap-1.5 my-1 shrink-0">
+                <button id="q-tool-cat" class="bg-amber-800 text-white active:scale-95 p-1.5 rounded-xl border border-amber-900 shadow-md flex items-center justify-center gap-1 transition">
+                    <span class="text-sm">🐱</span>
+                    <span class="text-xs font-black">放貓咪</span>
+                </button>
+                <button id="q-tool-x" class="bg-white/80 hover:bg-white text-amber-950 active:scale-95 p-1.5 rounded-xl border border-amber-800/10 shadow-sm flex items-center justify-center gap-1 transition">
+                    <span class="text-sm font-black text-rose-600">❌</span>
+                    <span class="text-xs font-black">標記 X</span>
+                </button>
+                <button id="q-tool-erase" class="bg-white/80 hover:bg-white text-amber-950 active:scale-95 p-1.5 rounded-xl border border-amber-800/10 shadow-sm flex items-center justify-center gap-1 transition">
+                    <i class="fa-solid fa-eraser text-amber-800 text-xs"></i>
+                    <span class="text-xs font-black">清除</span>
+                </button>
+            </div>
+
+            <!-- Gomoku Toolbar -->
+            <div id="gomoku-tools" class="w-full hidden grid-cols-2 gap-2 my-1 shrink-0">
+                <button id="g-tool-restart" class="bg-white/80 hover:bg-white active:scale-95 p-1.5 rounded-xl border border-amber-800/10 shadow-sm flex items-center justify-center gap-1 transition">
+                    <i class="fa-solid fa-arrows-rotate text-amber-800 text-xs"></i>
+                    <span class="text-xs font-black text-amber-900">重來</span>
+                </button>
+                <button id="g-tool-hint" class="bg-amber-100 hover:bg-amber-200 active:scale-95 p-1.5 rounded-xl border border-amber-400 shadow-sm flex items-center justify-center gap-1 transition relative">
+                    <span class="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] font-bold px-1 rounded-full">5🐟</span>
+                    <span class="text-xs">🐾</span>
+                    <span class="text-xs font-black text-amber-900">提示</span>
+                </button>
+            </div>
+
+            <!-- Trap Cat Toolbar -->
+            <div id="trapcat-tools" class="w-full hidden grid-cols-2 gap-2 my-1 shrink-0">
+                <button id="tc-tool-restart" class="bg-white/80 hover:bg-white active:scale-95 p-1.5 rounded-xl border border-amber-800/10 shadow-sm flex items-center justify-center gap-1 transition">
+                    <i class="fa-solid fa-arrows-rotate text-amber-800 text-xs"></i>
+                    <span class="text-xs font-black text-amber-900">重來</span>
+                </button>
+                <button id="tc-tool-hint" class="bg-amber-100 hover:bg-amber-200 active:scale-95 p-1.5 rounded-xl border border-amber-400 shadow-sm flex items-center justify-center gap-1 transition relative">
+                    <span class="text-xs">🐾</span>
+                    <span class="text-xs font-black text-amber-900">逃脫路線診斷</span>
+                </button>
+            </div>
+
+            <!-- Traffic Conductor Toolbar -->
+            <div id="traffic-tools" class="w-full hidden grid-cols-2 gap-2 my-1 shrink-0">
+                <button id="tr-tool-restart" class="bg-white/80 hover:bg-white active:scale-95 p-1.5 rounded-xl border border-amber-800/10 shadow-sm flex items-center justify-center gap-1 transition">
+                    <i class="fa-solid fa-arrows-rotate text-amber-800 text-xs"></i>
+                    <span class="text-xs font-black text-amber-900">重設道路</span>
+                </button>
+                <button id="tr-tool-hint" class="bg-amber-100 hover:bg-amber-200 active:scale-95 p-1.5 rounded-xl border border-amber-400 shadow-sm flex items-center justify-center gap-1 transition relative">
+                    <span class="absolute -top-1 -right-1 bg-rose-500 text-white text-[8px] font-bold px-1 rounded-full">5🐟</span>
+                    <span class="text-xs">🐾</span>
+                    <span class="text-xs font-black text-amber-900">道路提示</span>
+                </button>
+            </div>
+
+            <!-- Keypad (Sudoku) -->
+            <div id="input-keypad" class="w-full grid grid-cols-9 gap-1 bg-white/80 backdrop-blur-md p-1.5 rounded-xl border border-amber-800/20 shadow-md shrink-0">
+                <!-- Injected dynamically -->
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Modal: Skins -->
+    <div id="modal-skins" class="fixed inset-0 bg-amber-950/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
+        <div class="bg-amber-50 border-4 border-amber-800 rounded-3xl max-w-sm w-full p-4 shadow-2xl relative flex flex-col max-h-[85vh]">
+            <button id="btn-close-skins-modal" class="absolute top-3 right-3 text-amber-800 hover:text-rose-600 text-lg font-black w-7 h-7 flex items-center justify-center rounded-full bg-amber-200">
+                ✕
+            </button>
+
+            <div class="text-center mb-3">
+                <h3 class="text-xl font-black text-amber-950 flex items-center justify-center gap-1">
+                    <span>👗</span> 貓咪造型衣櫥
+                </h3>
+                <p class="text-xs font-bold text-amber-800">選擇你最喜歡的貓咪夥伴造型吧！</p>
+            </div>
+
+            <div id="skins-grid" class="grid grid-cols-3 gap-2 overflow-y-auto p-1 flex-1">
+                <!-- Injected dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Passport -->
+    <div id="modal-passport" class="fixed inset-0 bg-amber-950/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-amber-50 border-4 border-amber-800 rounded-3xl max-w-sm w-full p-4 shadow-2xl relative max-h-[85vh] flex flex-col">
+            <button id="btn-close-passport-modal" class="absolute top-3 right-3 text-amber-800 hover:text-rose-600 text-lg font-black w-7 h-7 flex items-center justify-center rounded-full bg-amber-200">
+                ✕
+            </button>
+
+            <div class="text-center mb-3">
+                <h3 class="text-xl font-black text-amber-950 flex items-center justify-center gap-1">
+                    <span>📕</span> 環球貓咪護照
+                </h3>
+                <p class="text-xs font-bold text-amber-800">解鎖的城市紀念郵戳集印冊</p>
+            </div>
+
+            <div id="passport-list" class="space-y-2 overflow-y-auto pr-1 flex-1">
+                <!-- Injected dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Station Launch & Mode Selector -->
+    <div id="modal-station" class="fixed inset-0 bg-amber-950/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-amber-50 border-4 border-amber-800 rounded-3xl max-w-sm w-full p-4 shadow-2xl relative text-center">
+            
+            <button id="btn-close-station-modal" class="absolute top-3 right-3 text-amber-800 hover:text-rose-600 text-lg font-black w-7 h-7 flex items-center justify-center rounded-full bg-amber-200">
+                ✕
+            </button>
+
+            <div id="modal-station-flag" class="text-5xl my-1">🥟</div>
+            <h3 id="modal-station-title" class="text-xl font-black text-amber-950">台北, 台灣</h3>
+            <p id="modal-station-cat" class="text-xs font-extrabold text-rose-500 mb-1">伴遊：小籠包貓 🐱</p>
+
+            <!-- Mode Selector Grid -->
+            <div class="bg-amber-200/80 p-1 rounded-xl my-2 grid grid-cols-3 gap-1 border border-amber-400">
+                <button id="btn-select-sudoku" class="py-1 rounded-lg font-extrabold text-[10px] sm:text-[11px] bg-amber-800 text-white shadow-sm transition">
+                    🧩 數獨
+                </button>
+                <button id="btn-select-queens" class="py-1 rounded-lg font-extrabold text-[10px] sm:text-[11px] text-amber-950 hover:bg-amber-100 transition">
+                    👑 獨居棋
+                </button>
+                <button id="btn-select-gomoku" class="py-1 rounded-lg font-extrabold text-[10px] sm:text-[11px] text-amber-950 hover:bg-amber-100 transition">
+                    🐾 五子棋
+                </button>
+                <button id="btn-select-trapcat" class="py-1 rounded-lg font-extrabold text-[10px] sm:text-[11px] text-amber-950 hover:bg-amber-100 transition">
+                    🏃 貓咪快逃
+                </button>
+                <button id="btn-select-traffic" class="py-1 rounded-lg font-extrabold text-[10px] sm:text-[11px] text-amber-950 hover:bg-amber-100 transition col-span-2">
+                    🚦 交通疏導
+                </button>
+            </div>
+            
+            <div class="bg-amber-100/80 rounded-xl p-2 my-2 text-[11px] text-amber-900 font-bold space-y-0.5 text-left border border-amber-200">
+                <div class="flex justify-between">
+                    <span class="text-amber-700">難易度：</span>
+                    <span id="modal-station-diff-text" class="font-extrabold text-amber-900">初級 (Easy)</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-amber-700">通關獎勵：</span>
+                    <span id="modal-station-reward" class="text-rose-600 font-extrabold">+20 🐟 點數 & 郵戳</span>
+                </div>
+            </div>
+
+            <p id="modal-station-desc" class="text-[11px] text-amber-800 mb-3 italic">"鼎泰豐的小籠包蒸氣引來了萌萌貓咪！一起展開冒險吧！"</p>
+
+            <button id="btn-start-game" class="w-full bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-black py-2.5 rounded-xl shadow-md active:scale-95 transition text-sm">
+                開始挑戰 🐾
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal: Rules -->
+    <div id="modal-rules" class="fixed inset-0 bg-amber-950/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-amber-50 border-4 border-amber-800 rounded-3xl max-w-sm w-full p-4 shadow-2xl relative max-h-[85vh] flex flex-col">
+            <button id="btn-close-rules-modal" class="absolute top-3 right-3 text-amber-800 hover:text-rose-600 text-lg font-black w-7 h-7 flex items-center justify-center rounded-full bg-amber-200">
+                ✕
+            </button>
+
+            <h3 class="text-lg font-black text-amber-950 mb-2 flex items-center gap-1">
+                📖 遊戲玩法說明
+            </h3>
+
+            <div class="overflow-y-auto space-y-2 text-xs text-amber-900 leading-relaxed font-bold pr-1">
+                <div class="bg-amber-100 p-2.5 rounded-xl border border-amber-300">
+                    <h4 class="font-black text-xs text-amber-950 mb-0.5">🧩 1. 經典數獨</h4>
+                    <p>在 9x9 棋盤中，每行、每列與 3x3 九宮格內，數字 1~9 (或貓咪圖示) 均不能重複。</p>
+                </div>
+
+                <div class="bg-rose-100 p-2.5 rounded-xl border border-rose-300">
+                    <h4 class="font-black text-xs text-rose-950 mb-0.5">👑 2. 貓咪領地獨居棋</h4>
+                    <p>• <b>專屬區域：</b>每個彩色區塊內<b>必須且只能有一隻貓咪 🐱</b>。</p>
+                    <p>• <b>行列唯一：</b>每行與每列只能有正好一隻貓咪。</p>
+                    <p>• <b>孤僻原則：</b>貓咪需要個人空間，任何兩隻貓咪<b>不可以九宮格相鄰</b>！</p>
+                </div>
+
+                <div class="bg-amber-100 p-2.5 rounded-xl border border-amber-300">
+                    <h4 class="font-black text-xs text-amber-950 mb-0.5">🐾 3. 貓咪五子棋</h4>
+                    <p>• <b>基本規則：</b>與關主貓咪對弈，先在橫、豎或斜方向連成<b>5 個貓咪棋子</b>者獲得勝利！</p>
+                </div>
+
+                <div class="bg-sky-100 p-2.5 rounded-xl border border-sky-300">
+                    <h4 class="font-black text-xs text-sky-950 mb-0.5">🏃 4. 貓咪快逃 (Cat Escape)</h4>
+                    <p>• <b>角色互換：</b>你扮演貓咪！點擊亮起綠光的相鄰空格即可移動。</p>
+                    <p>• <b>系統圍堵：</b>系統關主會預測你的逃跑路線，擺放當地特色景點美食障礙物進攻！</p>
+                    <p>• <b>快速收網：</b>一旦你被圍困無法到達邊界，關主會發動高智商快速收網，迅速完成封鎖。</p>
+                    <p>• <b>勝利與失敗：</b>順利逃至最外圈邊界即獲得勝利；若被完全包圍，畫面將顯示 LOSE 並可立即重新挑戰。</p>
+                </div>
+
+                <div class="bg-emerald-100 p-2.5 rounded-xl border border-emerald-300">
+                    <h4 class="font-black text-xs text-emerald-950 mb-0.5">🚦 5. 貓咪交通疏導員 (Traffic Pipe)</h4>
+                    <p>• <b>角色使命：</b>化身貓咪交通警察，旋轉道路接管（直線、轉角、三叉路），引導車輛 🚗 順利從起點通往終點 🏁！</p>
+                    <p>• <b>操作方式：</b>點擊道路格子旋轉 90 度，確保路網完整連接不漏車！</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: LOSE Screen -->
+    <div id="modal-lose" class="fixed inset-0 bg-amber-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white border-4 border-rose-600 rounded-3xl max-w-xs w-full p-6 shadow-2xl text-center relative animate-bounce">
+            <div class="text-6xl mb-1">😿</div>
+            <h2 class="text-5xl font-black text-rose-600 tracking-wider mb-2 drop-shadow-sm">LOSE</h2>
+            <p id="lose-desc-1" class="text-xs font-bold text-amber-950 mb-1">愛心用光了！</p>
+            <p id="lose-desc-2" class="text-[11px] font-semibold text-rose-500 mb-4">貓咪領地衝突過多，請再試一次吧 🐾</p>
+            
+            <button id="btn-lose-restart" class="w-full bg-gradient-to-r from-rose-500 to-amber-500 hover:from-rose-600 hover:to-amber-600 text-white font-black py-3 rounded-2xl shadow-lg active:scale-95 transition text-sm flex items-center justify-center gap-1">
+                <span>重新挑戰 🐾✈️</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal: Reset Progress Confirmation -->
+    <div id="modal-reset-confirm" class="fixed inset-0 bg-amber-950/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white border-4 border-rose-600 rounded-3xl max-w-xs w-full p-5 shadow-2xl text-center relative">
+            <div class="text-4xl mb-1">🗑️</div>
+            <h3 class="text-lg font-black text-rose-600">重置遊戲進度？</h3>
+            <p class="text-xs font-bold text-amber-950 my-2 leading-relaxed">
+                確定要重置所有遊戲存檔嗎？<br>包含已獲得的<span class="text-rose-600">魚乾、護照郵戳與解鎖城市</span>都將恢復為初始狀態！
+            </p>
+
+            <div class="flex gap-2 w-full mt-3">
+                <button id="btn-cancel-reset" class="flex-1 bg-amber-200 hover:bg-amber-300 text-amber-950 font-black py-2 rounded-xl shadow-md active:scale-95 transition text-xs">
+                    取消
+                </button>
+                <button id="btn-confirm-reset" class="flex-1 bg-rose-600 hover:bg-rose-700 text-white font-black py-2 rounded-xl shadow-md active:scale-95 transition text-xs">
+                    確定重置 🗑️
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Victory -->
+    <div id="modal-victory" class="fixed inset-0 bg-amber-950/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white border-4 border-amber-800 rounded-3xl max-w-xs w-full p-5 shadow-2xl text-center relative animate-meow">
+            <div class="text-5xl mb-1 animate-bounce">🎉🐱</div>
+            <h3 class="text-xl font-black text-amber-950">完美通關！</h3>
+            <p id="victory-station-name" class="text-xs font-bold text-rose-500 mb-2">台北, 台灣 - 小籠包貓</p>
+
+            <div class="bg-amber-50 border-2 border-dashed border-amber-300 rounded-xl p-3 my-2 flex flex-col items-center">
+                <div id="victory-stamp-badge" class="stamp-badge border-2 border-rose-600 text-rose-600 px-3 py-1 rounded-lg font-black uppercase text-xs my-1">
+                    <span>PASSPORT STAMPED</span>
+                </div>
+                <div class="text-xs font-bold text-amber-800">獲得獎勵：<span id="victory-fish-earned" class="text-rose-600 font-extrabold">+20 🐟</span></div>
+                <div class="text-xs font-bold text-amber-700 mt-0.5">費時：<span id="victory-final-time" class="font-mono text-amber-900">03:45</span></div>
+            </div>
+
+            <div class="flex gap-2 w-full mt-2">
+                <button id="btn-victory-continue" class="flex-1 bg-amber-200 hover:bg-amber-300 text-amber-950 font-black py-2.5 rounded-xl shadow-md active:scale-95 transition text-xs">
+                    返回地圖 🗺️
+                </button>
+                <button id="btn-victory-next" class="flex-1 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-black py-2.5 rounded-xl shadow-md active:scale-95 transition text-xs flex items-center justify-center gap-1">
+                    前往下一站 🐾 ✈️
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="w-full text-center py-0.5 text-[10px] font-bold text-amber-800/70 shrink-0">
+        MeowTravelSudoku &copy; 2026 🐾 (自動儲存進度已啟用)
+    </footer>
+
+    <script>
+        const AudioSynth = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) this.ctx = new AudioContext();
+                }
+            },
+            playClick() {
+                if (!gameState.soundEnabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.05);
+            },
+            playMeow() {
+                if (!gameState.soundEnabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(750, this.ctx.currentTime + 0.15);
+                osc.frequency.linearRampToValueAtTime(500, this.ctx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            },
+            playVictory() {
+                if (!gameState.soundEnabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(0.25, this.ctx.currentTime + idx * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + idx * 0.12 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + idx * 0.12);
+                    osc.stop(this.ctx.currentTime + idx * 0.12 + 0.25);
+                });
+            },
+            playError() {
+                if (!gameState.soundEnabled) return;
+                this.init();
+                if (!this.ctx) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+                osc.frequency.linearRampToValueAtTime(120, this.ctx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.2);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.2);
+            }
+        };
+
+        const CAT_SKINS = [
+            { id: 'yellow', name: '經典黃貓', emoji: '🐱', badge: '', desc: '最經典萌萌黃貓' },
+            { id: 'lucky', name: '招財幸運貓', emoji: '😸', badge: '✨', desc: '帶來幸運與靈感' },
+            { id: 'gentleman', name: '紳士爵士貓', emoji: '😼', badge: '🎩', desc: '優雅低調的紳士貓' },
+            { id: 'pink', name: '甜心粉貓', emoji: '😻', badge: '💖', desc: '愛心滿滿的甜心貓' },
+            { id: 'detective', name: '偵探酷貓', emoji: '😼', badge: '🔍', desc: '邏輯推導大師' },
+            { id: 'ninja', name: '忍術貓貓', emoji: '😾', badge: '🗡️', desc: '來無影去無蹤' },
+            { id: 'chef', name: '頂級主廚貓', emoji: '😹', badge: '🍳', desc: '精通各國美味大餐' },
+            { id: 'astro', name: '太空宇航貓', emoji: '🙀', badge: '🚀', desc: '探索宇宙數獨奧秘' },
+            { id: 'king', name: '皇家國王貓', emoji: '🐱', badge: '👑', desc: '高貴的領地統治者' }
+        ];
+
+        const CITIES = [
+            { id: 'taipei', name: '台北, 台灣', flag: '🥟', catName: '小籠包貓', diff: 'easy', fishReward: 20, x: 72, y: 45, quote: '鼎泰豐的小籠包蒸氣引來了萌萌貓咪！' },
+            { id: 'tokyo', name: '東京, 日本', flag: '🌸', catName: '抹茶櫻花貓', diff: 'easy', fishReward: 25, x: 82, y: 38, quote: '櫻花樹下與貓咪一起品嚐美味抹茶點心！' },
+            { id: 'bangkok', name: '曼谷, 泰國', flag: '🐘', catName: '泰奶冬陰貓', diff: 'easy', fishReward: 25, x: 68, y: 52, quote: '大象吉祥物與香濃泰式奶茶的美味冒險！' },
+            { id: 'singapore', name: '新加坡', flag: '🦁', catName: '魚尾獅貓', diff: 'medium', fishReward: 30, x: 69, y: 62, quote: '噴水的魚尾獅花園旁有隻威風的貓貓！' },
+            { id: 'delhi', name: '德里, 印度', flag: '🕌', catName: '咖哩香料貓', diff: 'medium', fishReward: 30, x: 58, y: 46, quote: '充滿濃郁香料味的古老古蹟解謎！' },
+            { id: 'cairo', name: '開羅, 埃及', flag: '🐫', catName: '法老金字塔貓', diff: 'medium', fishReward: 35, x: 48, y: 46, quote: '金字塔內隱藏著古代貓神的智慧秘密！' },
+            { id: 'athens', name: '雅典, 希臘', flag: '🏛️', catName: '帕德嫩哲學貓', diff: 'medium', fishReward: 35, x: 45, y: 38, quote: '在浪漫愛琴海畔思考數獨的哲學！' },
+            { id: 'rome', name: '羅馬, 義大利', flag: '🍕', catName: '披薩主廚貓', diff: 'hard', fishReward: 40, x: 42, y: 35, quote: '競技場旁飄著現烤窯烤披薩的香味！' },
+            { id: 'paris', name: '巴黎, 法國', flag: '🥐', catName: '可頌畫家貓', diff: 'hard', fishReward: 40, x: 37, y: 30, quote: '艾菲爾鐵塔下的法式可頌與藝術咖啡室！' },
+            { id: 'london', name: '倫敦, 英國', flag: '🏰', catName: '福爾摩斯偵探貓', diff: 'hard', fishReward: 45, x: 35, y: 26, quote: '大笨鐘下的霧都推理，貓咪偵探登場！' },
+            { id: 'newyork', name: '紐約, 美國', flag: '🗽', catName: '爵士漢堡貓', diff: 'hard', fishReward: 45, x: 22, y: 32, quote: '自由女神像與時代廣場的爵士樂之夜！' },
+            { id: 'hawaii', name: '夏威夷, 美國', flag: '🌺', catName: '草裙衝浪貓', diff: 'expert', fishReward: 50, x: 8, y: 48, quote: '陽光、海灘與草裙舞的熱情夏威夷！' },
+            { id: 'rio', name: '里約, 巴西', flag: '💃', catName: '森巴嘉年華貓', diff: 'expert', fishReward: 50, x: 28, y: 72, quote: '跟隨熱情的森巴鼓聲一邊跳舞一邊推理！' },
+            { id: 'sydney', name: '雪梨, 澳洲', flag: '🦘', catName: '袋鼠歌劇院貓', diff: 'master', fishReward: 60, x: 82, y: 78, quote: '雪梨歌劇院帆船下的南半球大冒險！' }
+        ];
+
+        const gameState = {
+            fishCoins: 50,
+            activeSkinId: 'yellow',
+            unlockedCities: ['taipei'],
+            stampsCollected: [],
+            starsCollected: 0,
+            selectedCityIndex: 0,
+            selectedGameMode: 'sudoku', // 'sudoku', 'queens', 'gomoku', 'trapcat', 'traffic'
+            displayMode: 'numbers', // 'numbers', 'cats'
+            soundEnabled: true,
+            timerSeconds: 0,
+            timerInterval: null,
+            
+            // Sudoku
+            boardSolution: [],
+            boardInitial: [],
+            boardCurrent: [],
+            boardNotes: Array.from({ length: 81 }, () => []),
+            selectedCell: -1,
+            mistakes: 0,
+            pencilMode: false,
+
+            // Queens Mode
+            queensGridSize: 6,
+            queensRegions: [],
+            queensSolution: [],
+            queensUserGrid: [],
+            queensTool: 'cat',
+
+            // Gomoku Mode
+            gomokuSize: 11,
+            gomokuBoard: [],
+            gomokuTurn: 1, // 1: Player, 2: AI
+            gomokuHistory: [],
+            gomokuWinningLine: [],
+
+            // Trap Cat Mode
+            trapcatSize: 11,
+            trapcatBoard: [],
+            trapcatCatPos: { r: 5, c: 5 },
+            trapcatHistory: [],
+
+            // Traffic Mode
+            trafficSize: 5,
+            trafficBoard: []
+        };
+
+        function getActiveSkin() {
+            return CAT_SKINS.find(s => s.id === gameState.activeSkinId) || CAT_SKINS[0];
+        }
+
+        function getSkinHTML(skin, large = false) {
+            const sizeClass = large ? 'text-2xl sm:text-3xl' : 'text-base sm:text-lg';
+            const badgeSize = large ? 'text-xs' : 'text-[9px]';
+            if (!skin.badge) return `<span class="${sizeClass}">${skin.emoji}</span>`;
+            return `
+                <div class="relative inline-flex items-center justify-center">
+                    <span class="${sizeClass}">${skin.emoji}</span>
+                    <span class="absolute -top-1 -right-1.5 ${badgeSize} drop-shadow-sm">${skin.badge}</span>
+                </div>
+            `;
+        }
+
+        function updateAvatarDisplays() {
+            const skin = getActiveSkin();
+            document.getElementById('header-cat-avatar').innerHTML = getSkinHTML(skin, false);
+            document.getElementById('cat-avatar').innerHTML = getSkinHTML(skin, false);
+        }
+
+        function showNotification(msg) {
+            const toast = document.getElementById('game-toast');
+            document.getElementById('toast-message').innerText = msg;
+            toast.classList.remove('opacity-0', 'translate-y-2');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-2');
+            }, 2200);
+        }
+
+        function triggerLose(desc1, desc2) {
+            AudioSynth.playError();
+            stopTimer();
+            if (desc1) document.getElementById('lose-desc-1').innerText = desc1;
+            if (desc2) document.getElementById('lose-desc-2').innerText = desc2;
+            document.getElementById('modal-lose').classList.remove('hidden');
+        }
+
+        function saveGameProgress() {
+            try {
+                const data = {
+                    fishCoins: gameState.fishCoins,
+                    activeSkinId: gameState.activeSkinId,
+                    unlockedCities: gameState.unlockedCities,
+                    stampsCollected: gameState.stampsCollected,
+                    starsCollected: gameState.starsCollected,
+                    displayMode: gameState.displayMode,
+                    selectedGameMode: gameState.selectedGameMode
+                };
+                localStorage.setItem('MeowTravelSudoku_Save', JSON.stringify(data));
+            } catch (e) {}
+        }
+
+        function loadGameProgress() {
+            try {
+                const raw = localStorage.getItem('MeowTravelSudoku_Save');
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    if (typeof data.fishCoins === 'number') gameState.fishCoins = data.fishCoins;
+                    if (data.activeSkinId) gameState.activeSkinId = data.activeSkinId;
+                    if (Array.isArray(data.unlockedCities)) gameState.unlockedCities = data.unlockedCities;
+                    if (Array.isArray(data.stampsCollected)) gameState.stampsCollected = data.stampsCollected;
+                    if (typeof data.starsCollected === 'number') gameState.starsCollected = data.starsCollected;
+                    if (data.displayMode) gameState.displayMode = data.displayMode;
+                    if (data.selectedGameMode) gameState.selectedGameMode = data.selectedGameMode;
+                }
+            } catch (e) {}
+
+            document.getElementById('fish-coins').innerText = gameState.fishCoins;
+            updateAvatarDisplays();
+        }
+
+        function startTimer() {
+            stopTimer();
+            gameState.timerSeconds = 0;
+            document.getElementById('game-timer').innerText = '00:00';
+            gameState.timerInterval = setInterval(() => {
+                gameState.timerSeconds++;
+                document.getElementById('game-timer').innerText = formatTime(gameState.timerSeconds);
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (gameState.timerInterval) {
+                clearInterval(gameState.timerInterval);
+                gameState.timerInterval = null;
+            }
+        }
+
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60).toString().padStart(2, '0');
+            const s = (sec % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        const SudokuEngine = {
+            isValid(board, row, col, num) {
+                for (let i = 0; i < 9; i++) {
+                    if (board[row * 9 + i] === num) return false;
+                    if (board[i * 9 + col] === num) return false;
+                }
+                const startRow = Math.floor(row / 3) * 3;
+                const startCol = Math.floor(col / 3) * 3;
+                for (let r = 0; r < 3; r++) {
+                    for (let c = 0; c < 3; c++) {
+                        if (board[(startRow + r) * 9 + (startCol + c)] === num) return false;
+                    }
+                }
+                return true;
+            },
+            solve(board) {
+                for (let i = 0; i < 81; i++) {
+                    if (board[i] === 0) {
+                        const row = Math.floor(i / 9);
+                        const col = i % 9;
+                        const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9].sort(() => Math.random() - 0.5);
+                        for (let num of nums) {
+                            if (this.isValid(board, row, col, num)) {
+                                board[i] = num;
+                                if (this.solve(board)) return true;
+                                board[i] = 0;
+                            }
+                        }
+                        return false;
+                    }
+                }
+                return true;
+            },
+            generatePuzzle(diff) {
+                const solution = Array(81).fill(0);
+                this.solve(solution);
+
+                const puzzle = [...solution];
+                let removals = 35;
+                if (diff === 'medium') removals = 42;
+                else if (diff === 'hard') removals = 48;
+                else if (diff === 'expert') removals = 52;
+                else if (diff === 'master') removals = 56;
+
+                const indices = Array.from({ length: 81 }, (_, i) => i).sort(() => Math.random() - 0.5);
+                for (let i = 0; i < removals; i++) {
+                    puzzle[indices[i]] = 0;
+                }
+                return { solution, puzzle };
+            }
+        };
+
+        const QueensEngine = {
+            generatePuzzle(N) {
+                const solution = Array(N).fill(-1);
+                const cols = new Set();
+
+                function placeQueens(r) {
+                    if (r === N) return true;
+                    const availableCols = Array.from({ length: N }, (_, i) => i).filter(c => !cols.has(c));
+                    availableCols.sort(() => Math.random() - 0.5);
+
+                    for (let c of availableCols) {
+                        let ok = true;
+                        if (r > 0) {
+                            const prevC = solution[r - 1];
+                            if (Math.abs(prevC - c) <= 1) ok = false;
+                        }
+                        if (!ok) continue;
+
+                        solution[r] = c;
+                        cols.add(c);
+                        if (placeQueens(r + 1)) return true;
+                        cols.delete(c);
+                        solution[r] = -1;
+                    }
+                    return false;
+                }
+
+                placeQueens(0);
+
+                const regions = Array(N * N).fill(-1);
+                for (let r = 0; r < N; r++) {
+                    const c = solution[r];
+                    regions[r * N + c] = r;
+                }
+
+                for (let i = 0; i < N * N; i++) {
+                    if (regions[i] === -1) {
+                        const r = Math.floor(i / N);
+                        const c = i % N;
+                        let bestRegion = -1;
+                        let minDist = 999;
+                        for (let qr = 0; qr < N; qr++) {
+                            const qc = solution[qr];
+                            const dist = Math.abs(r - qr) + Math.abs(c - qc);
+                            if (dist < minDist) {
+                                minDist = dist;
+                                bestRegion = qr;
+                            }
+                        }
+                        regions[i] = bestRegion;
+                    }
+                }
+
+                return { regions, solution };
+            }
+        };
+
+        const GomokuEngine = {
+            checkWin(board, size) {
+                const dirs = [[1, 0], [0, 1], [1, 1], [1, -1]];
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        const p = board[r * size + c];
+                        if (p === 0) continue;
+
+                        for (let [dr, dc] of dirs) {
+                            let line = [r * size + c];
+                            for (let i = 1; i < 5; i++) {
+                                const nr = r + dr * i;
+                                const nc = c + dc * i;
+                                if (nr >= 0 && nr < size && nc >= 0 && nc < size && board[nr * size + nc] === p) {
+                                    line.push(nr * size + nc);
+                                } else break;
+                            }
+                            if (line.length === 5) return { winner: p, line };
+                        }
+                    }
+                }
+                return null;
+            },
+            // Evaluate line patterns for candidate move
+            evaluateMove(board, size, r, c, player) {
+                const dirs = [[1, 0], [0, 1], [1, 1], [1, -1]];
+                let totalScore = 0;
+
+                for (let [dr, dc] of dirs) {
+                    let count = 1;
+                    let openEnds = 0;
+
+                    // Positive direction
+                    let step = 1;
+                    while (true) {
+                        const nr = r + dr * step;
+                        const nc = c + dc * step;
+                        if (nr < 0 || nr >= size || nc < 0 || nc >= size) break;
+                        const val = board[nr * size + nc];
+                        if (val === player) {
+                            count++;
+                            step++;
+                        } else {
+                            if (val === 0) openEnds++;
+                            break;
+                        }
+                    }
+
+                    // Negative direction
+                    step = 1;
+                    while (true) {
+                        const nr = r - dr * step;
+                        const nc = c - dc * step;
+                        if (nr < 0 || nr >= size || nc < 0 || nc >= size) break;
+                        const val = board[nr * size + nc];
+                        if (val === player) {
+                            count++;
+                            step++;
+                        } else {
+                            if (val === 0) openEnds++;
+                            break;
+                        }
+                    }
+
+                    // Pattern scores
+                    if (count >= 5) totalScore += 100000; // 5-in-a-row Win
+                    else if (count === 4) {
+                        if (openEnds === 2) totalScore += 10000; // Open 4 (Unstoppable)
+                        else if (openEnds === 1) totalScore += 2500; // Blocked 4
+                    } else if (count === 3) {
+                        if (openEnds === 2) totalScore += 1200; // Open 3
+                        else if (openEnds === 1) totalScore += 300;  // Blocked 3
+                    } else if (count === 2) {
+                        if (openEnds === 2) totalScore += 100;  // Open 2
+                        else if (openEnds === 1) totalScore += 20;   // Blocked 2
+                    }
+                }
+
+                return totalScore;
+            },
+            getBestAIMove(board, size, cityIndex) {
+                let hasPieces = false;
+                const candidates = new Set();
+
+                // Find active search boundary (within distance 2 of existing pieces)
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        if (board[r * size + c] !== 0) {
+                            hasPieces = true;
+                            for (let dr = -2; dr <= 2; dr++) {
+                                for (let dc = -2; dc <= 2; dc++) {
+                                    const nr = r + dr;
+                                    const nc = c + dc;
+                                    if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                                        if (board[nr * size + nc] === 0) {
+                                            candidates.add(nr * size + nc);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // If board is empty, start at center
+                if (!hasPieces) {
+                    return Math.floor(size / 2) * size + Math.floor(size / 2);
+                }
+
+                const candidateList = Array.from(candidates);
+                if (candidateList.length === 0) return -1;
+
+                let bestMove = -1;
+                let maxScore = -1;
+
+                // Scale defense vigilance and reduce randomness as city level increases (0 -> 13)
+                const defenseWeight = 0.95 + (cityIndex / 13) * 0.35;
+                const randomness = Math.max(0, 250 - cityIndex * 20);
+
+                for (let idx of candidateList) {
+                    const r = Math.floor(idx / size);
+                    const c = idx % size;
+
+                    const attackScore = this.evaluateMove(board, size, r, c, 2); // AI (2)
+                    const defenseScore = this.evaluateMove(board, size, r, c, 1); // Player (1)
+
+                    let score = attackScore + defenseScore * defenseWeight;
+
+                    // Absolute Overrides for critical threats
+                    if (attackScore >= 100000) score = 1000000; // AI immediate win
+                    else if (defenseScore >= 100000) score = 900000; // AI must block player win
+                    else if (attackScore >= 10000) score += 50000; // AI creates Open 4
+                    else if (defenseScore >= 10000) score += 40000; // AI blocks player Open 4
+
+                    // Minor center proximity weight
+                    const centerDist = Math.abs(r - Math.floor(size / 2)) + Math.abs(c - Math.floor(size / 2));
+                    score += (20 - centerDist);
+
+                    // Add level noise for lower cities
+                    if (randomness > 0) {
+                        score += Math.random() * randomness;
+                    }
+
+                    if (score > maxScore) {
+                        maxScore = score;
+                        bestMove = idx;
+                    }
+                }
+
+                return bestMove !== -1 ? bestMove : candidateList[0];
+            }
+        };
+
+        const TrapCatEngine = {
+            generatePuzzle(size, cityIndex) {
+                const grid = Array(size * size).fill(0);
+                const catPos = { r: Math.floor(size / 2), c: Math.floor(size / 2) };
+
+                let obstacleCount = 12 + Math.min(cityIndex, 13) * 2;
+
+                let added = 0;
+                while (added < obstacleCount) {
+                    const idx = Math.floor(Math.random() * (size * size));
+                    const r = Math.floor(idx / size);
+                    const c = idx % size;
+                    if ((r !== catPos.r || c !== catPos.c) && grid[idx] === 0) {
+                        grid[idx] = 1;
+                        added++;
+                    }
+                }
+                return { grid, catPos };
+            },
+            getNeighbors(r, c, size) {
+                const isOdd = (r % 2 === 1);
+                const dirs = isOdd ?
+                    [[-1, 0], [-1, 1], [0, -1], [0, 1], [1, 0], [1, 1]] :
+                    [[-1, -1], [-1, 0], [0, -1], [0, 1], [1, -1], [1, 0]];
+
+                const neighbors = [];
+                for (let [dr, dc] of dirs) {
+                    const nr = r + dr;
+                    const nc = c + dc;
+                    if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                        neighbors.push({ r: nr, c: nc, idx: nr * size + nc });
+                    }
+                }
+                return neighbors;
+            },
+            isBoundary(r, c, size) {
+                return r === 0 || r === size - 1 || c === 0 || c === size - 1;
+            },
+            findCatExitsAndDistances(grid, catR, catC, size) {
+                const startIdx = catR * size + catC;
+                const dist = new Array(size * size).fill(Infinity);
+                const queue = [startIdx];
+                dist[startIdx] = 0;
+                
+                let reachableBorders = 0;
+                let minBorderDist = Infinity;
+                let reachableCount = 0;
+
+                while (queue.length > 0) {
+                    const currIdx = queue.shift();
+                    const r = Math.floor(currIdx / size);
+                    const c = currIdx % size;
+                    const d = dist[currIdx];
+                    reachableCount++;
+
+                    if (this.isBoundary(r, c, size)) {
+                        reachableBorders++;
+                        if (d < minBorderDist) minBorderDist = d;
+                    }
+
+                    for (let n of this.getNeighbors(r, c, size)) {
+                        if (grid[n.idx] === 0 && dist[n.idx] === Infinity) {
+                            dist[n.idx] = d + 1;
+                            queue.push(n.idx);
+                        }
+                    }
+                }
+                return { minBorderDist, reachableBorders, reachableCount };
+            },
+            getBestBlockerMove(grid, catR, catC, size, cityIndex) {
+                const emptyIndices = [];
+                for (let i = 0; i < size * size; i++) {
+                    if (grid[i] === 0 && !(i === catR * size + catC)) {
+                        emptyIndices.push(i);
+                    }
+                }
+                if (emptyIndices.length === 0) return -1;
+
+                let bestMove = -1;
+                let bestScore = -Infinity;
+
+                const catNeighbors = this.getNeighbors(catR, catC, size).filter(n => grid[n.idx] === 0);
+
+                for (let candidate of emptyIndices) {
+                    grid[candidate] = 1;
+
+                    const { minBorderDist, reachableBorders, reachableCount } = this.findCatExitsAndDistances(grid, catR, catC, size);
+
+                    let score = 0;
+                    const candR = Math.floor(candidate / size);
+                    const candC = candidate % size;
+                    const isNeighbor = catNeighbors.some(n => n.idx === candidate);
+
+                    if (minBorderDist === Infinity) {
+                        score = 1000000;
+                        if (isNeighbor) score += 500000;
+                        score += (size * size - reachableCount) * 100;
+                        const distToCat = Math.abs(candR - catR) + Math.abs(candC - catC);
+                        score -= distToCat * 10;
+                    } else {
+                        score = minBorderDist * 1000 - reachableBorders * 50 - reachableCount * 2;
+                        if (isNeighbor) score += 300;
+                        const distToCat = Math.abs(candR - catR) + Math.abs(candC - catC);
+                        if (distToCat === 1) score += 200;
+                    }
+
+                    grid[candidate] = 0;
+
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestMove = candidate;
+                    }
+                }
+
+                return bestMove !== -1 ? bestMove : emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+            }
+        };
+
+        const TrafficEngine = {
+            BASE_CONNS: {
+                'start': [0, 1, 0, 0],
+                'end': [0, 0, 0, 1],
+                'straight': [1, 0, 1, 0],
+                'corner': [1, 1, 0, 0],
+                't': [1, 1, 1, 0],
+                'cross': [1, 1, 1, 1]
+            },
+            hasConnection(tile, dir) {
+                const conns = this.BASE_CONNS[tile.type];
+                if (!conns) return false;
+                const baseDir = (dir - tile.rotation + 4) % 4;
+                return conns[baseDir] === 1;
+            },
+            canConnect(tileA, tileB, dir) {
+                if (!this.hasConnection(tileA, dir)) return false;
+                const oppDir = (dir + 2) % 4;
+                return this.hasConnection(tileB, oppDir);
+            },
+            generatePuzzle(size) {
+                const board = [];
+                const path = [];
+                let currR = 0, currC = 0;
+                path.push({ r: 0, c: 0 });
+                const visited = new Set(['0,0']);
+
+                while (currR < size - 1 || currC < size - 1) {
+                    const dirs = [];
+                    if (currR < size - 1 && !visited.has(`${currR+1},${currC}`)) dirs.push({ dr: 1, dc: 0, dir: 2 });
+                    if (currC < size - 1 && !visited.has(`${currR},${currC+1}`)) dirs.push({ dr: 0, dc: 1, dir: 1 });
+                    if (currR > 0 && !visited.has(`${currR-1},${currC}`)) dirs.push({ dr: -1, dc: 0, dir: 0 });
+                    if (currC > 0 && !visited.has(`${currR},${currC-1}`)) dirs.push({ dr: 0, dc: -1, dir: 3 });
+
+                    if (dirs.length === 0) break;
+                    dirs.sort((a, b) => {
+                        const distA = Math.abs(size - 1 - (currR + a.dr)) + Math.abs(size - 1 - (currC + a.dc));
+                        const distB = Math.abs(size - 1 - (currR + b.dr)) + Math.abs(size - 1 - (currC + b.dc));
+                        return (distA - distB) + (Math.random() - 0.5) * 2;
+                    });
+
+                    const move = dirs[0];
+                    currR += move.dr;
+                    currC += move.dc;
+                    path.push({ r: currR, c: currC });
+                    visited.add(`${currR},${currC}`);
+                }
+
+                const gridMap = Array.from({ length: size }, () => Array(size).fill(null));
+                for (let i = 0; i < size * size; i++) {
+                    const r = Math.floor(i / size);
+                    const c = i % size;
+                    gridMap[r][c] = {
+                        r, c, idx: i,
+                        type: 'straight',
+                        rotation: 0,
+                        solutionRotation: 0,
+                        isStart: false,
+                        isEnd: false,
+                        connected: false
+                    };
+                }
+
+                for (let i = 0; i < path.length; i++) {
+                    const p = path[i];
+                    const cell = gridMap[p.r][p.c];
+                    if (i === 0) {
+                        cell.isStart = true;
+                        cell.type = 'start';
+                        const nextP = path[1];
+                        let outDir = 1;
+                        if (nextP.r > p.r) outDir = 2;
+                        else if (nextP.c > p.c) outDir = 1;
+                        cell.solutionRotation = (outDir - 1 + 4) % 4;
+                        cell.rotation = cell.solutionRotation;
+                    } else if (i === path.length - 1) {
+                        cell.isEnd = true;
+                        cell.type = 'end';
+                        const prevP = path[i - 1];
+                        let inDir = 3;
+                        if (prevP.r < p.r) inDir = 0;
+                        else if (prevP.c < p.c) inDir = 3;
+                        else if (prevP.r > p.r) inDir = 2;
+                        else if (prevP.c > p.c) inDir = 1;
+                        cell.solutionRotation = (inDir - 3 + 4) % 4;
+                        cell.rotation = cell.solutionRotation;
+                    } else {
+                        const prevP = path[i - 1];
+                        const nextP = path[i + 1];
+                        let d1 = 0, d2 = 0;
+                        if (prevP.r < p.r) d1 = 0; else if (prevP.r > p.r) d1 = 2; else if (prevP.c < p.c) d1 = 3; else if (prevP.c > p.c) d1 = 1;
+                        if (nextP.r < p.r) d2 = 0; else if (nextP.r > p.r) d2 = 2; else if (nextP.c < p.c) d2 = 3; else if (nextP.c > p.c) d2 = 1;
+
+                        if ((d1 === 0 && d2 === 2) || (d1 === 2 && d2 === 0)) {
+                            cell.type = 'straight';
+                            cell.solutionRotation = 0;
+                        } else if ((d1 === 1 && d2 === 3) || (d1 === 3 && d2 === 1)) {
+                            cell.type = 'straight';
+                            cell.solutionRotation = 1;
+                        } else {
+                            cell.type = 'corner';
+                            if ((d1 === 0 && d2 === 1) || (d1 === 1 && d2 === 0)) cell.solutionRotation = 0;
+                            else if ((d1 === 1 && d2 === 2) || (d1 === 2 && d2 === 1)) cell.solutionRotation = 1;
+                            else if ((d1 === 2 && d2 === 3) || (d1 === 3 && d2 === 2)) cell.solutionRotation = 2;
+                            else if ((d1 === 3 && d2 === 0) || (d1 === 0 && d2 === 3)) cell.solutionRotation = 3;
+                        }
+                    }
+                }
+
+                for (let r = 0; r < size; r++) {
+                    for (let c = 0; c < size; c++) {
+                        const cell = gridMap[r][c];
+                        if (!cell.isStart && !cell.isEnd && !visited.has(`${r},${c}`)) {
+                            const types = ['straight', 'corner', 't', 'cross'];
+                            cell.type = types[Math.floor(Math.random() * types.length)];
+                            cell.solutionRotation = Math.floor(Math.random() * 4);
+                        }
+                        if (!cell.isStart && !cell.isEnd) {
+                            cell.rotation = (cell.solutionRotation + Math.floor(Math.random() * 3) + 1) % 4;
+                        }
+                        board.push(cell);
+                    }
+                }
+
+                this.updateTrafficFlow(board, size);
+                return board;
+            },
+            updateTrafficFlow(board, size) {
+                board.forEach(t => t.connected = false);
+                const startTile = board.find(t => t.isStart);
+                if (!startTile) return false;
+
+                const queue = [startTile];
+                startTile.connected = true;
+                const visited = new Set([startTile.idx]);
+
+                let reachesEnd = false;
+
+                while (queue.length > 0) {
+                    const curr = queue.shift();
+                    if (curr.isEnd) reachesEnd = true;
+
+                    const neighbors = [
+                        { dr: -1, dc: 0, dir: 0 },
+                        { dr: 0, dc: 1, dir: 1 },
+                        { dr: 1, dc: 0, dir: 2 },
+                        { dr: 0, dc: -1, dir: 3 }
+                    ];
+
+                    for (let n of neighbors) {
+                        const nr = curr.r + n.dr;
+                        const nc = curr.c + n.dc;
+                        if (nr >= 0 && nr < size && nc >= 0 && nc < size) {
+                            const neighborTile = board[nr * size + nc];
+                            if (!visited.has(neighborTile.idx) && this.canConnect(curr, neighborTile, n.dir)) {
+                                visited.add(neighborTile.idx);
+                                neighborTile.connected = true;
+                                queue.push(neighborTile);
+                            }
+                        }
+                    }
+                }
+
+                return reachesEnd;
+            },
+            checkWin(board, size) {
+                return this.updateTrafficFlow(board, size);
+            }
+        };
+
+        function renderMap() {
+            const container = document.getElementById('map-nodes-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            CITIES.forEach((city, index) => {
+                const isUnlocked = gameState.unlockedCities.includes(city.id);
+                const isStamped = gameState.stampsCollected.includes(city.id);
+
+                const btn = document.createElement('button');
+                btn.style.left = `${city.x}%`;
+                btn.style.top = `${city.y}%`;
+                btn.className = `absolute transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center group z-10 transition cursor-pointer`;
+                
+                btn.onclick = () => {
+                    AudioSynth.playClick();
+                    if (isUnlocked) {
+                        openStationModal(index);
+                    } else {
+                        showNotification('請先通關前面的城市站點以解鎖航線！');
+                    }
+                };
+
+                btn.innerHTML = `
+                    <div class="relative flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-full ${
+                        isStamped ? 'bg-rose-500 text-white ring-2 ring-rose-300 shadow-lg scale-110' :
+                        isUnlocked ? 'bg-amber-400 text-amber-950 ring-2 ring-amber-200 shadow-md animate-bounce' :
+                        'bg-gray-300 text-gray-600 opacity-80'
+                    }">
+                        <span class="text-xs sm:text-base">${city.flag}</span>
+                        ${!isUnlocked ? '<span class="absolute -top-1 -right-1 text-[8px] bg-gray-700 text-white p-0.5 rounded-full">🔒</span>' : ''}
+                        ${isStamped ? '<span class="absolute -bottom-1 -right-1 text-[9px] bg-white text-rose-600 rounded-full border border-rose-600 font-black px-0.5">✓</span>' : ''}
+                    </div>
+                    <span class="mt-0.5 text-[8px] sm:text-[10px] font-black px-1 py-0.2 bg-amber-950/80 text-white rounded-md whitespace-nowrap shadow-sm">
+                        ${city.name.split(',')[0]}
+                    </span>
+                `;
+                container.appendChild(btn);
+            });
+
+            document.getElementById('stat-stamps-count').innerText = `${gameState.stampsCollected.length} / 14`;
+            document.getElementById('stat-cats-count').innerText = `${gameState.unlockedCities.length} / 14`;
+            document.getElementById('stat-stars-count').innerText = `${gameState.starsCollected} ⭐`;
+        }
+
+        function openStationModal(index) {
+            gameState.selectedCityIndex = index;
+            const city = CITIES[index];
+
+            document.getElementById('modal-station-flag').innerText = city.flag;
+            document.getElementById('modal-station-title').innerText = city.name;
+            document.getElementById('modal-station-cat').innerText = `伴遊：${city.catName} 🐱`;
+            document.getElementById('modal-station-diff-text').innerText = `${city.diff.toUpperCase()}`;
+            document.getElementById('modal-station-reward').innerText = `+${city.fishReward} 🐟 點數 & 郵戳`;
+            document.getElementById('modal-station-desc').innerText = `"${city.quote}"`;
+
+            updateStationModeButtons();
+            document.getElementById('modal-station').classList.remove('hidden');
+        }
+
+        function updateStationModeButtons() {
+            const modes = [
+                { id: 'sudoku', btn: 'btn-select-sudoku' },
+                { id: 'queens', btn: 'btn-select-queens' },
+                { id: 'gomoku', btn: 'btn-select-gomoku' },
+                { id: 'trapcat', btn: 'btn-select-trapcat' },
+                { id: 'traffic', btn: 'btn-select-traffic' }
+            ];
+
+            modes.forEach(m => {
+                const btn = document.getElementById(m.btn);
+                if (!btn) return;
+                if (gameState.selectedGameMode === m.id) {
+                    btn.className = 'py-1 rounded-lg font-extrabold text-[10px] sm:text-[11px] bg-amber-800 text-white shadow-sm transition' + (m.id === 'traffic' ? ' col-span-2' : '');
+                } else {
+                    btn.className = 'py-1 rounded-lg font-extrabold text-[10px] sm:text-[11px] text-amber-950 hover:bg-amber-100 transition' + (m.id === 'traffic' ? ' col-span-2' : '');
+                }
+            });
+        }
+
+        function startPuzzle(cityIndex) {
+            gameState.selectedCityIndex = cityIndex;
+            const city = CITIES[cityIndex];
+
+            document.getElementById('view-world-map').classList.add('hidden');
+            document.getElementById('view-gameplay').classList.remove('hidden');
+            document.getElementById('view-gameplay').classList.add('flex');
+
+            document.getElementById('current-station-flag').innerText = city.flag;
+            document.getElementById('current-station-name').innerText = city.name;
+            
+            const modeNames = {
+                sudoku: '【經典數獨】',
+                queens: '【貓咪領地獨居棋】',
+                gomoku: '【貓咪五子棋】',
+                trapcat: '【貓咪快逃】',
+                traffic: '【貓咪交通疏導】'
+            };
+            document.getElementById('current-station-diff').innerText = modeNames[gameState.selectedGameMode] || '【經典數獨】';
+            
+            if (gameState.selectedGameMode === 'traffic') {
+                document.getElementById('cat-quote').innerText = '「請順著 🚗 出口方向與 🏁 箭頭入口方向鋪設道路！」';
+            } else {
+                document.getElementById('cat-quote').innerText = `"${city.quote}"`;
+            }
+
+            gameState.mistakes = 0;
+            document.getElementById('game-hearts').innerText = '3/3';
+            startTimer();
+
+            if (gameState.selectedGameMode === 'sudoku') {
+                const { solution, puzzle } = SudokuEngine.generatePuzzle(city.diff);
+                gameState.boardSolution = solution;
+                gameState.boardInitial = [...puzzle];
+                gameState.boardCurrent = [...puzzle];
+                gameState.boardNotes = Array.from({ length: 81 }, () => []);
+                gameState.selectedCell = -1;
+            } else if (gameState.selectedGameMode === 'queens') {
+                const N = 6;
+                gameState.queensGridSize = N;
+                const { regions, solution } = QueensEngine.generatePuzzle(N);
+                gameState.queensRegions = regions;
+                gameState.queensSolution = solution;
+                gameState.queensUserGrid = Array(N * N).fill(0);
+                gameState.queensTool = 'cat';
+            } else if (gameState.selectedGameMode === 'gomoku') {
+                const size = 11;
+                gameState.gomokuSize = size;
+                gameState.gomokuBoard = Array(size * size).fill(0);
+                gameState.gomokuTurn = 1;
+                gameState.gomokuHistory = [];
+                gameState.gomokuWinningLine = [];
+            } else if (gameState.selectedGameMode === 'trapcat') {
+                const size = 11;
+                gameState.trapcatSize = size;
+                const { grid, catPos } = TrapCatEngine.generatePuzzle(size, gameState.selectedCityIndex);
+                gameState.trapcatBoard = grid;
+                gameState.trapcatCatPos = catPos;
+                gameState.trapcatHistory = [];
+            } else if (gameState.selectedGameMode === 'traffic') {
+                const size = 5;
+                gameState.trafficSize = size;
+                gameState.trafficBoard = TrafficEngine.generatePuzzle(size);
+            }
+
+            renderBoard();
+        }
+
+        function renderBoard() {
+            if (gameState.selectedGameMode === 'sudoku') renderSudokuBoard();
+            else if (gameState.selectedGameMode === 'queens') renderQueensBoard();
+            else if (gameState.selectedGameMode === 'gomoku') renderGomokuBoard();
+            else if (gameState.selectedGameMode === 'trapcat') renderTrapCatBoard();
+            else if (gameState.selectedGameMode === 'traffic') renderTrafficBoard();
+        }
+
+        function renderSudokuBoard() {
+            document.getElementById('sudoku-tools').classList.remove('hidden');
+            document.getElementById('sudoku-tools').classList.add('grid');
+            document.getElementById('queens-tools').classList.add('hidden');
+            document.getElementById('gomoku-tools').classList.add('hidden');
+            document.getElementById('trapcat-tools').classList.add('hidden');
+            document.getElementById('traffic-tools').classList.add('hidden');
+            document.getElementById('input-keypad').classList.remove('hidden');
+            document.getElementById('hearts-container').classList.remove('hidden');
+
+            const gridEl = document.getElementById('puzzle-grid');
+            gridEl.className = 'grid bg-amber-950 gap-[1px] rounded-xl overflow-hidden border border-amber-950 w-full h-full';
+            gridEl.style.gridTemplateColumns = 'repeat(9, 1fr)';
+            gridEl.style.gridTemplateRows = 'repeat(9, 1fr)';
+            gridEl.innerHTML = '';
+
+            const skin = getActiveSkin();
+            const catIcons = [skin.emoji, '😸', '🐈‍⬛', '😻', '😼', '😽', '🦁', '🐾', '🐟'];
+
+            for (let i = 0; i < 81; i++) {
+                const val = gameState.boardCurrent[i];
+                const isInitial = gameState.boardInitial[i] !== 0;
+                const isSelected = gameState.selectedCell === i;
+
+                const cell = document.createElement('button');
+                cell.className = `sudoku-cell flex items-center justify-center font-bold text-xs sm:text-base cursor-pointer select-none transition ${
+                    isSelected ? 'bg-amber-300 ring-2 ring-amber-600 z-10' :
+                    isInitial ? 'bg-amber-100 text-amber-950 font-black' :
+                    val !== 0 ? 'bg-white text-rose-600 font-extrabold' :
+                    'bg-amber-50 hover:bg-amber-100'
+                }`;
+
+                cell.onclick = () => selectCell(i);
+
+                if (val !== 0) {
+                    if (gameState.displayMode === 'cats') {
+                        cell.innerText = catIcons[val - 1];
+                    } else {
+                        cell.innerText = val;
+                    }
+                } else if (gameState.boardNotes[i].length > 0) {
+                    const notesGrid = document.createElement('div');
+                    notesGrid.className = 'grid grid-cols-3 grid-rows-3 w-full h-full text-[8px] sm:text-[9px] text-amber-800 pointer-events-none p-0.5 leading-none';
+                    for (let n = 1; n <= 9; n++) {
+                        const noteSub = document.createElement('div');
+                        noteSub.className = 'flex items-center justify-center';
+                        if (gameState.boardNotes[i].includes(n)) {
+                            noteSub.innerText = gameState.displayMode === 'cats' ? catIcons[n - 1] : n;
+                        }
+                        notesGrid.appendChild(noteSub);
+                    }
+                    cell.appendChild(notesGrid);
+                }
+
+                gridEl.appendChild(cell);
+            }
+
+            renderKeypad();
+        }
+
+        function renderKeypad() {
+            const keypad = document.getElementById('input-keypad');
+            keypad.innerHTML = '';
+            const skin = getActiveSkin();
+            const catIcons = [skin.emoji, '😸', '🐈‍⬛', '😻', '😼', '😽', '🦁', '🐾', '🐟'];
+
+            for (let i = 1; i <= 9; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'bg-amber-100 hover:bg-amber-200 active:scale-95 font-extrabold text-xs sm:text-sm text-amber-950 py-1.5 rounded-lg border border-amber-300 shadow-sm transition flex items-center justify-center';
+                btn.innerText = gameState.displayMode === 'cats' ? catIcons[i - 1] : i;
+                btn.onclick = () => inputNumber(i);
+                keypad.appendChild(btn);
+            }
+        }
+
+        function selectCell(index) {
+            AudioSynth.playClick();
+            gameState.selectedCell = index;
+            renderBoard();
+        }
+
+        function inputNumber(num) {
+            if (gameState.selectedCell < 0) return;
+            if (gameState.boardInitial[gameState.selectedCell] !== 0) return;
+
+            if (gameState.pencilMode) {
+                AudioSynth.playClick();
+                const notes = gameState.boardNotes[gameState.selectedCell];
+                const idx = notes.indexOf(num);
+                if (idx > -1) notes.splice(idx, 1);
+                else notes.push(num);
+            } else {
+                const correct = gameState.boardSolution[gameState.selectedCell];
+                if (num === correct) {
+                    AudioSynth.playClick();
+                    gameState.boardCurrent[gameState.selectedCell] = num;
+                    gameState.boardNotes[gameState.selectedCell] = [];
+                    
+                    if (!gameState.boardCurrent.includes(0)) {
+                        triggerVictory();
+                    }
+                } else {
+                    AudioSynth.playError();
+                    gameState.mistakes++;
+                    document.getElementById('game-hearts').innerText = `${Math.max(0, 3 - gameState.mistakes)}/3`;
+                    if (gameState.mistakes >= 3) {
+                        triggerLose('愛心用光了！(失誤達 3 次)', '數獨填答錯誤過多，請重新挑戰 🐾');
+                    }
+                }
+            }
+            renderBoard();
+        }
+
+        function renderQueensBoard() {
+            document.getElementById('sudoku-tools').classList.add('hidden');
+            document.getElementById('queens-tools').classList.remove('hidden');
+            document.getElementById('queens-tools').classList.add('grid');
+            document.getElementById('gomoku-tools').classList.add('hidden');
+            document.getElementById('trapcat-tools').classList.add('hidden');
+            document.getElementById('traffic-tools').classList.add('hidden');
+            document.getElementById('input-keypad').classList.add('hidden');
+            document.getElementById('hearts-container').classList.remove('hidden');
+
+            const N = gameState.queensGridSize;
+            const gridEl = document.getElementById('puzzle-grid');
+            gridEl.className = `grid gap-[1px] bg-amber-950 rounded-xl overflow-hidden border border-amber-950 w-full h-full`;
+            gridEl.style.gridTemplateColumns = `repeat(${N}, 1fr)`;
+            gridEl.style.gridTemplateRows = `repeat(${N}, 1fr)`;
+            gridEl.innerHTML = '';
+
+            const conflictingIndices = getQueensConflicts();
+
+            for (let i = 0; i < N * N; i++) {
+                const region = gameState.queensRegions[i];
+                const val = gameState.queensUserGrid[i];
+                const hasConflict = conflictingIndices.has(i);
+
+                const cell = document.createElement('button');
+                cell.className = `q-region-${region} flex items-center justify-center font-black text-sm sm:text-xl border cursor-pointer select-none transition ${
+                    hasConflict ? 'bg-rose-400 ring-4 ring-rose-600 animate-pulse z-10' : ''
+                }`;
+
+                cell.onclick = () => handleQueensCellClick(i);
+
+                if (val === 1) {
+                    cell.innerHTML = `
+                        <div class="relative flex items-center justify-center">
+                            ${getSkinHTML(getActiveSkin(), false)}
+                            ${hasConflict ? '<span class="absolute -top-2 -right-2 text-xs">⚠️</span>' : ''}
+                        </div>
+                    `;
+                } else if (val === 2) {
+                    cell.innerText = '❌';
+                }
+
+                gridEl.appendChild(cell);
+            }
+        }
+
+        function getQueensConflicts() {
+            const N = gameState.queensGridSize;
+            const conflicts = new Set();
+            const catIndices = [];
+
+            for (let i = 0; i < N * N; i++) {
+                if (gameState.queensUserGrid[i] === 1) catIndices.push(i);
+            }
+
+            for (let a = 0; a < catIndices.length; a++) {
+                for (let b = a + 1; b < catIndices.length; b++) {
+                    const idx1 = catIndices[a];
+                    const idx2 = catIndices[b];
+                    const r1 = Math.floor(idx1 / N), c1 = idx1 % N;
+                    const r2 = Math.floor(idx2 / N), c2 = idx2 % N;
+                    const reg1 = gameState.queensRegions[idx1];
+                    const reg2 = gameState.queensRegions[idx2];
+
+                    const sameRow = (r1 === r2);
+                    const sameCol = (c1 === c2);
+                    const sameRegion = (reg1 === reg2);
+                    const isAdjacent = (Math.abs(r1 - r2) <= 1 && Math.abs(c1 - c2) <= 1);
+
+                    if (sameRow || sameCol || sameRegion || isAdjacent) {
+                        conflicts.add(idx1);
+                        conflicts.add(idx2);
+                    }
+                }
+            }
+            return conflicts;
+        }
+
+        function handleQueensCellClick(index) {
+            if (gameState.queensTool === 'cat') {
+                const isPlacingCat = gameState.queensUserGrid[index] !== 1;
+                gameState.queensUserGrid[index] = isPlacingCat ? 1 : 0;
+
+                if (isPlacingCat) {
+                    const conflicts = getQueensConflicts();
+                    if (conflicts.has(index)) {
+                        AudioSynth.playError();
+                        gameState.mistakes++;
+                        document.getElementById('game-hearts').innerText = `${Math.max(0, 3 - gameState.mistakes)}/3`;
+                        showNotification('違反孤僻原則或同行列區域重覆！');
+                        if (gameState.mistakes >= 3) {
+                            triggerLose('愛心用光了！(失誤達 3 次)', '貓咪領地衝突過多，請重新挑戰 🐾');
+                        }
+                    } else {
+                        AudioSynth.playClick();
+                    }
+                } else {
+                    AudioSynth.playClick();
+                }
+            } else if (gameState.queensTool === 'x') {
+                AudioSynth.playClick();
+                gameState.queensUserGrid[index] = gameState.queensUserGrid[index] === 2 ? 0 : 2;
+            } else if (gameState.queensTool === 'erase') {
+                AudioSynth.playClick();
+                gameState.queensUserGrid[index] = 0;
+            }
+
+            renderQueensBoard();
+            checkQueensWin();
+        }
+
+        function checkQueensWin() {
+            const N = gameState.queensGridSize;
+            let catCount = 0;
+            // Check if Cat is completely trapped
+            const newNeighbors = TrapCatEngine.getNeighbors(r, c, size);
+            const hasFreeWay = newNeighbors.some(n => gameState.trapcatBoard[n.idx] === 0);
+
+            renderTrapCatBoard();
+
+            if (!hasFreeWay) {
+                triggerLose('被當地特產美食包圍了！', '貓咪快逃失敗，請再試一次吧 🐾');
+            }
+        }
+
+        function renderGomokuBoard() {
+            document.getElementById('sudoku-tools').classList.add('hidden');
+            document.getElementById('queens-tools').classList.add('hidden');
+            document.getElementById('gomoku-tools').classList.remove('hidden');
+            document.getElementById('gomoku-tools').classList.add('grid');
+            document.getElementById('trapcat-tools').classList.add('hidden');
+            document.getElementById('traffic-tools').classList.add('hidden');
+            document.getElementById('input-keypad').classList.add('hidden');
+            document.getElementById('hearts-container').classList.add('hidden');
+
+            const size = gameState.gomokuSize;
+            const gridEl = document.getElementById('puzzle-grid');
+            gridEl.className = `grid bg-amber-950 border-2 border-amber-900 w-full h-full p-1 rounded-xl gap-[1px]`;
+            gridEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+            gridEl.style.gridTemplateRows = `repeat(${size}, 1fr)`;
+            gridEl.innerHTML = '';
+
+            // Get current city flag and last played move
+            const cityFlag = CITIES[gameState.selectedCityIndex].flag;
+            const lastMove = gameState.gomokuHistory.length > 0 ? gameState.gomokuHistory[gameState.gomokuHistory.length - 1] : null;
+
+            for (let i = 0; i < size * size; i++) {
+                const val = gameState.gomokuBoard[i];
+                const isWinningPiece = gameState.gomokuWinningLine.includes(i);
+                const isLastMove = lastMove && lastMove.idx === i;
+
+                const cell = document.createElement('button');
+                cell.className = `relative flex items-center justify-center transition cursor-pointer select-none bg-amber-200 hover:bg-amber-300 border border-amber-800/20 ${
+                    isWinningPiece ? 'bg-amber-400 ring-2 ring-rose-500 rounded-full animate-pulse z-20' :
+                    isLastMove ? 'bg-amber-300 ring-2 ring-rose-500 animate-pulse z-10' : ''
+                }`;
+
+                cell.onclick = () => handleGomokuCellClick(i);
+
+                if (val === 1) {
+                    cell.innerHTML = getSkinHTML(getActiveSkin(), false);
+                } else if (val === 2) {
+                    // Render current city icon for AI piece
+                    cell.innerHTML = `<span class="text-xs sm:text-base">${cityFlag}</span>`;
+                }
+
+                // Add flashing marker badge on the latest played move
+                if (isLastMove) {
+                    const badge = document.createElement('span');
+                    badge.className = 'absolute -top-1 -right-1 w-2.5 h-2.5 bg-rose-500 rounded-full animate-ping pointer-events-none';
+                    cell.appendChild(badge);
+                }
+
+                gridEl.appendChild(cell);
+            }
+        }
+
+        function handleGomokuCellClick(index) {
+            if (gameState.gomokuBoard[index] !== 0 || gameState.gomokuTurn !== 1) return;
+
+            AudioSynth.playClick();
+            gameState.gomokuBoard[index] = 1;
+            gameState.gomokuHistory.push({ player: 1, idx: index });
+
+            const winResult = GomokuEngine.checkWin(gameState.gomokuBoard, gameState.gomokuSize);
+            if (winResult) {
+                gameState.gomokuWinningLine = winResult.line;
+                renderGomokuBoard();
+                setTimeout(() => triggerVictory(), 300);
+                return;
+            }
+
+            gameState.gomokuTurn = 2;
+            renderGomokuBoard();
+
+            setTimeout(() => {
+                const aiMove = GomokuEngine.getBestAIMove(gameState.gomokuBoard, gameState.gomokuSize, gameState.selectedCityIndex);
+                if (aiMove !== -1) {
+                    gameState.gomokuBoard[aiMove] = 2;
+                    gameState.gomokuHistory.push({ player: 2, idx: aiMove });
+
+                    const aiWin = GomokuEngine.checkWin(gameState.gomokuBoard, gameState.gomokuSize);
+                    if (aiWin) {
+                        gameState.gomokuWinningLine = aiWin.line;
+                        renderGomokuBoard();
+                        showNotification('關主貓咪連成 5 子獲勝了！再試一次吧！');
+                        setTimeout(() => startPuzzle(gameState.selectedCityIndex), 1200);
+                        return;
+                    }
+                }
+                gameState.gomokuTurn = 1;
+                renderGomokuBoard();
+            }, 300);
+        }
+
+        function renderTrapCatBoard() {
+            document.getElementById('sudoku-tools').classList.add('hidden');
+            document.getElementById('queens-tools').classList.add('hidden');
+            document.getElementById('gomoku-tools').classList.add('hidden');
+            document.getElementById('trapcat-tools').classList.remove('hidden');
+            document.getElementById('trapcat-tools').classList.add('grid');
+            document.getElementById('traffic-tools').classList.add('hidden');
+            document.getElementById('input-keypad').classList.add('hidden');
+            document.getElementById('hearts-container').classList.add('hidden');
+
+            const size = gameState.trapcatSize;
+            const gridEl = document.getElementById('puzzle-grid');
+            gridEl.className = `flex flex-col items-center justify-center bg-sky-200 border-2 border-sky-800 w-full h-full p-1 rounded-xl overflow-hidden gap-0.5 sm:gap-1`;
+            gridEl.style.gridTemplateColumns = '';
+            gridEl.style.gridTemplateRows = '';
+            gridEl.innerHTML = '';
+
+            const cityFlag = CITIES[gameState.selectedCityIndex].flag;
+            const catR = gameState.trapcatCatPos.r;
+            const catC = gameState.trapcatCatPos.c;
+            const validNeighbors = TrapCatEngine.getNeighbors(catR, catC, size).map(n => n.idx);
+
+            for (let r = 0; r < size; r++) {
+                const rowEl = document.createElement('div');
+                const isOdd = (r % 2 === 1);
+                rowEl.className = `flex gap-0.5 sm:gap-1 items-center justify-center w-full ${isOdd ? 'pl-2 sm:pl-3' : ''}`;
+
+                for (let c = 0; c < size; c++) {
+                    const idx = r * size + c;
+                    const val = gameState.trapcatBoard[idx];
+                    const isCat = (r === catR && c === catC);
+                    const isMovableNeighbor = validNeighbors.includes(idx) && val === 0;
+
+                    const cell = document.createElement('button');
+                    cell.className = `w-5 h-5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center transition text-xs sm:text-base cursor-pointer shadow-sm ${
+                        isCat ? 'bg-amber-300 ring-2 ring-amber-600 animate-bounce z-10' :
+                        val === 1 ? 'bg-amber-100 border border-amber-300' :
+                        isMovableNeighbor ? 'bg-emerald-300 hover:bg-emerald-400 ring-2 ring-emerald-500 animate-pulse' :
+                        'bg-white/80 hover:bg-sky-100'
+                    }`;
+
+                    cell.onclick = () => handleTrapCatMove(r, c);
+
+                    if (isCat) {
+                        cell.innerHTML = getSkinHTML(getActiveSkin(), false);
+                    } else if (val === 1) {
+                        cell.innerText = cityFlag;
+                    }
+
+                    rowEl.appendChild(cell);
+                }
+                gridEl.appendChild(rowEl);
+            }
+        }
+
+        function handleTrapCatMove(r, c) {
+            const size = gameState.trapcatSize;
+            const catPos = gameState.trapcatCatPos;
+            const neighbors = TrapCatEngine.getNeighbors(catPos.r, catPos.c, size);
+            const targetNeighbor = neighbors.find(n => n.r === r && n.c === c);
+
+            if (!targetNeighbor || gameState.trapcatBoard[targetNeighbor.idx] !== 0) {
+                return;
+            }
+
+            AudioSynth.playClick();
+            
+            gameState.trapcatHistory.push({ catPos: { ...catPos }, board: [...gameState.trapcatBoard] });
+            gameState.trapcatCatPos = { r, c };
+
+            if (TrapCatEngine.isBoundary(r, c, size)) {
+                renderTrapCatBoard();
+                setTimeout(() => triggerVictory(), 300);
+                return;
+            }
+
+            const bestBlock = TrapCatEngine.getBestBlockerMove(
+                gameState.trapcatBoard,
+                r,
+                c,
+                size,
+                gameState.selectedCityIndex
+            );
+
+            if (bestBlock !== -1) {
+                gameState.trapcatBoard[bestBlock] = 1;
+
+                const { minBorderDist } = TrapCatEngine.findCatExitsAndDistances(gameState.trapcatBoard, r, c, size);
+
+                if (minBorderDist === Infinity || (gameState.selectedCityIndex >= 6 && Math.random() < 0.35)) {
+                    const secondBlock = TrapCatEngine.getBestBlockerMove(
+                        gameState.trapcatBoard,
+                        r,
+                        c,
+                        size,
+                        gameState.selectedCityIndex
+                    );
+                    if (secondBlock !== -1) gameState.trapcatBoard[secondBlock] = 1;
+                }
+            }
+
+            const newNeighbors = TrapCatEngine.getNeighbors(r, c, size);
+            const hasFreeWay = newNeighbors.some(n => gameState.trapcatBoard[n.idx] === 0);
+
+            renderTrapCatBoard();
+
+            if (!hasFreeWay) {
+                AudioSynth.playError();
+                document.getElementById('modal-lose').classList.remove('hidden');
+            }
+        }
+
+        function renderTrafficBoard() {
+            document.getElementById('sudoku-tools').classList.add('hidden');
+            document.getElementById('queens-tools').classList.add('hidden');
+            document.getElementById('gomoku-tools').classList.add('hidden');
+            document.getElementById('trapcat-tools').classList.add('hidden');
+            document.getElementById('traffic-tools').classList.remove('hidden');
+            document.getElementById('traffic-tools').classList.add('grid');
+            document.getElementById('input-keypad').classList.add('hidden');
+            document.getElementById('hearts-container').classList.add('hidden');
+
+            const size = gameState.trafficSize;
+            TrafficEngine.updateTrafficFlow(gameState.trafficBoard, size);
+
+            const gridEl = document.getElementById('puzzle-grid');
+            gridEl.className = `grid bg-amber-950 border-2 border-amber-900 w-full h-full p-1 rounded-xl gap-1`;
+            gridEl.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+            gridEl.style.gridTemplateRows = `repeat(${size}, 1fr)`;
+            gridEl.innerHTML = '';
+
+            for (let i = 0; i < size * size; i++) {
+                const tile = gameState.trafficBoard[i];
+                const cell = document.createElement('button');
+                cell.className = `relative flex items-center justify-center bg-amber-900/80 hover:bg-amber-800 rounded-lg p-1 transition cursor-pointer overflow-hidden border border-amber-700/50 ${tile.connected ? 'ring-2 ring-emerald-400 bg-amber-800/90' : ''}`;
+
+                cell.onclick = () => handleTrafficTileClick(i);
+
+                const roadColor = tile.connected ? '#10b981' : '#78350f';
+                const laneColor = tile.connected ? '#ecfdf5' : '#fef08a';
+
+                let svgPath = '';
+                if (tile.type === 'straight') {
+                    svgPath = `
+                        <rect x="38" y="0" width="24" height="100" rx="4" fill="${roadColor}"/>
+                        <line x1="50" y1="0" x2="50" y2="100" stroke="${laneColor}" stroke-width="3" stroke-dasharray="8 8"/>
+                    `;
+                } else if (tile.type === 'corner') {
+                    svgPath = `
+                        <path d="M 38 0 L 62 0 L 62 38 L 100 38 L 100 62 L 38 62 Z" fill="${roadColor}"/>
+                        <path d="M 50 0 A 50 50 0 0 0 100 50" fill="none" stroke="${laneColor}" stroke-width="3" stroke-dasharray="8 8"/>
+                    `;
+                } else if (tile.type === 't') {
+                    svgPath = `
+                        <path d="M 38 0 L 62 0 L 62 38 L 100 38 L 100 62 L 62 62 L 62 100 L 38 100 Z" fill="${roadColor}"/>
+                        <line x1="50" y1="0" x2="50" y2="100" stroke="${laneColor}" stroke-width="3" stroke-dasharray="8 8"/>
+                        <line x1="50" y1="50" x2="100" y2="50" stroke="${laneColor}" stroke-width="3" stroke-dasharray="8 8"/>
+                    `;
+                } else if (tile.type === 'cross') {
+                    svgPath = `
+                        <path d="M 38 0 H 62 V 38 H 100 V 62 H 62 V 100 H 38 V 62 H 0 V 38 H 38 Z" fill="${roadColor}"/>
+                        <line x1="50" y1="0" x2="50" y2="100" stroke="${laneColor}" stroke-width="3" stroke-dasharray="8 8"/>
+                        <line x1="0" y1="50" x2="100" y2="50" stroke="${laneColor}" stroke-width="3" stroke-dasharray="8 8"/>
+                    `;
+                } else if (tile.type === 'start') {
+                    svgPath = `
+                        <rect x="38" y="38" width="62" height="24" rx="4" fill="${roadColor}"/>
+                        <polygon points="65,42 85,50 65,58" fill="${laneColor}" class="animate-pulse"/>
+                        <text x="30" y="62" font-size="36" text-anchor="middle">🚗</text>
+                    `;
+                } else if (tile.type === 'end') {
+                    svgPath = `
+                        <rect x="0" y="38" width="62" height="24" rx="4" fill="${roadColor}"/>
+                        <polygon points="5,50 25,35 25,43 45,43 45,57 25,57 25,65" fill="${laneColor}" class="animate-pulse"/>
+                        <text x="25" y="26" font-size="14" font-weight="900" fill="${laneColor}" text-anchor="middle">入口 ➔</text>
+                        <text x="72" y="62" font-size="36" text-anchor="middle">🏁</text>
+                    `;
+                }
+
+                cell.innerHTML = `
+                    <svg viewBox="0 0 100 100" class="w-full h-full transform transition-transform duration-200" style="transform: rotate(${tile.rotation * 90}deg)">
+                        ${svgPath}
+                    </svg>
+                    ${tile.connected && !tile.isStart && !tile.isEnd ? '<span class="absolute text-[10px] sm:text-xs pointer-events-none animate-pulse">🐾</span>' : ''}
+                `;
+
+                gridEl.appendChild(cell);
+            }
+        }
+
+        function handleTrafficTileClick(index) {
+            const tile = gameState.trafficBoard[index];
+            if (tile.isStart || tile.isEnd) return;
+
+            AudioSynth.playClick();
+            tile.rotation = (tile.rotation + 1) % 4;
+
+            const isWin = TrafficEngine.checkWin(gameState.trafficBoard, gameState.trafficSize);
+            renderTrafficBoard();
+
+            if (isWin) {
+                AudioSynth.playVictory();
+                setTimeout(() => triggerVictory(), 300);
+            }
+        }
+
+        function triggerVictory() {
+            stopTimer();
+            AudioSynth.playVictory();
+
+            const city = CITIES[gameState.selectedCityIndex];
+            gameState.fishCoins += city.fishReward;
+            
+            if (!gameState.stampsCollected.includes(city.id)) {
+                gameState.stampsCollected.push(city.id);
+            }
+
+            const nextIndex = gameState.selectedCityIndex + 1;
+            if (nextIndex < CITIES.length) {
+                const nextCity = CITIES[nextIndex];
+                if (!gameState.unlockedCities.includes(nextCity.id)) {
+                    gameState.unlockedCities.push(nextCity.id);
+                }
+            }
+
+            gameState.starsCollected += 3;
+            document.getElementById('fish-coins').innerText = gameState.fishCoins;
+            saveGameProgress();
+
+            document.getElementById('victory-station-name').innerText = `${city.name} - ${city.catName}`;
+            document.getElementById('victory-fish-earned').innerText = `+${city.fishReward} 🐟`;
+            document.getElementById('victory-final-time').innerText = formatTime(gameState.timerSeconds);
+            document.getElementById('modal-victory').classList.remove('hidden');
+        }
+
+        function renderSkinsModal() {
+            const grid = document.getElementById('skins-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            CAT_SKINS.forEach(skin => {
+                const isSelected = skin.id === gameState.activeSkinId;
+                const card = document.createElement('button');
+                card.className = `p-2 rounded-2xl border-2 transition flex flex-col items-center text-center cursor-pointer ${
+                    isSelected ? 'bg-amber-200 border-amber-800 ring-2 ring-amber-600 shadow-md' : 'bg-white border-amber-200 hover:bg-amber-100'
+                }`;
+
+                card.onclick = () => {
+                    AudioSynth.playClick();
+                    gameState.activeSkinId = skin.id;
+                    updateAvatarDisplays();
+                    saveGameProgress();
+                    renderSkinsModal();
+                    if (!document.getElementById('view-gameplay').classList.contains('hidden')) {
+                        renderBoard();
+                    }
+                };
+
+                card.innerHTML = `
+                    <div class="my-1">${getSkinHTML(skin, true)}</div>
+                    <div class="text-xs font-black text-amber-950">${skin.name}</div>
+                    <div class="text-[9px] font-bold text-amber-800">${skin.desc}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function renderPassportModal() {
+            const list = document.getElementById('passport-list');
+            if (!list) return;
+            list.innerHTML = '';
+
+            CITIES.forEach(city => {
+                const isUnlocked = gameState.unlockedCities.includes(city.id);
+                const isStamped = gameState.stampsCollected.includes(city.id);
+
+                const item = document.createElement('div');
+                item.className = `p-2.5 rounded-2xl border-2 flex items-center justify-between ${
+                    isStamped ? 'bg-rose-50 border-rose-300' :
+                    isUnlocked ? 'bg-amber-100 border-amber-300' : 'bg-gray-100 border-gray-300 opacity-60'
+                }`;
+
+                item.innerHTML = `
+                    <div class="flex items-center space-x-2">
+                        <span class="text-2xl">${city.flag}</span>
+                        <div>
+                            <div class="text-xs font-black text-amber-950">${city.name}</div>
+                            <div class="text-[10px] font-bold text-amber-800">${city.catName}</div>
+                        </div>
+                    </div>
+                    <div>
+                        ${isStamped ? '<span class="stamp-badge border border-rose-600 text-rose-600 text-[9px] px-1.5 py-0.5 rounded-md font-black">STAMPED</span>' :
+                          isUnlocked ? '<span class="text-[10px] font-bold text-amber-700">可挑戰</span>' :
+                          '<span class="text-[10px] font-bold text-gray-500">未解鎖</span>'}
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        window.onload = function() {
+            loadGameProgress();
+            renderMap();
+
+            // Mode Selector Buttons
+            document.getElementById('btn-select-sudoku').onclick = () => { gameState.selectedGameMode = 'sudoku'; updateStationModeButtons(); };
+            document.getElementById('btn-select-queens').onclick = () => { gameState.selectedGameMode = 'queens'; updateStationModeButtons(); };
+            document.getElementById('btn-select-gomoku').onclick = () => { gameState.selectedGameMode = 'gomoku'; updateStationModeButtons(); };
+            document.getElementById('btn-select-trapcat').onclick = () => { gameState.selectedGameMode = 'trapcat'; updateStationModeButtons(); };
+            document.getElementById('btn-select-traffic').onclick = () => { gameState.selectedGameMode = 'traffic'; updateStationModeButtons(); };
+
+            // Game Launch
+            document.getElementById('btn-start-game').onclick = () => {
+                AudioSynth.playClick();
+                document.getElementById('modal-station').classList.add('hidden');
+                startPuzzle(gameState.selectedCityIndex);
+            };
+
+            // Navigation and Modal Triggers
+            document.getElementById('btn-skin-header').onclick =
+            document.getElementById('btn-open-skins').onclick =
+            document.getElementById('btn-quick-skin').onclick = () => {
+                AudioSynth.playClick();
+                renderSkinsModal();
+                document.getElementById('modal-skins').classList.remove('hidden');
+            };
+
+            document.getElementById('btn-close-skins-modal').onclick = () => document.getElementById('modal-skins').classList.add('hidden');
+
+            document.getElementById('btn-passport').onclick = () => {
+                AudioSynth.playClick();
+                renderPassportModal();
+                document.getElementById('modal-passport').classList.remove('hidden');
+            };
+
+            document.getElementById('btn-close-passport-modal').onclick = () => document.getElementById('modal-passport').classList.add('hidden');
+
+            document.getElementById('btn-rules').onclick = () => {
+                AudioSynth.playClick();
+                document.getElementById('modal-rules').classList.remove('hidden');
+            };
+
+            document.getElementById('btn-close-rules-modal').onclick = () => document.getElementById('modal-rules').classList.add('hidden');
+            document.getElementById('btn-close-station-modal').onclick = () => document.getElementById('modal-station').classList.add('hidden');
+
+            document.getElementById('btn-back-map').onclick = () => {
+                AudioSynth.playClick();
+                stopTimer();
+                document.getElementById('view-gameplay').classList.add('hidden');
+                document.getElementById('view-gameplay').classList.remove('flex');
+                document.getElementById('view-world-map').classList.remove('hidden');
+                renderMap();
+            };
+
+            // Display Mode Toggles
+            document.getElementById('mode-numbers').onclick = () => {
+                AudioSynth.playClick();
+                gameState.displayMode = 'numbers';
+                document.getElementById('mode-numbers').className = 'px-2 py-0.5 sm:py-1 rounded-lg font-extrabold text-[10px] sm:text-xs transition bg-amber-800 text-white shadow-sm';
+                document.getElementById('mode-cats').className = 'px-2 py-0.5 sm:py-1 rounded-lg font-extrabold text-[10px] sm:text-xs text-amber-900 transition hover:bg-amber-100';
+            };
+
+            document.getElementById('mode-cats').onclick = () => {
+                AudioSynth.playClick();
+                gameState.displayMode = 'cats';
+                document.getElementById('mode-cats').className = 'px-2 py-0.5 sm:py-1 rounded-lg font-extrabold text-[10px] sm:text-xs transition bg-amber-800 text-white shadow-sm';
+                document.getElementById('mode-numbers').className = 'px-2 py-0.5 sm:py-1 rounded-lg font-extrabold text-[10px] sm:text-xs text-amber-900 transition hover:bg-amber-100';
+            };
+
+            // Sound Toggle
+            document.getElementById('btn-sound').onclick = () => {
+                gameState.soundEnabled = !gameState.soundEnabled;
+                document.getElementById('sound-icon').className = gameState.soundEnabled ? 'fa-solid fa-volume-high' : 'fa-solid fa-volume-xmark';
+            };
+
+            // Reset Save Progress Handlers
+            document.getElementById('btn-reset-save').onclick = () => {
+                AudioSynth.playClick();
+                document.getElementById('modal-reset-confirm').classList.remove('hidden');
+            };
+
+            document.getElementById('btn-cancel-reset').onclick = () => {
+                AudioSynth.playClick();
+                document.getElementById('modal-reset-confirm').classList.add('hidden');
+            };
+
+            document.getElementById('btn-confirm-reset').onclick = () => {
+                AudioSynth.playClick();
+                try {
+                    localStorage.removeItem('MeowTravelSudoku_Save');
+                } catch (e) {}
+                
+                gameState.fishCoins = 50;
+                gameState.activeSkinId = 'yellow';
+                gameState.unlockedCities = ['taipei'];
+                gameState.stampsCollected = [];
+                gameState.starsCollected = 0;
+                gameState.displayMode = 'numbers';
+                gameState.selectedGameMode = 'sudoku';
+
+                document.getElementById('fish-coins').innerText = gameState.fishCoins;
+                updateAvatarDisplays();
+                renderMap();
+
+                document.getElementById('modal-reset-confirm').classList.add('hidden');
+                showNotification('已成功重置所有遊戲進度！');
+            };
+
+            // Sudoku Tools
+            document.getElementById('tool-erase').onclick = () => {
+                if (gameState.selectedCell >= 0 && gameState.boardInitial[gameState.selectedCell] === 0) {
+                    AudioSynth.playClick();
+                    gameState.boardCurrent[gameState.selectedCell] = 0;
+                    gameState.boardNotes[gameState.selectedCell] = [];
+                    renderSudokuBoard();
+                }
+            };
+
+            document.getElementById('tool-pencil').onclick = () => {
+                AudioSynth.playClick();
+                gameState.pencilMode = !gameState.pencilMode;
+                document.getElementById('pencil-badge').className = gameState.pencilMode ? 'absolute top-1 right-1.5 w-1.5 h-1.5 rounded-full bg-rose-500' : 'absolute top-1 right-1.5 w-1.5 h-1.5 rounded-full bg-gray-400';
+            };
+
+            document.getElementById('tool-hint').onclick = () => {
+                if (gameState.selectedCell < 0) {
+                    showNotification('請先點選棋盤上的空格！');
+                    return;
+                }
+                if (gameState.fishCoins < 5) {
+                    showNotification('魚乾點數不足！');
+                    return;
+                }
+                AudioSynth.playClick();
+                gameState.fishCoins -= 5;
+                document.getElementById('fish-coins').innerText = gameState.fishCoins;
+                gameState.boardCurrent[gameState.selectedCell] = gameState.boardSolution[gameState.selectedCell];
+                gameState.boardNotes[gameState.selectedCell] = [];
+                renderSudokuBoard();
+                if (!gameState.boardCurrent.includes(0)) triggerVictory();
+            };
+
+            document.getElementById('tool-auto-notes').onclick = () => {
+                if (gameState.selectedGameMode !== 'sudoku') return;
+                if (gameState.fishCoins < 10) {
+                    showNotification('魚乾點數不足！(需要 10 🐟)');
+                    return;
+                }
+                AudioSynth.playClick();
+                gameState.fishCoins -= 10;
+                document.getElementById('fish-coins').innerText = gameState.fishCoins;
+
+                // Fill candidate pencil notes for all empty cells on the Sudoku board
+                for (let i = 0; i < 81; i++) {
+                    if (gameState.boardCurrent[i] === 0) {
+                        const row = Math.floor(i / 9);
+                        const col = i % 9;
+                        const candidates = [];
+                        for (let n = 1; n <= 9; n++) {
+                            if (SudokuEngine.isValid(gameState.boardCurrent, row, col, n)) {
+                                candidates.push(n);
+                            }
+                        }
+                        gameState.boardNotes[i] = candidates;
+                    }
+                }
+                renderSudokuBoard();
+                showNotification('已為所有空格自動標註候選筆記！');
+                saveGameProgress();
+            };
+
+            // Keyboard navigation and input controls for Desktop
+            window.addEventListener('keydown', (e) => {
+                const gameplayView = document.getElementById('view-gameplay');
+                if (!gameplayView || gameplayView.classList.contains('hidden')) return;
+
+                if (gameState.selectedGameMode === 'sudoku') {
+                    if (e.key >= '1' && e.key <= '9') {
+                        inputNumber(parseInt(e.key));
+                    } else if (e.key === 'Backspace' || e.key === 'Delete') {
+                        if (gameState.selectedCell >= 0 && gameState.boardInitial[gameState.selectedCell] === 0) {
+                            AudioSynth.playClick();
+                            gameState.boardCurrent[gameState.selectedCell] = 0;
+                            gameState.boardNotes[gameState.selectedCell] = [];
+                            renderSudokuBoard();
+                        }
+                    } else if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                        e.preventDefault();
+                        if (gameState.selectedCell < 0) {
+                            gameState.selectedCell = 0;
+                        } else {
+                            let r = Math.floor(gameState.selectedCell / 9);
+                            let c = gameState.selectedCell % 9;
+                            if (e.key === 'ArrowUp') r = Math.max(0, r - 1);
+                            else if (e.key === 'ArrowDown') r = Math.min(8, r + 1);
+                            else if (e.key === 'ArrowLeft') c = Math.max(0, c - 1);
+                            else if (e.key === 'ArrowRight') c = Math.min(8, c + 1);
+                            gameState.selectedCell = r * 9 + c;
+                        }
+                        AudioSynth.playClick();
+                        renderBoard();
+                    } else if (e.key === 'p' || e.key === 'P') {
+                        document.getElementById('tool-pencil').click();
+                    }
+                }
+            });
+
+            // Queens Tools
+            document.getElementById('q-tool-cat').onclick = () => setQueensTool('cat');
+            document.getElementById('q-tool-x').onclick = () => setQueensTool('x');
+            document.getElementById('q-tool-erase').onclick = () => setQueensTool('erase');
+
+            // Trapcat Hint Tool
+            document.getElementById('tc-tool-hint').onclick = () => {
+                const size = gameState.trapcatSize;
+                const catPos = gameState.trapcatCatPos;
+                const { minBorderDist } = TrapCatEngine.findCatExitsAndDistances(gameState.trapcatBoard, catPos.r, catPos.c, size);
+                if (minBorderDist === Infinity) {
+                    showNotification('喵喵已被關主包圍圍堵！請儘快尋找剩餘空間～');
+                } else {
+                    showNotification(`距離最近逃脫邊界還有 ${minBorderDist} 步！`);
+                }
+            };
+
+            // Traffic Restart & Hint Handlers
+            document.getElementById('tr-tool-restart').onclick = () => {
+                AudioSynth.playClick();
+                startPuzzle(gameState.selectedCityIndex);
+            };
+
+            document.getElementById('tr-tool-hint').onclick = () => {
+                if (gameState.fishCoins < 5) {
+                    showNotification('魚乾點數不足！');
+                    return;
+                }
+                AudioSynth.playClick();
+                gameState.fishCoins -= 5;
+                document.getElementById('fish-coins').innerText = gameState.fishCoins;
+
+                for (let tile of gameState.trafficBoard) {
+                    if (!tile.isStart && !tile.isEnd && tile.rotation !== tile.solutionRotation) {
+                        tile.rotation = tile.solutionRotation;
+                        showNotification('已為您將一處道路旋轉至正確方向！');
+                        renderTrafficBoard();
+                        if (TrafficEngine.checkWin(gameState.trafficBoard, gameState.trafficSize)) {
+                            setTimeout(() => triggerVictory(), 300);
+                        }
+                        return;
+                    }
+                }
+                showNotification('目前所有主幹道路方向皆正確！');
+            };
+
+            // Gomoku / Trapcat Restart Handlers
+            document.getElementById('g-tool-restart').onclick =
+            document.getElementById('tc-tool-restart').onclick =
+            document.getElementById('btn-lose-restart').onclick = () => {
+                AudioSynth.playClick();
+                document.getElementById('modal-lose').classList.add('hidden');
+                startPuzzle(gameState.selectedCityIndex);
+            };
+
+            document.getElementById('btn-victory-continue').onclick = () => {
+                AudioSynth.playClick();
+                document.getElementById('modal-victory').classList.add('hidden');
+                document.getElementById('btn-back-map').click();
+            };
+
+            document.getElementById('btn-victory-next').onclick = () => {
+                AudioSynth.playClick();
+                document.getElementById('modal-victory').classList.add('hidden');
+                const nextIdx = gameState.selectedCityIndex + 1;
+                if (nextIdx < CITIES.length) {
+                    startPuzzle(nextIdx);
+                } else {
+                    showNotification('恭喜通關全球所有站點！');
+                    document.getElementById('btn-back-map').click();
+                }
+            };
+        };
+
+        function setQueensTool(tool) {
+            AudioSynth.playClick();
+            gameState.queensTool = tool;
+            document.getElementById('q-tool-cat').className = tool === 'cat' ? 'bg-amber-800 text-white active:scale-95 p-1.5 rounded-xl border border-amber-900 shadow-md flex items-center justify-center gap-1 transition' : 'bg-white/80 hover:bg-white text-amber-950 active:scale-95 p-1.5 rounded-xl border border-amber-800/10 shadow-sm flex items-center justify-center gap-1 transition';
+            document.getElementById('q-tool-x').className = tool === 'x' ? 'bg-amber-800 text-white active:scale-95 p-1.5 rounded-xl border border-amber-900 shadow-md flex items-center justify-center gap-1 transition' : 'bg-white/80 hover:bg-white text-amber-950 active:scale-95 p-1.5 rounded-xl border border-amber-800/10 shadow-sm flex items-center justify-center gap-1 transition';
+            document.getElementById('q-tool-erase').className = tool === 'erase' ? 'bg-amber-800 text-white active:scale-95 p-1.5 rounded-xl border border-amber-900 shadow-md flex items-center justify-center gap-1 transition' : 'bg-white/80 hover:bg-white text-amber-950 active:scale-95 p-1.5 rounded-xl border border-amber-800/10 shadow-sm flex items-center justify-center gap-1 transition';
+        }
+    </script>
+</body>
+</html>
