@@ -101,7 +101,13 @@
         body.font-zoom-2 .q-region-0, body.font-zoom-2 .q-region-1, body.font-zoom-2 .q-region-2,
         body.font-zoom-2 .q-region-3, body.font-zoom-2 .q-region-4, body.font-zoom-2 .q-region-5 { font-size: 1.65rem !important; font-weight: 900 !important; }
         body.font-zoom-2 p, body.font-zoom-2 span, body.font-zoom-2 button { font-size: 125%; }
-        body.font-zoom-2 h1, body.font-zoom-2 h2, body.font-zoom-2 h3 { transform: scale(1.06); transform-origin: left center; }
+        body.font-zoom-2 h1, body.font-zoom-2 h2, body.font-zoom-2 h3 { transform: scale(1.04); transform-origin: center center; }
+
+        /* Modal Close Button Layer Safety */
+        [id^="btn-close-"] {
+            z-index: 50 !important;
+            cursor: pointer !important;
+        }
 
         /* Cell Magnifier Hover Lens Effect */
         .sudoku-cell:hover, #puzzle-grid button:hover {
@@ -494,7 +500,7 @@
     <!-- Modal: Skins -->
     <div id="modal-skins" class="fixed inset-0 bg-amber-950/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3">
         <div class="bg-amber-50 border-4 border-amber-800 rounded-3xl max-w-sm w-full p-4 shadow-2xl relative flex flex-col max-h-[85vh]">
-            <button id="btn-close-skins-modal" class="absolute top-3 right-3 text-amber-800 hover:text-rose-600 text-lg font-black w-7 h-7 flex items-center justify-center rounded-full bg-amber-200">
+            <button id="btn-close-skins-modal" class="absolute top-3 right-3 text-amber-800 hover:text-rose-600 text-lg font-black w-7 h-7 flex items-center justify-center rounded-full bg-amber-200 z-30 cursor-pointer">
                 ✕
             </button>
 
@@ -514,7 +520,7 @@
     <!-- Modal: Passport -->
     <div id="modal-passport" class="fixed inset-0 bg-amber-950/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-amber-50 border-4 border-amber-800 rounded-3xl max-w-sm w-full p-4 shadow-2xl relative max-h-[85vh] flex flex-col">
-            <button id="btn-close-passport-modal" class="absolute top-3 right-3 text-amber-800 hover:text-rose-600 text-lg font-black w-7 h-7 flex items-center justify-center rounded-full bg-amber-200">
+            <button id="btn-close-passport-modal" class="absolute top-3 right-3 text-amber-800 hover:text-rose-600 text-lg font-black w-7 h-7 flex items-center justify-center rounded-full bg-amber-200 z-30 cursor-pointer">
                 ✕
             </button>
 
@@ -535,7 +541,7 @@
     <div id="modal-station" class="fixed inset-0 bg-amber-950/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-amber-50 border-4 border-amber-800 rounded-3xl max-w-sm w-full p-4 shadow-2xl relative text-center">
             
-            <button id="btn-close-station-modal" class="absolute top-3 right-3 text-amber-800 hover:text-rose-600 text-lg font-black w-7 h-7 flex items-center justify-center rounded-full bg-amber-200">
+            <button id="btn-close-station-modal" class="absolute top-3 right-3 text-amber-800 hover:text-rose-600 text-lg font-black w-7 h-7 flex items-center justify-center rounded-full bg-amber-200 z-30 cursor-pointer">
                 ✕
             </button>
 
@@ -584,7 +590,7 @@
     <!-- Modal: Rules -->
     <div id="modal-rules" class="fixed inset-0 bg-amber-950/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-amber-50 border-4 border-amber-800 rounded-3xl max-w-sm w-full p-4 shadow-2xl relative max-h-[85vh] flex flex-col">
-            <button id="btn-close-rules-modal" class="absolute top-3 right-3 text-amber-800 hover:text-rose-600 text-lg font-black w-7 h-7 flex items-center justify-center rounded-full bg-amber-200">
+            <button id="btn-close-rules-modal" class="absolute top-3 right-3 text-amber-800 hover:text-rose-600 text-lg font-black w-7 h-7 flex items-center justify-center rounded-full bg-amber-200 z-30 cursor-pointer">
                 ✕
             </button>
 
