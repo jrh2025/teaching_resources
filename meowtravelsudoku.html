@@ -128,50 +128,45 @@
     </div>
 
     <!-- Header Navigation -->
-    <header class="w-full max-w-2xl mx-auto flex items-center justify-between z-20 shrink-0 pb-1">
-        <div class="flex items-center space-x-2">
-            <div id="btn-skin-header" class="bg-amber-900 text-amber-100 w-9 h-9 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center text-lg sm:text-2xl shadow-md border-2 border-amber-700 cursor-pointer active:scale-95 transition animate-float relative">
+    <header class="w-full max-w-2xl mx-auto flex items-center justify-between z-20 shrink-0 pb-1 gap-1 sm:gap-2">
+        <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+            <div id="btn-open-skins" title="造型衣櫥" class="bg-amber-900 text-amber-100 w-9 h-9 sm:w-11 sm:h-11 rounded-2xl flex items-center justify-center text-lg sm:text-2xl shadow-md border-2 border-amber-700 cursor-pointer active:scale-95 transition animate-float relative shrink-0">
                 <span id="header-cat-avatar" class="flex items-center justify-center"><span class="text-base sm:text-lg">🐱</span></span>
-                <span class="absolute -bottom-1 -right-1 bg-rose-500 text-white text-[9px] px-1 rounded-full font-extrabold border border-white">衣櫥</span>
+                <span class="absolute -bottom-1 -right-1 bg-rose-500 text-white text-[9px] px-1 rounded-full font-extrabold border border-white">造型</span>
             </div>
             <div>
-                <h1 class="text-base sm:text-2xl font-black tracking-wide text-amber-950 flex items-center gap-1 leading-tight">
+                <h1 class="text-sm sm:text-2xl font-black tracking-wide text-amber-950 flex items-center gap-1 leading-tight">
                     MeowTravelSudoku
                 </h1>
-                <p class="text-[10px] sm:text-xs font-bold text-amber-800/80">數獨 ✕ 獨居棋 ✕ 五子棋 ✕ 貓咪快逃 ✕ 交通疏導 🐾</p>
+                <p class="text-[9px] sm:text-xs font-bold text-amber-800/80 hidden xs:block">數獨 ✕ 獨居棋 ✕ 五子棋 ✕ 貓咪快逃 ✕ 交通疏導 🐾</p>
             </div>
         </div>
 
-        <div class="flex items-center space-x-1.5 sm:space-x-2">
-            <div class="bg-amber-100/90 border border-amber-300 backdrop-blur-md px-2 py-1 rounded-xl flex items-center space-x-1 shadow-sm">
+        <div class="flex flex-wrap items-center justify-end gap-1 sm:gap-1.5 max-w-[65%] sm:max-w-none">
+            <div class="bg-amber-100/90 border border-amber-300 backdrop-blur-md px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-xl flex items-center space-x-1 shadow-sm shrink-0">
                 <span class="text-xs sm:text-sm">🐟</span>
                 <span id="fish-coins" class="font-extrabold text-amber-900 text-xs sm:text-sm">50</span>
             </div>
 
-            <button id="btn-open-skins" class="bg-amber-200/90 hover:bg-amber-300 text-amber-950 px-2 py-1 rounded-xl font-bold text-xs shadow-sm transition flex items-center gap-1">
-                <span>👗</span>
-                <span class="hidden sm:inline">造型</span>
+            <button id="btn-zoom" title="字體放大鏡 (切換 100% / 125% / 150%)" class="bg-amber-200/90 hover:bg-amber-300 active:scale-95 text-amber-950 w-7 h-7 sm:w-8 sm:h-8 rounded-xl font-bold text-xs shadow-sm transition flex items-center justify-center shrink-0">
+                <i id="zoom-icon" class="fa-solid fa-magnifying-glass-plus"></i>
             </button>
 
-            <button id="btn-rules" class="bg-amber-200/90 hover:bg-amber-300 text-amber-950 p-1.5 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition">
-                <i class="fa-solid fa-circle-question"></i>
-            </button>
-
-            <button id="btn-passport" class="bg-rose-500 hover:bg-rose-600 active:scale-95 text-white px-2 py-1 sm:px-2.5 sm:py-1 rounded-xl font-bold text-xs flex items-center gap-1 shadow-md transition">
+            <button id="btn-passport" title="護照郵戳集印冊" class="bg-rose-500 hover:bg-rose-600 active:scale-95 text-white h-7 sm:h-auto px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-md transition shrink-0">
                 <i class="fa-solid fa-passport"></i>
                 <span class="hidden sm:inline">護照</span>
             </button>
 
-            <button id="btn-reset-save" title="重置進度" class="bg-amber-200/80 hover:bg-rose-200 active:scale-95 text-amber-900 hover:text-rose-700 p-1.5 rounded-xl font-bold text-xs shadow-sm transition">
-                <i class="fa-solid fa-trash-can"></i>
+            <button id="btn-rules" title="遊戲規則說明" class="bg-amber-200/90 hover:bg-amber-300 text-amber-950 w-7 h-7 sm:w-8 sm:h-8 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-circle-question"></i>
             </button>
 
-            <button id="btn-sound" class="bg-amber-200/80 hover:bg-amber-300 active:scale-95 text-amber-900 p-1.5 rounded-xl font-bold text-xs shadow-sm transition">
+            <button id="btn-sound" title="切換音效" class="bg-amber-200/80 hover:bg-amber-300 active:scale-95 text-amber-900 w-7 h-7 sm:w-8 sm:h-8 rounded-xl font-bold text-xs shadow-sm transition flex items-center justify-center shrink-0">
                 <i id="sound-icon" class="fa-solid fa-volume-high"></i>
             </button>
 
-            <button id="btn-zoom" title="字體放大鏡 (切換 100% / 125% / 150%)" class="bg-amber-200/80 hover:bg-amber-300 active:scale-95 text-amber-900 p-1.5 rounded-xl font-bold text-xs shadow-sm transition">
-                <i id="zoom-icon" class="fa-solid fa-magnifying-glass-plus"></i>
+            <button id="btn-reset-save" title="重置進度" class="bg-amber-200/80 hover:bg-rose-200 active:scale-95 text-amber-900 hover:text-rose-700 w-7 h-7 sm:w-8 sm:h-8 rounded-xl font-bold text-xs shadow-sm transition flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-trash-can"></i>
             </button>
         </div>
     </header>
@@ -2325,13 +2320,17 @@
             };
 
             // Navigation and Modal Triggers
-            document.getElementById('btn-skin-header').onclick =
-            document.getElementById('btn-open-skins').onclick =
-            document.getElementById('btn-quick-skin').onclick = () => {
+            const openSkinsModalHandler = () => {
                 AudioSynth.playClick();
                 renderSkinsModal();
                 document.getElementById('modal-skins').classList.remove('hidden');
             };
+            const btnOpenSkins = document.getElementById('btn-open-skins');
+            if (btnOpenSkins) btnOpenSkins.onclick = openSkinsModalHandler;
+            const btnSkinHeader = document.getElementById('btn-skin-header');
+            if (btnSkinHeader) btnSkinHeader.onclick = openSkinsModalHandler;
+            const btnQuickSkin = document.getElementById('btn-quick-skin');
+            if (btnQuickSkin) btnQuickSkin.onclick = openSkinsModalHandler;
 
             document.getElementById('btn-close-skins-modal').onclick = () => document.getElementById('modal-skins').classList.add('hidden');
 
