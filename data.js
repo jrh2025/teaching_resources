@@ -246,6 +246,16 @@ window.APP_DATA = {
       "icon": "Gamepad2",
       "color": "orange",
       "grade": "遊戲"
+    },
+    {
+      "id": "item_1787886797409",
+      "title": "小綠人號誌模擬器",
+      "category": "其他",
+      "description": "一套在網頁上運作的台灣行人號誌（小綠人與小紅人）模擬工具。使用者可以自由設定秒數、調整步伐速度，並將包含完整燈箱外框、倒數秒數與動態人物的號誌動畫，匯出為向量圖（SVG）、動態圖（GIF）或含聲音的影片（WebM）。\n",
+      "link": "Little_green_person.html",
+      "icon": "PersonStanding",
+      "color": "slate",
+      "grade": "其他"
     }
   ]
 };

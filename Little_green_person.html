@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>台灣經典小綠人號誌模擬與全週期匯出系統</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入 GIF 渲染編碼核心 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gifshot/0.3.2/gifshot.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+TC:wght@400;500;600;700&display=swap');
+
+    :root {
+      --led-green: #00ff66;
+      --led-red: #ff3344;
+      --led-yellow: #ffcc00;
+    }
+
+    body {
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: radial-gradient(circle at 50% 12%, #141c26 0%, #070a0e 100%);
+      color: #e2e8f0;
+      min-height: 100vh;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .digit-font {
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    /* 號誌箱立體金屬質感 */
+    .traffic-housing {
+      background: linear-gradient(155deg, #242c38 0%, #12151c 100%);
+      box-shadow: 
+        0 20px 40px -10px rgba(0, 0, 0, 0.8),
+        inset 0 2px 3px rgba(255, 255, 255, 0.1),
+        inset 0 -2px 6px rgba(0, 0, 0, 0.9);
+      border: 3px solid #334050;
+    }
+
+    .visor {
+      background: linear-gradient(to bottom, #0e1318, #26303b);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.6);
+    }
+
+    .glow-green { filter: drop-shadow(0 0 7px var(--led-green)); }
+    .glow-red { filter: drop-shadow(0 0 7px var(--led-red)); }
+    .glow-yellow { filter: drop-shadow(0 0 7px var(--led-yellow)); }
+
+    .frame-item { display: none; }
+    .frame-item.active { display: inline; }
+
+    input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #00ff66;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(0, 255, 102, 0.6);
+    }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-center p-3 sm:p-6 selection:bg-emerald-500 selection:text-white pb-16">
+
+  <!-- 頂部標題列 -->
+  <header class="text-center mb-5 max-w-xl w-full">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold uppercase tracking-wider mb-2">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      Taiwan Pedestrian Signal Studio
+    </div>
+    <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-100">
+      台灣經典小綠人號誌模擬與全週期匯出系統
+    </h1>
+    <p class="text-xs sm:text-sm text-slate-400 mt-1">精準幀數變速 ｜ 無殘影動態 SVG ｜ 逐秒倒數 GIF ｜ 音效同步影片</p>
+  </header>
+
+  <!-- 主工作區 -->
+  <main class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+    
+    <!-- 左側：號誌燈硬體模擬箱 (雙層外框) -->
+    <section class="lg:col-span-5 flex flex-col items-center justify-center">
+      <div id="full-signal-housing" class="traffic-housing rounded-3xl p-4 sm:p-5 flex flex-col gap-3 relative max-w-[280px] w-full">
+        
+        <!-- 上方：倒數秒數面板 -->
+        <div class="flex flex-col items-center w-full">
+          <div class="visor w-48 sm:w-52 h-3.5 rounded-t-xl -mb-1 z-10"></div>
+          <div class="w-48 sm:w-52 h-44 sm:h-48 bg-[#050806] rounded-2xl border-4 border-[#1c242c] flex flex-col items-center justify-center relative overflow-hidden shadow-inner">
+            <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#1e382b_1.5px,transparent_1.5px)] [background-size:7px_7px]"></div>
+            
+            <div id="countdown-display" class="digit-font text-8xl font-bold text-[#00ff66] glow-green tracking-tighter select-none z-10 transition-colors duration-200">
+              30
+            </div>
+            
+            <div id="stop-text-group" class="hidden flex-col items-center z-10">
+              <span class="digit-font text-5xl font-bold text-[#ff3344] glow-red tracking-wider select-none">STOP</span>
+              <span id="red-countdown-display" class="digit-font text-2xl font-bold text-[#ff3344] glow-red select-none mt-1">10s</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 下方：小綠人/小紅人向量主體面板 -->
+        <div class="flex flex-col items-center w-full">
+          <div class="visor w-48 sm:w-52 h-3.5 rounded-t-xl -mb-1 z-10"></div>
+          <div class="w-48 sm:w-52 h-48 sm:h-52 bg-[#050806] rounded-2xl border-4 border-[#1c242c] flex items-center justify-center relative overflow-hidden shadow-inner">
+            <div class="absolute inset-0 opacity-25 bg-[radial-gradient(#1e382b_1.5px,transparent_1.5px)] [background-size:7px_7px]"></div>
+            
+            <!-- 向量小綠人主體 SVG -->
+            <svg id="signal-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" class="w-full h-full p-2 z-10 select-none">
+              <defs>
+                <filter id="led-glow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur id="svg-blur-filter" stdDeviation="2.2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              <!-- 綠色跑動動作組 (動態掛載於此) -->
+              <g id="green-man-frames" fill="none" stroke="#00ff66" stroke-linecap="round" stroke-linejoin="round" filter="url(#led-glow)"></g>
+
+              <!-- 小紅人立正停等姿態 -->
+              <g id="red-man-frame" class="hidden" fill="none" stroke="#ff3344" stroke-linecap="round" stroke-linejoin="round" filter="url(#led-glow)"></g>
+            </svg>
+          </div>
+        </div>
+
+        <div class="absolute -bottom-3 left-1/2 -translate-x-1/2 w-16 h-3 bg-[#1e252d] rounded-b-md border border-t-0 border-[#334050]"></div>
+      </div>
+    </section>
+
+    <!-- 右側：控制面板 -->
+    <section class="lg:col-span-7 bg-slate-900/90 backdrop-blur border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col gap-5">
+      
+      <!-- 狀態總覽 -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div>
+          <span class="text-xs text-slate-400">目前號誌狀態</span>
+          <div class="flex items-center gap-2 mt-0.5">
+            <span id="current-state-badge" class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              🟢 常態綠燈步行中
+            </span>
+          </div>
+        </div>
+        <div class="w-32 sm:w-44 text-right">
+          <span id="progress-percent" class="text-[11px] font-mono text-slate-400">剩餘 100% (30s)</span>
+          <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden mt-1">
+            <div id="progress-bar" class="h-full bg-emerald-500 transition-all duration-300" style="width: 100%;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 區塊 1：秒數與加速閾值自訂 -->
+      <div class="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs sm:text-sm font-semibold text-slate-200 flex items-center gap-1.5">
+            <span>⏱️</span> 倒數秒數與加速臨界點設定
+          </h2>
+          <span class="text-[11px] text-slate-400">自訂快跑與衝刺時間點</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div>
+            <label class="block text-[11px] text-slate-300 mb-1 font-medium">綠燈通行總秒數</label>
+            <input id="cfg-green-total" type="number" min="5" max="99" value="30" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-emerald-400 focus:outline-none focus:border-emerald-500" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-slate-300 mb-1 font-medium">紅燈停等總秒數</label>
+            <input id="cfg-red-total" type="number" min="3" max="60" value="10" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-rose-400 focus:outline-none focus:border-rose-500" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-slate-300 mb-1 font-medium">最後幾秒開始快跑</label>
+            <input id="cfg-jog-threshold" type="number" min="2" max="30" value="10" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-amber-400 focus:outline-none focus:border-amber-500" />
+          </div>
+
+          <div>
+            <label class="block text-[11px] text-slate-300 mb-1 font-medium">最後幾秒極速衝刺</label>
+            <input id="cfg-sprint-threshold" type="number" min="1" max="10" value="3" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-mono text-red-400 focus:outline-none focus:border-red-500" />
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-800/80">
+          <button id="btn-apply-timing" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md">
+            儲存並套用秒數設定
+          </button>
+        </div>
+      </div>
+
+      <!-- 區塊 2：三段步頻速度自訂與儲存 -->
+      <div class="bg-slate-950/60 p-4 rounded-2xl border border-slate-800 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs sm:text-sm font-semibold text-slate-200 flex items-center gap-1.5">
+            <span>⚡</span> 各階段步頻速率自訂 (秒 / 幀)
+          </h2>
+          <span class="text-[11px] text-slate-400">數值越小跑速越快</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <!-- 步行速度 -->
+          <div class="bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+            <div class="flex justify-between text-xs text-slate-300 mb-1">
+              <span>🚶 步行速率</span>
+              <span id="display-speed-walk" class="font-mono text-emerald-400 font-bold">0.32s</span>
+            </div>
+            <input id="slider-speed-walk" type="range" min="0.15" max="0.60" step="0.01" value="0.32" class="w-full h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-emerald-500" />
+          </div>
+
+          <!-- 快跑速度 -->
+          <div class="bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+            <div class="flex justify-between text-xs text-slate-300 mb-1">
+              <span>🏃 快跑速率</span>
+              <span id="display-speed-jog" class="font-mono text-amber-400 font-bold">0.14s</span>
+            </div>
+            <input id="slider-speed-jog" type="range" min="0.08" max="0.35" step="0.01" value="0.14" class="w-full h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-amber-500" />
+          </div>
+
+          <!-- 狂奔速度 -->
+          <div class="bg-slate-900/70 p-2.5 rounded-xl border border-slate-800">
+            <div class="flex justify-between text-xs text-slate-300 mb-1">
+              <span>⚡ 狂奔速率</span>
+              <span id="display-speed-sprint" class="font-mono text-rose-400 font-bold">0.07s</span>
+            </div>
+            <input id="slider-speed-sprint" type="range" min="0.03" max="0.15" step="0.01" value="0.07" class="w-full h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-rose-500" />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
+          <button id="btn-reset-all-speeds" class="text-xs text-slate-400 hover:text-slate-200">
+            恢復原廠速度預設
+          </button>
+          <button id="btn-save-speeds" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md">
+            儲存當前速度偏好
+          </button>
+        </div>
+      </div>
+
+      <!-- 區塊 3：手動測試與光暈設定 -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+        <div>
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs text-slate-400 font-semibold">姿態即時預覽切換</label>
+            <button id="toggle-cycle-btn" class="text-[11px] text-emerald-400 hover:underline">自動循環中</button>
+          </div>
+          <div class="grid grid-cols-4 gap-1.5">
+            <button id="btn-mode-walk" class="px-2 py-1 rounded-lg bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 text-[11px] font-semibold">步行</button>
+            <button id="btn-mode-jog" class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-[11px]">快跑</button>
+            <button id="btn-mode-sprint" class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-[11px]">狂奔</button>
+            <button id="btn-mode-red" class="px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-[11px]">紅燈</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex justify-between text-xs text-slate-300 mb-1.5">
+            <span>LED 光暈擴散半徑</span>
+            <span id="glow-val-display" class="font-mono text-emerald-400">2.2px</span>
+          </div>
+          <input id="glow-slider" type="range" min="0.5" max="6.0" step="0.1" value="2.2" class="w-full h-1 bg-slate-800 rounded appearance-none cursor-pointer accent-emerald-500" />
+        </div>
+      </div>
+
+      <!-- 區塊 4：全週期多媒體匯出專區 -->
+      <div class="bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-950 p-4 rounded-2xl border border-emerald-500/30 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs sm:text-sm font-bold text-emerald-300 flex items-center gap-1.5">
+            <span>📦</span> 全週期倒數動畫匯出中心
+          </h2>
+          <span class="text-[10px] text-emerald-400/90 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">無殘影 ｜ 依設定秒數與速度輸出</span>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          <!-- 1. 下載無殘影全週期動態 SVG -->
+          <button id="btn-download-svg" class="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex flex-col items-center justify-center gap-1 text-xs font-semibold transition-all">
+            <div class="flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+              </svg>
+              <span>動態向量圖 (SVG)</span>
+            </div>
+            <span class="text-[9px] text-slate-400 font-normal">離散時間軸・無重疊殘影</span>
+          </button>
+
+          <!-- 2. 產生全週期倒數 GIF -->
+          <button id="btn-generate-gif" class="px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white flex flex-col items-center justify-center gap-1 text-xs font-bold transition-all shadow-lg shadow-emerald-900/40">
+            <div class="flex items-center gap-1.5">
+              <span id="gif-spinner" class="hidden w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              <span id="gif-btn-text">🎬 倒數動態圖 (GIF)</span>
+            </div>
+            <span class="text-[9px] text-emerald-200 font-normal">逐秒倒數・多段步速</span>
+          </button>
+
+          <!-- 3. 產生含提示聲音效影片 (WebM) -->
+          <button id="btn-record-video" class="px-3 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white flex flex-col items-center justify-center gap-1 text-xs font-bold transition-all shadow-lg shadow-indigo-900/40">
+            <div class="flex items-center gap-1.5">
+              <span id="video-spinner" class="hidden w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              <span id="video-btn-text">🔊 音效影片 (WebM)</span>
+            </div>
+            <span id="video-subtext" class="text-[9px] text-indigo-200 font-normal">精確時間軸與提示音</span>
+          </button>
+        </div>
+
+        <div class="flex items-center justify-between text-[11px] text-slate-400 pt-1">
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <input type="checkbox" id="audio-toggle" checked class="rounded bg-slate-800 border-slate-700 text-emerald-500 focus:ring-0" />
+            <span>開啟即時號誌提示聲</span>
+          </label>
+          <span class="text-[10px] text-slate-400">影片錄製會自動混入號誌提示嗶嗶聲</span>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- 提示氣泡通知 -->
+  <div id="toast" class="fixed bottom-6 right-6 px-4 py-2.5 rounded-xl bg-slate-800 text-slate-100 text-xs border border-slate-700 shadow-2xl transform translate-y-16 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-2 z-50">
+    <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+    <span id="toast-msg">已儲存設定！</span>
+  </div>
+
+  <script>
+    // --- 完整 7 幀火柴人骨架精準幾何座標 ---
+    const STICKMAN_FRAMES = [
+      {
+        head: { cx: 118, cy: 48, r: 14 },
+        hat: "M 110 39 Q 124 35 138 44 L 134 48 Q 120 42 110 44 Z",
+        torso: [116, 62, 108, 114],
+        armL: [[116, 72], [96, 88], [84, 106]],
+        handL: { cx: 84, cy: 106, r: 4.5 },
+        legL: [[108, 114], [82, 142], [66, 170], [54, 174]],
+        legR: [[108, 114], [130, 146], [150, 174], [166, 174]],
+        armR: [[116, 72], [134, 88], [150, 78]],
+        handR: { cx: 150, cy: 78, r: 4.5 }
+      },
+      {
+        head: { cx: 120, cy: 47, r: 14 },
+        hat: "M 112 38 Q 126 34 140 43 L 136 47 Q 122 41 112 43 Z",
+        torso: [118, 61, 112, 113],
+        armL: [[118, 71], [102, 88], [94, 108]],
+        handL: { cx: 94, cy: 108, r: 4.5 },
+        legL: [[112, 113], [90, 140], [84, 166], [74, 170]],
+        legR: [[112, 113], [124, 146], [138, 175], [154, 175]],
+        armR: [[118, 71], [130, 88], [144, 84]],
+        handR: { cx: 144, cy: 84, r: 4.5 }
+      },
+      {
+        head: { cx: 122, cy: 45, r: 14 },
+        hat: "M 114 36 Q 128 32 142 41 L 138 45 Q 124 39 114 41 Z",
+        torso: [120, 59, 114, 111],
+        armL: [[120, 69], [112, 90], [110, 110]],
+        handL: { cx: 110, cy: 110, r: 4.5 },
+        legL: [[114, 111], [118, 142], [108, 168], [118, 173]],
+        legR: [[114, 111], [122, 145], [124, 176], [138, 176]],
+        armR: [[120, 69], [126, 90], [124, 110]],
+        handR: { cx: 124, cy: 110, r: 4.5 }
+      },
+      {
+        head: { cx: 118, cy: 48, r: 14 },
+        hat: "M 110 39 Q 124 35 138 44 L 134 48 Q 120 42 110 44 Z",
+        torso: [116, 62, 108, 114],
+        armR: [[116, 72], [96, 88], [84, 106]],
+        handR: { cx: 84, cy: 106, r: 4.5 },
+        legR: [[108, 114], [82, 142], [66, 170], [54, 174]],
+        legL: [[108, 114], [130, 146], [150, 174], [166, 174]],
+        armL: [[116, 72], [134, 88], [150, 78]],
+        handL: { cx: 150, cy: 78, r: 4.5 }
+      },
+      {
+        head: { cx: 120, cy: 47, r: 14 },
+        hat: "M 112 38 Q 126 34 140 43 L 136 47 Q 122 41 112 43 Z",
+        torso: [118, 61, 112, 113],
+        armR: [[118, 71], [102, 88], [94, 108]],
+        handR: { cx: 94, cy: 108, r: 4.5 },
+        legR: [[112, 113], [90, 140], [84, 166], [74, 170]],
+        legL: [[112, 113], [124, 146], [138, 175], [154, 175]],
+        armL: [[118, 71], [130, 88], [144, 84]],
+        handL: { cx: 144, cy: 84, r: 4.5 }
+      },
+      {
+        head: { cx: 122, cy: 45, r: 14 },
+        hat: "M 114 36 Q 128 32 142 41 L 138 45 Q 124 39 114 41 Z",
+        torso: [120, 59, 114, 111],
+        armR: [[120, 69], [112, 90], [110, 110]],
+        handR: { cx: 110, cy: 110, r: 4.5 },
+        legR: [[114, 111], [118, 142], [108, 168], [118, 173]],
+        legL: [[114, 111], [122, 145], [124, 176], [138, 176]],
+        armL: [[120, 69], [126, 90], [124, 110]],
+        handL: { cx: 124, cy: 110, r: 4.5 }
+      },
+      {
+        head: { cx: 124, cy: 48, r: 14 },
+        hat: "M 116 39 Q 130 34 144 43 L 140 47 Q 126 41 116 43 Z",
+        torso: [120, 62, 108, 114],
+        armL: [[120, 72], [90, 82], [72, 100]],
+        handL: { cx: 72, cy: 100, r: 4.5 },
+        legL: [[108, 114], [74, 138], [52, 160], [42, 164]],
+        legR: [[108, 114], [136, 144], [162, 170], [178, 170]],
+        armR: [[120, 72], [144, 82], [164, 68]],
+        handR: { cx: 164, cy: 68, r: 4.5 }
+      }
+    ];
+
+    const RED_MAN_FRAME = {
+      head: { cx: 120, cy: 46, r: 14 },
+      hat: "M 110 37 Q 124 33 138 42 L 134 46 Q 120 40 110 42 Z",
+      torso: [120, 60, 120, 116],
+      armL: [[106, 72], [104, 118]],
+      handL: { cx: 104, cy: 122, r: 4.5 },
+      armR: [[134, 72], [136, 118]],
+      handR: { cx: 136, cy: 122, r: 4.5 },
+      legL: [[113, 116], [113, 174], [102, 174]],
+      legR: [[127, 116], [127, 174], [138, 174]]
+    };
+
+    // --- 系統設定狀態機 ---
+    const config = {
+      greenSeconds: 30,
+      redSeconds: 10,
+      jogThreshold: 10,
+      sprintThreshold: 3,
+      speedWalk: 0.32,
+      speedJog: 0.14,
+      speedSprint: 0.07
+    };
+
+    const state = {
+      countdown: config.greenSeconds,
+      redCountdown: config.redSeconds,
+      phase: 'WALK',
+      isAutoCycle: true,
+      audioEnabled: true,
+      currentFrameIndex: 1,
+      glowRadius: 2.2
+    };
+
+    // --- DOM 節點快取 ---
+    const countdownDisplay = document.getElementById('countdown-display');
+    const stopTextGroup = document.getElementById('stop-text-group');
+    const redCountdownDisplay = document.getElementById('red-countdown-display');
+    const greenManFramesGroup = document.getElementById('green-man-frames');
+    const redManFrame = document.getElementById('red-man-frame');
+    const stateBadge = document.getElementById('current-state-badge');
+    const progressBar = document.getElementById('progress-bar');
+    const progressPercent = document.getElementById('progress-percent');
+
+    const cfgGreenTotal = document.getElementById('cfg-green-total');
+    const cfgRedTotal = document.getElementById('cfg-red-total');
+    const cfgJogThreshold = document.getElementById('cfg-jog-threshold');
+    const cfgSprintThreshold = document.getElementById('cfg-sprint-threshold');
+
+    const sliderSpeedWalk = document.getElementById('slider-speed-walk');
+    const sliderSpeedJog = document.getElementById('slider-speed-jog');
+    const sliderSpeedSprint = document.getElementById('slider-speed-sprint');
+    const displaySpeedWalk = document.getElementById('display-speed-walk');
+    const displaySpeedJog = document.getElementById('display-speed-jog');
+    const displaySpeedSprint = document.getElementById('display-speed-sprint');
+
+    const glowSlider = document.getElementById('glow-slider');
+    const glowValDisplay = document.getElementById('glow-val-display');
+    const svgBlurFilter = document.getElementById('svg-blur-filter');
+    const toggleCycleBtn = document.getElementById('toggle-cycle-btn');
+    const audioToggle = document.getElementById('audio-toggle');
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toast-msg');
+
+    const btnGenerateGif = document.getElementById('btn-generate-gif');
+    const gifSpinner = document.getElementById('gif-spinner');
+    const gifBtnText = document.getElementById('gif-btn-text');
+
+    const btnRecordVideo = document.getElementById('btn-record-video');
+    const videoSpinner = document.getElementById('video-spinner');
+    const videoBtnText = document.getElementById('video-btn-text');
+    const videoSubtext = document.getElementById('video-subtext');
+
+    const modeBtns = {
+      WALK: document.getElementById('btn-mode-walk'),
+      JOG: document.getElementById('btn-mode-jog'),
+      SPRINT: document.getElementById('btn-mode-sprint'),
+      RED: document.getElementById('btn-mode-red')
+    };
+
+    // --- 產生純向量 SVG 字串 ---
+    function buildFrameSVGMarkup(data, color) {
+      const p2s = (pts) => pts.map(p => p.join(',')).join(' ');
+      let markup = `
+        <circle cx="${data.head.cx}" cy="${data.head.cy}" r="${data.head.r}" fill="${color}" stroke="${color}" stroke-width="1" />
+        <path d="${data.hat}" fill="${color}" stroke="${color}" stroke-width="1" />
+        <line x1="${data.torso[0]}" y1="${data.torso[1]}" x2="${data.torso[2]}" y2="${data.torso[3]}" stroke-width="15" stroke="${color}" />
+      `;
+      if (data.armL) {
+        markup += `<polyline points="${p2s(data.armL)}" stroke-width="11" stroke="${color}" />`;
+        markup += `<circle cx="${data.handL.cx}" cy="${data.handL.cy}" r="${data.handL.r}" fill="${color}" stroke="${color}" />`;
+      }
+      if (data.legL) markup += `<polyline points="${p2s(data.legL)}" stroke-width="13" stroke="${color}" />`;
+      if (data.legR) markup += `<polyline points="${p2s(data.legR)}" stroke-width="13" stroke="${color}" />`;
+      if (data.armR) {
+        markup += `<polyline points="${p2s(data.armR)}" stroke-width="11" stroke="${color}" />`;
+        markup += `<circle cx="${data.handR.cx}" cy="${data.handR.cy}" r="${data.handR.r}" fill="${color}" stroke="${color}" />`;
+      }
+      return markup;
+    }
+
+    // 初始化頁面 SVG 骨架
+    greenManFramesGroup.innerHTML = STICKMAN_FRAMES.map((f, idx) => `
+      <g id="frame-node-${idx + 1}" class="frame-item ${idx === 0 ? 'active' : ''}">
+        ${buildFrameSVGMarkup(f, '#00ff66')}
+      </g>
+    `).join('');
+    redManFrame.innerHTML = buildFrameSVGMarkup(RED_MAN_FRAME, '#ff3344');
+
+    const domFrames = STICKMAN_FRAMES.map((_, i) => document.getElementById(`frame-node-${i + 1}`));
+
+    // --- Web Audio 提示音 ---
+    let audioCtx = null;
+    function playBeep(freq = 880, duration = 0.08, destNode = null) {
+      if (!state.audioEnabled && !destNode) return;
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(destNode || audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    // --- 頁面即時動態幀數循環 ---
+    let animTimer = null;
+    function startFrameAnimation() {
+      if (animTimer) clearInterval(animTimer);
+      
+      let currentIntervalMs = config.speedWalk * 1000;
+      if (state.phase === 'JOG') currentIntervalMs = config.speedJog * 1000;
+      if (state.phase === 'SPRINT') currentIntervalMs = config.speedSprint * 1000;
+
+      animTimer = setInterval(() => {
+        if (state.phase === 'RED') return;
+
+        const maxFrames = state.phase === 'SPRINT' ? 7 : 6;
+        state.currentFrameIndex = (state.currentFrameIndex % maxFrames) + 1;
+
+        domFrames.forEach((el, index) => {
+          if (index === state.currentFrameIndex - 1) {
+            el.classList.add('active');
+          } else {
+            el.classList.remove('active');
+          }
+        });
+      }, currentIntervalMs);
+    }
+
+    // --- 姿態切換機 ---
+    function setPhase(newPhase) {
+      state.phase = newPhase;
+
+      Object.keys(modeBtns).forEach(key => {
+        const btn = modeBtns[key];
+        if (key === newPhase) {
+          btn.className = 'px-2 py-1 rounded-lg bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 text-[11px] font-semibold';
+        } else {
+          btn.className = 'px-2 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 text-[11px]';
+        }
+      });
+
+      if (newPhase === 'RED') {
+        greenManFramesGroup.classList.add('hidden');
+        redManFrame.classList.remove('hidden');
+        countdownDisplay.classList.add('hidden');
+        stopTextGroup.classList.remove('hidden');
+        stopTextGroup.classList.add('flex');
+
+        stateBadge.textContent = '🛑 紅燈停等中';
+        stateBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30';
+      } else {
+        greenManFramesGroup.classList.remove('hidden');
+        redManFrame.classList.add('hidden');
+        countdownDisplay.classList.remove('hidden');
+        stopTextGroup.classList.add('hidden');
+        stopTextGroup.classList.remove('flex');
+
+        let badgeText = '🟢 常態綠燈步行中';
+        let badgeStyle = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+
+        if (newPhase === 'JOG') {
+          badgeText = '🟡 倒數快跑中';
+          badgeStyle = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30';
+        } else if (newPhase === 'SPRINT') {
+          badgeText = '🔴 極速衝刺狂奔';
+          badgeStyle = 'px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30';
+        }
+
+        stateBadge.textContent = badgeText;
+        stateBadge.className = badgeStyle;
+        startFrameAnimation();
+      }
+    }
+
+    // --- 每秒號誌邏輯倒數器 ---
+    setInterval(() => {
+      if (!state.isAutoCycle) return;
+
+      if (state.phase !== 'RED') {
+        state.countdown--;
+        const total = config.greenSeconds;
+        const current = Math.max(0, state.countdown);
+        const percent = Math.round((current / total) * 100);
+
+        countdownDisplay.textContent = current < 10 ? `0${current}` : current;
+        progressBar.style.width = `${percent}%`;
+        progressPercent.textContent = `剩餘 ${percent}% (${current}s)`;
+
+        if (state.countdown > config.jogThreshold) {
+          if (state.phase !== 'WALK') setPhase('WALK');
+          countdownDisplay.className = 'digit-font text-8xl font-bold text-[#00ff66] glow-green tracking-tighter select-none z-10 transition-colors duration-200';
+          progressBar.className = 'h-full bg-emerald-500 transition-all duration-300';
+          playBeep(600, 0.04);
+        } else if (state.countdown > config.sprintThreshold) {
+          if (state.phase !== 'JOG') setPhase('JOG');
+          countdownDisplay.className = 'digit-font text-8xl font-bold text-[#ffcc00] glow-yellow tracking-tighter select-none z-10 transition-colors duration-200';
+          progressBar.className = 'h-full bg-amber-500 transition-all duration-300';
+          playBeep(880, 0.07);
+        } else if (state.countdown > 0) {
+          if (state.phase !== 'SPRINT') setPhase('SPRINT');
+          countdownDisplay.className = 'digit-font text-8xl font-bold text-[#ff3344] glow-red tracking-tighter select-none z-10 transition-colors duration-200';
+          progressBar.className = 'h-full bg-rose-500 transition-all duration-300';
+          playBeep(1200, 0.09);
+        } else {
+          state.redCountdown = config.redSeconds;
+          setPhase('RED');
+          redCountdownDisplay.textContent = `${state.redCountdown}s`;
+          progressBar.style.width = '100%';
+          progressBar.className = 'h-full bg-rose-600 transition-all duration-300';
+          playBeep(440, 0.2);
+        }
+      } else {
+        state.redCountdown--;
+        const totalRed = config.redSeconds;
+        const currentRed = Math.max(0, state.redCountdown);
+        const percentRed = Math.round((currentRed / totalRed) * 100);
+
+        redCountdownDisplay.textContent = `${currentRed}s`;
+        progressBar.style.width = `${percentRed}%`;
+        progressPercent.textContent = `紅燈剩餘 ${currentRed}s`;
+
+        if (state.redCountdown <= 0) {
+          state.countdown = config.greenSeconds;
+          setPhase('WALK');
+          countdownDisplay.textContent = state.countdown < 10 ? `0${state.countdown}` : state.countdown;
+          countdownDisplay.className = 'digit-font text-8xl font-bold text-[#00ff66] glow-green tracking-tighter select-none z-10 transition-colors duration-200';
+          progressBar.style.width = '100%';
+          progressBar.className = 'h-full bg-emerald-500 transition-all duration-300';
+          playBeep(880, 0.12);
+        }
+      }
+    }, 1000);
+
+    // --- 事件監聽：套用秒數設定 ---
+    document.getElementById('btn-apply-timing').addEventListener('click', () => {
+      let g = parseInt(cfgGreenTotal.value, 10);
+      let r = parseInt(cfgRedTotal.value, 10);
+      let jog = parseInt(cfgJogThreshold.value, 10);
+      let sprint = parseInt(cfgSprintThreshold.value, 10);
+
+      if (isNaN(g) || g < 5) g = 5;
+      if (isNaN(r) || r < 3) r = 3;
+      if (isNaN(jog) || jog >= g) jog = Math.max(2, Math.floor(g * 0.4));
+      if (isNaN(sprint) || sprint >= jog) sprint = Math.max(1, Math.floor(jog * 0.4));
+
+      cfgGreenTotal.value = g;
+      cfgRedTotal.value = r;
+      cfgJogThreshold.value = jog;
+      cfgSprintThreshold.value = sprint;
+
+      config.greenSeconds = g;
+      config.redSeconds = r;
+      config.jogThreshold = jog;
+      config.sprintThreshold = sprint;
+
+      state.countdown = g;
+      state.redCountdown = r;
+      state.isAutoCycle = true;
+      toggleCycleBtn.textContent = '自動循環中';
+
+      setPhase('WALK');
+      countdownDisplay.textContent = g < 10 ? `0${g}` : g;
+      showToast(`已套用：綠燈 ${g}s (快跑:≤${jog}s / 狂奔:≤${sprint}s)`);
+    });
+
+    // --- 步頻速率調控 ---
+    sliderSpeedWalk.addEventListener('input', (e) => {
+      const v = parseFloat(e.target.value);
+      config.speedWalk = v;
+      displaySpeedWalk.textContent = `${v.toFixed(2)}s`;
+      if (state.phase === 'WALK') startFrameAnimation();
+    });
+
+    sliderSpeedJog.addEventListener('input', (e) => {
+      const v = parseFloat(e.target.value);
+      config.speedJog = v;
+      displaySpeedJog.textContent = `${v.toFixed(2)}s`;
+      if (state.phase === 'JOG') startFrameAnimation();
+    });
+
+    sliderSpeedSprint.addEventListener('input', (e) => {
+      const v = parseFloat(e.target.value);
+      config.speedSprint = v;
+      displaySpeedSprint.textContent = `${v.toFixed(2)}s`;
+      if (state.phase === 'SPRINT') startFrameAnimation();
+    });
+
+    document.getElementById('btn-save-speeds').addEventListener('click', () => {
+      startFrameAnimation();
+      showToast('已儲存當前各階段步頻速率偏好！');
+    });
+
+    document.getElementById('btn-reset-all-speeds').addEventListener('click', () => {
+      config.speedWalk = 0.32;
+      config.speedJog = 0.14;
+      config.speedSprint = 0.07;
+
+      sliderSpeedWalk.value = 0.32;
+      sliderSpeedJog.value = 0.14;
+      sliderSpeedSprint.value = 0.07;
+      displaySpeedWalk.textContent = '0.32s';
+      displaySpeedJog.textContent = '0.14s';
+      displaySpeedSprint.textContent = '0.07s';
+
+      startFrameAnimation();
+      showToast('已恢復原廠步頻速率預設！');
+    });
+
+    glowSlider.addEventListener('input', (e) => {
+      const val = parseFloat(e.target.value);
+      state.glowRadius = val;
+      glowValDisplay.textContent = `${val.toFixed(1)}px`;
+      if (svgBlurFilter) svgBlurFilter.setAttribute('stdDeviation', val);
+    });
+
+    modeBtns.WALK.addEventListener('click', () => { state.isAutoCycle = false; toggleCycleBtn.textContent = '手動暫停中'; setPhase('WALK'); });
+    modeBtns.JOG.addEventListener('click', () => { state.isAutoCycle = false; toggleCycleBtn.textContent = '手動暫停中'; setPhase('JOG'); });
+    modeBtns.SPRINT.addEventListener('click', () => { state.isAutoCycle = false; toggleCycleBtn.textContent = '手動暫停中'; setPhase('SPRINT'); });
+    modeBtns.RED.addEventListener('click', () => { state.isAutoCycle = false; toggleCycleBtn.textContent = '手動暫停中'; setPhase('RED'); });
+
+    toggleCycleBtn.addEventListener('click', () => {
+      state.isAutoCycle = !state.isAutoCycle;
+      toggleCycleBtn.textContent = state.isAutoCycle ? '自動循環中' : '手動暫停中';
+      showToast(state.isAutoCycle ? '已恢復自動倒數循環' : '已暫停自動倒數');
+    });
+
+    audioToggle.addEventListener('change', (e) => {
+      state.audioEnabled = e.target.checked;
+      if (state.audioEnabled) playBeep(880, 0.1);
+    });
+
+    // --- Canvas 2D 骨架渲染引擎 ---
+    function renderSignalToCanvas(ctx, frameData, isRed, digitStr, subTextStr, digitColor, glowVal) {
+      ctx.clearRect(0, 0, 280, 540);
+
+      // 號誌箱主體
+      ctx.fillStyle = '#1c232d';
+      ctx.strokeStyle = '#334050';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.roundRect(10, 10, 260, 520, 32);
+      ctx.fill();
+      ctx.stroke();
+
+      // 底部卡榫
+      ctx.fillStyle = '#12171e';
+      ctx.beginPath();
+      ctx.roundRect(110, 530, 60, 8, 3);
+      ctx.fill();
+
+      // 上方面板 (倒數螢幕)
+      ctx.save();
+      ctx.translate(20, 24);
+      ctx.fillStyle = '#0d1217';
+      ctx.beginPath();
+      ctx.roundRect(12, 0, 216, 14, 6);
+      ctx.fill();
+
+      ctx.fillStyle = '#050806';
+      ctx.strokeStyle = '#1c242c';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.roundRect(16, 10, 208, 210, 18);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.shadowColor = digitColor;
+      ctx.shadowBlur = glowVal * 3;
+      ctx.fillStyle = digitColor;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      if (isRed) {
+        ctx.font = 'bold 44px "Share Tech Mono", monospace, sans-serif';
+        ctx.fillText('STOP', 120, 95);
+        ctx.font = 'bold 28px "Share Tech Mono", monospace, sans-serif';
+        ctx.fillText(subTextStr || '', 120, 150);
+      } else {
+        ctx.font = 'bold 88px "Share Tech Mono", monospace, sans-serif';
+        ctx.fillText(digitStr, 120, 115);
+      }
+      ctx.restore();
+
+      // 下方面板 (動態小綠人/小紅人螢幕)
+      ctx.save();
+      ctx.translate(20, 274);
+      ctx.fillStyle = '#0d1217';
+      ctx.beginPath();
+      ctx.roundRect(12, 0, 216, 14, 6);
+      ctx.fill();
+
+      ctx.fillStyle = '#050806';
+      ctx.strokeStyle = '#1c242c';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.roundRect(16, 10, 208, 224, 18);
+      ctx.fill();
+      ctx.stroke();
+
+      const strokeColor = isRed ? '#ff3344' : '#00ff66';
+      ctx.shadowColor = strokeColor;
+      ctx.shadowBlur = glowVal * 3;
+      ctx.strokeStyle = strokeColor;
+      ctx.fillStyle = strokeColor;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      // 頭部
+      ctx.beginPath();
+      ctx.arc(frameData.head.cx, frameData.head.cy, frameData.head.r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 帽子
+      ctx.fill(new Path2D(frameData.hat));
+
+      // 軀幹
+      ctx.lineWidth = 15;
+      ctx.beginPath();
+      ctx.moveTo(frameData.torso[0], frameData.torso[1]);
+      ctx.lineTo(frameData.torso[2], frameData.torso[3]);
+      ctx.stroke();
+
+      // 左臂
+      if (frameData.armL) {
+        ctx.lineWidth = 11;
+        ctx.beginPath();
+        frameData.armL.forEach((p, idx) => {
+          if (idx === 0) ctx.moveTo(p[0], p[1]);
+          else ctx.lineTo(p[0], p[1]);
+        });
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(frameData.handL.cx, frameData.handL.cy, frameData.handL.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 左腿
+      if (frameData.legL) {
+        ctx.lineWidth = 13;
+        ctx.beginPath();
+        frameData.legL.forEach((p, idx) => {
+          if (idx === 0) ctx.moveTo(p[0], p[1]);
+          else ctx.lineTo(p[0], p[1]);
+        });
+        ctx.stroke();
+      }
+
+      // 右腿
+      if (frameData.legR) {
+        ctx.lineWidth = 13;
+        ctx.beginPath();
+        frameData.legR.forEach((p, idx) => {
+          if (idx === 0) ctx.moveTo(p[0], p[1]);
+          else ctx.lineTo(p[0], p[1]);
+        });
+        ctx.stroke();
+      }
+
+      // 右臂
+      if (frameData.armR) {
+        ctx.lineWidth = 11;
+        ctx.beginPath();
+        frameData.armR.forEach((p, idx) => {
+          if (idx === 0) ctx.moveTo(p[0], p[1]);
+          else ctx.lineTo(p[0], p[1]);
+        });
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(frameData.handR.cx, frameData.handR.cy, frameData.handR.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    // =========================================================================
+    // 匯出 1：下載完整全週期動態 SVG (採用 calcMode="discrete" 離散切換，無殘影)
+    // =========================================================================
+    document.getElementById('btn-download-svg').addEventListener('click', () => {
+      const G = config.greenSeconds;
+      const R = config.redSeconds;
+      const totalDur = G + R;
+      const jogSec = config.jogThreshold;
+      const sprintSec = config.sprintThreshold;
+
+      const walkTime = G - jogSec;
+      const jogTime = jogSec - sprintSec;
+      const sprintTime = sprintSec;
+
+      const walkDur = config.speedWalk * 6;
+      const jogDur = config.speedJog * 6;
+      const sprintDur = config.speedSprint * 7;
+
+      // 1. 上方面板：每秒數字離散切換（保證同時間只有單一數字顯示）
+      let countdownDigitsSVG = '';
+      for (let s = G; s >= 1; s--) {
+        const timeOffset = G - s;
+        const tStart = (timeOffset / totalDur).toFixed(5);
+        const tEnd = ((timeOffset + 1) / totalDur).toFixed(5);
+
+        let color = '#00ff66';
+        if (s <= sprintSec) color = '#ff3344';
+        else if (s <= jogSec) color = '#ffcc00';
+
+        const numStr = s < 10 ? `0${s}` : `${s}`;
+        countdownDigitsSVG += `
+          <text x="120" y="115" class="led-digit" fill="${color}" opacity="0" visibility="hidden">
+            <animate attributeName="visibility" values="hidden;visible;hidden" keyTimes="0;${tStart};${tEnd}" dur="${totalDur}s" repeatCount="indefinite" calcMode="discrete" />
+            <animate attributeName="opacity" values="0;1;0" keyTimes="0;${tStart};${tEnd}" dur="${totalDur}s" repeatCount="indefinite" calcMode="discrete" />
+            ${numStr}
+          </text>
+        `;
+      }
+
+      // 紅燈 STOP 與秒數
+      const tRedStart = (G / totalDur).toFixed(5);
+      const stopTextSVG = `
+        <text x="120" y="95" class="led-stop" fill="#ff3344" opacity="0" visibility="hidden">
+          <animate attributeName="visibility" values="hidden;visible;visible" keyTimes="0;${tRedStart};1" dur="${totalDur}s" repeatCount="indefinite" calcMode="discrete" />
+          <animate attributeName="opacity" values="0;1;1" keyTimes="0;${tRedStart};1" dur="${totalDur}s" repeatCount="indefinite" calcMode="discrete" />
+          STOP
+        </text>
+      `;
+
+      let redCountdownsSVG = '';
+      for (let rs = R; rs >= 1; rs--) {
+        const timeOffset = G + (R - rs);
+        const tStart = (timeOffset / totalDur).toFixed(5);
+        const tEnd = ((timeOffset + 1) / totalDur).toFixed(5);
+
+        redCountdownsSVG += `
+          <text x="120" y="150" class="led-sub-digit" fill="#ff3344" opacity="0" visibility="hidden">
+            <animate attributeName="visibility" values="hidden;visible;hidden" keyTimes="0;${tStart};${tEnd}" dur="${totalDur}s" repeatCount="indefinite" calcMode="discrete" />
+            <animate attributeName="opacity" values="0;1;0" keyTimes="0;${tStart};${tEnd}" dur="${totalDur}s" repeatCount="indefinite" calcMode="discrete" />
+            ${rs}s
+          </text>
+        `;
+      }
+
+      // 2. 下方面板：依各階段時間窗切換動作組，內部採用 discrete 輪播
+      function buildPhaseGroupSVG(frames, stepIntervalSec, beginSec, activeSec, color) {
+        const count = frames.length;
+        const cycleDur = (count * stepIntervalSec).toFixed(3);
+        const tStart = (beginSec / totalDur).toFixed(5);
+        const tEnd = ((beginSec + activeSec) / totalDur).toFixed(5);
+
+        let innerFrames = '';
+        frames.forEach((f, idx) => {
+          const kStart = (idx / count).toFixed(4);
+          const kEnd = ((idx + 1) / count).toFixed(4);
+          innerFrames += `
+            <g opacity="0" visibility="hidden">
+              <animate attributeName="visibility" values="hidden;visible;hidden" keyTimes="0;${kStart};${kEnd}" dur="${cycleDur}s" repeatCount="indefinite" calcMode="discrete" />
+              <animate attributeName="opacity" values="0;1;0" keyTimes="0;${kStart};${kEnd}" dur="${cycleDur}s" repeatCount="indefinite" calcMode="discrete" />
+              ${buildFrameSVGMarkup(f, color)}
+            </g>
+          `;
+        });
+
+        return `
+          <g opacity="0" visibility="hidden">
+            <animate attributeName="visibility" values="hidden;visible;hidden" keyTimes="0;${tStart};${tEnd}" dur="${totalDur}s" repeatCount="indefinite" calcMode="discrete" />
+            <animate attributeName="opacity" values="0;1;0" keyTimes="0;${tStart};${tEnd}" dur="${totalDur}s" repeatCount="indefinite" calcMode="discrete" />
+            ${innerFrames}
+          </g>
+        `;
+      }
+
+      const walkSVG = buildPhaseGroupSVG(STICKMAN_FRAMES.slice(0, 6), config.speedWalk, 0, walkTime, '#00ff66');
+      const jogSVG = buildPhaseGroupSVG(STICKMAN_FRAMES.slice(0, 6), config.speedJog, walkTime, jogTime, '#00ff66');
+      const sprintSVG = buildPhaseGroupSVG(STICKMAN_FRAMES, config.speedSprint, walkTime + jogTime, sprintTime, '#00ff66');
+
+      // 紅燈小紅人群組
+      const redManSVG = `
+        <g opacity="0" visibility="hidden">
+          <animate attributeName="visibility" values="hidden;visible;visible" keyTimes="0;${tRedStart};1" dur="${totalDur}s" repeatCount="indefinite" calcMode="discrete" />
+          <animate attributeName="opacity" values="0;1;1" keyTimes="0;${tRedStart};1" dur="${totalDur}s" repeatCount="indefinite" calcMode="discrete" />
+          ${buildFrameSVGMarkup(RED_MAN_FRAME, '#ff3344')}
+        </g>
+      `;
+
+      const fullSvgMarkup = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 540" width="280" height="540">
+  <defs>
+    <filter id="svg-export-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="${state.glowRadius}" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <pattern id="matrix-dot" width="7" height="7" patternUnits="userSpaceOnUse">
+      <circle cx="3.5" cy="3.5" r="1.2" fill="#14261c" />
+    </pattern>
+  </defs>
+
+  <style>
+    .housing-base { fill: #1c232d; stroke: #334050; stroke-width: 3; rx: 32px; }
+    .visor-top { fill: #0d1217; rx: 6px; }
+    .screen-bg { fill: #050806; stroke: #1c242c; stroke-width: 4; rx: 18px; }
+    .led-digit { font-family: 'Share Tech Mono', monospace, sans-serif; font-size: 88px; font-weight: bold; text-anchor: middle; dominant-baseline: central; filter: url(#svg-export-glow); }
+    .led-stop { font-family: 'Share Tech Mono', monospace, sans-serif; font-size: 44px; font-weight: bold; text-anchor: middle; dominant-baseline: central; filter: url(#svg-export-glow); }
+    .led-sub-digit { font-family: 'Share Tech Mono', monospace, sans-serif; font-size: 28px; font-weight: bold; text-anchor: middle; dominant-baseline: central; filter: url(#svg-export-glow); }
+    .runner-group { fill: none; stroke-linecap: round; stroke-linejoin: round; filter: url(#svg-export-glow); }
+  </style>
+
+  <!-- 號誌箱外框 -->
+  <rect x="10" y="10" width="260" height="520" class="housing-base" />
+  <rect x="110" y="530" width="60" height="8" fill="#12171e" rx="3" />
+
+  <!-- 上方面板 (完整逐秒倒數) -->
+  <g transform="translate(20, 24)">
+    <rect x="12" y="0" width="216" height="14" class="visor-top" />
+    <rect x="16" y="10" width="208" height="210" class="screen-bg" />
+    <rect x="16" y="10" width="208" height="210" fill="url(#matrix-dot)" rx="18" opacity="0.35" />
+
+    ${countdownDigitsSVG}
+    ${stopTextSVG}
+    ${redCountdownsSVG}
+  </g>
+
+  <!-- 下方面板 (動態小綠人/小紅人) -->
+  <g transform="translate(20, 274)">
+    <rect x="12" y="0" width="216" height="14" class="visor-top" />
+    <rect x="16" y="10" width="208" height="224" class="screen-bg" />
+    <rect x="16" y="10" width="208" height="224" fill="url(#matrix-dot)" rx="18" opacity="0.35" />
+
+    <g class="runner-group" transform="translate(0, 2)">
+      ${walkSVG}
+      ${jogSVG}
+      ${sprintSVG}
+      ${redManSVG}
+    </g>
+  </g>
+</svg>`;
+
+      const blob = new Blob([fullSvgMarkup], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `taiwan_signal_discrete_${G}s_${R}s.svg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(`已成功下載無殘影動態 SVG！`);
+    });
+
+    // =========================================================================
+    // 匯出 2：產生並下載全週期動態 GIF (精確時間相位積分)
+    // =========================================================================
+    document.getElementById('btn-generate-gif').addEventListener('click', () => {
+      if (typeof gifshot === 'undefined') {
+        showToast('GIF 模組載入中，請稍候重試');
+        return;
+      }
+
+      btnGenerateGif.disabled = true;
+      gifSpinner.classList.remove('hidden');
+      gifBtnText.textContent = '合成倒數 GIF...';
+
+      try {
+        const G = config.greenSeconds;
+        const R = config.redSeconds;
+        const jogSec = config.jogThreshold;
+        const sprintSec = config.sprintThreshold;
+
+        const walkTime = G - jogSec;
+        const jogTime = jogSec - sprintSec;
+        const sprintTime = sprintSec;
+
+        const fps = 8;
+        const frameIntervalSec = 1 / fps;
+        const totalDuration = G + R;
+        const totalFrames = totalDuration * fps;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 280;
+        canvas.height = 540;
+        const ctx = canvas.getContext('2d');
+
+        const frameDataURLs = [];
+
+        for (let f = 0; f < totalFrames; f++) {
+          const t = f * frameIntervalSec;
+
+          if (t < G) {
+            const remainingGreen = Math.ceil(G - t);
+            const digitStr = remainingGreen < 10 ? `0${remainingGreen}` : `${remainingGreen}`;
+            let digitColor = '#00ff66';
+            let frameIdx = 0;
+
+            // 分段計算步態相位，徹底消除卡格或跳步
+            if (t < walkTime) {
+              digitColor = '#00ff66';
+              frameIdx = Math.floor(t / config.speedWalk) % 6;
+            } else if (t < walkTime + jogTime) {
+              digitColor = '#ffcc00';
+              frameIdx = Math.floor((t - walkTime) / config.speedJog) % 6;
+            } else {
+              digitColor = '#ff3344';
+              frameIdx = Math.floor((t - walkTime - jogTime) / config.speedSprint) % 7;
+            }
+
+            const frameData = STICKMAN_FRAMES[frameIdx];
+            renderSignalToCanvas(ctx, frameData, false, digitStr, null, digitColor, state.glowRadius);
+          } else {
+            const remainingRed = Math.ceil(totalDuration - t);
+            renderSignalToCanvas(ctx, RED_MAN_FRAME, true, null, `${remainingRed}s`, '#ff3344', state.glowRadius);
+          }
+
+          frameDataURLs.push(canvas.toDataURL('image/png'));
+        }
+
+        gifshot.createGIF({
+          images: frameDataURLs,
+          gifWidth: 280,
+          gifHeight: 540,
+          interval: frameIntervalSec,
+          numFrames: totalFrames,
+          sampleInterval: 6
+        }, function (obj) {
+          if (!obj.error) {
+            const animatedImage = obj.image;
+            const downloadLink = document.createElement('a');
+            downloadLink.href = animatedImage;
+            downloadLink.download = `taiwan_traffic_countdown_${G}s_${R}s.gif`;
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+            showToast('已產出全週期秒數倒數動態 GIF！');
+          } else {
+            showToast('GIF 生成失敗，請重試');
+          }
+
+          btnGenerateGif.disabled = false;
+          gifSpinner.classList.add('hidden');
+          gifBtnText.textContent = '🎬 倒數動態圖 (GIF)';
+        });
+
+      } catch (err) {
+        console.error(err);
+        btnGenerateGif.disabled = false;
+        gifSpinner.classList.add('hidden');
+        gifBtnText.textContent = '🎬 倒數動態圖 (GIF)';
+        showToast('GIF 渲染過程出錯');
+      }
+    });
+
+    // =========================================================================
+    // 匯出 3：錄製含同步音效之影片 (WebM) (精準時鐘時序排程)
+    // =========================================================================
+    document.getElementById('btn-record-video').addEventListener('click', async () => {
+      btnRecordVideo.disabled = true;
+      videoSpinner.classList.remove('hidden');
+      videoBtnText.textContent = '錄製音效影片中...';
+
+      try {
+        const G = config.greenSeconds;
+        const R = config.redSeconds;
+        const jogSec = config.jogThreshold;
+        const sprintSec = config.sprintThreshold;
+        const totalDuration = G + R;
+
+        const walkTime = G - jogSec;
+        const jogTime = jogSec - sprintSec;
+
+        const canvas = document.createElement('canvas');
+        canvas.width = 280;
+        canvas.height = 540;
+        const ctx = canvas.getContext('2d');
+
+        // 音訊串流設定
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') await audioCtx.resume();
+        const dest = audioCtx.createMediaStreamDestination();
+
+        const canvasStream = canvas.captureStream(30);
+        const combinedStream = new MediaStream([
+          ...canvasStream.getVideoTracks(),
+          ...dest.stream.getAudioTracks()
+        ]);
+
+        let recorder;
+        try {
+          recorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm;codecs=vp9,opus' });
+        } catch(e) {
+          recorder = new MediaRecorder(combinedStream);
+        }
+
+        const chunks = [];
+        recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+        recorder.onstop = () => {
+          const blob = new Blob(chunks, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `taiwan_signal_with_sound_${G}s_${R}s.webm`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast('已成功下載含同步號誌提示聲之影片 (WebM)！');
+
+          btnRecordVideo.disabled = false;
+          videoSpinner.classList.add('hidden');
+          videoBtnText.textContent = '🔊 音效影片 (WebM)';
+          videoSubtext.textContent = '精確時間軸與提示音';
+        };
+
+        recorder.start();
+
+        // 預先在 AudioContext 時間軸精準排程所有嗶嗶聲
+        const t0 = audioCtx.currentTime;
+        for (let s = G; s >= 1; s--) {
+          const schedTime = t0 + (G - s);
+          let freq = 600;
+          let dur = 0.05;
+          if (s <= sprintSec) { freq = 1200; dur = 0.1; }
+          else if (s <= jogSec) { freq = 880; dur = 0.08; }
+
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, schedTime);
+          gain.gain.setValueAtTime(0.18, schedTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, schedTime + dur);
+          osc.connect(gain);
+          gain.connect(dest);
+          osc.start(schedTime);
+          osc.stop(schedTime + dur);
+        }
+
+        // 紅燈開始時長嗶聲
+        const redSchedTime = t0 + G;
+        const redOsc = audioCtx.createOscillator();
+        const redGain = audioCtx.createGain();
+        redOsc.type = 'sine';
+        redOsc.frequency.setValueAtTime(440, redSchedTime);
+        redGain.gain.setValueAtTime(0.2, redSchedTime);
+        redGain.gain.exponentialRampToValueAtTime(0.001, redSchedTime + 0.3);
+        redOsc.connect(redGain);
+        redGain.connect(dest);
+        redOsc.start(redSchedTime);
+        redOsc.stop(redSchedTime + 0.3);
+
+        // 逐訊框精確渲染畫布
+        function renderLoop() {
+          const elapsed = audioCtx.currentTime - t0;
+          const progressSec = Math.min(totalDuration, elapsed);
+          videoSubtext.textContent = `錄製中 (${progressSec.toFixed(1)}s / ${totalDuration}s)`;
+
+          if (elapsed >= totalDuration) {
+            recorder.stop();
+            return;
+          }
+
+          if (elapsed < G) {
+            const remainingGreen = Math.ceil(G - elapsed);
+            const digitStr = remainingGreen < 10 ? `0${remainingGreen}` : `${remainingGreen}`;
+            let digitColor = '#00ff66';
+            let frameIdx = 0;
+
+            if (elapsed < walkTime) {
+              digitColor = '#00ff66';
+              frameIdx = Math.floor(elapsed / config.speedWalk) % 6;
+            } else if (elapsed < walkTime + jogTime) {
+              digitColor = '#ffcc00';
+              frameIdx = Math.floor((elapsed - walkTime) / config.speedJog) % 6;
+            } else {
+              digitColor = '#ff3344';
+              frameIdx = Math.floor((elapsed - walkTime - jogTime) / config.speedSprint) % 7;
+            }
+
+            const frameData = STICKMAN_FRAMES[frameIdx];
+            renderSignalToCanvas(ctx, frameData, false, digitStr, null, digitColor, state.glowRadius);
+          } else {
+            const remainingRed = Math.ceil(totalDuration - elapsed);
+            renderSignalToCanvas(ctx, RED_MAN_FRAME, true, null, `${remainingRed}s`, '#ff3344', state.glowRadius);
+          }
+
+          requestAnimationFrame(renderLoop);
+        }
+
+        renderLoop();
+
+      } catch (err) {
+        console.error(err);
+        btnRecordVideo.disabled = false;
+        videoSpinner.classList.add('hidden');
+        videoBtnText.textContent = '🔊 音效影片 (WebM)';
+        videoSubtext.textContent = '精確時間軸與提示音';
+        showToast('影片錄製發生錯誤');
+      }
+    });
+
+    // 提示訊息彈窗
+    function showToast(msg) {
+      toastMsg.textContent = msg;
+      toast.classList.remove('translate-y-16', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-16', 'opacity-0');
+      }, 2200);
+    }
+
+    // 初始化啟動
+    setPhase('WALK');
+  </script>
+</body>
+</html>
