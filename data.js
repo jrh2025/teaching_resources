@@ -256,6 +256,15 @@ window.APP_DATA = {
       "icon": "PersonStanding",
       "color": "slate",
       "grade": "其他"
+    },
+    {
+      "id": "item_1788228770168",
+      "title": "班級事務管理系統",
+      "category": "班級經營",
+      "description": "5 分鐘，打造專屬班級雲端事務中心\n本系統整合電子聯絡簿、班級公告、公約守則、課表作息、幹部名冊、親師問答 FAQ 與 6 種布景主題。 完全基於 Google 試算表與 Google Apps Script (GAS) 運行，不需購買任何主機與網址，家長與學生用手機掃碼即可即時查看！",
+      "link": "Class_Affairs_Management_System.html",
+      "icon": "School",
+      "color": "green"
     }
   ]
 };
