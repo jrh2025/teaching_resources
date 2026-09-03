@@ -265,6 +265,16 @@ window.APP_DATA = {
       "link": "Class_Affairs_Management_System.html",
       "icon": "School",
       "color": "green"
+    },
+    {
+      "id": "item_1788408318874",
+      "title": "Google Apps Script 零基礎實戰手冊",
+      "category": "其他",
+      "description": "實戰學習地圖👉0.編輯器環境與授👉1.動寄信與程式解剖👉2. 二維陣列效能突破👉3. 雲端鬧鐘定時觸發器👉4. doGet / doPost API👉5. 部署上線必勝手冊👉6. HtmlService 前端👉7. 安全金鑰庫 (Token)👉8. LINE 雙向問答與卡片👉9. Gemini AI 智能兜底👉10. 新手常見錯誤急救",
+      "link": "google_apps_script_tutorial.html",
+      "icon": "BookOpen",
+      "color": "slate",
+      "grade": "其他"
     }
   ]
 };

@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Apps Script (GAS) 零基礎自學與實戰教學平台</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter, Noto Sans TC, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans TC"', 'Inter', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            gas: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#1a73e8',
+              600: '#1557b0',
+              700: '#0d47a1',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* 捲軸美化 */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    .code-editor {
+      font-family: 'JetBrains Mono', monospace;
+      tab-size: 2;
+    }
+    
+    /* 螢光標籤動畫 */
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+      50% { box-shadow: 0 0 0 8px rgba(37, 99, 235, 0); }
+    }
+    .pulse-glow {
+      animation: pulseGlow 2.5s infinite;
+    }
+
+    /* 側邊欄平滑縮放與收合樣式 */
+    #sidebarAside {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #sidebarAside.collapsed {
+      display: none;
+    }
+    @media (min-width: 1024px) {
+      #sidebarAside.collapsed {
+        display: block;
+        width: 0 !important;
+        min-width: 0 !important;
+        margin-right: -2rem !important;
+        opacity: 0;
+        overflow: hidden;
+        pointer-events: none;
+      }
+    }
+
+    /* 全站文字大小平滑縮放支援 */
+    html {
+      transition: font-size 0.2s ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col selection:bg-blue-100 selection:text-blue-800">
+
+  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
+      <div class="flex items-center space-x-3 shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 via-indigo-600 to-amber-500 flex items-center justify-center text-white font-bold text-lg shadow-md shadow-blue-500/20">
+          GAS
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="font-bold text-slate-900 tracking-tight text-base sm:text-lg">Google Apps Script 零基礎實戰手冊</h1>
+            <span class="text-[10px] font-bold tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full hidden sm:inline-block">新手自學保證班</span>
+          </div>
+          <p class="text-xs text-slate-500 hidden sm:block">免安裝伺服器 · 原生自動化 · 完整範例與白話解說</p>
+        </div>
+      </div>
+
+      <!-- 字體縮放、側邊欄控制與進度捷徑 -->
+      <div class="flex items-center space-x-2 sm:space-x-3">
+        <!-- 字體大小調整控制組 -->
+        <div class="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200 text-xs shadow-inner" title="調整教材字體大小">
+          <button onclick="changeFontSize(-1)" class="w-6 h-6 flex items-center justify-center hover:bg-white text-slate-700 hover:text-blue-600 rounded transition font-bold text-xs" title="縮小字體">A-</button>
+          <span id="fontSizeDisplay" class="px-1.5 text-[11px] font-mono font-semibold text-slate-600 select-none">100%</span>
+          <button onclick="changeFontSize(1)" class="w-6 h-6 flex items-center justify-center hover:bg-white text-slate-700 hover:text-blue-600 rounded transition font-bold text-xs" title="放大字體">A+</button>
+          <button onclick="resetFontSize()" class="w-5 h-6 flex items-center justify-center text-slate-400 hover:text-slate-700 rounded transition text-[10px]" title="重設字體大小">↺</button>
+        </div>
+
+        <!-- 側邊欄收合/展開切換按鈕 -->
+        <button onclick="toggleSidebar()" id="sidebarToggleBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold px-2.5 sm:px-3 py-2 rounded-lg border border-slate-200 transition flex items-center space-x-1.5 shadow-sm" title="收合或展開左側目錄">
+          <span id="sidebarToggleIcon" class="text-xs">◀</span>
+          <span id="sidebarToggleText" class="hidden sm:inline">收合選單</span>
+        </button>
+
+        <div class="hidden xl:flex flex-col items-end">
+          <span class="text-xs font-semibold text-slate-600" id="progressText">學習進度：0 / 11 關卡</span>
+          <div class="w-28 bg-slate-200 h-2 rounded-full mt-1 overflow-hidden">
+            <div id="progressBar" class="bg-blue-600 h-full w-0 transition-all duration-300"></div>
+          </div>
+        </div>
+        <button onclick="scrollToSection('troubleshooting')" class="hidden md:flex bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-semibold px-2.5 py-2 rounded-lg border border-amber-200 transition items-center space-x-1">
+          <span>🩺 新手急救箱</span>
+        </button>
+        <button onclick="scrollToSection('deploy-guide')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-medium px-3 py-2 rounded-lg transition shadow-sm flex items-center space-x-1">
+          <span>🚀 部署指南</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 側邊欄收合時的左側懸浮快速喚醒鈕 -->
+  <button id="floatingSidebarOpenBtn" onclick="toggleSidebar()" class="hidden fixed left-0 top-24 z-30 bg-blue-600 hover:bg-blue-700 text-white shadow-xl px-3 py-2 rounded-r-xl border border-l-0 border-blue-400/50 text-xs font-bold items-center space-x-1.5 transition hover:translate-x-1" title="點擊重新展開章節導航">
+    <span>📖</span>
+    <span>展開章節</span>
+  </button>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full flex flex-col lg:flex-row gap-8 transition-all duration-300">
+    
+    <!-- 左側固定課程大綱導航 (可自由縮放收合) -->
+    <aside id="sidebarAside" class="w-full lg:w-64 shrink-0">
+      <div class="sticky top-24 space-y-4">
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div class="flex items-center justify-between mb-3 px-2">
+            <div class="flex items-center space-x-1.5">
+              <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider">實戰學習地圖</h2>
+              <span class="text-[10px] text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded-full">循序漸進</span>
+            </div>
+            <!-- 卡片右上角快速收合按鈕 -->
+            <button onclick="toggleSidebar()" class="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-1 rounded-md text-[11px] font-medium flex items-center space-x-0.5 transition" title="收合導覽選單以專心學習">
+              <span>收合</span>
+              <span class="text-[10px]">◀</span>
+            </button>
+          </div>
+          <nav class="space-y-1 text-sm font-medium" id="sidebarNav">
+            <a href="#module-0" class="nav-item flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition">
+              <span class="flex items-center space-x-2"><span>🌱</span><span>0. 編輯器環境與授權</span></span>
+              <input type="checkbox" data-chap="0" onchange="toggleChapterCheck(0)" class="rounded text-blue-600 pointer-events-none">
+            </a>
+            <a href="#quickstart" class="nav-item flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition">
+              <span class="flex items-center space-x-2"><span>✉️</span><span>1. 自動寄信與程式解剖</span></span>
+              <input type="checkbox" data-chap="1" onchange="toggleChapterCheck(1)" class="rounded text-blue-600 pointer-events-none">
+            </a>
+            <a href="#triggers-batch" class="nav-item flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition">
+              <span class="flex items-center space-x-2"><span>⚡</span><span>2. 二維陣列效能突破</span></span>
+              <input type="checkbox" data-chap="2" onchange="toggleChapterCheck(2)" class="rounded text-blue-600 pointer-events-none">
+            </a>
+            <a href="#triggers-auto" class="nav-item flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition">
+              <span class="flex items-center space-x-2"><span>⏰</span><span>3. 雲端鬧鐘定時觸發器</span></span>
+              <input type="checkbox" data-chap="3" onchange="toggleChapterCheck(3)" class="rounded text-blue-600 pointer-events-none">
+            </a>
+            <a href="#webapp-api" class="nav-item flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition">
+              <span class="flex items-center space-x-2"><span>🌐</span><span>4. doGet / doPost API</span></span>
+              <input type="checkbox" data-chap="4" onchange="toggleChapterCheck(4)" class="rounded text-blue-600 pointer-events-none">
+            </a>
+            <a href="#deploy-guide" class="nav-item flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition">
+              <span class="flex items-center space-x-2"><span>🚀</span><span>5. 部署上線必勝手冊</span></span>
+              <input type="checkbox" data-chap="5" onchange="toggleChapterCheck(5)" class="rounded text-blue-600 pointer-events-none">
+            </a>
+            <a href="#html-tailwind" class="nav-item flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition">
+              <span class="flex items-center space-x-2"><span>🎨</span><span>6. HtmlService 前端</span></span>
+              <input type="checkbox" data-chap="6" onchange="toggleChapterCheck(6)" class="rounded text-blue-600 pointer-events-none">
+            </a>
+            <a href="#properties" class="nav-item flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition">
+              <span class="flex items-center space-x-2"><span>🔐</span><span>7. 安全金鑰庫 (Token)</span></span>
+              <input type="checkbox" data-chap="7" onchange="toggleChapterCheck(7)" class="rounded text-blue-600 pointer-events-none">
+            </a>
+            <a href="#linebot" class="nav-item flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition">
+              <span class="flex items-center space-x-2"><span>💬</span><span>8. LINE 雙向問答與卡片</span></span>
+              <input type="checkbox" data-chap="8" onchange="toggleChapterCheck(8)" class="rounded text-blue-600 pointer-events-none">
+            </a>
+            <a href="#ai-gemini" class="nav-item flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition">
+              <span class="flex items-center space-x-2"><span>🤖</span><span>9. Gemini AI 智能兜底</span></span>
+              <input type="checkbox" data-chap="9" onchange="toggleChapterCheck(9)" class="rounded text-blue-600 pointer-events-none">
+            </a>
+            <a href="#troubleshooting" class="nav-item flex items-center justify-between px-3 py-2 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition">
+              <span class="flex items-center space-x-2"><span>🩺</span><span>10. 新手常見錯誤急救</span></span>
+              <input type="checkbox" data-chap="10" onchange="toggleChapterCheck(10)" class="rounded text-blue-600 pointer-events-none">
+            </a>
+          </nav>
+        </div>
+
+        <!-- 友善貼士卡片 -->
+        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200/70 rounded-2xl p-4 text-xs space-y-2">
+          <div class="font-bold text-blue-900 flex items-center space-x-1">
+            <span>💡</span><span>初學者專用指引</span>
+          </div>
+          <p class="text-blue-800 leading-relaxed">
+            不用背程式碼！每個程式碼區塊上方都清楚標明了<strong>「該存在哪一個檔案」</strong>，並附有一鍵複製按鈕。跟著步驟貼上與點擊就能 100% 成功！
+          </p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="flex-1 space-y-12">
+
+      <!-- ================= 模組 0：新手第一步與全介面導覽 ================= -->
+      <section id="module-0" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">
+            <span>單元 0</span><span>·</span><span>零基礎第一步</span>
+          </div>
+          <button onclick="markChapterDone(0)" class="text-xs bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 font-medium px-3 py-1.5 rounded-lg transition">
+            標記為已學習
+          </button>
+        </div>
+
+        <div>
+          <h2 class="text-2xl sm:text-3xl font-bold text-slate-900">Google Apps Script 是什麼？如何開啟它？</h2>
+          <p class="mt-2 text-slate-600 leading-relaxed text-sm">
+            Google Apps Script（簡稱 <strong>GAS</strong>）就像是 Google 為你準備的「24 小時免費雲端小助理」。它使用最熱門的 JavaScript 語法，不需要在電腦安裝任何軟體，只要有 Google 帳號就能直接在瀏覽器執行！
+          </p>
+        </div>
+
+        <!-- 步驟 1：如何開啟編輯器 -->
+        <div class="space-y-3">
+          <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-1.5">
+            <span class="w-5 h-5 bg-blue-600 text-white rounded-full inline-flex items-center justify-center text-xs">1</span>
+            <span>如何打開 Google Apps Script 編輯器？（兩種方式）</span>
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div class="p-4 rounded-xl border border-blue-100 bg-blue-50/50 space-y-2">
+              <span class="font-bold text-blue-900 text-sm">方式 A：從 Google 試算表開啟（最常用）</span>
+              <p class="text-slate-600 leading-relaxed">
+                打開任何一份 Google 試算表 ➔ 點擊上方工具列的 <strong>「擴充功能」</strong> ➔ 選擇 <strong>「Apps Script」</strong>。這會建立一個與此試算表直接綁定的腳本。
+              </p>
+              <div class="text-[11px] text-blue-700 bg-white/70 p-2 rounded-lg border border-blue-200">
+                ⭐ 推薦新手：最容易讀取與回寫試算表資料！
+              </div>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+              <span class="font-bold text-slate-900 text-sm">方式 B：直接獨立建立專案</span>
+              <p class="text-slate-600 leading-relaxed">
+                直接在瀏覽器網址列輸入 <code class="bg-white px-1.5 py-0.5 rounded text-blue-600 font-mono">script.new</code>，或是前往 Google 雲端硬碟 ➔「新增」➔「更多」➔「Google Apps Script」。
+              </p>
+              <div class="text-[11px] text-slate-500 bg-white/70 p-2 rounded-lg border border-slate-200">
+                適用情境：不附屬於特定檔案的獨立後端排程。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 步驟 2：圖解介面區域 -->
+        <div class="space-y-3">
+          <h3 class="text-sm font-bold text-slate-800 flex items-center space-x-1.5">
+            <span class="w-5 h-5 bg-blue-600 text-white rounded-full inline-flex items-center justify-center text-xs">2</span>
+            <span>認識編輯器 5 大核心區塊</span>
+          </h3>
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center text-xs">
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <div class="text-xl">📁</div>
+              <div class="font-bold text-slate-800">左側檔案列表</div>
+              <p class="text-[11px] text-slate-500">可新增 .gs 腳本或 .html 網頁</p>
+            </div>
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <div class="text-xl">▶️</div>
+              <div class="font-bold text-slate-800">執行按鈕</div>
+              <p class="text-[11px] text-slate-500">選定函式後，點擊立即手動測試</p>
+            </div>
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <div class="text-xl">📊</div>
+              <div class="font-bold text-slate-800">下方執行紀錄</div>
+              <p class="text-[11px] text-slate-500">顯示 Logger.log 輸出與報錯</p>
+            </div>
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <div class="text-xl">⏰</div>
+              <div class="font-bold text-slate-800">鬧鐘圖示 (觸發條件)</div>
+              <p class="text-[11px] text-slate-500">設定定時每天、每小時自動執行</p>
+            </div>
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+              <div class="text-xl">⚙️</div>
+              <div class="font-bold text-slate-800">齒輪 (專案設定)</div>
+              <p class="text-[11px] text-slate-500">安全儲存 API Key 與 Token</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 步驟 3：新手最大的心魔「授權警告」解密 -->
+        <div class="bg-amber-50/80 border-2 border-amber-300/80 rounded-2xl p-5 space-y-3">
+          <div class="flex items-center space-x-2 text-amber-900 font-bold text-sm">
+            <span class="text-lg">🛡️</span>
+            <span>初學者必看：初次執行時跳出「警告危險」怎麼辦？（授權四部曲）</span>
+          </div>
+          <p class="text-xs text-amber-800 leading-relaxed">
+            當你第一次在編輯器點擊「執行」時，Google 為了安全，會跳出<strong>「需要授權」</strong>與<strong>「Google 尚未驗證這個應用程式」</strong>的視窗。請別慌張！這是因為程式碼是你自己寫的，並非公開上架到 Google 商店的軟體。請依照以下 4 個步驟輕鬆放行：
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-2 text-xs">
+            <div class="bg-white p-3 rounded-xl border border-amber-200">
+              <div class="font-bold text-slate-700">步驟 1. 審查權限</div>
+              <div class="text-[11px] text-slate-500 mt-1">點擊彈出視窗中的「審查權限」，並選擇登入你的 Google 帳號。</div>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-amber-200">
+              <div class="font-bold text-slate-700">步驟 2. 點擊「進階」</div>
+              <div class="text-[11px] text-slate-500 mt-1">看到「Google 尚未驗證」警告畫面時，點擊左下方小字的<strong>「進階」</strong>。</div>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-amber-200">
+              <div class="font-bold text-slate-700">步驟 3. 前往專案</div>
+              <div class="text-[11px] text-slate-500 mt-1">點擊下方最底部的<strong>「前往『未命名專案』（不安全）」</strong>連結。</div>
+            </div>
+            <div class="bg-white p-3 rounded-xl border border-amber-200">
+              <div class="font-bold text-slate-700">步驟 4. 點擊「允許」</div>
+              <div class="text-[11px] text-slate-500 mt-1">滾動至最下方按下「允許」，整個專案就完成安全授權了！</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 模組 1：5 分鐘發信實戰 & 程式碼解剖學 ================= -->
+      <section id="quickstart" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">
+            <span>單元 1</span><span>·</span><span>手把手實戰</span>
+          </div>
+          <button onclick="markChapterDone(1)" class="text-xs bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 font-medium px-3 py-1.5 rounded-lg transition">
+            標記為已學習
+          </button>
+        </div>
+
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">實戰一：試算表自動發送個人化郵件</h2>
+          <p class="text-sm text-slate-600 mt-1">
+            從試算表中讀取「姓名」與「Email」，組合成個人化問候，並自動調用 Gmail 發送，最後將發送時間寫回試算表。
+          </p>
+        </div>
+
+        <!-- 檔案存放指引與代碼 -->
+        <div class="space-y-3">
+          <!-- 檔案標記 Bar -->
+          <div class="flex items-center justify-between bg-slate-800 text-white px-4 py-2.5 rounded-t-xl text-xs">
+            <div class="flex items-center space-x-2">
+              <span class="bg-emerald-500 text-slate-900 font-bold px-2 py-0.5 rounded text-[10px]">存放位置</span>
+              <span class="font-mono text-emerald-300 font-bold">Code.gs (GAS 預設腳本檔案)</span>
+            </div>
+            <button onclick="copyCode('codeSnippet1', 'copyBtn1')" id="copyBtn1" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1 rounded transition flex items-center space-x-1">
+              <span>📋 點我一鍵複製</span>
+            </button>
+          </div>
+
+          <div class="bg-slate-900 p-4 rounded-b-xl overflow-x-auto text-xs font-mono text-blue-200 leading-relaxed">
+            <pre id="codeSnippet1">function sendWelcomeEmail() {
+  // 1. 取得當前作用中的試算表與工作表
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  
+  // 2. 讀取第二列的資料：A2 為姓名，B2 為 Email
+  const name = sheet.getRange("A2").getValue();
+  const email = sheet.getRange("B2").getValue();
+  
+  // 3. 設定信件主旨與內容 (反引號 `` 可直接嵌入變數 ${name})
+  const subject = "歡迎加入！這是一封來自 GAS 的自動通知";
+  const body = `親愛的 ${name} 您好：\n\n感謝您的參與！此信件由 Google Apps Script 雲端伺服器自動發送。`;
+  
+  // 4. 調用 Gmail 服務發送真實信件
+  GmailApp.sendEmail(email, subject, body);
+  
+  // 5. 將發送結果回填至 C2 欄位，標註目前時間
+  const timestamp = new Date().toLocaleTimeString();
+  sheet.getRange("C2").setValue(`已發送 (${timestamp})`);
+}</pre>
+          </div>
+
+          <!-- 程式碼白話文解剖學 -->
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs space-y-2">
+            <div class="font-bold text-slate-700 flex items-center space-x-1.5">
+              <span>🔍</span><span>程式碼逐行白話拆解（新手一定要看懂這 3 句）：</span>
+            </div>
+            <ul class="list-disc list-inside space-y-1.5 text-slate-600 leading-relaxed pl-1">
+              <li><code class="bg-white px-1.5 py-0.5 rounded border font-mono text-blue-700">sheet.getRange("A2").getValue()</code>：像拿鑷子夾取 A2 格子裡面的文字「王小明」。</li>
+              <li><code class="bg-white px-1.5 py-0.5 rounded border font-mono text-blue-700">GmailApp.sendEmail(收件者, 主旨, 內容)</code>：Google 幫你準備好的發信函式，不用設定密碼直接發信。</li>
+              <li><code class="bg-white px-1.5 py-0.5 rounded border font-mono text-blue-700">sheet.getRange("C2").setValue(...)</code>：把成果直接寫回 C2 儲存格，讓你在表格上一目了然。</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 互動沙盒：可編輯儲存格並模擬執行 -->
+        <div class="border-2 border-emerald-500/30 bg-emerald-50/20 rounded-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+              <h3 class="font-bold text-slate-800 text-sm">線上互動試跑沙盒（免切換視窗直接體驗）</h3>
+            </div>
+            <span class="text-xs text-slate-400">點擊儲存格可修改姓名與信箱</span>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <!-- 模擬試算表 (左) -->
+            <div class="lg:col-span-5 bg-white border border-slate-200 rounded-xl p-3 shadow-sm flex flex-col justify-between">
+              <div>
+                <div class="text-[11px] font-bold text-slate-500 pb-2 border-b border-slate-100 flex items-center justify-between">
+                  <span>📊 模擬試算表 (工作表1)</span>
+                  <span class="text-emerald-600 font-normal">● 連線就緒</span>
+                </div>
+                <table class="w-full text-xs text-left border-collapse border border-slate-200 mt-2">
+                  <thead>
+                    <tr class="bg-slate-100 text-slate-600">
+                      <th class="border border-slate-200 p-1.5 w-6 text-center bg-slate-200/60 font-mono text-[11px]"></th>
+                      <th class="border border-slate-200 p-1.5 font-semibold">A (姓名)</th>
+                      <th class="border border-slate-200 p-1.5 font-semibold">B (Email)</th>
+                      <th class="border border-slate-200 p-1.5 font-semibold">C (發送狀態)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr class="text-slate-400 bg-slate-50 font-bold">
+                      <td class="border border-slate-200 p-1 text-center font-mono">1</td>
+                      <td class="border border-slate-200 p-1">姓名</td>
+                      <td class="border border-slate-200 p-1">Email</td>
+                      <td class="border border-slate-200 p-1">狀態</td>
+                    </tr>
+                    <tr>
+                      <td class="border border-slate-200 p-1 text-center font-mono text-slate-400 bg-slate-50">2</td>
+                      <td class="border border-slate-200 p-1">
+                        <input id="cell_A2" type="text" value="王小明" class="w-full px-1 py-0.5 text-xs border border-transparent focus:border-blue-400 focus:bg-blue-50/30 rounded outline-none font-medium">
+                      </td>
+                      <td class="border border-slate-200 p-1">
+                        <input id="cell_B2" type="text" value="ming@example.com" class="w-full px-1 py-0.5 text-xs border border-transparent focus:border-blue-400 focus:bg-blue-50/30 rounded outline-none font-medium">
+                      </td>
+                      <td id="cell_C2" class="border border-slate-200 p-1 text-slate-400 italic">未發送</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <button onclick="runEmailSandbox()" class="mt-4 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs py-2.5 px-4 rounded-xl shadow transition flex items-center justify-center space-x-1.5">
+                <span>▶ 模擬執行 sendWelcomeEmail()</span>
+              </button>
+            </div>
+
+            <!-- 模擬 Logger 日誌輸出 (右) -->
+            <div class="lg:col-span-7 bg-slate-950 rounded-xl p-3.5 text-xs font-mono text-slate-300 border border-slate-800 flex flex-col justify-between">
+              <div>
+                <div class="text-slate-500 pb-2 border-b border-slate-800 flex justify-between">
+                  <span>執行紀錄 (Execution Log)</span>
+                  <span class="text-emerald-400">Status: Idle</span>
+                </div>
+                <div id="sandboxConsole" class="mt-2 text-[11px] leading-relaxed space-y-1 h-28 overflow-y-auto">
+                  <div class="text-slate-600">// 等待觸發執行...</div>
+                </div>
+              </div>
+              <div class="text-[10px] text-slate-500 pt-2 border-t border-slate-800">
+                提示：點擊按鈕後會同時彈出 Gmail 模擬收件預覽視窗。
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 模組 2：二維陣列大批次讀寫 (效能瓶頸突破) ================= -->
+      <section id="triggers-batch" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-50 text-amber-700 text-xs font-semibold">
+            <span>單元 2</span><span>·</span><span>速度提升 50 倍</span>
+          </div>
+          <button onclick="markChapterDone(2)" class="text-xs bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 font-medium px-3 py-1.5 rounded-lg transition">
+            標記為已學習
+          </button>
+        </div>
+
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">告別超時！二維陣列大批次處理 (getValues / setValues)</h2>
+          <p class="text-sm text-slate-600 mt-1">
+            新手最常在 <code>for</code> 迴圈中不斷呼叫 <code>setValue()</code>，當資料有數百列時就會超過 6 分鐘的執行限制而當機。記住核心口訣：<strong>「用卡車整車載走，在記憶體算完，一次整車倒回去」</strong>！
+          </p>
+        </div>
+
+        <!-- 觀念圖解卡 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+          <div class="p-4 rounded-xl border border-rose-200 bg-rose-50/50 space-y-2">
+            <span class="font-bold text-rose-900 text-sm">❌ 逐筆操作（愚公移山模式）</span>
+            <p class="text-slate-600 leading-relaxed">
+              每次迴圈都連線一次 Google 伺服器：<br>
+              <code>for (...) { sheet.getRange(i, 1).setValue("及格"); }</code><br>
+              如果有 500 列資料，就要發送 500 次網路連線，極慢且極易報錯。
+            </p>
+          </div>
+          <div class="p-4 rounded-xl border border-blue-200 bg-blue-50/50 space-y-2">
+            <span class="font-bold text-blue-900 text-sm">⚡ 批次操作（大卡車模式）</span>
+            <p class="text-slate-600 leading-relaxed">
+              只連線 2 次！一次抓全部二維陣列，記憶體算完一次推回去：<br>
+              <code>const data = sheet.getRange(...).getValues();</code><br>
+              <code>sheet.getRange(...).setValues(results);</code>
+            </p>
+          </div>
+        </div>
+
+        <!-- 程式碼範例 -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between bg-slate-800 text-white px-4 py-2.5 rounded-t-xl text-xs">
+            <div class="flex items-center space-x-2">
+              <span class="bg-amber-400 text-slate-900 font-bold px-2 py-0.5 rounded text-[10px]">存放位置</span>
+              <span class="font-mono text-amber-300 font-bold">Code.gs</span>
+            </div>
+            <button onclick="copyCode('codeSnippet2', 'copyBtn2')" id="copyBtn2" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1 rounded transition flex items-center space-x-1">
+              <span>📋 點我一鍵複製</span>
+            </button>
+          </div>
+          <div class="bg-slate-900 p-4 rounded-b-xl overflow-x-auto text-xs font-mono text-blue-200 leading-relaxed">
+            <pre id="codeSnippet2">function batchProcessGrades() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return; // 沒有資料就直接結束
+
+  // 1. 【卡車裝車】：從第 2 列第 1 欄開始，一次性抓取全部 (lastRow - 1) 列與 2 欄資料
+  const inputValues = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
+  
+  // 2. 【記憶體運算】：準備一個二維陣列 [[結果1], [結果2], ...]
+  const outputResults = [];
+  for (let i = 0; i < inputValues.length; i++) {
+    const score = inputValues[i][1]; // 取出該列的 B 欄分數
+    outputResults.push([ score >= 60 ? "及格" : "不及格" ]);
+  }
+  
+  // 3. 【卡車卸貨】：一次性寫入 C 欄 (第 3 欄)，長度完全對應運算筆數
+  sheet.getRange(2, 3, outputResults.length, 1).setValues(outputResults);
+}</pre>
+          </div>
+        </div>
+
+        <!-- 效能對比模擬器 -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 class="font-bold text-slate-800 text-sm">真實速度實驗室（模擬處理 500 筆學生成績）</h3>
+              <p class="text-xs text-slate-500">親自點擊按鈕，觀察兩者的時間消耗差距！</p>
+            </div>
+            <div class="flex space-x-2">
+              <button onclick="runBenchmark('slow')" class="bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs font-semibold px-3 py-1.5 rounded-lg transition">
+                測試單格逐筆 (慢)
+              </button>
+              <button onclick="runBenchmark('fast')" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition shadow-sm">
+                測試批次處理 (快)
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white p-3 rounded-lg border border-slate-200 space-y-2">
+              <div class="flex justify-between text-xs font-semibold">
+                <span class="text-rose-700">❌ 逐格操作 (setValue 500 次)</span>
+                <span id="slowTimer" class="font-mono text-slate-400">尚未測試</span>
+              </div>
+              <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                <div id="slowProgress" class="bg-rose-500 h-full w-0 transition-all duration-75"></div>
+              </div>
+            </div>
+
+            <div class="bg-white p-3 rounded-lg border border-slate-200 space-y-2">
+              <div class="flex justify-between text-xs font-semibold">
+                <span class="text-blue-700">⚡ 批次處理 (setValues 1 次)</span>
+                <span id="fastTimer" class="font-mono text-slate-400">尚未測試</span>
+              </div>
+              <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                <div id="fastProgress" class="bg-blue-600 h-full w-0 transition-all duration-75"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 模組 3：時間與事件觸發器 (Triggers) ================= -->
+      <section id="triggers-auto" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-violet-50 text-violet-700 text-xs font-semibold">
+            <span>單元 3</span><span>·</span><span>全自動定時排程</span>
+          </div>
+          <button onclick="markChapterDone(3)" class="text-xs bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 font-medium px-3 py-1.5 rounded-lg transition">
+            標記為已學習
+          </button>
+        </div>
+
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">雲端鬧鐘：設定定時自動執行（電腦關機照樣跑）</h2>
+          <p class="text-sm text-slate-600 mt-1">
+            程式寫完後，如果每天都要手動進去點「執行」，那就不是真正的自動化！利用 GAS 的<strong>「觸發條件（Triggers）」</strong>，你可以指定每天早上 8 點或每小時自動執行腳本。
+          </p>
+        </div>
+
+        <!-- 免寫代碼設定圖解 -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-3">
+          <div class="font-bold text-slate-800 text-sm flex items-center space-x-2">
+            <span>⏰</span><span>30 秒圖形化介面設定步驟（完全不需寫程式碼）：</span>
+          </div>
+          <ol class="list-decimal list-inside space-y-2 text-xs text-slate-600 leading-relaxed pl-1">
+            <li>在 Apps Script 編輯器左邊工具列，點選 <strong>「鬧鐘圖示（觸發條件）」</strong>。</li>
+            <li>點選右下角的藍色大按鈕 <strong>「+ 新增觸發條件」</strong>。</li>
+            <li><strong>選擇要執行的功能</strong>：選定你要執行的函式名稱（例如 <code>checkOverdueTasks</code>）。</li>
+            <li><strong>選取活動來源</strong>：切換為 <strong>「時間驅動」</strong>。</li>
+            <li><strong>選取時間型觸發條件類型</strong>：可選「日計時器」（每天跑一次）或「小時預定時器」。</li>
+            <li><strong>選取時段</strong>：例如「上午 8:00 到 9:00」，最後點擊「儲存」即可！</li>
+          </ol>
+        </div>
+
+        <!-- 實戰範例代碼 -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between bg-slate-800 text-white px-4 py-2.5 rounded-t-xl text-xs">
+            <div class="flex items-center space-x-2">
+              <span class="bg-violet-400 text-slate-900 font-bold px-2 py-0.5 rounded text-[10px]">存放位置</span>
+              <span class="font-mono text-violet-300 font-bold">Code.gs (定時巡檢逾期任務)</span>
+            </div>
+            <button onclick="copyCode('codeSnippet3', 'copyBtn3')" id="copyBtn3" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1 rounded transition flex items-center space-x-1">
+              <span>📋 點我一鍵複製</span>
+            </button>
+          </div>
+          <div class="bg-slate-900 p-4 rounded-b-xl overflow-x-auto text-xs font-mono text-blue-200 leading-relaxed">
+            <pre id="codeSnippet3">// 此函式適合設定為每天早上 8 點定時觸發
+function checkOverdueTasks() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return;
+  
+  const today = new Date();
+  const data = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
+  
+  for (let i = 0; i < data.length; i++) {
+    const dueDate = new Date(data[i][1]); // 假設 B 欄是到期日
+    const status = data[i][2];            // 假設 C 欄是目前狀態
+    
+    // 若尚未完成且已過期，就在 D 欄標註警示
+    if (status !== "已完成" && dueDate < today) {
+      sheet.getRange(i + 2, 4).setValue("⚠️ 已逾期");
+    }
+  }
+}</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 模組 4：Web App 與 API (doGet / doPost) ================= -->
+      <section id="webapp-api" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-purple-50 text-purple-700 text-xs font-semibold">
+            <span>單元 4</span><span>·</span><span>試算表化身資料庫</span>
+          </div>
+          <button onclick="markChapterDone(4)" class="text-xs bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 font-medium px-3 py-1.5 rounded-lg transition">
+            標記為已學習
+          </button>
+        </div>
+
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">將 GAS 發布為 Web App：建立 doGet 與 doPost API</h2>
+          <p class="text-sm text-slate-600 mt-1">
+            只要在程式碼中寫好特定的函式名稱 <code>doGet(e)</code>（處理讀取請求）或 <code>doPost(e)</code>（處理寫入請求），你的試算表就能對全世界提供 API 服務！
+          </p>
+        </div>
+
+        <!-- 程式碼 -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between bg-slate-800 text-white px-4 py-2.5 rounded-t-xl text-xs">
+            <div class="flex items-center space-x-2">
+              <span class="bg-purple-400 text-slate-900 font-bold px-2 py-0.5 rounded text-[10px]">存放位置</span>
+              <span class="font-mono text-purple-300 font-bold">Code.gs (負責監聽外部網路連線)</span>
+            </div>
+            <button onclick="copyCode('codeSnippet4', 'copyBtn4')" id="copyBtn4" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1 rounded transition flex items-center space-x-1">
+              <span>📋 點我一鍵複製</span>
+            </button>
+          </div>
+          <div class="bg-slate-900 p-4 rounded-b-xl overflow-x-auto text-xs font-mono text-blue-200 leading-relaxed">
+            <pre id="codeSnippet4">// 1. 處理外部瀏覽器網址傳來的 GET 請求 (例如 ?name=小明)
+function doGet(e) {
+  const name = e.parameter.name || "訪客";
+  const result = {
+    status: "success",
+    message: `您好 ${name}，這是從 Google Apps Script 雲端回傳的 JSON 資料！`,
+    timestamp: new Date().toISOString()
+  };
+  return ContentService.createTextOutput(JSON.stringify(result))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+// 2. 處理外部表單或 Webhook 送來的 POST 寫入請求
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.tryLock(10000); // 鎖定 10 秒防撞車
+
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    const data = JSON.parse(e.postData.contents); // 解析傳入的 JSON 內容
+    
+    // 自動在試算表最後一列追加資料
+    sheet.appendRow([new Date().toLocaleTimeString(), data.name, data.note]);
+    
+    return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } finally {
+    lock.releaseLock(); // 釋放鎖定
+  }
+}</pre>
+          </div>
+        </div>
+
+        <!-- 互動測試器 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- GET 測試器 -->
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+            <span class="text-xs font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded">HTTP GET 測試沙盒</span>
+            <div class="space-y-1">
+              <label class="text-xs text-slate-600 font-medium">輸入參數 name：</label>
+              <input id="apiQueryName" type="text" value="陳小華" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+            <button onclick="simulateDoGet()" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium py-2 rounded-lg transition">
+              發送 GET 模擬請求
+            </button>
+            <div class="bg-slate-900 rounded-lg p-3 font-mono text-[11px] text-slate-200 h-24 overflow-y-auto">
+              <pre id="apiGetResponse" class="text-emerald-400">點擊按鈕發送請求...</pre>
+            </div>
+          </div>
+
+          <!-- POST 測試器 -->
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+            <span class="text-xs font-bold bg-purple-100 text-purple-800 px-2 py-0.5 rounded">HTTP POST 測試沙盒 (Webhook)</span>
+            <div class="space-y-1">
+              <label class="text-xs text-slate-600 font-medium">傳送 JSON Payload 內容：</label>
+              <textarea id="apiPostPayload" rows="2" class="w-full px-3 py-1.5 text-xs border border-slate-200 rounded-lg font-mono outline-none focus:ring-2 focus:ring-purple-500">{"name": "張志強", "note": "報名完成"}</textarea>
+            </div>
+            <button onclick="simulateDoPost()" class="w-full bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium py-2 rounded-lg transition">
+              模擬 Webhook 寫入試算表
+            </button>
+            <div class="bg-slate-900 rounded-lg p-3 font-mono text-[11px] text-slate-200 h-24 overflow-y-auto">
+              <pre id="apiPostResponse" class="text-purple-300">點擊按鈕發送請求...</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 模組 5：部署上線必勝手冊 (初學者最常踩雷) ================= -->
+      <section id="deploy-guide" class="bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-950 text-white rounded-2xl p-6 sm:p-8 shadow-xl space-y-6">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-semibold">
+            <span>單元 5</span><span>·</span><span>必經關卡</span>
+          </div>
+          <button onclick="markChapterDone(5)" class="text-xs bg-white/10 hover:bg-emerald-500/30 text-white font-medium px-3 py-1.5 rounded-lg transition border border-white/20">
+            標記為已學習
+          </button>
+        </div>
+
+        <div>
+          <h2 class="text-2xl sm:text-3xl font-bold text-white">🚀 部署必勝手冊：將專案發布為公開 Web App</h2>
+          <p class="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
+            很多初學者寫好 <code>doGet</code> 或 LINE 機器人後發現「完全沒反應」，90% 都是因為<strong>「部署權限選錯」</strong>或<strong>「修改程式後忘記建立新版本」</strong>！請牢記以下部署秘訣。
+          </p>
+        </div>
+
+        <!-- 部署步驟圖解 -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+          <div class="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
+            <span class="text-blue-400 font-bold text-sm">步驟 1. 新增部署</span>
+            <p class="text-slate-300 leading-relaxed">
+              點擊右上角藍色的 <strong>「部署」</strong> ➔ 點選 <strong>「新增部署」</strong> ➔ 點左邊的小齒輪 ➔ 選擇 <strong>「網頁應用程式」</strong>。
+            </p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-400/30 space-y-2">
+            <span class="text-amber-300 font-bold text-sm">步驟 2. 關鍵權限設定 (極重要)</span>
+            <p class="text-slate-300 leading-relaxed">
+              <strong>執行身分</strong>：選 <strong>「我」</strong>（用你的權限寫入表格）。<br>
+              <strong>誰可以存取</strong>：務必改為 <strong>「任何人」</strong>（即使沒有登入 Google 也能呼叫，接 LINE 必選！）。
+            </p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
+            <span class="text-emerald-400 font-bold text-sm">步驟 3. 取得正式網址</span>
+            <p class="text-slate-300 leading-relaxed">
+              按下「部署」後，複製結尾為 <code class="text-emerald-300 font-mono">/exec</code> 的網址。這就是你的 API 或 LINE Webhook 網址！
+            </p>
+          </div>
+        </div>
+
+        <!-- 致命防雷提示 -->
+        <div class="p-4 rounded-xl bg-rose-500/20 border border-rose-400/40 text-rose-200 text-xs space-y-2">
+          <div class="font-bold flex items-center space-x-1 text-sm text-rose-100">
+            <span>⚠️</span><span>新手最常犯的致命錯誤：修改程式碼後沒有更新部署！</span>
+          </div>
+          <p class="leading-relaxed text-rose-200">
+            當你部署完後，若又在 <code>Code.gs</code> 裡面修改了程式碼，<strong>原本的 Web App 網址依舊會執行「舊版本」！</strong><br>
+            每次修改代碼後，必須：點擊「部署」➔「管理部署作業」➔ 點擊鉛筆圖示 ➔ 版本選擇 <strong>「新版本」</strong> ➔ 再次點擊「部署」，修改才會真正生效！
+          </p>
+        </div>
+      </section>
+
+      <!-- ================= 模組 6：HtmlService 前端介面與 Tailwind CSS ================= -->
+      <section id="html-tailwind" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-50 text-cyan-700 text-xs font-semibold">
+            <span>單元 6</span><span>·</span><span>視覺化前端介面</span>
+          </div>
+          <button onclick="markChapterDone(6)" class="text-xs bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 font-medium px-3 py-1.5 rounded-lg transition">
+            標記為已學習
+          </button>
+        </div>
+
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">使用 HtmlService + Tailwind CSS 打造自適應前端</h2>
+          <p class="text-sm text-slate-600 mt-1">
+            GAS 不只能跑後端，還能利用 <code>HtmlService</code> 做出漂亮的網頁表單或儀表板！利用專屬的 <code>google.script.run</code> 語法，前端可以直接呼叫後端函式，完全免架 API 伺服器。
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- 後端代碼 -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between bg-slate-800 text-white px-3 py-2 rounded-t-xl text-xs">
+              <div class="flex items-center space-x-2">
+                <span class="bg-blue-500 text-slate-900 font-bold px-1.5 py-0.5 rounded text-[10px]">存放位置 1</span>
+                <span class="font-mono text-blue-300">Code.gs</span>
+              </div>
+              <button onclick="copyCode('codeSnippet6_gs', 'copyBtn6_gs')" id="copyBtn6_gs" class="text-slate-300 hover:text-white">
+                📋 複製
+              </button>
+            </div>
+            <div class="bg-slate-900 p-3 rounded-b-xl overflow-x-auto text-xs font-mono text-blue-200 leading-relaxed">
+              <pre id="codeSnippet6_gs">function doGet() {
+  return HtmlService.createHtmlOutputFromFile("Index")
+    .setTitle("即時庫存查詢系統")
+    .addMetaTag("viewport", "width=device-width, initial-scale=1.0");
+}
+
+// 供前端非同步呼叫
+function queryStock(itemName) {
+  const mockData = { "蘋果": 120, "香蕉": 45, "草莓": 0 };
+  return mockData[itemName] !== undefined 
+    ? { found: true, count: mockData[itemName] } 
+    : { found: false };
+}</pre>
+            </div>
+          </div>
+
+          <!-- 前端代碼 -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between bg-slate-800 text-white px-3 py-2 rounded-t-xl text-xs">
+              <div class="flex items-center space-x-2">
+                <span class="bg-cyan-400 text-slate-900 font-bold px-1.5 py-0.5 rounded text-[10px]">存放位置 2</span>
+                <span class="font-mono text-cyan-300">Index.html (點左側 + 號新增 HTML)</span>
+              </div>
+              <button onclick="copyCode('codeSnippet6_html', 'copyBtn6_html')" id="copyBtn6_html" class="text-slate-300 hover:text-white">
+                📋 複製
+              </button>
+            </div>
+            <div class="bg-slate-900 p-3 rounded-b-xl overflow-x-auto text-xs font-mono text-cyan-200 leading-relaxed">
+              <pre id="codeSnippet6_html">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;!-- 引入 Tailwind CDN --&gt;
+  &lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;
+&lt;/head&gt;
+&lt;body class="p-6 bg-slate-50"&gt;
+  &lt;input id="item" placeholder="輸入品項 (如: 蘋果)" class="p-2 border rounded"&gt;
+  &lt;button onclick="search()" class="bg-blue-600 text-white px-4 py-2 rounded"&gt;查詢&lt;/button&gt;
+  &lt;div id="res" class="mt-2 text-sm"&gt;&lt;/div&gt;
+
+  &lt;script&gt;
+    function search() {
+      const val = document.getElementById("item").value;
+      // 呼叫後端 Code.gs 中的 queryStock 函式
+      google.script.run
+        .withSuccessHandler(data =&gt; {
+          document.getElementById("res").innerText = data.found 
+            ? `目前庫存: ${data.count} 件` 
+            : "查無此品項";
+        })
+        .queryStock(val);
+    }
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 模組 7：PropertiesService 安全金鑰保險庫 ================= -->
+      <section id="properties" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-semibold">
+            <span>單元 7</span><span>·</span><span>資安防護</span>
+          </div>
+          <button onclick="markChapterDone(7)" class="text-xs bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 font-medium px-3 py-1.5 rounded-lg transition">
+            標記為已學習
+          </button>
+        </div>
+
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">保護好你的密碼：使用 PropertiesService 保管 API Token</h2>
+          <p class="text-sm text-slate-600 mt-1">
+            ❌ <strong>千萬不要</strong>把 LINE Token 或 OpenAI/Gemini 金鑰直接寫在程式碼中！如果試算表共用給同事，密鑰就會外洩。使用 GAS 的「指令碼屬性」，就像把金鑰放進加密保險箱一樣安全。
+          </p>
+        </div>
+
+        <!-- 操作步驟圖解 -->
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs space-y-2">
+          <div class="font-bold text-slate-800 flex items-center space-x-1">
+            <span>⚙️</span><span>如何在編輯器中新增金鑰（圖形化介面）：</span>
+          </div>
+          <p class="text-slate-600 leading-relaxed">
+            點擊編輯器左側的 <strong>「專案設定（齒輪圖示）」</strong> ➔ 滾動到最下方找到 <strong>「指令碼屬性」</strong> ➔ 點擊 <strong>「編輯指令碼屬性」</strong> ➔「新增指令碼屬性」➔ 屬性名稱輸入 <code class="bg-white px-1.5 py-0.5 rounded font-mono text-blue-600">LINE_TOKEN</code>，值貼上你的金鑰字串 ➔ 點擊儲存！
+          </p>
+        </div>
+
+        <!-- 讀取程式碼 -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between bg-slate-800 text-white px-4 py-2.5 rounded-t-xl text-xs">
+            <div class="flex items-center space-x-2">
+              <span class="bg-slate-400 text-slate-900 font-bold px-2 py-0.5 rounded text-[10px]">存放位置</span>
+              <span class="font-mono text-slate-200 font-bold">Code.gs (如何用代碼讀取保險箱)</span>
+            </div>
+            <button onclick="copyCode('codeSnippet7', 'copyBtn7')" id="copyBtn7" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1 rounded transition flex items-center space-x-1">
+              <span>📋 點我一鍵複製</span>
+            </button>
+          </div>
+          <div class="bg-slate-900 p-4 rounded-b-xl overflow-x-auto text-xs font-mono text-blue-200 leading-relaxed">
+            <pre id="codeSnippet7">function getSafeToken() {
+  // 取得指令碼屬性儲存庫
+  const properties = PropertiesService.getScriptProperties();
+  
+  // 依照設定的名稱讀取
+  const token = properties.getProperty("LINE_TOKEN");
+  
+  if (!token) {
+    throw new Error("找不到 LINE_TOKEN，請先至專案設定中配置！");
+  }
+  
+  return token; // 安全取出金鑰供後續 API 調用
+}</pre>
+          </div>
+        </div>
+
+        <!-- 保險箱互動模擬 -->
+        <div class="border border-slate-200 rounded-xl p-4 bg-slate-50 space-y-3">
+          <span class="text-xs font-bold text-slate-700">虛擬金鑰保管庫沙盒（測試新增屬性）：</span>
+          <div class="grid grid-cols-1 sm:grid-cols-5 gap-2 text-xs">
+            <input id="propKey" type="text" placeholder="屬性名稱 (Key，如 GEMINI_KEY)" class="sm:col-span-2 px-3 py-2 border rounded-lg outline-none">
+            <input id="propVal" type="text" placeholder="密鑰值 (Value，如 AIzaSy...)" class="sm:col-span-2 px-3 py-2 border rounded-lg outline-none">
+            <button onclick="addScriptProperty()" class="bg-slate-800 hover:bg-slate-900 text-white font-medium py-2 rounded-lg transition">
+              + 存入金鑰庫
+            </button>
+          </div>
+          <div id="propertyList" class="space-y-1.5 mt-2 text-xs font-mono">
+            <div class="p-2 bg-white rounded border flex justify-between">
+              <span class="text-blue-600 font-semibold">LINE_CHANNEL_ACCESS_TOKEN</span>
+              <span class="text-slate-400">eyJhbGciOiJIUzI1... (已加密封裝)</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 模組 8：LINE 雙向問答機器人 & Flex 卡片 ================= -->
+      <section id="linebot" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold">
+            <span>單元 8</span><span>·</span><span>實戰天花板</span>
+          </div>
+          <button onclick="markChapterDone(8)" class="text-xs bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 font-medium px-3 py-1.5 rounded-lg transition">
+            標記為已學習
+          </button>
+        </div>
+
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">建立 LINE 雙向客服機器人 & Flex Message 精美圖文卡</h2>
+          <p class="text-sm text-slate-600 mt-1">
+            結合 <code>doPost(e)</code> 接收 LINE 的 Webhook 訊息，比對試算表資料，並回傳圖文並茂的 Flex 卡片。以下是手機即時對話模擬器：
+          </p>
+        </div>
+
+        <!-- 實戰代碼 -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between bg-slate-800 text-white px-4 py-2.5 rounded-t-xl text-xs">
+            <div class="flex items-center space-x-2">
+              <span class="bg-emerald-400 text-slate-900 font-bold px-2 py-0.5 rounded text-[10px]">存放位置</span>
+              <span class="font-mono text-emerald-300 font-bold">Code.gs (處理 LINE 訊息回傳)</span>
+            </div>
+            <button onclick="copyCode('codeSnippet8', 'copyBtn8')" id="copyBtn8" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1 rounded transition flex items-center space-x-1">
+              <span>📋 點我一鍵複製</span>
+            </button>
+          </div>
+          <div class="bg-slate-900 p-4 rounded-b-xl overflow-x-auto text-xs font-mono text-blue-200 leading-relaxed">
+            <pre id="codeSnippet8">function doPost(e) {
+  const token = PropertiesService.getScriptProperties().getProperty("LINE_TOKEN");
+  const event = JSON.parse(e.postData.contents).events[0];
+  
+  if (event && event.type === "message" && event.message.type === "text") {
+    const userText = event.message.text.trim();
+    const replyToken = event.replyToken;
+    
+    // 試算表關鍵字查表
+    let reply = "您好！請輸入「營業時間」或「地址」查詢資訊。";
+    if (userText.includes("營業時間")) reply = "本校服務時間為週一至週五 08:30 - 17:30。";
+    if (userText.includes("地址")) reply = "校址位於：台北市信義區忠孝東路五段 100 號。";
+    
+    // 呼叫 LINE Reply API 回覆訊息
+    UrlFetchApp.fetch("https://api.line.me/v2/bot/message/reply", {
+      method: "post",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + token
+      },
+      payload: JSON.stringify({
+        replyToken: replyToken,
+        messages: [{ type: "text", text: reply }]
+      })
+    });
+  }
+  return ContentService.createTextOutput("OK");
+}</pre>
+          </div>
+        </div>
+
+        <!-- 互動模擬手機 -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div class="lg:col-span-6 flex justify-center">
+            <div class="w-full max-w-[340px] bg-[#849ebf] rounded-[36px] p-3 shadow-2xl border-4 border-slate-800">
+              <div class="bg-slate-900 text-white px-4 py-2.5 rounded-t-[28px] flex items-center justify-between text-xs">
+                <span class="font-bold flex items-center space-x-1"><span>💬</span><span>學校行政官方客服</span></span>
+                <span class="text-[10px] text-emerald-400">● 雲端在線</span>
+              </div>
+
+              <!-- 訊息視窗 -->
+              <div id="lineChatContainer" class="bg-[#849ebf] h-80 p-3 overflow-y-auto space-y-3 text-xs">
+                <div class="text-center text-[10px] text-white/70 my-1">今天 10:30</div>
+                <div class="flex items-start space-x-2">
+                  <div class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shrink-0 font-bold">BOT</div>
+                  <div class="bg-white p-2.5 rounded-2xl rounded-tl-none shadow-sm max-w-[80%] text-slate-800 leading-relaxed">
+                    您好！請嘗試輸入關鍵字：<strong>營業時間</strong>、<strong>地址</strong> 或 <strong>活動</strong> 進行測試！
+                  </div>
+                </div>
+              </div>
+
+              <!-- 輸入列 -->
+              <div class="mt-2 bg-white rounded-2xl p-1.5 flex items-center space-x-1.5">
+                <input id="lineUserInput" type="text" placeholder="輸入關鍵字測試..." class="flex-1 px-3 py-1.5 text-xs outline-none bg-transparent" onkeydown="if(event.key==='Enter') sendMockLineMsg()">
+                <button onclick="sendMockLineMsg()" class="bg-emerald-600 hover:bg-emerald-700 text-white p-1.5 rounded-xl transition">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Flex Message 卡片產生器 -->
+          <div class="lg:col-span-6 bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
+            <h3 class="font-bold text-slate-800 text-sm flex items-center space-x-1.5">
+              <span>🎨</span><span>自訂 Flex Message 圖文卡片</span>
+            </h3>
+            <p class="text-xs text-slate-500">修改以下卡片內容，點擊按鈕，精美的圖文卡片將立即推進左邊的手機中！</p>
+            <div class="space-y-3 text-xs">
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1">活動大標題</label>
+                <input id="flexTitleInput" type="text" value="2026 全國數位科技工作坊" class="w-full px-3 py-2 border rounded-lg outline-none">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1">摘要說明</label>
+                <input id="flexDescInput" type="text" value="全雲端免安裝，手把手帶您串接試算表與 AI 自動化！" class="w-full px-3 py-2 border rounded-lg outline-none">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-600 mb-1">按鈕文字</label>
+                <input id="flexBtnInput" type="text" value="立即登記報名" class="w-full px-3 py-2 border rounded-lg outline-none">
+              </div>
+            </div>
+            <button onclick="sendMockFlexMsg()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold py-2.5 rounded-xl transition shadow">
+              🚀 產生 Flex Message 推入手機
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 模組 9：雙層架構：Gemini AI 智能兜底 ================= -->
+      <section id="ai-gemini" class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-semibold">
+            <span>單元 9</span><span>·</span><span>最夯 AI 應用</span>
+          </div>
+          <button onclick="markChapterDone(9)" class="text-xs bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 font-medium px-3 py-1.5 rounded-lg transition">
+            標記為已學習
+          </button>
+        </div>
+
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900">在 GAS 中串接 Gemini API：打造「規則優先、AI 兜底」雙層客服</h2>
+          <p class="text-sm text-slate-600 mt-1">
+            如果使用者輸入不在試算表裡的冷門問題，機器人該怎麼辦？傳統做法只能回答「聽不懂」，但最聰明的架構是：<strong>先查試算表，查無資料自動交給 Gemini AI 接手生成解答！</strong>
+          </p>
+        </div>
+
+        <!-- 決策架構 -->
+        <div class="bg-slate-900 text-white p-5 rounded-2xl space-y-3 text-xs">
+          <div class="text-indigo-400 font-bold text-xs uppercase tracking-wider">雙層智能防線工作流程</div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700">
+              <span class="text-amber-400 font-bold">1. 查試算表 (免費又精準)</span>
+              <p class="text-slate-400 mt-1">先搜尋常見問題清單，有答案就秒回，不消耗 AI 額度。</p>
+            </div>
+            <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700">
+              <span class="text-blue-400 font-bold">2. 查無結果 ➔ 觸發兜底</span>
+              <p class="text-slate-400 mt-1">當試算表找不到時，自動帶入 System Instruction 呼叫 Gemini。</p>
+            </div>
+            <div class="p-3 bg-slate-800/80 rounded-xl border border-slate-700">
+              <span class="text-emerald-400 font-bold">3. 溫暖回覆</span>
+              <p class="text-slate-400 mt-1">AI 根據設定的角色語氣，生成客製化繁體中文回覆！</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 程式碼 -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between bg-slate-800 text-white px-4 py-2.5 rounded-t-xl text-xs">
+            <div class="flex items-center space-x-2">
+              <span class="bg-indigo-400 text-slate-900 font-bold px-2 py-0.5 rounded text-[10px]">存放位置</span>
+              <span class="font-mono text-indigo-300 font-bold">Code.gs (Gemini REST API 串接函式)</span>
+            </div>
+            <button onclick="copyCode('codeSnippet9', 'copyBtn9')" id="copyBtn9" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-3 py-1 rounded transition flex items-center space-x-1">
+              <span>📋 點我一鍵複製</span>
+            </button>
+          </div>
+          <div class="bg-slate-900 p-4 rounded-b-xl overflow-x-auto text-xs font-mono text-blue-200 leading-relaxed">
+            <pre id="codeSnippet9">function callGeminiAPI(promptText) {
+  const apiKey = PropertiesService.getScriptProperties().getProperty("GEMINI_API_KEY");
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+  const payload = {
+    system_instruction: {
+      parts: [{ text: "你是一位親切專業的學校行政客服，請用繁體中文簡明扼要地回覆訪客。" }]
+    },
+    contents: [{ role: "user", parts: [{ text: promptText }] }]
+  };
+
+  const response = UrlFetchApp.fetch(url, {
+    method: "post",
+    headers: { "Content-Type": "application/json" },
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  });
+
+  const resJson = JSON.parse(response.getContentText());
+  return resJson.candidates[0].content.parts[0].text.trim();
+}</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 模組 10：新手急救箱 (常見報錯秒查手冊) ================= -->
+      <section id="troubleshooting" class="bg-white rounded-2xl border-2 border-amber-300 p-6 sm:p-8 shadow-sm space-y-6">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-amber-100 text-amber-800 text-xs font-semibold">
+            <span>單元 10</span><span>·</span><span>常見錯誤診斷</span>
+          </div>
+          <button onclick="markChapterDone(10)" class="text-xs bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 font-medium px-3 py-1.5 rounded-lg transition">
+            標記為已學習
+          </button>
+        </div>
+
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900 flex items-center space-x-2">
+            <span>🩺</span><span>新手急救箱：寫程式一定會遇到的 6 大報錯與解法</span>
+          </h2>
+          <p class="text-sm text-slate-600 mt-1">遇到錯誤訊息別害怕，選擇下方的常見報錯，馬上獲得秒殺解方！</p>
+        </div>
+
+        <!-- 錯誤診斷下拉與解答展示 -->
+        <div class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">請選擇你在執行紀錄 (Log) 看到的錯誤訊息：</label>
+            <select id="errorSelector" onchange="diagnoseError()" class="w-full p-2.5 text-xs border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-mono bg-slate-50">
+              <option value="range_mismatch">The number of columns in the data does not match the number of columns in the range.</option>
+              <option value="timeout">Exceeded maximum execution time (執行超過 6 分鐘上限)</option>
+              <option value="undefined_prop">TypeError: Cannot read properties of undefined (reading 'xxx')</option>
+              <option value="auth_401">Web App 存取時回傳 401 Unauthorized / 權限拒絕</option>
+              <option value="line_verify">LINE Webhook 點擊 Verify 顯示失敗 (Red Error)</option>
+              <option value="quota_email">Exception: Service invoked too many times for one day: email.</option>
+            </select>
+          </div>
+
+          <div id="diagnoseCard" class="p-4 rounded-xl border border-blue-200 bg-blue-50/50 space-y-2 text-xs">
+            <div class="font-bold text-blue-900 text-sm" id="diagTitle">原因分析與解法：</div>
+            <p class="text-slate-700 leading-relaxed" id="diagDesc"></p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- 仿 App 專屬 Toast 提示 (絕無原生 alert) -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center space-x-3 px-4 py-3 rounded-xl shadow-lg text-xs font-medium">
+    <span id="toastIcon"></span>
+    <span id="toastMessage"></span>
+  </div>
+
+  <!-- 模擬 Gmail 收件匣預覽彈窗 -->
+  <div id="emailModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-200">
+      <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span class="w-3 h-3 rounded-full bg-red-400"></span>
+          <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+          <span class="w-3 h-3 rounded-full bg-emerald-400"></span>
+          <span class="text-xs font-bold text-slate-700 ml-2">Gmail 收件匣即時預覽</span>
+        </div>
+        <button onclick="closeModal('emailModal')" class="text-slate-400 hover:text-slate-600 text-lg font-bold">&times;</button>
+      </div>
+      <div class="p-5 space-y-3">
+        <div class="border-b border-slate-100 pb-2">
+          <div class="text-xs text-slate-400">收件者：<span id="modalEmailTo" class="text-slate-700 font-mono"></span></div>
+          <div class="text-xs text-slate-400 mt-0.5">寄件者：<span class="text-slate-700 font-mono">Google Apps Script 雲端小幫手</span></div>
+          <div class="text-sm font-bold text-slate-900 mt-2" id="modalEmailSubject"></div>
+        </div>
+        <div class="text-xs text-slate-600 leading-relaxed whitespace-pre-line bg-slate-50 p-3 rounded-xl border border-slate-100" id="modalEmailBody"></div>
+        <button onclick="closeModal('emailModal')" class="w-full bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium py-2 rounded-xl transition">
+          關閉預覽
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 學習進度管理
+    const completedChapters = new Set();
+    const totalChapters = 11; // 0 到 10
+
+    function markChapterDone(chapIdx) {
+      completedChapters.add(chapIdx);
+      updateProgress();
+      const checkbox = document.querySelector(`input[data-chap="${chapIdx}"]`);
+      if (checkbox) checkbox.checked = true;
+      showToast(`單元 ${chapIdx} 已記錄為完成！學習進度已更新。`, "success");
+    }
+
+    function toggleChapterCheck(chapIdx) {
+      if (completedChapters.has(chapIdx)) {
+        completedChapters.delete(chapIdx);
+      } else {
+        completedChapters.add(chapIdx);
+      }
+      updateProgress();
+    }
+
+    function updateProgress() {
+      const count = completedChapters.size;
+      const pct = Math.round((count / totalChapters) * 100);
+      const textEl = document.getElementById("progressText");
+      const barEl = document.getElementById("progressBar");
+      if (textEl) textEl.innerText = `學習進度：${count} / ${totalChapters} 關卡 (${pct}%)`;
+      if (barEl) barEl.style.width = `${pct}%`;
+    }
+
+    // 自訂 Toast
+    function showToast(message, type = "info") {
+      const toast = document.getElementById("toast");
+      const toastIcon = document.getElementById("toastIcon");
+      const toastMessage = document.getElementById("toastMessage");
+
+      toastMessage.innerText = message;
+
+      if (type === "success") {
+        toast.className = "fixed bottom-6 right-6 z-50 transition-all duration-300 flex items-center space-x-2 px-4 py-3 rounded-xl shadow-xl text-xs font-semibold bg-emerald-600 text-white";
+        toastIcon.innerHTML = "✓";
+      } else if (type === "error") {
+        toast.className = "fixed bottom-6 right-6 z-50 transition-all duration-300 flex items-center space-x-2 px-4 py-3 rounded-xl shadow-xl text-xs font-semibold bg-rose-600 text-white";
+        toastIcon.innerHTML = "⚠️";
+      } else {
+        toast.className = "fixed bottom-6 right-6 z-50 transition-all duration-300 flex items-center space-x-2 px-4 py-3 rounded-xl shadow-xl text-xs font-semibold bg-slate-900 text-white";
+        toastIcon.innerHTML = "ℹ️";
+      }
+
+      toast.style.transform = "translateY(0)";
+      toast.style.opacity = "1";
+
+      setTimeout(() => {
+        toast.style.transform = "translateY(20px)";
+        toast.style.opacity = "0";
+      }, 3000);
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add("hidden");
+    }
+
+    function scrollToSection(id) {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // 一鍵複製功能
+    function copyCode(snippetId, btnId) {
+      const el = document.getElementById(snippetId);
+      if (!el) return;
+      const text = el.innerText;
+      
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      
+      try {
+        document.execCommand('copy');
+        showToast("程式碼已成功複製至剪貼簿！可直接貼進編輯器", "success");
+        const btn = document.getElementById(btnId);
+        if (btn) {
+          const originalText = btn.innerHTML;
+          btn.innerHTML = "<span>✓ 已複製！</span>";
+          setTimeout(() => { btn.innerHTML = originalText; }, 2000);
+        }
+      } catch (err) {
+        showToast("複製失敗，請手動全選複製", "error");
+      }
+      document.body.removeChild(textarea);
+    }
+
+    // 模擬 1：5分鐘發信沙盒
+    function runEmailSandbox() {
+      const name = document.getElementById("cell_A2").value.trim() || "王小明";
+      const email = document.getElementById("cell_B2").value.trim() || "ming@example.com";
+      const consoleBox = document.getElementById("sandboxConsole");
+      const statusCell = document.getElementById("cell_C2");
+
+      consoleBox.innerHTML = `<span class="text-amber-400">[${new Date().toLocaleTimeString()}] 執行函式: sendWelcomeEmail...</span><br>`;
+
+      setTimeout(() => {
+        consoleBox.innerHTML += `<span class="text-blue-300">[${new Date().toLocaleTimeString()}] 讀取 A2 (姓名): "${name}", B2 (Email): "${email}"</span><br>`;
+      }, 300);
+
+      setTimeout(() => {
+        consoleBox.innerHTML += `<span class="text-blue-300">[${new Date().toLocaleTimeString()}] 呼叫 GmailApp.sendEmail() 成功發信！</span><br>`;
+        const now = new Date().toLocaleTimeString();
+        statusCell.innerHTML = `<span class="text-emerald-600 font-semibold">已發送 (${now})</span>`;
+        consoleBox.innerHTML += `<span class="text-emerald-400">[${new Date().toLocaleTimeString()}] 回寫 C2 儲存格完成。狀態: 執行成功 (耗時 0.7 秒)。</span>`;
+
+        // 開啟 Gmail 預覽彈窗
+        document.getElementById("modalEmailTo").innerText = email;
+        document.getElementById("modalEmailSubject").innerText = "歡迎加入！這是一封來自 GAS 的自動通知";
+        document.getElementById("modalEmailBody").innerText = `親愛的 ${name} 您好：\n\n感謝您的參與！此信件是由 Google Apps Script 雲端伺服器在無人介入下自動發送。\n\n祝 學習愉快！\nGoogle Apps Script 教學團隊`;
+        document.getElementById("emailModal").classList.remove("hidden");
+        markChapterDone(1);
+      }, 800);
+    }
+
+    // 模擬 2：效能測試
+    function runBenchmark(mode) {
+      if (mode === 'slow') {
+        const prog = document.getElementById("slowProgress");
+        const timer = document.getElementById("slowTimer");
+        prog.style.width = "0%";
+        timer.innerText = "逐筆連線中...";
+        let curr = 0;
+        const interval = setInterval(() => {
+          curr += 10;
+          prog.style.width = curr + "%";
+          if (curr >= 100) {
+            clearInterval(interval);
+            timer.innerText = "耗時: 26.8 秒 (慢)";
+            showToast("逐筆寫入測試完成：重複發起 500 次 HTTP 往返！", "error");
+          }
+        }, 120);
+      } else {
+        const prog = document.getElementById("fastProgress");
+        const timer = document.getElementById("fastTimer");
+        prog.style.width = "0%";
+        timer.innerText = "一次載入中...";
+        setTimeout(() => {
+          prog.style.width = "100%";
+          timer.innerText = "耗時: 0.38 秒 (極速)";
+          showToast("二維陣列測試完成：僅 1 次寫入整片推回！", "success");
+          markChapterDone(2);
+        }, 350);
+      }
+    }
+
+    // 模擬 3：doGet / doPost
+    function simulateDoGet() {
+      const name = document.getElementById("apiQueryName").value.trim() || "訪客";
+      const out = document.getElementById("apiGetResponse");
+      out.innerText = "連線 GAS Web App 雲端端點中...";
+      setTimeout(() => {
+        const data = {
+          status: "success",
+          method: "GET",
+          parameterReceived: { name: name },
+          message: `您好 ${name}，這是從 Google Apps Script 雲端回傳的 JSON 資料！`,
+          timestamp: new Date().toISOString()
+        };
+        out.innerText = JSON.stringify(data, null, 2);
+        showToast("doGet 請求模擬成功！", "success");
+      }, 400);
+    }
+
+    function simulateDoPost() {
+      const payloadStr = document.getElementById("apiPostPayload").value;
+      const out = document.getElementById("apiPostResponse");
+      out.innerText = "LockService 防碰撞鎖定中，執行 appendRow...";
+      setTimeout(() => {
+        try {
+          const parsed = JSON.parse(payloadStr);
+          const data = {
+            status: "success",
+            action: "appendRow",
+            savedRow: [new Date().toLocaleTimeString(), parsed.name, parsed.note],
+            serverLockDurationMs: 38
+          };
+          out.innerText = JSON.stringify(data, null, 2);
+          showToast("doPost 模擬資料已成功追加至試算表！", "success");
+          markChapterDone(4);
+        } catch (e) {
+          out.innerText = "JSON 語法錯誤，請檢查雙引號與逗號。";
+          showToast("傳送的內容不是合法 JSON！", "error");
+        }
+      }, 500);
+    }
+
+    // 模擬 4：新增屬性
+    function addScriptProperty() {
+      const k = document.getElementById("propKey").value.trim();
+      const v = document.getElementById("propVal").value.trim();
+      if (!k || !v) {
+        showToast("請輸入屬性名稱與密鑰內容", "error");
+        return;
+      }
+      const list = document.getElementById("propertyList");
+      const div = document.createElement("div");
+      div.className = "p-2 bg-white rounded border flex justify-between";
+      div.innerHTML = `<span class="text-blue-600 font-semibold">${k}</span><span class="text-slate-400">${v.substring(0, 4)}•••••• (已加密封裝)</span>`;
+      list.appendChild(div);
+      document.getElementById("propKey").value = "";
+      document.getElementById("propVal").value = "";
+      showToast(`屬性 [${k}] 已加密儲存至指令碼屬性中！`, "success");
+      markChapterDone(7);
+    }
+
+    // 模擬 5：LINE Bot 雙向手機對話
+    function sendMockLineMsg() {
+      const input = document.getElementById("lineUserInput");
+      const text = input.value.trim();
+      if (!text) return;
+
+      const container = document.getElementById("lineChatContainer");
+
+      // 使用者發送訊息
+      const userDiv = document.createElement("div");
+      userDiv.className = "flex justify-end";
+      userDiv.innerHTML = `
+        <div class="bg-emerald-500 text-white p-2.5 rounded-2xl rounded-tr-none shadow-sm max-w-[80%] leading-relaxed">
+          ${text}
+        </div>
+      `;
+      container.appendChild(userDiv);
+      input.value = "";
+      container.scrollTop = container.scrollHeight;
+
+      // 機器人查表與 AI 兜底模擬
+      setTimeout(() => {
+        let reply = "";
+        const lower = text.toLowerCase();
+        if (lower.includes("營業時間") || lower.includes("時間")) {
+          reply = "【試算表精準命中】：本校服務時間為週一至週五 08:30 - 17:30。";
+        } else if (lower.includes("地址") || lower.includes("在哪")) {
+          reply = "【試算表精準命中】：校址位於台北市信義區忠孝東路五段 100 號。";
+        } else if (lower.includes("活動")) {
+          reply = "請點擊右方的「自訂 Flex Message」產生器，我們可將活動卡片直接推到手機中！";
+        } else {
+          // Gemini 兜底
+          reply = `🤖【Gemini AI 智能兜底】\n您詢問了「${text}」。根據本校規範，各項校園設施均提供預約借用，若有特殊需求歡迎在上班時間致電總務處登記！`;
+          markChapterDone(9);
+        }
+
+        const botDiv = document.createElement("div");
+        botDiv.className = "flex items-start space-x-2";
+        botDiv.innerHTML = `
+          <div class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shrink-0 font-bold">BOT</div>
+          <div class="bg-white p-2.5 rounded-2xl rounded-tl-none shadow-sm max-w-[80%] text-slate-800 leading-relaxed whitespace-pre-line">
+            ${reply}
+          </div>
+        `;
+        container.appendChild(botDiv);
+        container.scrollTop = container.scrollHeight;
+        markChapterDone(8);
+      }, 600);
+    }
+
+    // 模擬 6：Flex 卡片推播
+    function sendMockFlexMsg() {
+      const title = document.getElementById("flexTitleInput").value;
+      const desc = document.getElementById("flexDescInput").value;
+      const btnText = document.getElementById("flexBtnInput").value;
+      const container = document.getElementById("lineChatContainer");
+
+      const cardDiv = document.createElement("div");
+      cardDiv.className = "flex items-start space-x-2";
+      cardDiv.innerHTML = `
+        <div class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs shrink-0 font-bold">BOT</div>
+        <div class="bg-white rounded-2xl rounded-tl-none shadow-md overflow-hidden max-w-[82%] border border-slate-100">
+          <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600" class="w-full h-24 object-cover">
+          <div class="p-3 space-y-1.5">
+            <div class="font-bold text-slate-800 text-xs">${title}</div>
+            <div class="text-[11px] text-slate-500 leading-tight">${desc}</div>
+            <button class="w-full mt-2 bg-blue-600 text-white text-[11px] font-semibold py-1.5 rounded-lg shadow-sm">
+              ${btnText}
+            </button>
+          </div>
+        </div>
+      `;
+      container.appendChild(cardDiv);
+      container.scrollTop = container.scrollHeight;
+      showToast("Flex 卡片已推播至模擬手機！", "success");
+      markChapterDone(8);
+    }
+
+    // 模擬 7：常見報錯診斷
+    const errorMap = {
+      range_mismatch: {
+        title: "陣列大小與儲存格範圍不符 (setValues 尺寸錯誤)",
+        desc: "【原因】：你的 outputResults 陣列長度或欄位數，跟 getRange(row, col, numRows, numCols) 指定的範圍不一致！例如選了 3 欄，但陣列每個元素只有 1 欄。\n【解法】：檢查 outputResults.length 是否剛好等於 numRows；寫入單欄時結構必須是二維 [[A], [B]] 而非一維 [A, B]！"
+      },
+      timeout: {
+        title: "超過單次 6 分鐘執行上限 (Exceeded maximum execution time)",
+        desc: "【原因】：在 for 迴圈中重複呼叫了 getValue() 或 setValue()，造成大量網路延遲。\n【解法】：改用本手冊「單元 2」的二維陣列大批次寫法 (getValues 一次抓、setValues 一次填)，能立刻縮短至 1 秒內！"
+      },
+      undefined_prop: {
+        title: "找不到屬性或物件不存在 (Cannot read properties of undefined)",
+        desc: "【原因】：嘗試從不存在的物件取值，例如抓取的陣列只有 2 欄，你卻寫了 row[5] 取第 6 欄。\n【解法】：善用 Logger.log(data) 先印出內容確認結構，或加入防呆判斷 if (row && row[1]) {...}。"
+      },
+      auth_401: {
+        title: "外部呼叫 Web App 回傳 401 或權限錯誤",
+        desc: "【原因】：部署網頁應用程式時，「誰可以存取」被設成了『僅限自己』或『網域內的使用者』。\n【解法】：重新點擊「部署」➔「管理部署作業」，將『誰可以存取』修改為『任何人 (Anyone)』即可開放外部訪問！"
+      },
+      line_verify: {
+        title: "LINE Developers 點擊 Webhook Verify 失敗",
+        desc: "【原因】：1. GAS 尚未部署成『任何人』存取；2. 程式碼修改後忘記在部署管理中發布『新版本』；3. 程式碼沒有回傳 ContentService.createTextOutput('OK')。\n【解法】：確保 doPost(e) 結尾有 return 200 OK，並發布新版本後再次 Verify。"
+      },
+      quota_email: {
+        title: "每日發信次數達到上限 (Quota exceeded)",
+        desc: "【原因】：免費個人 Google 帳號每日發信上限約 100 封（Workspace 企業版約 1,500 封）。\n【解法】：等待 24 小時額度重置；或先用 Logger.log() 代替真實發信做測試。"
+      }
+    };
+
+    function diagnoseError() {
+      const key = document.getElementById("errorSelector").value;
+      const card = errorMap[key];
+      if (card) {
+        document.getElementById("diagTitle").innerText = card.title;
+        document.getElementById("diagDesc").innerText = card.desc;
+        showToast("已更新錯誤診斷說明！", "info");
+      }
+    }
+
+    // 初始化診斷
+    window.onload = function() {
+      diagnoseError();
+    };
+
+    // 字體大小縮放控制 (依比例平滑縮放全頁 rem)
+    let currentFontScale = 100;
+    const fontScaleLevels = [85, 90, 95, 100, 105, 110, 120, 130, 140];
+
+    function changeFontSize(step) {
+      let currentIndex = fontScaleLevels.indexOf(currentFontScale);
+      if (currentIndex === -1) currentIndex = 3; // 預設 100%
+
+      let targetIndex = currentIndex + step;
+      if (targetIndex < 0) targetIndex = 0;
+      if (targetIndex >= fontScaleLevels.length) targetIndex = fontScaleLevels.length - 1;
+
+      currentFontScale = fontScaleLevels[targetIndex];
+      applyFontSize();
+    }
+
+    function resetFontSize() {
+      currentFontScale = 100;
+      applyFontSize();
+    }
+
+    function applyFontSize() {
+      // 根據標準 16px 基準進行比例縮放
+      const newBaseSize = (currentFontScale / 100) * 16;
+      document.documentElement.style.fontSize = `${newBaseSize}px`;
+
+      const displayEl = document.getElementById("fontSizeDisplay");
+      if (displayEl) {
+        displayEl.innerText = `${currentFontScale}%`;
+        if (currentFontScale !== 100) {
+          displayEl.className = "px-1.5 text-[11px] font-mono font-bold text-blue-600 select-none";
+        } else {
+          displayEl.className = "px-1.5 text-[11px] font-mono font-semibold text-slate-600 select-none";
+        }
+      }
+      showToast(`已將版面字體調整為 ${currentFontScale}%`, "info");
+    }
+
+    // 側邊欄縮放與收合控制
+    let isSidebarCollapsed = false;
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById("sidebarAside");
+      const toggleText = document.getElementById("sidebarToggleText");
+      const toggleIcon = document.getElementById("sidebarToggleIcon");
+      const floatBtn = document.getElementById("floatingSidebarOpenBtn");
+
+      if (!sidebar) return;
+
+      isSidebarCollapsed = !isSidebarCollapsed;
+
+      if (isSidebarCollapsed) {
+        sidebar.classList.add("collapsed");
+        if (toggleText) toggleText.innerText = "展開選單";
+        if (toggleIcon) toggleIcon.innerText = "▶";
+        if (floatBtn) {
+          floatBtn.classList.remove("hidden");
+          floatBtn.classList.add("flex");
+        }
+        showToast("已收合左側選單，內容區已擴展為全螢幕空間！", "info");
+      } else {
+        sidebar.classList.remove("collapsed");
+        if (toggleText) toggleText.innerText = "收合選單";
+        if (toggleIcon) toggleIcon.innerText = "◀";
+        if (floatBtn) {
+          floatBtn.classList.add("hidden");
+          floatBtn.classList.remove("flex");
+        }
+        showToast("已展開左側章節導覽選單", "info");
+      }
+    }
+  </script>
+</body>
+</html>
