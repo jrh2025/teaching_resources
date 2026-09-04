@@ -51,11 +51,12 @@
         <span class="inline-block bg-white/20 text-white text-xs px-3 py-1 rounded-full font-semibold backdrop-blur-xs">專為各級學校、處室主任、組長與行政同仁打造</span>
         <h2 class="text-xl sm:text-2xl font-black">只需 5 分鐘，建立全校專屬的雲端校務行政整合中心</h2>
         <p class="text-xs sm:text-sm text-blue-100 leading-relaxed">
-          整合<strong>行政處室公告、教職員研習差假派代、校園大事紀 (校史人事物)、師生榮譽榜、各處室常用系統與業務交接專區、線上動態自訂擴充工作表</strong>。
+          整合<strong>行政處室公告、全校會議記錄（晨會/行政會議/領域研討）、教職員研習差假派代、校園大事紀 (校史人事物)、師生榮譽榜、各處室常用系統與業務交接專區、線上動態自訂擴充工作表</strong>。
           系統完全基於 Google 試算表與 Google Apps Script 運行，零伺服器維護成本，全校同仁與家長手機掃碼即可即時查閱！
         </p>
         <div class="pt-2 flex flex-wrap gap-2.5 text-xs">
           <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>📱</span><span>電腦/平板/手機 RWD 響應自適應</span></div>
+          <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>📋</span><span>會議記錄與公開/內部權限控管</span></div>
           <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>🏢</span><span>行政處室動態增刪與分類篩選</span></div>
           <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>🤝</span><span>新進同仁業務交接與系統導航</span></div>
           <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>📊</span><span>線上直接擴充全新工作表</span></div>
@@ -87,7 +88,7 @@
           <label class="block font-bold text-slate-700 mb-1">2. 自訂校務管理密鑰 (登入密碼)</label>
           <input type="text" id="inputPassword" oninput="updateConfig()" value="AdminSchool2026" placeholder="例如：MySchoolAdmin2026" 
                  class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-xs">
-          <p class="text-[11px] text-slate-400 mt-1">💡 這是您在前台登入「校務管理員模式」新增公告、派代與自訂表單時的保護密碼。</p>
+          <p class="text-[11px] text-slate-400 mt-1">💡 這是您在前台登入「校務管理員模式」新增公告、派代、會議記錄與自訂表單時的保護密碼。</p>
         </div>
       </div>
 
@@ -132,7 +133,7 @@
             </div>
           </li>
           <li class="text-emerald-800 font-medium bg-emerald-50 p-3 rounded-xl border border-emerald-200">
-            ✨ <strong>零手動建表保證</strong>：試算表內的工作表名稱與欄位<strong>完全保留空白即可</strong>！系統首次連線時，會自動在背景建立「處室清單、教師名冊、行政公告、研習派代系統、校園大事紀、師生榮譽榜、各處室常用網、自訂工作表清單、系統設定」等 9 大核心工作表與預設範例！
+            ✨ <strong>零手動建表保證</strong>：試算表內的工作表名稱與欄位<strong>完全保留空白即可</strong>！系統首次連線時，會自動在背景建立「處室清單、教師名冊、行政公告、研習派代系統、校園大事紀、師生榮譽榜、各處室常用網、會議類別清單、會議記錄、自訂工作表清單、系統設定」等 11 大核心工作表與預設範例！
           </li>
         </ol>
       </div>
@@ -224,7 +225,7 @@
           <li>
             確認並完成下列三項核心參數設定：
             <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2 mt-2 font-medium">
-              <div class="flex justify-between items-center"><span>部署說明：</span><span class="font-bold text-slate-800">校務整合系統正式上線 v1.0</span></div>
+              <div class="flex justify-between items-center"><span>部署說明：</span><span class="font-bold text-slate-800">校務整合系統正式上線 v1.1 (含會議記錄)</span></div>
               <div class="flex justify-between items-center"><span>執行身分：</span><span class="font-bold text-blue-700">我 (您的 Google 帳號)</span></div>
               <div class="flex justify-between items-center"><span>誰可以存取：</span><span class="font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded">所有人 (Anyone)</span></div>
             </div>
@@ -253,7 +254,7 @@
         <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm">5</div>
         <div>
           <h3 class="text-base font-bold text-slate-900">第五步：自動自癒初始化與日常校務管理</h3>
-          <p class="text-xs text-slate-500">掌握處室管理、派代登記、業務傳承與動態擴充表單功能</p>
+          <p class="text-xs text-slate-500">掌握會議記錄、處室管理、派代登記、業務傳承與動態擴充表單功能</p>
         </div>
       </div>
 
@@ -261,27 +262,27 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
             <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>1️⃣</span><span>首度開啟與自動建表</span></h4>
-            <p class="text-xs text-slate-600">首次連線時，後端會自動在試算表中建置 9 張工作表並填入範例資料，完全無需手動設定任何欄位。</p>
+            <p class="text-xs text-slate-600">首次連線時，後端會自動在試算表中建置 11 張核心工作表並填入示範資料，完全無需手動設定任何欄位。</p>
           </div>
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>2️⃣</span><span>管理員登入與處室維護</span></h4>
-            <p class="text-xs text-slate-600">點選右上角「管理員登入」，輸入密鑰（預設 <code>AdminSchool2026</code>）即可解鎖發布公告、處室清單管理與研習派代登記。</p>
+            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>2️⃣</span><span>管理員登入與處室/類別維護</span></h4>
+            <p class="text-xs text-slate-600">點選右上角「管理員登入」，輸入密鑰（預設 <code>AdminSchool2026</code>）即可解鎖發布公告、處室清單維護、會議類別管理與研習派代登記。</p>
           </div>
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>3️⃣</span><span>自訂工作表即時擴充</span></h4>
+            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>3️⃣</span><span>會議記錄與公開/內部權限</span></h4>
+            <p class="text-xs text-slate-600">支援晨會、行政會議及自訂會議類別，詳細記錄主席、紀錄者與決議事項。提供「設為公開會議紀錄」核取切換，機敏或內部會議絕不對訪客公開！</p>
+          </div>
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>4️⃣</span><span>自訂工作表即時擴充</span></h4>
             <p class="text-xs text-slate-600">管理員可在「📁 自訂擴充項目」點擊「建立全新工作表」，輸入自訂欄位即可於後端動態生出新分頁並同步於前台管理！</p>
           </div>
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>4️⃣</span><span>處室常用網與業務交接</span></h4>
+            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>5️⃣</span><span>處室常用網與業務交接</span></h4>
             <p class="text-xs text-slate-600">彙整各處室日常業務系統、填報表單與交接注意事項，新進同仁與代理主管可迅速上手、智慧傳承。</p>
           </div>
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>5️⃣</span><span>校園大事紀與榮譽榜</span></h4>
-            <p class="text-xs text-slate-600">詳實記錄學校歷史發展人、事、時、地、物及重要文物；師生對外競賽榮譽榜亦可公開表揚與歸檔。</p>
-          </div>
-          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
             <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>6️⃣</span><span>訪客隱藏與公務布景</span></h4>
-            <p class="text-xs text-slate-600">登入後點擊「⚙️ 系統設定」，可自由勾選各模組是否對前台訪客公開，並提供公務湛藍、校園翡翠等 6 大主題切換。</p>
+            <p class="text-xs text-slate-600">登入後點擊「⚙️ 系統設定」，可自由勾選各模組（含會議記錄）是否對前台訪客公開，並提供公務湛藍、校園翡翠等 6 大主題切換。</p>
           </div>
         </div>
       </div>
@@ -312,17 +313,27 @@
 
         <details class="bg-slate-50 p-4 rounded-2xl border border-slate-200 group">
           <summary class="font-bold text-slate-800 cursor-pointer list-none flex justify-between items-center">
-            <span>Q2. 學校同仁或家長使用手機瀏覽時，需要登入 Google 帳號嗎？</span>
+            <span>Q2. 會議記錄中的內部機敏或專案輔導討論，會被校外訪客看見嗎？</span>
             <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <div class="mt-3 pt-3 border-t border-slate-200 text-slate-600">
-            <p>完全不需要！只要在部署時設定「誰可以存取：所有人 (Anyone)」，任何同仁無論使用手機、平板或電腦，點開連結皆可直接瀏覽公開之公告、榮譽榜與常用網站。</p>
+            <p>完全不會！登錄或編輯會議記錄時，可自由勾選「設為公開會議紀錄」。若取消勾選，該篇會議記錄在前台將自動對一般訪客完全隱藏，且不會出現在訪客的全域搜尋結果中，只有以管理密鑰登入後的行政同仁才可檢視與編輯。</p>
           </div>
         </details>
 
         <details class="bg-slate-50 p-4 rounded-2xl border border-slate-200 group">
           <summary class="font-bold text-slate-800 cursor-pointer list-none flex justify-between items-center">
-            <span>Q3. 校務資料儲存在哪裡？是否有資料外洩風險？</span>
+            <span>Q3. 學校同仁或家長使用手機瀏覽時，需要登入 Google 帳號嗎？</span>
+            <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="mt-3 pt-3 border-t border-slate-200 text-slate-600">
+            <p>完全不需要！只要在部署時設定「誰可以存取：所有人 (Anyone)」，任何同仁無論使用手機、平板或電腦，點開連結皆可直接瀏覽公開之公告、會議記錄、榮譽榜與常用網站。</p>
+          </div>
+        </details>
+
+        <details class="bg-slate-50 p-4 rounded-2xl border border-slate-200 group">
+          <summary class="font-bold text-slate-800 cursor-pointer list-none flex justify-between items-center">
+            <span>Q4. 校務資料儲存在哪裡？是否有資料外洩風險？</span>
             <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <div class="mt-3 pt-3 border-t border-slate-200 text-slate-600">
@@ -332,7 +343,7 @@
 
         <details class="bg-slate-50 p-4 rounded-2xl border border-slate-200 group">
           <summary class="font-bold text-slate-800 cursor-pointer list-none flex justify-between items-center">
-            <span>Q4. 如何新增其他業務模組（例如設備報修、校車登記或場地預約）？</span>
+            <span>Q5. 如何新增其他業務模組（例如設備報修、校車登記或場地預約）？</span>
             <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <div class="mt-3 pt-3 border-t border-slate-200 text-slate-600">
@@ -366,7 +377,7 @@
   <!-- 1. Code.gs 後端原始碼樣板 (使用 textarea 保留完整字元) -->
   <textarea id="tpl-code-gs" class="hidden">/* =========================================================================
  * 校務行政整合系統 - 後端雲端資料庫核心 (Code.gs)
- * 修正：雙重容錯試算表連線、完整補齊所有模組 CRUD 與刪除處室/自訂表
+ * 擴充：新增「會議記錄」模組、會議類別自訂管理、訪客公開權限控制
  * ========================================================================= */
 
 // 請填入您的 Google 試算表 ID（若此專案是從試算表內「擴充功能 > Apps Script」開啟，保留或空白皆可自動相容目前試算表）
@@ -430,8 +441,24 @@ const DB_SCHEMAS = {
       ['2', '教導處', '全誼校務行政資訊系統', 'https://school.example.edu.tw/admin', '學籍異動、成績輸入、學生基本資料管理核心系統。', '開學前需指派新學年班級任課教師權限', '2026-09-01 08:00:00']
     ]
   },
+  '會議類別清單': {
+    headers: ['類別名稱', '排序權重', '更新時間'],
+    defaultRows: [
+      ['晨會', '1', '2026-09-01 08:00:00'],
+      ['行政會議', '2', '2026-09-01 08:00:00'],
+      ['其它', '3', '2026-09-01 08:00:00']
+    ]
+  },
+  '會議記錄': {
+    headers: ['ID', '日期時間', '會議類別', '地點', '主席', '紀錄者', '出席人員', '會議內容', '公開', '其他', '登錄時間'],
+    defaultRows: [
+      ['1', '2026-09-02 08:00', '晨會', '教導處辦公室', '校長', '陳雅婷', '全體教職員工', '1. 請各班導師提醒學生注意早秋換季氣候與日常衛生清潔。\n2. 總務處提醒各教室冷氣開啟規範，珍惜校園資源。\n3. 週三下午舉辦全校校務發展研習，請全員準時參與。', '是', '各組提案已彙整完畢', '2026-09-02 08:30:00'],
+      ['2', '2026-09-03 13:30', '行政會議', '校長室會議室', '校長', '林志遠', '各處室主任、組長', '1. 審定115學年度第一學期校事行事曆與各項重要活動排程。\n2. 研議智慧校園設備採購案預算編列與審查事宜。', '是', '請總務處於下週前提送設備規格清冊', '2026-09-03 15:00:00'],
+      ['3', '2026-09-04 10:00', '其它', '輔導室個別諮商室', '輔導主任', '張建華', '輔導室全體同仁、認輔教師', '專案輔導會議：針對開學初期高關懷與適應困難學生進行個案分析與支援網絡指派。', '否', '涉及學生個別隱私，本記錄僅供內部專業諮商參考', '2026-09-04 11:30:00']
+    ]
+  },
   '自訂工作表清單': {
-    headers: ['工作表名稱', '中文標題', '欄位定義', '說明備忘', '建立時間'],
+    headers: ['工作表名稱', '中文標題', '欄位定義', '說明備註', '建立時間'],
     defaultRows: [
       ['校園設備修繕', '校園設備修繕登記', '報修日期,報修處室地點,報修項目,狀況說明,報修人,維修進度', '供同仁日常登記水電、門窗或各項硬體耗損', '2026-09-01 08:00:00']
     ]
@@ -441,12 +468,13 @@ const DB_SCHEMAS = {
     defaultRows: [
       ['theme', 'ocean', '布景主題 (ocean/forest/sunset/lavender/rose/slate)', '2026-09-01 08:00:00'],
       ['school_title', '智慧校務行政整合系統', '系統頂部抬頭名稱', '2026-09-01 08:00:00'],
-      ['school_subtitle', '行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網', '頂部副標題', '2026-09-01 08:00:00'],
+      ['school_subtitle', '行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網 · 會議記錄', '頂部副標題', '2026-09-01 08:00:00'],
       ['show_announcements', 'true', '行政公告模組顯示狀態', '2026-09-01 08:00:00'],
       ['show_training', 'true', '研習派代模組顯示狀態', '2026-09-01 08:00:00'],
       ['show_chronicle', 'true', '校園大事紀顯示狀態', '2026-09-01 08:00:00'],
       ['show_honors', 'true', '師生榮譽榜顯示狀態', '2026-09-01 08:00:00'],
       ['show_links', 'true', '處室常用網顯示狀態', '2026-09-01 08:00:00'],
+      ['show_meetings', 'true', '會議記錄模組顯示狀態', '2026-09-01 08:00:00'],
       ['show_custom', 'true', '自訂擴充工作表顯示狀態', '2026-09-01 08:00:00']
     ]
   }
@@ -506,7 +534,7 @@ function ensureAllSheetsFast(ss) {
 function doGet(e) {
   return HtmlService.createTemplateFromFile('Index')
       .evaluate()
-      .setTitle('智慧校務行政整合系統')
+      .setTitle('校務行政整合系統')
       .addMetaTag('viewport', 'width=device-width, initial-scale=1')
       .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
@@ -555,12 +583,13 @@ function getAllSchoolData() {
     let settings = {
       theme: 'ocean',
       school_title: '智慧校務行政整合系統',
-      school_subtitle: '行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網',
+      school_subtitle: '行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網 · 會議記錄',
       show_announcements: true,
       show_training: true,
       show_chronicle: true,
       show_honors: true,
       show_links: true,
+      show_meetings: true,
       show_custom: true
     };
     sRows.forEach(r => {
@@ -600,7 +629,16 @@ function getAllSchoolData() {
     // 8. 處室常用網
     const links = readSheetAsJson(ss, '各處室常用網');
 
-    // 9. 自訂工作表清單與其內容
+    // 9. 會議類別清單
+    const meetingCategories = readSheetAsJson(ss, '會議類別清單')
+      .sort((a, b) => (Number(a['排序權重']) || 99) - (Number(b['排序權重']) || 99))
+      .map(x => x['類別名稱'])
+      .filter(Boolean);
+
+    // 10. 會議記錄 (最新放前面)
+    const meetings = readSheetAsJson(ss, '會議記錄').reverse();
+
+    // 11. 自訂工作表清單與其內容
     const customList = readSheetAsJson(ss, '自訂工作表清單');
     let customSheetsData = {};
     customList.forEach(item => {
@@ -632,6 +670,8 @@ function getAllSchoolData() {
       chronicle: chronicle,
       honors: honors,
       links: links,
+      meetingCategories: meetingCategories,
+      meetings: meetings,
       customSheets: customSheetsData
     };
   } catch (err) {
@@ -690,7 +730,9 @@ function deleteRowGeneral(sheetName, matchKey, password) {
   throw new Error('找不到欲刪除的資料項目。');
 }
 
-// 1. 處室管理 (支援新增與刪除)
+// -------------------------------------------------------------
+// 1. 處室管理 (新增與刪除)
+// -------------------------------------------------------------
 function addOfficeCategory(officeName, p) {
   verifyAdmin(p);
   const name = String(officeName || '').trim();
@@ -726,7 +768,9 @@ function deleteOfficeCategory(officeName, p) {
   throw new Error(`找不到欲刪除的處室「${name}」。`);
 }
 
+// -------------------------------------------------------------
 // 2. 教師名冊管理
+// -------------------------------------------------------------
 function addTeacherRecord(d, p) {
   verifyAdmin(p);
   const name = String(d.name || '').trim();
@@ -739,10 +783,10 @@ function addTeacherRecord(d, p) {
   return { success: true, message: `已成功將【${name}】登錄至教師名冊！` };
 }
 
+// -------------------------------------------------------------
 // 3. 行政公告 CRUD
+// -------------------------------------------------------------
 function saveAnnouncement(d, p) {
-  const ss = getSpreadsheet();
-  const s = getOrCreateSheetFast(ss, '行政公告');
   const id = d.id || String(Date.now().toString().slice(-6));
   const rowData = [
     id,
@@ -761,7 +805,9 @@ function deleteAnnouncement(id, p) {
   return deleteRowGeneral('行政公告', id, p);
 }
 
+// -------------------------------------------------------------
 // 4. 研習派代 CRUD
+// -------------------------------------------------------------
 function saveTrainingRecord(d, p) {
   const id = d.id || String(Date.now().toString().slice(-6));
   const rowData = [
@@ -782,7 +828,9 @@ function deleteTrainingRecord(id, p) {
   return deleteRowGeneral('研習派代系統', id, p);
 }
 
+// -------------------------------------------------------------
 // 5. 校園大事紀 CRUD
+// -------------------------------------------------------------
 function saveChronicleRecord(d, p) {
   const id = d.id || String(Date.now().toString().slice(-6));
   const rowData = [
@@ -802,7 +850,9 @@ function deleteChronicleRecord(id, p) {
   return deleteRowGeneral('校園大事紀', id, p);
 }
 
+// -------------------------------------------------------------
 // 6. 師生榮譽榜 CRUD
+// -------------------------------------------------------------
 function saveHonorRecord(d, p) {
   const id = d.id || String(Date.now().toString().slice(-6));
   const rowData = [
@@ -822,7 +872,9 @@ function deleteHonorRecord(id, p) {
   return deleteRowGeneral('師生榮譽榜', id, p);
 }
 
+// -------------------------------------------------------------
 // 7. 處室常用網 CRUD
+// -------------------------------------------------------------
 function savePortalLink(d, p) {
   const id = d.id || String(Date.now().toString().slice(-6));
   const rowData = [
@@ -841,7 +893,70 @@ function deletePortalLink(id, p) {
   return deleteRowGeneral('各處室常用網', id, p);
 }
 
-// 8. 管理者自行新增/刪除自訂工作表
+// -------------------------------------------------------------
+// 8. 會議記錄與類別管理 CRUD
+// -------------------------------------------------------------
+function addMeetingCategory(categoryName, p) {
+  verifyAdmin(p);
+  const name = String(categoryName || '').trim();
+  if (!name) throw new Error('會議類別名稱不得為空！');
+  const ss = getSpreadsheet();
+  const s = getOrCreateSheetFast(ss, '會議類別清單');
+  const vals = s.getDataRange().getDisplayValues();
+  for (let i = 1; i < vals.length; i++) {
+    if (vals[i][0] === name) {
+      throw new Error(`會議類別「${name}」已存在！`);
+    }
+  }
+  const nextOrder = String(vals.length);
+  s.appendRow([name, nextOrder, getNowTimestamp()]);
+  SpreadsheetApp.flush();
+  return { success: true, message: `已成功新增會議類別【${name}】！` };
+}
+
+function deleteMeetingCategory(categoryName, p) {
+  verifyAdmin(p);
+  const name = String(categoryName || '').trim();
+  if (!name) throw new Error('會議類別名稱不得為空！');
+  const ss = getSpreadsheet();
+  const s = getOrCreateSheetFast(ss, '會議類別清單');
+  const vals = s.getDataRange().getDisplayValues();
+  for (let i = 1; i < vals.length; i++) {
+    if (vals[i][0] === name) {
+      s.deleteRow(i + 1);
+      SpreadsheetApp.flush();
+      return { success: true, message: `已成功刪除會議類別【${name}】！` };
+    }
+  }
+  throw new Error(`找不到欲刪除的會議類別「${name}」。`);
+}
+
+function saveMeetingRecord(d, p) {
+  const id = d.id || String(Date.now().toString().slice(-6));
+  const isPublicStr = (d.isPublic === true || d.isPublic === '是' || d.isPublic === 'true') ? '是' : '否';
+  const rowData = [
+    id,
+    d.dateTime || '',
+    d.category || '晨會',
+    d.location || '',
+    d.chairperson || '',
+    d.recorder || '',
+    d.attendees || '',
+    d.content || '',
+    isPublicStr,
+    d.other || '',
+    getNowTimestamp()
+  ];
+  return saveRowGeneral('會議記錄', d.id, rowData, p);
+}
+
+function deleteMeetingRecord(id, p) {
+  return deleteRowGeneral('會議記錄', id, p);
+}
+
+// -------------------------------------------------------------
+// 9. 自訂工作表擴充管理
+// -------------------------------------------------------------
 function createCustomSheet(d, p) {
   verifyAdmin(p);
   const sheetName = String(d.sheetName || '').trim();
@@ -856,14 +971,12 @@ function createCustomSheet(d, p) {
     throw new Error(`名為「${sheetName}」的工作表已經存在，請更換名稱！`);
   }
 
-  // 1. 建立實體工作表
   const newSheet = ss.insertSheet(sheetName);
   const cols = ['ID', ...columnsStr.split(',').map(s => s.trim()).filter(Boolean), '登錄時間'];
   newSheet.getRange(1, 1, 1, cols.length).setValues([cols]);
   newSheet.getRange(1, 1, 1, cols.length).setBackground('#1e293b').setFontColor('#ffffff').setFontWeight('bold');
   newSheet.setFrozenRows(1);
 
-  // 2. 登記在「自訂工作表清單」
   const metaSheet = getOrCreateSheetFast(ss, '自訂工作表清單');
   metaSheet.appendRow([sheetName, displayTitle, cols.slice(1, -1).join(','), d.note || '', getNowTimestamp()]);
   SpreadsheetApp.flush();
@@ -877,7 +990,6 @@ function deleteCustomSheet(sheetName, p) {
   if (!name) throw new Error('工作表名稱不能為空！');
   const ss = getSpreadsheet();
 
-  // 1. 自「自訂工作表清單」移除紀錄
   const metaSheet = getOrCreateSheetFast(ss, '自訂工作表清單');
   const vals = metaSheet.getDataRange().getDisplayValues();
   for (let i = 1; i < vals.length; i++) {
@@ -887,7 +999,6 @@ function deleteCustomSheet(sheetName, p) {
     }
   }
 
-  // 2. 刪除 Google 試算表實體分頁
   const targetSheet = ss.getSheetByName(name);
   if (targetSheet) {
     if (ss.getSheets().length > 1) {
@@ -938,7 +1049,9 @@ function deleteCustomSheetRow(sheetName, id, p) {
   return deleteRowGeneral(sheetName, id, p);
 }
 
-// 9. 系統設定儲存
+// -------------------------------------------------------------
+// 10. 系統設定儲存 (含會議記錄前台開關)
+// -------------------------------------------------------------
 function saveSystemSettings(sObj, p) {
   verifyAdmin(p);
   const ss = getSpreadsheet();
@@ -951,12 +1064,13 @@ function saveSystemSettings(sObj, p) {
     ['設定項目', '設定值', '說明', '更新時間'],
     ['theme', String(sObj.theme || 'ocean'), '布景主題 (ocean/forest/sunset/lavender/rose/slate)', now],
     ['school_title', String(sObj.school_title || '智慧校務行政整合系統'), '系統頂部抬頭名稱', now],
-    ['school_subtitle', String(sObj.school_subtitle || '行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網'), '頂部副標題', now],
+    ['school_subtitle', String(sObj.school_subtitle || '行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網 · 會議記錄'), '頂部副標題', now],
     ['show_announcements', isBoolTrue(sObj.show_announcements) ? 'true' : 'false', '行政公告模組顯示狀態', now],
     ['show_training', isBoolTrue(sObj.show_training) ? 'true' : 'false', '研習派代模組顯示狀態', now],
     ['show_chronicle', isBoolTrue(sObj.show_chronicle) ? 'true' : 'false', '校園大事紀顯示狀態', now],
     ['show_honors', isBoolTrue(sObj.show_honors) ? 'true' : 'false', '師生榮譽榜顯示狀態', now],
     ['show_links', isBoolTrue(sObj.show_links) ? 'true' : 'false', '處室常用網顯示狀態', now],
+    ['show_meetings', isBoolTrue(sObj.show_meetings) ? 'true' : 'false', '會議記錄模組顯示狀態', now],
     ['show_custom', isBoolTrue(sObj.show_custom) ? 'true' : 'false', '自訂擴充工作表顯示狀態', now]
   ];
 
@@ -975,7 +1089,7 @@ function saveSystemSettings(sObj, p) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>智慧校務行政整合系統</title>
+  <title>校務行政整合系統</title>
   <!-- 載入 Tailwind CSS 最新瀏覽器引擎 -->
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"><\/script>
   <style>
@@ -1086,7 +1200,7 @@ function saveSystemSettings(sObj, p) {
             智慧校務行政整合系統
           </h1>
           <p id="headerSubtitle" class="text-xs text-slate-500">
-            行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網
+            行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網 · 會議記錄
           </p>
         </div>
       </div>
@@ -1117,13 +1231,19 @@ function saveSystemSettings(sObj, p) {
       </div>
     </div>
 
-    <!-- 模組功能分頁選單 (含訪客隱藏提示徽章) -->
+    <!-- 模組功能分頁選單 -->
     <nav
       class="max-w-7xl mx-auto px-4 sm:px-6 flex gap-1 sm:gap-6 overflow-x-auto text-sm border-t border-slate-100 scrollbar-none">
       <button onclick="switchTab('announcements')" id="tab-announcements"
         class="py-3 px-2.5 whitespace-nowrap tab-active transition-colors flex items-center gap-1.5 cursor-pointer">
         <span>📢 行政公告</span>
         <span id="badge-announcements-hidden"
+          class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
+      </button>
+      <button onclick="switchTab('meetings')" id="tab-meetings"
+        class="py-3 px-2.5 whitespace-nowrap text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer">
+        <span>📋 會議記錄</span>
+        <span id="badge-meetings-hidden"
           class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
       </button>
       <button onclick="switchTab('training')" id="tab-training"
@@ -1180,7 +1300,7 @@ function saveSystemSettings(sObj, p) {
       <div id="searchResultList" class="space-y-3"></div>
     </div>
 
-    <!-- 1. 行政公告模組 -->
+    <!-- ==================== 1. 行政公告模組 ==================== -->
     <section id="view-announcements" class="hidden space-y-5">
       <div id="banner-announcements-hidden"
         class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
@@ -1193,7 +1313,7 @@ function saveSystemSettings(sObj, p) {
           <span class="text-xs font-bold text-slate-500 mr-1">發布處室：</span>
           <div id="officeFilterChips" class="flex gap-1.5 flex-wrap"></div>
         </div>
-        <!-- 管理按鈕 (新增/管理處室、發布公告) -->
+        <!-- 管理按鈕 -->
         <div class="flex items-center gap-2">
           <button id="adminManageOfficeBtn" onclick="openOfficeManageModal()"
             class="hidden text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2 rounded-xl border border-slate-300 cursor-pointer">
@@ -1208,7 +1328,35 @@ function saveSystemSettings(sObj, p) {
       <div id="announcementsList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </section>
 
-    <!-- 2. 研習派代系統 -->
+    <!-- ==================== 2. 會議記錄模組 ==================== -->
+    <section id="view-meetings" class="hidden space-y-5">
+      <div id="banner-meetings-hidden"
+        class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
+        ⚠️ 本模組目前設定為「對訪客隱藏」。訪客無法在主選單看見此分頁，僅校務管理人員可見。
+      </div>
+      <div
+        class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <!-- 會議類別快速切換標籤 (Chips) -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs font-bold text-slate-500 mr-1">會議類別：</span>
+          <div id="meetingCategoryFilterChips" class="flex gap-1.5 flex-wrap"></div>
+        </div>
+        <!-- 管理按鈕 -->
+        <div class="flex items-center gap-2">
+          <button id="adminManageMeetingCatBtn" onclick="openMeetingCatManageModal()"
+            class="hidden text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2 rounded-xl border border-slate-300 cursor-pointer">
+            🏷️ 會議類別管理 (新增/刪除)
+          </button>
+          <button id="adminAddMeetingBtn" onclick="openMeetingModal()"
+            class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
+            📋 登錄會議記錄
+          </button>
+        </div>
+      </div>
+      <div id="meetingsList" class="space-y-4"></div>
+    </section>
+
+    <!-- ==================== 3. 研習派代系統 ==================== -->
     <section id="view-training" class="hidden space-y-4">
       <div id="banner-training-hidden"
         class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
@@ -1252,7 +1400,7 @@ function saveSystemSettings(sObj, p) {
       </div>
     </section>
 
-    <!-- 3. 校園大事紀 -->
+    <!-- ==================== 4. 校園大事紀 ==================== -->
     <section id="view-chronicle" class="hidden space-y-4">
       <div id="banner-chronicle-hidden"
         class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
@@ -1272,7 +1420,7 @@ function saveSystemSettings(sObj, p) {
       <div id="chronicleTimeline" class="space-y-4"></div>
     </section>
 
-    <!-- 4. 師生榮譽榜 -->
+    <!-- ==================== 5. 師生榮譽榜 ==================== -->
     <section id="view-honors" class="hidden space-y-4">
       <div id="banner-honors-hidden"
         class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
@@ -1295,7 +1443,7 @@ function saveSystemSettings(sObj, p) {
       <div id="honorsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </section>
 
-    <!-- 5. 各處室常用網 (業務交接專區) -->
+    <!-- ==================== 6. 各處室常用網 ==================== -->
     <section id="view-links" class="hidden space-y-4">
       <div id="banner-links-hidden"
         class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
@@ -1315,7 +1463,7 @@ function saveSystemSettings(sObj, p) {
       <div id="linksContainer" class="space-y-6"></div>
     </section>
 
-    <!-- 6. 自訂工作表擴充專區 -->
+    <!-- ==================== 7. 自訂工作表擴充專區 ==================== -->
     <section id="view-custom" class="hidden space-y-4">
       <div id="banner-custom-hidden"
         class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
@@ -1348,7 +1496,7 @@ function saveSystemSettings(sObj, p) {
     </section>
   </main>
 
-  <!-- 模態對話盒 (Modals) -->
+  <!-- ==================== 模態對話盒 (Modals) ==================== -->
 
   <!-- 1. 管理員登入 Modal -->
   <div id="loginModal"
@@ -1410,6 +1558,8 @@ function saveSystemSettings(sObj, p) {
           <div class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
             <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📢 行政公告</span><input
                 type="checkbox" id="set_show_announcements" class="w-4 h-4"></label>
+            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📋 會議記錄</span><input
+                type="checkbox" id="set_show_meetings" class="w-4 h-4"></label>
             <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📝
                 研習派代系統</span><input type="checkbox" id="set_show_training" class="w-4 h-4"></label>
             <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📜
@@ -1438,23 +1588,20 @@ function saveSystemSettings(sObj, p) {
     <div
       class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
       <h3 class="text-base font-bold text-slate-900 mb-1">🏢 行政處室與組別管理</h3>
-      <p class="text-xs text-slate-500 mb-4">管理公告發布及常用網站所使用的處室清單，支援刪除與新增。</p>
-
+      <p class="text-xs text-slate-500 mb-4">管理公告發布及常用網站所使用的處室清單。</p>
       <div class="mb-4">
         <label class="block text-xs font-bold text-slate-700 mb-2">現存處室清單：</label>
         <div id="existingOfficesList" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
       </div>
-
       <div class="border-t border-slate-200 pt-4 space-y-3">
         <label class="block text-xs font-bold text-slate-700">➕ 新增行政處室或組別</label>
         <div class="flex gap-2">
-          <input type="text" id="newOfficeInput" placeholder="例如：圖書館、實習處、研發處"
+          <input type="text" id="newOfficeInput" placeholder="例如：圖書館、實習處"
             class="flex-1 px-3 py-2 text-sm border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
           <button onclick="submitNewOffice()"
             class="text-xs font-semibold px-4 py-2 rounded-xl text-white theme-bg whitespace-nowrap cursor-pointer">確定新增</button>
         </div>
       </div>
-
       <div class="flex justify-end gap-2 mt-6">
         <button onclick="closeModal('officeManageModal')"
           class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">關閉</button>
@@ -1462,7 +1609,109 @@ function saveSystemSettings(sObj, p) {
     </div>
   </div>
 
-  <!-- 4. 新增教師名冊 Modal -->
+  <!-- 4. 會議類別自訂管理 Modal -->
+  <div id="meetingCatManageModal"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div
+      class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <h3 class="text-base font-bold text-slate-900 mb-1">🏷️ 會議類別清單自訂管理</h3>
+      <p class="text-xs text-slate-500 mb-4">管理會議記錄的分類標籤，支援線上新增自訂類別與刪除。</p>
+      <div class="mb-4">
+        <label class="block text-xs font-bold text-slate-700 mb-2">現有會議類別：</label>
+        <div id="existingMeetingCatsList" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+      </div>
+      <div class="border-t border-slate-200 pt-4 space-y-3">
+        <label class="block text-xs font-bold text-slate-700">➕ 新增會議類別</label>
+        <div class="flex gap-2">
+          <input type="text" id="newMeetingCatInput" placeholder="例如：領域教學研究會、校務會議、導師會報"
+            class="flex-1 px-3 py-2 text-sm border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+          <button onclick="submitNewMeetingCategory()"
+            class="text-xs font-semibold px-4 py-2 rounded-xl text-white theme-bg whitespace-nowrap cursor-pointer">新增類別</button>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-6">
+        <button onclick="closeModal('meetingCatManageModal')"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 會議記錄編輯 Modal -->
+  <div id="meetingModal"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div
+      class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <h3 class="text-base font-bold text-slate-900 mb-3" id="meetingModalTitle">登錄會議記錄</h3>
+      <input type="hidden" id="meetingId">
+      <div class="space-y-3 text-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">日期時間</label>
+            <input type="text" id="meetingDateTime" placeholder="例如：2026-09-04 08:30"
+              class="w-full px-3 py-2 border rounded-xl">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">會議類別</label>
+            <select id="meetingCategorySelect" class="w-full px-3 py-2 border rounded-xl"></select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">會議地點</label>
+            <input type="text" id="meetingLocation" placeholder="例如：二樓會議室、校長室"
+              class="w-full px-3 py-2 border rounded-xl">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">主席</label>
+            <input type="text" id="meetingChairperson" placeholder="例如：校長、教導主任"
+              class="w-full px-3 py-2 border rounded-xl">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">紀錄者</label>
+            <input type="text" id="meetingRecorder" placeholder="例如：教務組長、陳雅婷"
+              class="w-full px-3 py-2 border rounded-xl">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">出席人員</label>
+          <input type="text" id="meetingAttendees" placeholder="例如：全體教職員工、各處室主任與組長"
+            class="w-full px-3 py-2 border rounded-xl">
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">會議內容 (主席報告、處室報告、提案討論、決議)</label>
+          <textarea id="meetingContent" rows="6" placeholder="請詳細填寫會議報告、各處室宣導事項、討論案決議內容..."
+            class="w-full px-3 py-2 border rounded-xl leading-relaxed"></textarea>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">其他 (備註、列管追蹤、附件說明等)</label>
+          <input type="text" id="meetingOther" placeholder="例如：各組請於下週前提送相關書面資料備查"
+            class="w-full px-3 py-2 border rounded-xl">
+        </div>
+
+        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" id="meetingIsPublic" class="w-4 h-4 text-blue-600 rounded">
+            <div>
+              <span class="text-xs font-bold text-slate-800">🌐 設為公開會議紀錄</span>
+              <p class="text-[11px] text-slate-500">※ 若勾選，訪客即可在主選單查看本篇會議記錄；若不勾選，則僅管理人員可見。</p>
+            </div>
+          </label>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-5">
+        <button onclick="closeModal('meetingModal')"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitMeeting()"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. 新增教師名冊 Modal -->
   <div id="addTeacherModal"
     class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200">
@@ -1493,7 +1742,7 @@ function saveSystemSettings(sObj, p) {
     </div>
   </div>
 
-  <!-- 5. 行政公告編輯 Modal -->
+  <!-- 7. 行政公告編輯 Modal -->
   <div id="announceModal"
     class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div
@@ -1532,7 +1781,7 @@ function saveSystemSettings(sObj, p) {
     </div>
   </div>
 
-  <!-- 6. 研習派代編輯 Modal -->
+  <!-- 8. 研習派代編輯 Modal -->
   <div id="trainingModal"
     class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div
@@ -1593,7 +1842,7 @@ function saveSystemSettings(sObj, p) {
     </div>
   </div>
 
-  <!-- 7. 校園大事紀編輯 Modal -->
+  <!-- 9. 校園大事紀編輯 Modal -->
   <div id="chronicleModal"
     class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div
@@ -1640,7 +1889,7 @@ function saveSystemSettings(sObj, p) {
     </div>
   </div>
 
-  <!-- 8. 師生榮譽榜 Modal -->
+  <!-- 10. 師生榮譽榜 Modal -->
   <div id="honorModal"
     class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200">
@@ -1690,7 +1939,7 @@ function saveSystemSettings(sObj, p) {
     </div>
   </div>
 
-  <!-- 9. 處室常用網 Modal -->
+  <!-- 11. 處室常用網 Modal -->
   <div id="linkModal"
     class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200">
@@ -1729,15 +1978,15 @@ function saveSystemSettings(sObj, p) {
     </div>
   </div>
 
-  <!-- 10. 建立自訂工作表 Modal -->
+  <!-- 12. 建立自訂工作表 Modal -->
   <div id="createSheetModal"
     class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200">
       <h3 class="text-base font-bold text-slate-900 mb-2">📄 建立全新自訂工作表</h3>
-      <p class="text-xs text-slate-500 mb-4">系統將自動於後端試算表建立新分頁，並立即在前台生成管理介面。</p>
+      <p class="text-xs text-slate-500 mb-4">系統將自動於後端試算表建立新分頁，並立即生成管理介面。</p>
       <div class="space-y-3 text-sm">
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">工作表名稱 (試算表分頁名)</label>
+          <label class="block text-xs font-bold text-slate-700 mb-1">工作表名稱 (分頁名)</label>
           <input type="text" id="newCustomSheetName" placeholder="例如：設備維修登記表"
             class="w-full px-3 py-2 border rounded-xl">
         </div>
@@ -1747,10 +1996,9 @@ function saveSystemSettings(sObj, p) {
             class="w-full px-3 py-2 border rounded-xl">
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">自訂欄位清單 (以逗號分隔)</label>
+          <label class="block text-xs font-bold text-slate-700 mb-1">自訂欄位清單 (逗號分隔)</label>
           <input type="text" id="newCustomSheetCols" placeholder="例如：報修日期, 處室地點, 損壞狀況, 申請人, 處理進度"
             class="w-full px-3 py-2 border rounded-xl">
-          <p class="text-[11px] text-slate-400 mt-1">※ 系統會自動為您追加 ID 與登錄時間欄位。</p>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">備註說明</label>
@@ -1767,7 +2015,7 @@ function saveSystemSettings(sObj, p) {
     </div>
   </div>
 
-  <!-- 11. 自訂工作表資料列填寫 Modal -->
+  <!-- 13. 自訂工作表資料列填寫 Modal -->
   <div id="customRowModal"
     class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div
@@ -1785,9 +2033,9 @@ function saveSystemSettings(sObj, p) {
     </div>
   </div>
 
-  <!-- 12. 系統通知與確認訊息 Modal -->
+  <!-- 14. 系統通知與確認訊息 Modal -->
   <div id="msgModal"
-    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-60 hidden">
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-center">
       <div id="msgModalIcon" class="text-3xl mb-2">🔔</div>
       <h4 id="msgModalTitle" class="text-sm font-bold text-slate-900 mb-1.5">系統訊息</h4>
@@ -1800,7 +2048,7 @@ function saveSystemSettings(sObj, p) {
     </div>
   </div>
 
-  <!-- 前端核心程式邏輯 -->
+  <!-- ==================== 前端應用程式邏輯 ==================== -->
   <script>
     let schoolData = null;
     let isAdmin = false;
@@ -1808,9 +2056,11 @@ function saveSystemSettings(sObj, p) {
     let currentActiveTab = 'announcements';
     let selectedThemeKey = 'ocean';
     let currentOfficeFilter = 'all';
+    let currentMeetingCategoryFilter = 'all';
     let currentHonorFilter = 'all';
     let selectedCustomSheetKey = '';
 
+    /* 自訂通知視窗工具 */
     function showNotice(title, message, icon = 'ℹ️') {
       document.getElementById('msgModalIcon').innerText = icon;
       document.getElementById('msgModalTitle').innerText = title;
@@ -1821,6 +2071,7 @@ function saveSystemSettings(sObj, p) {
       document.getElementById('msgModal').classList.remove('hidden');
     }
 
+    /* 自訂確認視窗工具 */
     function showConfirmDialog(title, message, onConfirm, icon = '❓') {
       document.getElementById('msgModalIcon').innerText = icon;
       document.getElementById('msgModalTitle').innerText = title;
@@ -1856,7 +2107,7 @@ function saveSystemSettings(sObj, p) {
           })
           .withFailureHandler(function (err) {
             loader.classList.add('hidden');
-            showNotice('連線雲端異常', '連線雲端資料庫時發生錯誤：\n' + err.message + '\n\n請確認試算表 ID 設定與共用存取權限。', '⚠️');
+            showNotice('連線雲端異常', '連線雲端資料庫時發生錯誤：\n' + err.message, '⚠️');
           })
           .getAllSchoolData();
       } else {
@@ -1872,7 +2123,7 @@ function saveSystemSettings(sObj, p) {
       schoolData = res;
       if (res.settings) {
         document.getElementById('headerTitle').innerText = res.settings.school_title || '智慧校務行政整合系統';
-        document.getElementById('headerSubtitle').innerText = res.settings.school_subtitle || '行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網';
+        document.getElementById('headerSubtitle').innerText = res.settings.school_subtitle || '行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網 · 會議記錄';
         applyTheme(res.settings.theme || 'ocean');
       }
       populateSelectOptions();
@@ -1901,6 +2152,7 @@ function saveSystemSettings(sObj, p) {
       if (!schoolData) return;
       const offices = schoolData.offices || [];
       const teachers = schoolData.teachers || [];
+      const meetingCats = schoolData.meetingCategories || ['晨會', '行政會議', '其它'];
 
       const annSel = document.getElementById('annOfficeSelect');
       annSel.innerHTML = offices.map(o => `<option value="${o}">${o}</option>`).join('');
@@ -1913,12 +2165,16 @@ function saveSystemSettings(sObj, p) {
       const teacherOpts = teachers.map(t => `<option value="${t['教師姓名']}">${t['教師姓名']} (${t['身分職稱'] || '同仁'})</option>`).join('');
       tSel.innerHTML = teacherOpts;
       subSel.innerHTML = `<option value="無派代">無派代 (無課務)</option>` + teacherOpts;
+
+      const meetCatSel = document.getElementById('meetingCategorySelect');
+      meetCatSel.innerHTML = meetingCats.map(c => `<option value="${c}">${c}</option>`).join('');
     }
 
     function updateModuleVisibility() {
       const s = (schoolData && schoolData.settings) ? schoolData.settings : {};
       const modules = [
         { key: 'announcements', show: (s.show_announcements !== false && s.show_announcements !== 'false') },
+        { key: 'meetings', show: (s.show_meetings !== false && s.show_meetings !== 'false') },
         { key: 'training', show: (s.show_training !== false && s.show_training !== 'false') },
         { key: 'chronicle', show: (s.show_chronicle !== false && s.show_chronicle !== 'false') },
         { key: 'honors', show: (s.show_honors !== false && s.show_honors !== 'false') },
@@ -1968,10 +2224,10 @@ function saveSystemSettings(sObj, p) {
       const authBtn = document.getElementById('authBtn');
       const setBtn = document.getElementById('systemSettingsBtn');
       const btns = [
-        'adminAddAnnounceBtn', 'adminManageOfficeBtn', 'adminAddTeacherBtn',
-        'adminAddTrainingBtn', 'adminAddChronicleBtn', 'adminAddHonorBtn',
-        'adminAddLinkBtn', 'adminCreateSheetBtn', 'adminAddCustomRowBtn',
-        'adminDeleteSheetBtn'
+        'adminAddAnnounceBtn', 'adminManageOfficeBtn', 'adminAddMeetingBtn',
+        'adminManageMeetingCatBtn', 'adminAddTeacherBtn', 'adminAddTrainingBtn',
+        'adminAddChronicleBtn', 'adminAddHonorBtn', 'adminAddLinkBtn',
+        'adminCreateSheetBtn', 'adminAddCustomRowBtn', 'adminDeleteSheetBtn'
       ];
 
       if (isAdmin) {
@@ -2017,13 +2273,14 @@ function saveSystemSettings(sObj, p) {
       closeModal('loginModal');
       document.getElementById('passwordInput').value = '';
       updateAdminUI();
-      showNotice('登入成功', '已啟用行政管理模式，您現在可新增、編輯、刪除各模組項目與處室。', '🎉');
+      showNotice('登入成功', '已啟用行政管理模式，您現在可新增、編輯、刪除各模組項目與會議記錄。', '🎉');
     }
 
     function switchTab(tabId) {
       currentActiveTab = tabId;
-      ['announcements', 'training', 'chronicle', 'honors', 'links', 'custom'].forEach(t => {
-        document.getElementById(`view-${t}`).classList.add('hidden');
+      ['announcements', 'meetings', 'training', 'chronicle', 'honors', 'links', 'custom'].forEach(t => {
+        const viewEl = document.getElementById(`view-${t}`);
+        if (viewEl) viewEl.classList.add('hidden');
         const tabEl = document.getElementById(`tab-${t}`);
         if (tabEl) {
           tabEl.classList.remove('tab-active');
@@ -2041,6 +2298,7 @@ function saveSystemSettings(sObj, p) {
 
     function renderAllModules() {
       renderAnnouncements();
+      renderMeetings();
       renderTraining();
       renderChronicle();
       renderHonors();
@@ -2101,6 +2359,84 @@ function saveSystemSettings(sObj, p) {
             <p class="text-xs sm:text-sm text-slate-600 whitespace-pre-line leading-relaxed">${a['詳細內容']}</p>
           </div>
           ${linkHtml}`;
+        container.appendChild(card);
+      });
+    }
+
+    function renderMeetings(filter = currentMeetingCategoryFilter) {
+      currentMeetingCategoryFilter = filter;
+      const chipContainer = document.getElementById('meetingCategoryFilterChips');
+      const cats = (schoolData && schoolData.meetingCategories) ? schoolData.meetingCategories : ['晨會', '行政會議', '其它'];
+      const rawList = (schoolData && schoolData.meetings) ? schoolData.meetings : [];
+
+      const list = isAdmin ? rawList : rawList.filter(m => (m['公開'] === '是' || m['公開'] === 'true' || m['公開'] === true));
+
+      chipContainer.innerHTML = '';
+      const allCategories = ['全部類別', ...cats];
+      allCategories.forEach(cat => {
+        const isAct = (filter === 'all' && cat === '全部類別') || filter === cat;
+        const btn = document.createElement('button');
+        btn.className = isAct
+          ? 'theme-bg text-white px-3 py-1 rounded-lg font-bold transition-all shadow-xs cursor-pointer'
+          : 'bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1 rounded-lg font-medium transition-all cursor-pointer';
+        btn.innerText = cat;
+        btn.onclick = () => renderMeetings(cat === '全部類別' ? 'all' : cat);
+        chipContainer.appendChild(btn);
+      });
+
+      const container = document.getElementById('meetingsList');
+      container.innerHTML = '';
+      let filtered = (filter === 'all') ? list : list.filter(m => m['會議類別'] === filter);
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<p class="text-center text-slate-400 text-sm py-12">目前尚無此類別的會議記錄或對外公開項目。</p>';
+        return;
+      }
+
+      filtered.forEach(m => {
+        const card = document.createElement('div');
+        const isPublic = (m['公開'] === '是' || m['公開'] === 'true' || m['公開'] === true);
+        card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3.5 hover:border-slate-300 transition-colors";
+
+        let adminActions = isAdmin ? `
+          <div class="flex items-center gap-2">
+            <button onclick="editMeeting('${m['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button>
+            <button onclick="deleteMeeting('${m['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
+          </div>` : '';
+
+        let publicBadge = isPublic
+          ? '<span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold px-2 py-0.5 rounded-md">🌐 公開</span>'
+          : '<span class="text-[10px] bg-amber-50 text-amber-800 border border-amber-200 font-bold px-2 py-0.5 rounded-md">🔒 內部會議</span>';
+
+        let otherSection = m['其他'] ? `
+          <div class="text-xs bg-slate-50 text-slate-600 p-3 rounded-xl border border-slate-100 leading-relaxed">
+            <strong class="text-slate-800">📌 備註與後續追蹤：</strong>${m['其他']}
+          </div>` : '';
+
+        card.innerHTML = `
+          <div class="flex justify-between items-start gap-2 flex-wrap border-b border-slate-100 pb-3">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs font-bold theme-soft-bg theme-text px-2.5 py-1 rounded-lg border theme-border">${m['會議類別'] || '會議'}</span>
+              <span class="text-xs font-bold text-slate-700 font-mono">📅 ${m['日期時間'] || '未設定時間'}</span>
+              <span class="text-xs text-slate-500">📍 ${m['地點'] || '校內'}</span>
+              ${publicBadge}
+            </div>
+            ${adminActions}
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50/70 p-3 rounded-xl text-xs text-slate-700">
+            <div><span class="text-slate-400">主席：</span><strong class="text-slate-900">${m['主席'] || '-'}</strong></div>
+            <div><span class="text-slate-400">紀錄者：</span><strong class="text-slate-900">${m['紀錄者'] || '-'}</strong></div>
+            <div><span class="text-slate-400">出席人員：</span><span>${m['出席人員'] || '-'}</span></div>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">會議重要內容與決議事項</h4>
+            <div class="text-xs sm:text-sm text-slate-800 whitespace-pre-line leading-relaxed bg-white rounded-xl p-1">${m['會議內容'] || '無詳細內容記載'}</div>
+          </div>
+
+          ${otherSection}
+        `;
         container.appendChild(card);
       });
     }
@@ -2388,6 +2724,21 @@ function saveSystemSettings(sObj, p) {
         }
       });
 
+      (schoolData.meetings || []).forEach(m => {
+        const isPub = (m['公開'] === '是' || m['公開'] === 'true' || m['公開'] === true);
+        if (!isAdmin && !isPub) return;
+        const text = `${m['會議類別']} ${m['地點']} ${m['主席']} ${m['紀錄者']} ${m['出席人員']} ${m['會議內容']} ${m['其他']}`.toLowerCase();
+        if (text.includes(q)) {
+          matches.push({
+            type: '會議記錄',
+            icon: '📋',
+            title: `[${m['會議類別']}] ${m['日期時間']} (${m['地點'] || '校內'})`,
+            desc: `主席：${m['主席']} | 內容：${m['會議內容']}`,
+            action: () => { switchTab('meetings'); clearSearch(); }
+          });
+        }
+      });
+
       (schoolData.training || []).forEach(t => {
         const text = `${t['研習教師']} ${t['研習名稱']} ${t['研習地點']} ${t['職務代理人']}`.toLowerCase();
         if (text.includes(q)) {
@@ -2441,6 +2792,115 @@ function saveSystemSettings(sObj, p) {
       document.getElementById('searchResultView').classList.add('hidden');
     }
 
+    function openMeetingCatManageModal() {
+      renderMeetingCategoryManageList();
+      document.getElementById('newMeetingCatInput').value = '';
+      document.getElementById('meetingCatManageModal').classList.remove('hidden');
+    }
+
+    function renderMeetingCategoryManageList() {
+      const container = document.getElementById('existingMeetingCatsList');
+      container.innerHTML = '';
+      const cats = (schoolData && schoolData.meetingCategories) ? schoolData.meetingCategories : ['晨會', '行政會議', '其它'];
+
+      cats.forEach(catName => {
+        const div = document.createElement('div');
+        div.className = "flex justify-between items-center bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 text-xs";
+        div.innerHTML = `
+          <span class="font-bold text-slate-800">🏷️ ${catName}</span>
+          <button onclick="deleteMeetingCategoryAction('${catName}')" class="text-red-500 hover:text-red-700 font-semibold px-2 py-1 rounded hover:bg-red-50 transition-colors cursor-pointer">
+            🗑️ 刪除類別
+          </button>`;
+        container.appendChild(div);
+      });
+    }
+
+    function submitNewMeetingCategory() {
+      const name = document.getElementById('newMeetingCatInput').value.trim();
+      if (!name) return showNotice('提示', '請輸入會議類別名稱！', '⚠️');
+      callBackend('addMeetingCategory', [name, adminPassword], function (res) {
+        showNotice('成功', res.message, '✅');
+        document.getElementById('newMeetingCatInput').value = '';
+        loadAllData();
+        setTimeout(renderMeetingCategoryManageList, 600);
+      });
+    }
+
+    function deleteMeetingCategoryAction(name) {
+      showConfirmDialog('確認刪除類別', `確定要刪除會議類別【${name}】嗎？`, () => {
+        callBackend('deleteMeetingCategory', [name, adminPassword], function (res) {
+          showNotice('刪除成功', res.message, '🗑️');
+          loadAllData();
+          setTimeout(renderMeetingCategoryManageList, 600);
+        });
+      });
+    }
+
+    function openMeetingModal() {
+      document.getElementById('meetingModalTitle').innerText = '登錄會議記錄';
+      document.getElementById('meetingId').value = '';
+      document.getElementById('meetingDateTime').value = new Date().toISOString().slice(0, 10) + ' 08:30';
+      document.getElementById('meetingLocation').value = '';
+      document.getElementById('meetingChairperson').value = '';
+      document.getElementById('meetingRecorder').value = '';
+      document.getElementById('meetingAttendees').value = '';
+      document.getElementById('meetingContent').value = '';
+      document.getElementById('meetingOther').value = '';
+      document.getElementById('meetingIsPublic').checked = true;
+      document.getElementById('meetingModal').classList.remove('hidden');
+    }
+
+    function editMeeting(id) {
+      const item = (schoolData.meetings || []).find(m => String(m['ID']) === String(id));
+      if (!item) return;
+      document.getElementById('meetingModalTitle').innerText = '編輯會議記錄';
+      document.getElementById('meetingId').value = item['ID'];
+      document.getElementById('meetingDateTime').value = item['日期時間'] || '';
+      document.getElementById('meetingCategorySelect').value = item['會議類別'] || '晨會';
+      document.getElementById('meetingLocation').value = item['地點'] || '';
+      document.getElementById('meetingChairperson').value = item['主席'] || '';
+      document.getElementById('meetingRecorder').value = item['紀錄者'] || '';
+      document.getElementById('meetingAttendees').value = item['出席人員'] || '';
+      document.getElementById('meetingContent').value = item['會議內容'] || '';
+      document.getElementById('meetingOther').value = item['其他'] || '';
+      document.getElementById('meetingIsPublic').checked = (item['公開'] === '是' || item['公開'] === 'true' || item['公開'] === true);
+      document.getElementById('meetingModal').classList.remove('hidden');
+    }
+
+    function submitMeeting() {
+      const payload = {
+        id: document.getElementById('meetingId').value,
+        dateTime: document.getElementById('meetingDateTime').value.trim(),
+        category: document.getElementById('meetingCategorySelect').value,
+        location: document.getElementById('meetingLocation').value.trim(),
+        chairperson: document.getElementById('meetingChairperson').value.trim(),
+        recorder: document.getElementById('meetingRecorder').value.trim(),
+        attendees: document.getElementById('meetingAttendees').value.trim(),
+        content: document.getElementById('meetingContent').value.trim(),
+        other: document.getElementById('meetingOther').value.trim(),
+        isPublic: document.getElementById('meetingIsPublic').checked
+      };
+
+      if (!payload.dateTime || !payload.content) {
+        return showNotice('提示', '請填寫會議日期時間與會議內容！', '⚠️');
+      }
+
+      callBackend('saveMeetingRecord', [payload, adminPassword], function (res) {
+        closeModal('meetingModal');
+        showNotice('成功', res.message, '📋');
+        loadAllData();
+      });
+    }
+
+    function deleteMeeting(id) {
+      showConfirmDialog('確認刪除會議記錄', '確定要刪除這篇會議記錄嗎？', () => {
+        callBackend('deleteMeetingRecord', [id, adminPassword], function (res) {
+          showNotice('已刪除', res.message, '🗑️');
+          loadAllData();
+        });
+      });
+    }
+
     function openOfficeManageModal() {
       renderOfficeManageList();
       document.getElementById('newOfficeInput').value = '';
@@ -2451,11 +2911,6 @@ function saveSystemSettings(sObj, p) {
       const container = document.getElementById('existingOfficesList');
       container.innerHTML = '';
       const offices = (schoolData && schoolData.offices) ? schoolData.offices : [];
-
-      if (offices.length === 0) {
-        container.innerHTML = '<p class="text-slate-400 text-xs py-2">目前無處室資料。</p>';
-        return;
-      }
 
       offices.forEach(officeName => {
         const div = document.createElement('div');
@@ -2481,7 +2936,7 @@ function saveSystemSettings(sObj, p) {
     }
 
     function deleteOfficeCategoryAction(officeName) {
-      showConfirmDialog('確認刪除處室', `確定要刪除處室【${officeName}】嗎？刪除後該處室將不會出現在公告與常用網清單中。`, () => {
+      showConfirmDialog('確認刪除處室', `確定要刪除處室【${officeName}】嗎？`, () => {
         callBackend('deleteOfficeCategory', [officeName, adminPassword], function (res) {
           showNotice('刪除成功', res.message, '🗑️');
           loadAllData();
@@ -2794,9 +3249,7 @@ function saveSystemSettings(sObj, p) {
     function deleteCurrentCustomSheet() {
       const sheetsObj = (schoolData && schoolData.customSheets) ? schoolData.customSheets : {};
       const current = sheetsObj[selectedCustomSheetKey];
-      if (!selectedCustomSheetKey || !current) {
-        return showNotice('提示', '目前無可刪除的自訂工作表！', '⚠️');
-      }
+      if (!selectedCustomSheetKey || !current) return showNotice('提示', '目前無可刪除的自訂工作表！', '⚠️');
 
       const displayTitle = (current.meta && current.meta['中文標題']) || selectedCustomSheetKey;
       showConfirmDialog(
@@ -2868,6 +3321,7 @@ function saveSystemSettings(sObj, p) {
 
       const isTrue = (v) => (v !== false && v !== 'false');
       document.getElementById('set_show_announcements').checked = isTrue(s.show_announcements);
+      document.getElementById('set_show_meetings').checked = isTrue(s.show_meetings);
       document.getElementById('set_show_training').checked = isTrue(s.show_training);
       document.getElementById('set_show_chronicle').checked = isTrue(s.show_chronicle);
       document.getElementById('set_show_honors').checked = isTrue(s.show_honors);
@@ -2884,6 +3338,7 @@ function saveSystemSettings(sObj, p) {
         school_title: document.getElementById('set_school_title').value.trim(),
         school_subtitle: document.getElementById('set_school_subtitle').value.trim(),
         show_announcements: document.getElementById('set_show_announcements').checked,
+        show_meetings: document.getElementById('set_show_meetings').checked,
         show_training: document.getElementById('set_show_training').checked,
         show_chronicle: document.getElementById('set_show_chronicle').checked,
         show_honors: document.getElementById('set_show_honors').checked,
@@ -2933,8 +3388,9 @@ function saveSystemSettings(sObj, p) {
         settings: {
           theme: 'ocean',
           school_title: '智慧校務行政整合系統',
-          school_subtitle: '行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網',
+          school_subtitle: '行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網 · 會議記錄',
           show_announcements: true,
+          show_meetings: true,
           show_training: true,
           show_chronicle: true,
           show_honors: true,
@@ -2942,6 +3398,7 @@ function saveSystemSettings(sObj, p) {
           show_custom: true
         },
         offices: ['教導處', '總務處', '教務組', '學務組', '輔導室', '校長室'],
+        meetingCategories: ['晨會', '行政會議', '其它', '領域教學研究會'],
         teachers: [
           { '教師姓名': '林志遠', '身分職稱': '主任', '所屬處室': '教導處' },
           { '教師姓名': '陳雅婷', '身分職稱': '組長', '所屬處室': '教務組' },
@@ -2950,30 +3407,53 @@ function saveSystemSettings(sObj, p) {
           { '教師姓名': '李宗翰', '身分職稱': '教師', '所屬處室': '導師' }
         ],
         announcements: [
-          { 'ID': '1', '發布處室': '教導處', '公告標題': '115學年度第一學期開學初全校校務會議日程通知', '詳細內容': '請全體同仁於本週三下午13:30準時於三樓多功能視聽會議室出席。', '是否置頂': '是', '發布日期': '2026-09-01', '附件或連結': 'https://meet.google.com/' },
-          { 'ID': '2', '發布處室': '總務處', '公告標題': '各辦公室及專科教室節能用電與冷氣使用規範說明', '詳細內容': '配合節能減碳政策，室溫達28度始得開啟冷氣，下班離開請各組人員確實巡視電源關閉。', '是否置頂': '否', '發布日期': '2026-09-02' }
+          { 'ID': '1', '發布處室': '教導處', '公告標題': '115學年度第一學期開學初全校校務會議日程通知', '詳細內容': '請全體同仁於本週三下午13:30準時於三樓多功能視聽會議室出席。', '是否置頂': '是', '發布日期': '2026-09-01', '附件或連結': 'https://meet.google.com/' }
+        ],
+        meetings: [
+          {
+            'ID': '1',
+            '日期時間': '2026-09-02 08:00',
+            '會議類別': '晨會',
+            '地點': '教導處辦公室',
+            '主席': '校長',
+            '紀錄者': '陳雅婷',
+            '出席人員': '全體教職員工',
+            '會議內容': '1. 請各班導師提醒學生注意早秋換季氣候與日常衛生清潔。\n2. 總務處提醒各教室冷氣開啟規範，珍惜校園資源。\n3. 週三下午舉辦全校校務發展研習，請全員準時參與。',
+            '公開': '是',
+            '其他': '各組提案已彙整完畢'
+          },
+          {
+            'ID': '2',
+            '日期時間': '2026-09-03 13:30',
+            '會議類別': '行政會議',
+            '地點': '校長室會議室',
+            '主席': '校長',
+            '紀錄者': '林志遠',
+            '出席人員': '各處室主任、組長',
+            '會議內容': '1. 審定115學年度第一學期校事行事曆與各項重要活動排程。\n2. 研議智慧校園設備採購案預算編列與審查事宜。',
+            '公開': '是',
+            '其他': '請總務處於下週前提送設備規格清冊'
+          },
+          {
+            'ID': '3',
+            '日期時間': '2026-09-04 10:00',
+            '會議類別': '其它',
+            '地點': '輔導室個別諮商室',
+            '主席': '輔導主任',
+            '紀錄者': '張建華',
+            '出席人員': '輔導室全體同仁、認輔教師',
+            '會議內容': '專案輔導會議：針對開學初期高關懷與適應困難學生進行個案分析與支援網絡指派。',
+            '公開': '否',
+            '其他': '涉及學生個別隱私，本記錄僅供內部專業諮商參考'
+          }
         ],
         training: [
           { 'ID': '1', '身分職稱': '教師', '研習教師': '陳雅婷', '研習名稱': '教育部素養導向評量與命題實務工作坊', '研習地點': '國家教育研究院臺北院區', '職務代理人': '李宗翰', '研習日期時間': '2026-09-18 全日', '備註與派代差假': '公假排代（已陳核）' }
         ],
-        chronicle: [
-          { 'ID': '1', '發生時間': '民國五十八年三月', '主要人物': '小林登八夫婦、校友代表', '發生地點': '本校校史館前廣場', '關鍵事物或文物': '訪校留念照片與墨寶', '記事內容': '本校首任校長小林登八夫婦由日本返校訪問，全校師生夾道歡迎並合影留念。', '記錄人': '曾壬保' }
-        ],
-        honors: [
-          { 'ID': '1', '獲獎日期': '2026-06-20', '對象類別': '學生組', '競賽或榮譽名稱': '全國中小學科展環境科學組', '得獎人或班級': '六年甲班 吳念真', '名次或獎項': '特優第一名', '指導老師或主辦單位': '指導老師：李宗翰' }
-        ],
-        links: [
-          { 'ID': '1', '所屬處室': '總務處', '網站或系統名稱': '主計會計Web版帳務整合系統', '系統網址': 'https://example.gov.tw', '功能說明與交接備忘': '年度歲出歲入預算編列、核銷請款專用系統。', '帳號權限提醒': '交接請向主計主任申請新憑證' },
-          { 'ID': '2', '所屬處室': '教導處', '網站或系統名稱': '全誼校務行政資訊系統', '系統網址': 'https://example.edu.tw', '功能說明與交接備忘': '學籍異動、成績輸入、學生基本資料管理核心系統。', '帳號權限提醒': '開學前需指派新學年班級導師權限' }
-        ],
-        customSheets: {
-          '設備維修登記': {
-            meta: { '中文標題': '校園設備修繕登記', '欄位定義': '報修日期,處室地點,報修項目,狀況說明,報修人,維修進度', '說明備忘': '供同仁日常登記水電、門窗或各項硬體耗損' },
-            rows: [
-              { 'ID': '1', '報修日期': '2026-09-02', '處室地點': '教導處', '報修項目': '冷氣遙控器', '狀況說明': '顯示螢幕異常，無法開機', '報修人': '陳組長', '維修進度': '已報請廠商修繕' }
-            ]
-          }
-        }
+        chronicle: [],
+        honors: [],
+        links: [],
+        customSheets: {}
       };
     }
   <\/script>
@@ -2994,7 +3474,7 @@ function saveSystemSettings(sObj, p) {
       document.getElementById(id).classList.add('hidden');
     }
 
-    /* 終極安全剪貼簿複製引擎 (參照原版穩定雙重備援機制) */
+    /* 終極安全剪貼簿複製引擎 (雙重備援機制) */
     function safeCopyToClipboard(text, onSuccess, onError) {
       if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(text)
