@@ -1,0 +1,3114 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>校務行政整合系統 - 新手零基礎快速部署教學指南</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    .code-box { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .step-card { transition: all 0.2s ease-in-out; }
+    .step-card:hover { border-color: #2563eb; transform: translateY(-1px); }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
+
+  <!-- 頂部 Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <div class="max-w-6xl mx-auto px-4 py-3.5 flex flex-wrap justify-between items-center gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-blue-700 text-white flex items-center justify-center font-bold text-xl shadow-xs">🏛️</div>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold text-slate-900 leading-tight">校務行政整合系統 · 快速部署教學指南</h1>
+          <p class="text-xs text-slate-500">零基礎新手指南 · 5 分鐘完成 Google 試算表與 GAS 雲端校務入口網建置</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full border border-emerald-300">免主機 · 永久免費 · 高安全性</span>
+        <button onclick="window.scrollTo({top: document.getElementById('configGenerator').offsetTop - 80, behavior: 'smooth'})" class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-bold px-3.5 py-1.5 rounded-xl shadow-xs transition-colors cursor-pointer">
+          ⚡ 快速生成代碼
+        </button>
+      </div>
+    </div>
+
+    <!-- 步驟導覽列 -->
+    <nav class="max-w-6xl mx-auto px-4 flex gap-2 sm:gap-6 overflow-x-auto text-xs sm:text-sm border-t border-slate-100 py-2 scrollbar-none">
+      <a href="#step1" class="whitespace-nowrap text-slate-600 hover:text-blue-600 py-1 font-medium">1. 建立雲端資料庫</a>
+      <a href="#step2" class="whitespace-nowrap text-slate-600 hover:text-blue-600 py-1 font-medium">2. 配置後端 Code.gs</a>
+      <a href="#step3" class="whitespace-nowrap text-slate-600 hover:text-blue-600 py-1 font-medium">3. 建立前端 Index.html</a>
+      <a href="#step4" class="whitespace-nowrap text-slate-600 hover:text-blue-600 py-1 font-medium">4. 部署為 Web 應用程式</a>
+      <a href="#step5" class="whitespace-nowrap text-slate-600 hover:text-blue-600 py-1 font-medium">5. 初始化與校務管理</a>
+      <a href="#faq" class="whitespace-nowrap text-slate-600 hover:text-blue-600 py-1 font-medium">常見問題 FAQ</a>
+    </nav>
+  </header>
+
+  <!-- 主內容容器 -->
+  <main class="max-w-6xl mx-auto px-4 py-8 flex-1 w-full space-y-8">
+
+    <!-- 歡迎區與概覽 -->
+    <section class="bg-gradient-to-br from-blue-700 via-indigo-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-md">
+      <div class="max-w-4xl space-y-3">
+        <span class="inline-block bg-white/20 text-white text-xs px-3 py-1 rounded-full font-semibold backdrop-blur-xs">專為各級學校、處室主任、組長與行政同仁打造</span>
+        <h2 class="text-xl sm:text-2xl font-black">只需 5 分鐘，建立全校專屬的雲端校務行政整合中心</h2>
+        <p class="text-xs sm:text-sm text-blue-100 leading-relaxed">
+          整合<strong>行政處室公告、教職員研習差假派代、校園大事紀 (校史人事物)、師生榮譽榜、各處室常用系統與業務交接專區、線上動態自訂擴充工作表</strong>。
+          系統完全基於 Google 試算表與 Google Apps Script 運行，零伺服器維護成本，全校同仁與家長手機掃碼即可即時查閱！
+        </p>
+        <div class="pt-2 flex flex-wrap gap-2.5 text-xs">
+          <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>📱</span><span>電腦/平板/手機 RWD 響應自適應</span></div>
+          <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>🏢</span><span>行政處室動態增刪與分類篩選</span></div>
+          <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>🤝</span><span>新進同仁業務交接與系統導航</span></div>
+          <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>📊</span><span>線上直接擴充全新工作表</span></div>
+          <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>🎨</span><span>6 大公務主題色與訪客隱藏開關</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 互動式代碼自訂生成工具 -->
+    <section id="configGenerator" class="bg-white rounded-3xl p-6 sm:p-7 border border-blue-200 shadow-sm space-y-5">
+      <div class="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="text-2xl">⚡</span>
+          <div>
+            <h3 class="text-base font-bold text-slate-900">互動式程式碼自訂生成器 (推薦新手使用)</h3>
+            <p class="text-xs text-slate-500">輸入您的 Google 試算表網址與校務管理密鑰，系統會自動替換好設定，點擊即可一鍵複製完整程式碼！</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">1. 貼上您的 Google 試算表網址或 ID</label>
+          <input type="text" id="inputSheetUrl" oninput="updateConfig()" placeholder="https://docs.google.com/spreadsheets/d/1Xgy6NWf.../edit" 
+                 class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-xs">
+          <p class="text-[11px] text-slate-400 mt-1">💡 系統會自動解析出試算表 ID，亦支援從當前試算表擴充開啟（雙重相容備援機制）。</p>
+        </div>
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">2. 自訂校務管理密鑰 (登入密碼)</label>
+          <input type="text" id="inputPassword" oninput="updateConfig()" value="AdminSchool2026" placeholder="例如：MySchoolAdmin2026" 
+                 class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-xs">
+          <p class="text-[11px] text-slate-400 mt-1">💡 這是您在前台登入「校務管理員模式」新增公告、派代與自訂表單時的保護密碼。</p>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex flex-wrap justify-between items-center gap-3">
+        <div class="text-xs">
+          <span class="font-bold text-slate-700">目前設定之試算表 ID：</span>
+          <span id="displaySheetId" class="font-mono text-blue-700 font-bold">1Xgy6NWfWOwQTuE46aZzCpuBmD232x5lw5Lc0agBDuEY</span>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <button onclick="copyGeneratedCodeGs()" id="btnCopyCode" class="text-xs bg-blue-700 hover:bg-blue-800 text-white font-bold px-4 py-2.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
+            <span>📋</span><span>一鍵複製 Code.gs 後端代碼</span>
+          </button>
+          <button onclick="copyGeneratedIndexHtml()" id="btnCopyHtml" class="text-xs bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
+            <span>📋</span><span>一鍵複製 Index.html 前端代碼</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 步驟一：建立試算表 -->
+    <section id="step1" class="step-card bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-4">
+      <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm">1</div>
+        <div>
+          <h3 class="text-base font-bold text-slate-900">第一步：建立專屬 Google 試算表 (雲端資料庫)</h3>
+          <p class="text-xs text-slate-500">此表格為校務入口網的雲端儲存庫，所有資料皆安全保存於校方雲端硬碟中</p>
+        </div>
+      </div>
+
+      <div class="space-y-3 text-xs sm:text-sm text-slate-600 leading-relaxed">
+        <ol class="list-decimal list-inside space-y-2.5">
+          <li>
+            點擊前往 <a href="https://sheets.new" target="_blank" class="text-blue-600 font-bold hover:underline">Google 試算表 (sheets.new) ↗</a> 建立一份全新空白表格。
+          </li>
+          <li>
+            將試算表左上角檔名命名為「<strong>智慧校務行政整合系統_資料庫</strong>」（可依學校名稱自訂）。
+          </li>
+          <li>
+            從瀏覽器上方網址列複製網址，取得您的 <strong>試算表 ID</strong>（貼入上方產生器中）：
+            <div class="bg-slate-100 p-3 rounded-xl border border-slate-200 font-mono text-xs my-2 overflow-x-auto">
+              https://docs.google.com/spreadsheets/d/<span class="bg-amber-200 text-amber-900 font-bold px-1.5 py-0.5 rounded">1Xgy6NWfWOwQTuE46aZzCpuBmD232x5lw5Lc0agBDuEY</span>/edit
+            </div>
+          </li>
+          <li class="text-emerald-800 font-medium bg-emerald-50 p-3 rounded-xl border border-emerald-200">
+            ✨ <strong>零手動建表保證</strong>：試算表內的工作表名稱與欄位<strong>完全保留空白即可</strong>！系統首次連線時，會自動在背景建立「處室清單、教師名冊、行政公告、研習派代系統、校園大事紀、師生榮譽榜、各處室常用網、自訂工作表清單、系統設定」等 9 大核心工作表與預設範例！
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 步驟二：配置後端 Code.gs -->
+    <section id="step2" class="step-card bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-4">
+      <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm">2</div>
+        <div>
+          <h3 class="text-base font-bold text-slate-900">第二步：開啟 Apps Script 並貼上 Code.gs</h3>
+          <p class="text-xs text-slate-500">部署負責處理資料讀寫、身分驗證與動態建表的後端核心</p>
+        </div>
+      </div>
+
+      <div class="space-y-3 text-xs sm:text-sm text-slate-600 leading-relaxed">
+        <ol class="list-decimal list-inside space-y-2.5">
+          <li>
+            在剛建立的 Google 試算表上方選單，點選 <strong>「擴充功能」 ➔ 「Apps Script」</strong>。
+          </li>
+          <li>
+            將專案標題（左上角「未命名專案」）修改命名為「<strong>智慧校務行政整合系統</strong>」。
+          </li>
+          <li>
+            在左側檔案清單中點擊 <strong><code>Code.gs</code></strong>。
+          </li>
+          <li>
+            將編輯器內的預設程式碼全部清空（按 <code class="bg-slate-100 px-1.5 py-0.5 rounded border">Ctrl + A</code> 全選後按 <code class="bg-slate-100 px-1.5 py-0.5 rounded border">Delete</code>）。
+          </li>
+          <li>
+            點擊上方產生器的 <strong>「一鍵複製 Code.gs 後端代碼」</strong>，完整貼入編輯器中。
+          </li>
+          <li>
+            按下鍵盤 <code class="bg-slate-100 px-1.5 py-0.5 rounded border font-bold text-blue-700">Ctrl + S</code>（Mac 為 <code class="bg-slate-100 px-1.5 py-0.5 rounded border font-bold text-blue-700">Cmd + S</code>）儲存。
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 步驟三：建立前端 Index.html -->
+    <section id="step3" class="step-card bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-4">
+      <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm">3</div>
+        <div>
+          <h3 class="text-base font-bold text-slate-900">第三步：建立前端網頁檔案 Index.html</h3>
+          <p class="text-xs text-slate-500">部署全校同仁、主管與訪客查閱之響應式現代化校務介面</p>
+        </div>
+      </div>
+
+      <div class="space-y-3 text-xs sm:text-sm text-slate-600 leading-relaxed">
+        <ol class="list-decimal list-inside space-y-2.5">
+          <li>
+            在 Apps Script 編輯器左側「檔案」旁邊，點擊 <strong>「+」按鈕 ➔ 選擇「HTML」</strong>。
+          </li>
+          <li>
+            檔名請直接輸入 <strong><code>Index</code></strong> 並按下 Enter（系統會自動建立為 <code>Index.html</code>）。
+          </li>
+          <li>
+            將新建立的 <code>Index.html</code> 編輯區內預設代碼全部清空刪除。
+          </li>
+          <li>
+            點擊上方產生器的 <strong>「一鍵複製 Index.html 前端代碼」</strong>，完整貼入 <code>Index.html</code> 中。
+          </li>
+          <li>
+            按下鍵盤 <code class="bg-slate-100 px-1.5 py-0.5 rounded border font-bold text-blue-700">Ctrl + S</code> 儲存。
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 步驟四：發布部署為 Web 應用程式 -->
+    <section id="step4" class="step-card bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-4">
+      <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm">4</div>
+        <div>
+          <h3 class="text-base font-bold text-slate-900">第四步：發布部署為 Web 應用程式 (關鍵上線步驟)</h3>
+          <p class="text-xs text-slate-500">產生專屬網址，供全校師生與行政同仁使用</p>
+        </div>
+      </div>
+
+      <div class="space-y-3 text-xs sm:text-sm text-slate-600 leading-relaxed">
+        <ol class="list-decimal list-inside space-y-3">
+          <li>
+            點擊 Apps Script 視窗右上角的深藍色按鈕 <strong>「部署」 ➔ 選擇「新增部署作業」</strong>。
+          </li>
+          <li>
+            在彈出的對話框中，點擊左上角 <strong>齒輪圖示 ➔ 選擇「網頁應用程式 (Web App)」</strong>。
+          </li>
+          <li>
+            確認並完成下列三項核心參數設定：
+            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2 mt-2 font-medium">
+              <div class="flex justify-between items-center"><span>部署說明：</span><span class="font-bold text-slate-800">校務整合系統正式上線 v1.0</span></div>
+              <div class="flex justify-between items-center"><span>執行身分：</span><span class="font-bold text-blue-700">我 (您的 Google 帳號)</span></div>
+              <div class="flex justify-between items-center"><span>誰可以存取：</span><span class="font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded">所有人 (Anyone)</span></div>
+            </div>
+            <p class="text-[11px] text-amber-700 mt-1">⚠️「誰可以存取」務必選取「所有人」，這樣學校同仁與訪客無需擁有試算表編輯權限，即可直接檢視前台！</p>
+          </li>
+          <li>
+            點擊 <strong>「部署」</strong> 按鈕，系統將要求授予讀寫試算表之權限：
+            <div class="bg-amber-50 p-3.5 rounded-xl border border-amber-200 text-amber-900 text-xs space-y-1.5 mt-2">
+              <p class="font-bold">🔐 Google 原廠授權驗證指引（首次部署專屬流程）：</p>
+              <p>1. 點擊「審查權限 (Review permissions)」並登入您的 Google 帳號。</p>
+              <p>2. 若畫面出現「Google 尚未驗證這個應用程式」，請點擊左側小字 <strong>「進階 (Advanced)」</strong>。</p>
+              <p>3. 點擊最下方 <strong>「前往『智慧校務行政整合系統』(不安全)」</strong>。</p>
+              <p>4. 點擊 <strong>「允許 (Allow)」</strong> 即可完成官方權限綁定。</p>
+            </div>
+          </li>
+          <li>
+            部署完成後，複製畫面上產生的 <strong>「網頁應用程式網址 (Web App URL)」</strong>，這就是您的全校專屬入口網址！
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 步驟五：初始化與校務管理指南 -->
+    <section id="step5" class="step-card bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-4">
+      <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm">5</div>
+        <div>
+          <h3 class="text-base font-bold text-slate-900">第五步：自動自癒初始化與日常校務管理</h3>
+          <p class="text-xs text-slate-500">掌握處室管理、派代登記、業務傳承與動態擴充表單功能</p>
+        </div>
+      </div>
+
+      <div class="space-y-3 text-xs sm:text-sm text-slate-600 leading-relaxed">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>1️⃣</span><span>首度開啟與自動建表</span></h4>
+            <p class="text-xs text-slate-600">首次連線時，後端會自動在試算表中建置 9 張工作表並填入範例資料，完全無需手動設定任何欄位。</p>
+          </div>
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>2️⃣</span><span>管理員登入與處室維護</span></h4>
+            <p class="text-xs text-slate-600">點選右上角「管理員登入」，輸入密鑰（預設 <code>AdminSchool2026</code>）即可解鎖發布公告、處室清單管理與研習派代登記。</p>
+          </div>
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>3️⃣</span><span>自訂工作表即時擴充</span></h4>
+            <p class="text-xs text-slate-600">管理員可在「📁 自訂擴充項目」點擊「建立全新工作表」，輸入自訂欄位即可於後端動態生出新分頁並同步於前台管理！</p>
+          </div>
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>4️⃣</span><span>處室常用網與業務交接</span></h4>
+            <p class="text-xs text-slate-600">彙整各處室日常業務系統、填報表單與交接注意事項，新進同仁與代理主管可迅速上手、智慧傳承。</p>
+          </div>
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>5️⃣</span><span>校園大事紀與榮譽榜</span></h4>
+            <p class="text-xs text-slate-600">詳實記錄學校歷史發展人、事、時、地、物及重要文物；師生對外競賽榮譽榜亦可公開表揚與歸檔。</p>
+          </div>
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>6️⃣</span><span>訪客隱藏與公務布景</span></h4>
+            <p class="text-xs text-slate-600">登入後點擊「⚙️ 系統設定」，可自由勾選各模組是否對前台訪客公開，並提供公務湛藍、校園翡翠等 6 大主題切換。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 常見問題 FAQ -->
+    <section id="faq" class="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-xs space-y-4">
+      <h3 class="text-base font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
+        <span>💡</span><span>常見問題與系統維護說明 (FAQ)</span>
+      </h3>
+
+      <div class="space-y-3 text-xs sm:text-sm">
+        <details class="bg-slate-50 p-4 rounded-2xl border border-slate-200 group">
+          <summary class="font-bold text-slate-800 cursor-pointer list-none flex justify-between items-center">
+            <span>Q1. 我後續修改了 Code.gs 或 Index.html 程式碼，為什麼網頁沒有更新？</span>
+            <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="mt-3 pt-3 border-t border-slate-200 text-slate-600 space-y-2">
+            <p>Google Apps Script 修改程式碼儲存後，必須執行「更新部署作業」才能對外生效：</p>
+            <ol class="list-decimal list-inside space-y-1 bg-white p-3 rounded-xl border border-slate-200">
+              <li>點擊右上角藍色 <strong>「部署」 ➔ 「管理部署作業」</strong>。</li>
+              <li>點擊右上角鉛筆圖示（編輯）。</li>
+              <li>在「版本」下拉選單中，務必選擇 <strong>「新版本 (New Version)」</strong>。</li>
+              <li>點擊右下角 <strong>「部署」</strong> 按鈕即刻生效，網址保持不變！</li>
+            </ol>
+          </div>
+        </details>
+
+        <details class="bg-slate-50 p-4 rounded-2xl border border-slate-200 group">
+          <summary class="font-bold text-slate-800 cursor-pointer list-none flex justify-between items-center">
+            <span>Q2. 學校同仁或家長使用手機瀏覽時，需要登入 Google 帳號嗎？</span>
+            <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="mt-3 pt-3 border-t border-slate-200 text-slate-600">
+            <p>完全不需要！只要在部署時設定「誰可以存取：所有人 (Anyone)」，任何同仁無論使用手機、平板或電腦，點開連結皆可直接瀏覽公開之公告、榮譽榜與常用網站。</p>
+          </div>
+        </details>
+
+        <details class="bg-slate-50 p-4 rounded-2xl border border-slate-200 group">
+          <summary class="font-bold text-slate-800 cursor-pointer list-none flex justify-between items-center">
+            <span>Q3. 校務資料儲存在哪裡？是否有資料外洩風險？</span>
+            <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="mt-3 pt-3 border-t border-slate-200 text-slate-600">
+            <p>所有資料全部存放於您第一步所建立的 Google 試算表中，屬於學校或發布者專屬的 Google 帳號所有。沒有經過您的密鑰驗證，任何人都無法在網頁端增修資料，安全性由 Google 原廠最高規格保護。</p>
+          </div>
+        </details>
+
+        <details class="bg-slate-50 p-4 rounded-2xl border border-slate-200 group">
+          <summary class="font-bold text-slate-800 cursor-pointer list-none flex justify-between items-center">
+            <span>Q4. 如何新增其他業務模組（例如設備報修、校車登記或場地預約）？</span>
+            <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="mt-3 pt-3 border-t border-slate-200 text-slate-600">
+            <p>本系統特別設計了「自訂擴充工作表」引擎。管理員登入後前往「📁 自訂擴充項目」標籤，點擊「📄 建立全新工作表」，輸入自訂欄位名稱（如：報修日期, 地點, 故障項目, 報修人），系統就會全自動在試算表插入新分頁並在前台產出專屬表單與維護表格！</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 頁尾 Footer -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400">
+    <p>智慧校務行政整合系統 · 專為基層教育同仁打造的高效、透明、免伺服器之開源方案</p>
+  </footer>
+
+  <!-- 系統訊息彈跳視窗 (取代 alert) -->
+  <div id="noticeModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-60 hidden">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-center">
+      <div id="noticeModalIcon" class="text-3xl mb-2">🔔</div>
+      <h4 id="noticeModalTitle" class="text-sm font-bold text-slate-900 mb-1.5">系統通知</h4>
+      <p id="noticeModalContent" class="text-xs text-slate-600 mb-5 whitespace-pre-line leading-relaxed"></p>
+      <div class="flex justify-center">
+        <button onclick="closeModal('noticeModal')" class="text-xs font-semibold px-6 py-2 rounded-xl text-white bg-blue-700 hover:bg-blue-800 cursor-pointer">確定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 程式碼樣板來源庫 ==================== -->
+
+  <!-- 1. Code.gs 後端原始碼樣板 (使用 textarea 保留完整字元) -->
+  <textarea id="tpl-code-gs" class="hidden">/* =========================================================================
+ * 校務行政整合系統 - 後端雲端資料庫核心 (Code.gs)
+ * 修正：雙重容錯試算表連線、完整補齊所有模組 CRUD 與刪除處室/自訂表
+ * ========================================================================= */
+
+// 請填入您的 Google 試算表 ID（若此專案是從試算表內「擴充功能 > Apps Script」開啟，保留或空白皆可自動相容目前試算表）
+const SPREADSHEET_ID = '{{SPREADSHEET_ID}}';
+const ADMIN_PASSWORD = '{{ADMIN_PASSWORD}}'; // 校務管理密鑰
+
+// 系統核心預設工作表結構定義
+const DB_SCHEMAS = {
+  '處室清單': {
+    headers: ['處室名稱', '排序權重', '更新時間'],
+    defaultRows: [
+      ['教導處', '1', '2026-09-01 08:00:00'],
+      ['總務處', '2', '2026-09-01 08:00:00'],
+      ['教務組', '3', '2026-09-01 08:00:00'],
+      ['學務組', '4', '2026-09-01 08:00:00'],
+      ['輔導室', '5', '2026-09-01 08:00:00'],
+      ['校長室', '6', '2026-09-01 08:00:00']
+    ]
+  },
+  '教師名冊': {
+    headers: ['ID', '教師姓名', '身分職稱', '所屬處室', '狀態', '更新時間'],
+    defaultRows: [
+      ['T001', '林志遠', '教師兼教導主任', '教導處', '在職', '2026-09-01 08:00:00'],
+      ['T002', '陳雅婷', '教師兼教務組長', '教務組', '在職', '2026-09-01 08:00:00'],
+      ['T003', '張建華', '教師兼學務組長', '學務組', '在職', '2026-09-01 08:00:00'],
+      ['T004', '黃文信', '總務主任', '總務處', '在職', '2026-09-01 08:00:00'],
+      ['T005', '王小琪', '專任教師', '科任教師', '在職', '2026-09-01 08:00:00'],
+      ['T006', '李宗翰', '導師', '一年級', '在職', '2026-09-01 08:00:00']
+    ]
+  },
+  '行政公告': {
+    headers: ['ID', '發布處室', '公告標題', '詳細內容', '附件或連結', '是否置頂', '發布日期', '更新時間'],
+    defaultRows: [
+      ['1', '教導處', '115學年度第一學期開學初全校校務會議日程通知', '請全體同仁於本週三下午13:30準時於三樓多功能視聽會議室出席，提案請提早交予教務組彙整。', 'https://meet.google.com/', '是', '2026-09-01', '2026-09-01 08:30:00'],
+      ['2', '總務處', '各辦公室及專科教室節能用電與冷氣使用規範說明', '配合節能減碳政策，室溫達28度始得開啟冷氣，下班離開請各組人員確實巡視電源與門窗關閉。', '', '否', '2026-09-02', '2026-09-02 09:00:00']
+    ]
+  },
+  '研習派代系統': {
+    headers: ['ID', '身分職稱', '研習教師', '研習名稱', '研習地點', '職務代理人', '研習日期時間', '備註與派代差假', '登錄時間'],
+    defaultRows: [
+      ['1', '教師', '陳雅婷', '教育部素養導向評量與命題實務工作坊', '國家教育研究院臺北院區', '王小琪', '2026-09-18 全日', '公假排代（已陳核）', '2026-09-02 11:30:00'],
+      ['2', '行政', '黃文信', '公有財產採購法規與校舍維護實務講習', '教育局第一會議室', '林志遠', '2026-09-25 下午', '公差假', '2026-09-03 09:20:00']
+    ]
+  },
+  '校園大事紀': {
+    headers: ['ID', '發生時間', '主要人物', '發生地點', '關鍵事物或文物', '記事內容', '記錄人', '登錄時間'],
+    defaultRows: [
+      ['1', '民國五十八年三月', '小林登八夫婦、校友代表', '本校校史館前廣場', '訪校留念照片與墨寶', '本校首任校長小林登八夫婦由日本返校訪問，全校師生夾道歡迎並合影留念。', '曾壬保', '2026-09-01 08:00:00']
+    ]
+  },
+  '師生榮譽榜': {
+    headers: ['ID', '獲獎日期', '對象類別', '競賽或榮譽名稱', '得獎人或班級', '名次或獎項', '指導老師或主辦單位', '登錄時間'],
+    defaultRows: [
+      ['1', '2026-06-20', '學生組', '全國中小學科展環境科學組', '六年甲班 吳念真', '特優第一名', '指導老師：李宗翰', '2026-09-01 08:00:00']
+    ]
+  },
+  '各處室常用網': {
+    headers: ['ID', '所屬處室', '網站或系統名稱', '系統網址', '功能說明與交接備忘', '帳號權限提醒', '更新時間'],
+    defaultRows: [
+      ['1', '總務處', '主計會計Web版帳務整合系統', 'https://accounting.example.gov.tw', '年度歲出歲入預算編列、各項經費核銷請款專用系統。', '交接請向主計主任申請新憑證憑以簽核', '2026-09-01 08:00:00'],
+      ['2', '教導處', '全誼校務行政資訊系統', 'https://school.example.edu.tw/admin', '學籍異動、成績輸入、學生基本資料管理核心系統。', '開學前需指派新學年班級任課教師權限', '2026-09-01 08:00:00']
+    ]
+  },
+  '自訂工作表清單': {
+    headers: ['工作表名稱', '中文標題', '欄位定義', '說明備忘', '建立時間'],
+    defaultRows: [
+      ['校園設備修繕', '校園設備修繕登記', '報修日期,報修處室地點,報修項目,狀況說明,報修人,維修進度', '供同仁日常登記水電、門窗或各項硬體耗損', '2026-09-01 08:00:00']
+    ]
+  },
+  '系統設定': {
+    headers: ['設定項目', '設定值', '說明', '更新時間'],
+    defaultRows: [
+      ['theme', 'ocean', '布景主題 (ocean/forest/sunset/lavender/rose/slate)', '2026-09-01 08:00:00'],
+      ['school_title', '智慧校務行政整合系統', '系統頂部抬頭名稱', '2026-09-01 08:00:00'],
+      ['school_subtitle', '行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網', '頂部副標題', '2026-09-01 08:00:00'],
+      ['show_announcements', 'true', '行政公告模組顯示狀態', '2026-09-01 08:00:00'],
+      ['show_training', 'true', '研習派代模組顯示狀態', '2026-09-01 08:00:00'],
+      ['show_chronicle', 'true', '校園大事紀顯示狀態', '2026-09-01 08:00:00'],
+      ['show_honors', 'true', '師生榮譽榜顯示狀態', '2026-09-01 08:00:00'],
+      ['show_links', 'true', '處室常用網顯示狀態', '2026-09-01 08:00:00'],
+      ['show_custom', 'true', '自訂擴充工作表顯示狀態', '2026-09-01 08:00:00']
+    ]
+  }
+};
+
+/**
+ * 智慧容錯開啟試算表：優先嘗試 SPREADSHEET_ID，若失敗則自動採用當前綁定之活頁簿
+ */
+function getSpreadsheet() {
+  if (SPREADSHEET_ID && SPREADSHEET_ID.trim() !== '' && SPREADSHEET_ID !== '請在此替換您的試算表ID') {
+    try {
+      return SpreadsheetApp.openById(SPREADSHEET_ID);
+    } catch (err) {
+      Logger.log('無法透過 SPREADSHEET_ID 開啟，嘗試切換為 active 試算表：' + err.toString());
+    }
+  }
+  try {
+    const active = SpreadsheetApp.getActiveSpreadsheet();
+    if (active) return active;
+  } catch (err) {
+    Logger.log('getActiveSpreadsheet 亦失敗：' + err.toString());
+  }
+  throw new Error('無法開啟 Google 試算表！請確認 SPREADSHEET_ID 是否正確，或該專案是否已繫結至 Google 試算表。');
+}
+
+/**
+ * 快速取得或自動初始化工作表
+ */
+function getOrCreateSheetFast(ss, name) {
+  let s = ss.getSheetByName(name);
+  if (!s) {
+    s = ss.insertSheet(name);
+    const sch = DB_SCHEMAS[name];
+    if (sch) {
+      const data = [sch.headers, ...sch.defaultRows];
+      s.getRange(1, 1, data.length, sch.headers.length).setValues(data);
+      s.getRange(1, 1, 1, sch.headers.length).setBackground('#1e3a8a').setFontColor('#ffffff').setFontWeight('bold');
+      s.setFrozenRows(1);
+    }
+  }
+  return s;
+}
+
+/**
+ * 確保預設資料庫架構皆已生成
+ */
+function ensureAllSheetsFast(ss) {
+  Object.keys(DB_SCHEMAS).forEach(name => {
+    getOrCreateSheetFast(ss, name);
+  });
+  const def1 = ss.getSheetByName('工作表1');
+  const def2 = ss.getSheetByName('Sheet1');
+  if (def1 && ss.getSheets().length > 1) ss.deleteSheet(def1);
+  if (def2 && ss.getSheets().length > 1) ss.deleteSheet(def2);
+}
+
+function doGet(e) {
+  return HtmlService.createTemplateFromFile('Index')
+      .evaluate()
+      .setTitle('智慧校務行政整合系統')
+      .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+      .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+}
+
+function getNowTimestamp() {
+  return Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd HH:mm:ss");
+}
+
+function verifyAdmin(password) {
+  if (password !== ADMIN_PASSWORD) {
+    throw new Error('身分驗證失敗：校務管理密鑰錯誤！');
+  }
+}
+
+/**
+ * 讀取整張工作表為 JSON 陣列
+ */
+function readSheetAsJson(ss, sheetName) {
+  const s = ss.getSheetByName(sheetName);
+  if (!s) return [];
+  const r = s.getLastRow();
+  const c = s.getLastColumn();
+  if (r <= 1 || c < 1) return [];
+  const vals = s.getRange(1, 1, r, c).getDisplayValues();
+  const headers = vals[0].map(h => h.trim());
+  return vals.slice(1).map(row => {
+    let obj = {};
+    headers.forEach((h, i) => {
+      obj[h] = row[i] !== undefined ? row[i] : '';
+    });
+    return obj;
+  });
+}
+
+/**
+ * 載入校務系統所有全域資料
+ */
+function getAllSchoolData() {
+  const today = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd");
+  try {
+    const ss = getSpreadsheet();
+    ensureAllSheetsFast(ss);
+
+    // 1. 系統設定
+    const sRows = readSheetAsJson(ss, '系統設定');
+    let settings = {
+      theme: 'ocean',
+      school_title: '智慧校務行政整合系統',
+      school_subtitle: '行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網',
+      show_announcements: true,
+      show_training: true,
+      show_chronicle: true,
+      show_honors: true,
+      show_links: true,
+      show_custom: true
+    };
+    sRows.forEach(r => {
+      const k = String(r['設定項目'] || '').trim();
+      const v = String(r['設定值'] || '').trim();
+      if (k) {
+        if (k === 'theme' || k === 'school_title' || k === 'school_subtitle') {
+          if (v) settings[k] = v;
+        } else {
+          settings[k] = (v.toLowerCase() === 'true' || v === '1' || v === '是');
+        }
+      }
+    });
+
+    // 2. 處室清單
+    const offices = readSheetAsJson(ss, '處室清單')
+      .sort((a, b) => (Number(a['排序權重']) || 99) - (Number(b['排序權重']) || 99))
+      .map(x => x['處室名稱'])
+      .filter(Boolean);
+
+    // 3. 教師名冊
+    const teachers = readSheetAsJson(ss, '教師名冊');
+
+    // 4. 行政公告 (置頂優先，依日期排序)
+    const announcements = readSheetAsJson(ss, '行政公告').reverse()
+      .sort((a, b) => (b['是否置頂'] === '是' ? 1 : 0) - (a['是否置頂'] === '是' ? 1 : 0));
+
+    // 5. 研習派代
+    const training = readSheetAsJson(ss, '研習派代系統').reverse();
+
+    // 6. 校園大事紀
+    const chronicle = readSheetAsJson(ss, '校園大事紀');
+
+    // 7. 師生榮譽榜
+    const honors = readSheetAsJson(ss, '師生榮譽榜').reverse();
+
+    // 8. 處室常用網
+    const links = readSheetAsJson(ss, '各處室常用網');
+
+    // 9. 自訂工作表清單與其內容
+    const customList = readSheetAsJson(ss, '自訂工作表清單');
+    let customSheetsData = {};
+    customList.forEach(item => {
+      const sName = item['工作表名稱'];
+      if (sName) {
+        let sheetObj = ss.getSheetByName(sName);
+        if (!sheetObj) {
+          sheetObj = ss.insertSheet(sName);
+          const cols = (item['欄位定義'] || '編號,項目名稱,內容說明,記錄時間').split(',').map(s => s.trim());
+          sheetObj.getRange(1, 1, 1, cols.length).setValues([cols]);
+          sheetObj.getRange(1, 1, 1, cols.length).setBackground('#334155').setFontColor('#ffffff').setFontWeight('bold');
+          sheetObj.setFrozenRows(1);
+        }
+        customSheetsData[sName] = {
+          meta: item,
+          rows: readSheetAsJson(ss, sName)
+        };
+      }
+    });
+
+    return {
+      success: true,
+      today: today,
+      settings: settings,
+      offices: offices,
+      teachers: teachers,
+      announcements: announcements,
+      training: training,
+      chronicle: chronicle,
+      honors: honors,
+      links: links,
+      customSheets: customSheetsData
+    };
+  } catch (err) {
+    Logger.log('載入失敗: ' + err.toString());
+    return {
+      success: false,
+      error: err.toString(),
+      today: today
+    };
+  }
+}
+
+/**
+ * 通用存儲列 (匹配第1欄 ID)
+ */
+function saveRowGeneral(sheetName, matchKey, rowData, password) {
+  verifyAdmin(password);
+  const ss = getSpreadsheet();
+  const s = getOrCreateSheetFast(ss, sheetName);
+  const vals = s.getDataRange().getDisplayValues();
+  let idx = -1;
+
+  if (matchKey) {
+    for (let i = 1; i < vals.length; i++) {
+      if (String(vals[i][0]) === String(matchKey)) {
+        idx = i + 1;
+        break;
+      }
+    }
+  }
+
+  if (idx > 0) {
+    s.getRange(idx, 1, 1, rowData.length).setValues([rowData]);
+  } else {
+    s.appendRow(rowData);
+  }
+  SpreadsheetApp.flush();
+  return { success: true, message: '儲存完成！' };
+}
+
+/**
+ * 通用刪除列 (匹配第1欄 ID)
+ */
+function deleteRowGeneral(sheetName, matchKey, password) {
+  verifyAdmin(password);
+  const ss = getSpreadsheet();
+  const s = getOrCreateSheetFast(ss, sheetName);
+  const vals = s.getDataRange().getDisplayValues();
+  for (let i = 1; i < vals.length; i++) {
+    if (String(vals[i][0]) === String(matchKey)) {
+      s.deleteRow(i + 1);
+      SpreadsheetApp.flush();
+      return { success: true, message: '已成功刪除！' };
+    }
+  }
+  throw new Error('找不到欲刪除的資料項目。');
+}
+
+// 1. 處室管理 (支援新增與刪除)
+function addOfficeCategory(officeName, p) {
+  verifyAdmin(p);
+  const name = String(officeName || '').trim();
+  if (!name) throw new Error('處室名稱不得為空！');
+  const ss = getSpreadsheet();
+  const s = getOrCreateSheetFast(ss, '處室清單');
+  const vals = s.getDataRange().getDisplayValues();
+  for (let i = 1; i < vals.length; i++) {
+    if (vals[i][0] === name) {
+      throw new Error(`處室「${name}」已經存在，不需重複新增！`);
+    }
+  }
+  const nextOrder = String(vals.length);
+  s.appendRow([name, nextOrder, getNowTimestamp()]);
+  SpreadsheetApp.flush();
+  return { success: true, message: `已成功新增處室【${name}】！` };
+}
+
+function deleteOfficeCategory(officeName, p) {
+  verifyAdmin(p);
+  const name = String(officeName || '').trim();
+  if (!name) throw new Error('處室名稱不得為空！');
+  const ss = getSpreadsheet();
+  const s = getOrCreateSheetFast(ss, '處室清單');
+  const vals = s.getDataRange().getDisplayValues();
+  for (let i = 1; i < vals.length; i++) {
+    if (vals[i][0] === name) {
+      s.deleteRow(i + 1);
+      SpreadsheetApp.flush();
+      return { success: true, message: `已成功刪除處室【${name}】！` };
+    }
+  }
+  throw new Error(`找不到欲刪除的處室「${name}」。`);
+}
+
+// 2. 教師名冊管理
+function addTeacherRecord(d, p) {
+  verifyAdmin(p);
+  const name = String(d.name || '').trim();
+  if (!name) throw new Error('教師姓名為必填！');
+  const ss = getSpreadsheet();
+  const s = getOrCreateSheetFast(ss, '教師名冊');
+  const id = 'T' + String(Date.now()).slice(-4);
+  s.appendRow([id, name, d.title || '專任教師', d.office || '', '在職', getNowTimestamp()]);
+  SpreadsheetApp.flush();
+  return { success: true, message: `已成功將【${name}】登錄至教師名冊！` };
+}
+
+// 3. 行政公告 CRUD
+function saveAnnouncement(d, p) {
+  const ss = getSpreadsheet();
+  const s = getOrCreateSheetFast(ss, '行政公告');
+  const id = d.id || String(Date.now().toString().slice(-6));
+  const rowData = [
+    id,
+    d.office || '教導處',
+    d.title || '',
+    d.content || '',
+    d.link || '',
+    d.isTop ? '是' : '否',
+    Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd"),
+    getNowTimestamp()
+  ];
+  return saveRowGeneral('行政公告', d.id, rowData, p);
+}
+
+function deleteAnnouncement(id, p) {
+  return deleteRowGeneral('行政公告', id, p);
+}
+
+// 4. 研習派代 CRUD
+function saveTrainingRecord(d, p) {
+  const id = d.id || String(Date.now().toString().slice(-6));
+  const rowData = [
+    id,
+    d.roleType || '教師',
+    d.teacherName || '',
+    d.trainingName || '',
+    d.location || '',
+    d.substituteTeacher || '無派代',
+    d.dateTime || '',
+    d.note || '',
+    getNowTimestamp()
+  ];
+  return saveRowGeneral('研習派代系統', d.id, rowData, p);
+}
+
+function deleteTrainingRecord(id, p) {
+  return deleteRowGeneral('研習派代系統', id, p);
+}
+
+// 5. 校園大事紀 CRUD
+function saveChronicleRecord(d, p) {
+  const id = d.id || String(Date.now().toString().slice(-6));
+  const rowData = [
+    id,
+    d.timeStr || '',
+    d.people || '',
+    d.location || '',
+    d.objects || '',
+    d.eventDetail || '',
+    d.recorder || '校史室',
+    getNowTimestamp()
+  ];
+  return saveRowGeneral('校園大事紀', d.id, rowData, p);
+}
+
+function deleteChronicleRecord(id, p) {
+  return deleteRowGeneral('校園大事紀', id, p);
+}
+
+// 6. 師生榮譽榜 CRUD
+function saveHonorRecord(d, p) {
+  const id = d.id || String(Date.now().toString().slice(-6));
+  const rowData = [
+    id,
+    d.awardDate || Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd"),
+    d.category || '學生組',
+    d.contestName || '',
+    d.winnerName || '',
+    d.awardRank || '',
+    d.mentor || '',
+    getNowTimestamp()
+  ];
+  return saveRowGeneral('師生榮譽榜', d.id, rowData, p);
+}
+
+function deleteHonorRecord(id, p) {
+  return deleteRowGeneral('師生榮譽榜', id, p);
+}
+
+// 7. 處室常用網 CRUD
+function savePortalLink(d, p) {
+  const id = d.id || String(Date.now().toString().slice(-6));
+  const rowData = [
+    id,
+    d.office || '教導處',
+    d.name || '',
+    d.url || '',
+    d.desc || '',
+    d.accountTip || '',
+    getNowTimestamp()
+  ];
+  return saveRowGeneral('各處室常用網', d.id, rowData, p);
+}
+
+function deletePortalLink(id, p) {
+  return deleteRowGeneral('各處室常用網', id, p);
+}
+
+// 8. 管理者自行新增/刪除自訂工作表
+function createCustomSheet(d, p) {
+  verifyAdmin(p);
+  const sheetName = String(d.sheetName || '').trim();
+  const displayTitle = String(d.displayTitle || sheetName).trim();
+  const columnsStr = String(d.columns || '').trim();
+
+  if (!sheetName) throw new Error('工作表代碼名稱不能為空！');
+  if (!columnsStr) throw new Error('請至少輸入一個自訂欄位名稱！');
+
+  const ss = getSpreadsheet();
+  if (ss.getSheetByName(sheetName)) {
+    throw new Error(`名為「${sheetName}」的工作表已經存在，請更換名稱！`);
+  }
+
+  // 1. 建立實體工作表
+  const newSheet = ss.insertSheet(sheetName);
+  const cols = ['ID', ...columnsStr.split(',').map(s => s.trim()).filter(Boolean), '登錄時間'];
+  newSheet.getRange(1, 1, 1, cols.length).setValues([cols]);
+  newSheet.getRange(1, 1, 1, cols.length).setBackground('#1e293b').setFontColor('#ffffff').setFontWeight('bold');
+  newSheet.setFrozenRows(1);
+
+  // 2. 登記在「自訂工作表清單」
+  const metaSheet = getOrCreateSheetFast(ss, '自訂工作表清單');
+  metaSheet.appendRow([sheetName, displayTitle, cols.slice(1, -1).join(','), d.note || '', getNowTimestamp()]);
+  SpreadsheetApp.flush();
+
+  return { success: true, message: `已成功建立自訂模組【${displayTitle}】！` };
+}
+
+function deleteCustomSheet(sheetName, p) {
+  verifyAdmin(p);
+  const name = String(sheetName || '').trim();
+  if (!name) throw new Error('工作表名稱不能為空！');
+  const ss = getSpreadsheet();
+
+  // 1. 自「自訂工作表清單」移除紀錄
+  const metaSheet = getOrCreateSheetFast(ss, '自訂工作表清單');
+  const vals = metaSheet.getDataRange().getDisplayValues();
+  for (let i = 1; i < vals.length; i++) {
+    if (vals[i][0] === name) {
+      metaSheet.deleteRow(i + 1);
+      break;
+    }
+  }
+
+  // 2. 刪除 Google 試算表實體分頁
+  const targetSheet = ss.getSheetByName(name);
+  if (targetSheet) {
+    if (ss.getSheets().length > 1) {
+      ss.deleteSheet(targetSheet);
+    } else {
+      targetSheet.clear();
+    }
+  }
+
+  SpreadsheetApp.flush();
+  return { success: true, message: `已成功刪除工作表【${name}】及其所有資料！` };
+}
+
+function saveCustomSheetRow(sheetName, rowObj, p) {
+  verifyAdmin(p);
+  const ss = getSpreadsheet();
+  const s = ss.getSheetByName(sheetName);
+  if (!s) throw new Error(`找不到自訂工作表「${sheetName}」！`);
+
+  const vals = s.getDataRange().getDisplayValues();
+  const headers = vals[0].map(h => h.trim());
+  const id = rowObj['ID'] || String(Date.now().toString().slice(-6));
+  rowObj['ID'] = id;
+  rowObj['登錄時間'] = getNowTimestamp();
+
+  const newRow = headers.map(h => rowObj[h] !== undefined ? rowObj[h] : '');
+
+  let foundIdx = -1;
+  if (rowObj['ID']) {
+    for (let i = 1; i < vals.length; i++) {
+      if (String(vals[i][0]) === String(rowObj['ID'])) {
+        foundIdx = i + 1;
+        break;
+      }
+    }
+  }
+
+  if (foundIdx > 0) {
+    s.getRange(foundIdx, 1, 1, newRow.length).setValues([newRow]);
+  } else {
+    s.appendRow(newRow);
+  }
+  SpreadsheetApp.flush();
+  return { success: true, message: '自訂項目資料已順利儲存！' };
+}
+
+function deleteCustomSheetRow(sheetName, id, p) {
+  return deleteRowGeneral(sheetName, id, p);
+}
+
+// 9. 系統設定儲存
+function saveSystemSettings(sObj, p) {
+  verifyAdmin(p);
+  const ss = getSpreadsheet();
+  const s = getOrCreateSheetFast(ss, '系統設定');
+  const now = getNowTimestamp();
+
+  const isBoolTrue = (v) => (v === true || v === 'true' || v === '1' || v === '是');
+
+  const rows = [
+    ['設定項目', '設定值', '說明', '更新時間'],
+    ['theme', String(sObj.theme || 'ocean'), '布景主題 (ocean/forest/sunset/lavender/rose/slate)', now],
+    ['school_title', String(sObj.school_title || '智慧校務行政整合系統'), '系統頂部抬頭名稱', now],
+    ['school_subtitle', String(sObj.school_subtitle || '行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網'), '頂部副標題', now],
+    ['show_announcements', isBoolTrue(sObj.show_announcements) ? 'true' : 'false', '行政公告模組顯示狀態', now],
+    ['show_training', isBoolTrue(sObj.show_training) ? 'true' : 'false', '研習派代模組顯示狀態', now],
+    ['show_chronicle', isBoolTrue(sObj.show_chronicle) ? 'true' : 'false', '校園大事紀顯示狀態', now],
+    ['show_honors', isBoolTrue(sObj.show_honors) ? 'true' : 'false', '師生榮譽榜顯示狀態', now],
+    ['show_links', isBoolTrue(sObj.show_links) ? 'true' : 'false', '處室常用網顯示狀態', now],
+    ['show_custom', isBoolTrue(sObj.show_custom) ? 'true' : 'false', '自訂擴充工作表顯示狀態', now]
+  ];
+
+  s.clear();
+  s.getRange(1, 1, rows.length, 4).setValues(rows);
+  s.getRange(1, 1, 1, 4).setBackground('#1e3a8a').setFontColor('#ffffff').setFontWeight('bold');
+  s.setFrozenRows(1);
+  SpreadsheetApp.flush();
+  return { success: true, message: '校務系統設定與模組可見度已成功儲存！' };
+}</textarea>
+
+  <!-- 2. 前端 Index.html 完整原始碼 (內部 script 標籤已隔離) -->
+  <script type="text/plain" id="tpl-index-html"><!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智慧校務行政整合系統</title>
+  <!-- 載入 Tailwind CSS 最新瀏覽器引擎 -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"><\/script>
+  <style>
+    :root {
+      --primary: #1d4ed8;
+      --primary-hover: #1e40af;
+      --primary-soft: #eff6ff;
+      --primary-border: #bfdbfe;
+      --primary-text: #1e3a8a;
+    }
+
+    [data-theme="forest"] {
+      --primary: #047857;
+      --primary-hover: #065f46;
+      --primary-soft: #ecfdf5;
+      --primary-border: #a7f3d0;
+      --primary-text: #064e3b;
+    }
+
+    [data-theme="sunset"] {
+      --primary: #c2410c;
+      --primary-hover: #9a3412;
+      --primary-soft: #fff7ed;
+      --primary-border: #fed7aa;
+      --primary-text: #7c2d12;
+    }
+
+    [data-theme="lavender"] {
+      --primary: #6d28d9;
+      --primary-hover: #5b21b6;
+      --primary-soft: #f5f3ff;
+      --primary-border: #ddd6fe;
+      --primary-text: #4c1d95;
+    }
+
+    [data-theme="rose"] {
+      --primary: #be123c;
+      --primary-hover: #9f1239;
+      --primary-soft: #fff1f2;
+      --primary-border: #fecdd3;
+      --primary-text: #881337;
+    }
+
+    [data-theme="slate"] {
+      --primary: #334155;
+      --primary-hover: #1e293b;
+      --primary-soft: #f8fafc;
+      --primary-border: #cbd5e1;
+      --primary-text: #0f172a;
+    }
+
+    .theme-bg {
+      background-color: var(--primary);
+    }
+
+    .theme-bg:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .theme-text {
+      color: var(--primary);
+    }
+
+    .theme-border {
+      border-color: var(--primary-border);
+    }
+
+    .theme-soft-bg {
+      background-color: var(--primary-soft);
+    }
+
+    .tab-active {
+      border-bottom: 3px solid var(--primary);
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .loading-pulse {
+      animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: .5;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans" data-theme="ocean">
+
+  <!-- 頂部主導覽列 -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center gap-3">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-11 h-11 rounded-2xl theme-bg text-white flex items-center justify-center font-bold text-2xl shadow-sm">
+          🏛️
+        </div>
+        <div>
+          <h1 id="headerTitle" class="text-base sm:text-xl font-bold text-slate-900 leading-tight">
+            智慧校務行政整合系統
+          </h1>
+          <p id="headerSubtitle" class="text-xs text-slate-500">
+            行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網
+          </p>
+        </div>
+      </div>
+
+      <!-- 右側工具區：搜尋、身分驗證、全域設定 -->
+      <div class="flex items-center gap-2 sm:gap-3 flex-1 sm:flex-initial justify-end">
+        <div class="relative w-40 sm:w-60">
+          <input type="text" id="globalSearchInput" oninput="onGlobalSearch(this.value)" placeholder="🔍 全域校務搜尋..."
+            class="w-full pl-3 pr-7 py-1.5 text-xs sm:text-sm bg-slate-100 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none">
+          <button onclick="clearSearch()" id="clearSearchBtn"
+            class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs cursor-pointer">✕</button>
+        </div>
+
+        <button id="systemSettingsBtn" onclick="openSettingsModal()"
+          class="hidden text-xs sm:text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-xl border border-slate-300 cursor-pointer">
+          ⚙️ 系統設定
+        </button>
+
+        <div id="adminBadge"
+          class="hidden text-[11px] sm:text-xs bg-amber-100 text-amber-800 px-3 py-1.5 rounded-full font-bold border border-amber-300 whitespace-nowrap">
+          🔑 行政管理模式
+        </div>
+
+        <button id="authBtn" onclick="toggleAdminLogin()"
+          class="text-xs sm:text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-xl border border-slate-300 whitespace-nowrap cursor-pointer">
+          管理員登入
+        </button>
+      </div>
+    </div>
+
+    <!-- 模組功能分頁選單 (含訪客隱藏提示徽章) -->
+    <nav
+      class="max-w-7xl mx-auto px-4 sm:px-6 flex gap-1 sm:gap-6 overflow-x-auto text-sm border-t border-slate-100 scrollbar-none">
+      <button onclick="switchTab('announcements')" id="tab-announcements"
+        class="py-3 px-2.5 whitespace-nowrap tab-active transition-colors flex items-center gap-1.5 cursor-pointer">
+        <span>📢 行政公告</span>
+        <span id="badge-announcements-hidden"
+          class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
+      </button>
+      <button onclick="switchTab('training')" id="tab-training"
+        class="py-3 px-2.5 whitespace-nowrap text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer">
+        <span>📝 研習派代系統</span>
+        <span id="badge-training-hidden"
+          class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
+      </button>
+      <button onclick="switchTab('chronicle')" id="tab-chronicle"
+        class="py-3 px-2.5 whitespace-nowrap text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer">
+        <span>📜 校園大事紀</span>
+        <span id="badge-chronicle-hidden"
+          class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
+      </button>
+      <button onclick="switchTab('honors')" id="tab-honors"
+        class="py-3 px-2.5 whitespace-nowrap text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer">
+        <span>🏆 師生榮譽榜</span>
+        <span id="badge-honors-hidden"
+          class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
+      </button>
+      <button onclick="switchTab('links')" id="tab-links"
+        class="py-3 px-2.5 whitespace-nowrap text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer">
+        <span>🌐 處室常用網 (業務交接)</span>
+        <span id="badge-links-hidden"
+          class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
+      </button>
+      <button onclick="switchTab('custom')" id="tab-custom"
+        class="py-3 px-2.5 whitespace-nowrap text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer">
+        <span>📁 自訂擴充項目</span>
+        <span id="badge-custom-hidden"
+          class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- 主內容視圖區 -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full relative">
+
+    <!-- 全局讀取動畫 -->
+    <div id="mainLoader" class="text-center py-20">
+      <div class="inline-block p-4 rounded-full theme-soft-bg theme-text mb-3 text-3xl loading-pulse">⏳</div>
+      <p class="text-sm font-semibold text-slate-600">正在同步校務雲端行政資料庫...</p>
+    </div>
+
+    <!-- 全域搜尋結果即時展示卡片 -->
+    <div id="searchResultView" class="hidden space-y-4 mb-6">
+      <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+          <span>🔍 全域校務搜尋結果：</span>
+          <span id="searchKeywordBadge" class="theme-soft-bg theme-text px-2.5 py-0.5 rounded-lg font-semibold"></span>
+        </h3>
+        <button onclick="clearSearch()" class="text-xs text-slate-500 hover:text-slate-800 underline cursor-pointer">關閉搜尋結果</button>
+      </div>
+      <div id="searchResultList" class="space-y-3"></div>
+    </div>
+
+    <!-- 1. 行政公告模組 -->
+    <section id="view-announcements" class="hidden space-y-5">
+      <div id="banner-announcements-hidden"
+        class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
+        ⚠️ 本模組目前設定為「對訪客隱藏」。訪客無法在主選單看見此分頁，僅校務管理人員可見與維護。
+      </div>
+      <div
+        class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <!-- 處室動態篩選晶片 -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs font-bold text-slate-500 mr-1">發布處室：</span>
+          <div id="officeFilterChips" class="flex gap-1.5 flex-wrap"></div>
+        </div>
+        <!-- 管理按鈕 (新增/管理處室、發布公告) -->
+        <div class="flex items-center gap-2">
+          <button id="adminManageOfficeBtn" onclick="openOfficeManageModal()"
+            class="hidden text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2 rounded-xl border border-slate-300 cursor-pointer">
+            🏢 處室清單管理 (新增/刪除)
+          </button>
+          <button id="adminAddAnnounceBtn" onclick="openAnnounceModal()"
+            class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
+            📢 發布行政公告
+          </button>
+        </div>
+      </div>
+      <div id="announcementsList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </section>
+
+    <!-- 2. 研習派代系統 -->
+    <section id="view-training" class="hidden space-y-4">
+      <div id="banner-training-hidden"
+        class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
+        ⚠️ 本模組目前設定為「對訪客隱藏」。僅校務管理人員可見。
+      </div>
+      <div class="flex justify-between items-center flex-wrap gap-2">
+        <div>
+          <h2 class="text-sm sm:text-base font-bold text-slate-800">教師與行政人員研習公假暨差假派代登記</h2>
+          <p class="text-xs text-slate-500">透明掌握校內公假排代現況，維護課務正常運作</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="adminAddTeacherBtn" onclick="openAddTeacherModal()"
+            class="hidden text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2 rounded-xl border border-slate-300 cursor-pointer">
+            👥 新增教師名冊
+          </button>
+          <button id="adminAddTrainingBtn" onclick="openTrainingModal()"
+            class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
+            ➕ 登記研習派代
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="bg-slate-100 text-slate-700 border-b border-slate-200 font-bold">
+              <tr>
+                <th class="py-3 px-3">身分職稱</th>
+                <th class="py-3 px-3">研習教師</th>
+                <th class="py-3 px-4">研習活動名稱</th>
+                <th class="py-3 px-3">地點</th>
+                <th class="py-3 px-3">研習時間</th>
+                <th class="py-3 px-3">職務代理人</th>
+                <th class="py-3 px-3">差假與派代說明</th>
+                <th class="py-3 px-3 admin-col hidden text-center">管理操作</th>
+              </tr>
+            </thead>
+            <tbody id="trainingTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 校園大事紀 -->
+    <section id="view-chronicle" class="hidden space-y-4">
+      <div id="banner-chronicle-hidden"
+        class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
+        ⚠️ 本模組目前設定為「對訪客隱藏」。僅校務管理人員可見。
+      </div>
+      <div class="flex justify-between items-center flex-wrap gap-2">
+        <div>
+          <h2 class="text-sm sm:text-base font-bold text-slate-800">校園校史與重要大事紀</h2>
+          <p class="text-xs text-slate-500">詳實記錄本校人、事、時、地、物等重大發展歷程</p>
+        </div>
+        <button id="adminAddChronicleBtn" onclick="openChronicleModal()"
+          class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
+          ➕ 登錄校園大事紀
+        </button>
+      </div>
+
+      <div id="chronicleTimeline" class="space-y-4"></div>
+    </section>
+
+    <!-- 4. 師生榮譽榜 -->
+    <section id="view-honors" class="hidden space-y-4">
+      <div id="banner-honors-hidden"
+        class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
+        ⚠️ 本模組目前設定為「對訪客隱藏」。僅校務管理人員可見。
+      </div>
+      <div class="flex justify-between items-center flex-wrap gap-2">
+        <div>
+          <h2 class="text-sm sm:text-base font-bold text-slate-800">卓越表現 · 師生榮譽榜</h2>
+          <p class="text-xs text-slate-500">表彰全體師生對外參與競賽、學術研究與特殊優異事蹟</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <div id="honorFilterChips" class="flex gap-1 text-xs"></div>
+          <button id="adminAddHonorBtn" onclick="openHonorModal()"
+            class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
+            🏆 登錄獲獎事蹟
+          </button>
+        </div>
+      </div>
+
+      <div id="honorsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </section>
+
+    <!-- 5. 各處室常用網 (業務交接專區) -->
+    <section id="view-links" class="hidden space-y-4">
+      <div id="banner-links-hidden"
+        class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
+        ⚠️ 本模組目前設定為「對訪客隱藏」。僅校務管理人員可見。
+      </div>
+      <div class="flex justify-between items-center flex-wrap gap-2">
+        <div>
+          <h2 class="text-sm sm:text-base font-bold text-slate-800">各處室常用業務系統與雲端資源</h2>
+          <p class="text-xs text-slate-500">彙整公務網站、差勤填報系統與操作手冊，傳承校務智慧與便利交接</p>
+        </div>
+        <button id="adminAddLinkBtn" onclick="openLinkModal()"
+          class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
+          🔗 登錄常用網站
+        </button>
+      </div>
+
+      <div id="linksContainer" class="space-y-6"></div>
+    </section>
+
+    <!-- 6. 自訂工作表擴充專區 -->
+    <section id="view-custom" class="hidden space-y-4">
+      <div id="banner-custom-hidden"
+        class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
+        ⚠️ 本模組目前設定為「對訪客隱藏」。僅校務管理人員可見。
+      </div>
+      <div class="flex justify-between items-center flex-wrap gap-2">
+        <div>
+          <h2 class="text-sm sm:text-base font-bold text-slate-800">自訂擴充校務工作表</h2>
+          <p class="text-xs text-slate-500">管理者可線上動態建立全新工作表，亦可刪除不再使用的表單</p>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+          <button id="adminDeleteSheetBtn" onclick="deleteCurrentCustomSheet()"
+            class="hidden text-xs sm:text-sm bg-red-50 hover:bg-red-100 text-red-600 font-semibold px-3 py-2 rounded-xl border border-red-200 shadow-xs cursor-pointer">
+            🗑️ 刪除此工作表
+          </button>
+          <button id="adminCreateSheetBtn" onclick="openCreateSheetModal()"
+            class="hidden text-xs sm:text-sm bg-slate-800 hover:bg-slate-900 text-white font-semibold px-3 py-2 rounded-xl shadow-xs cursor-pointer">
+            📄 建立全新工作表
+          </button>
+          <button id="adminAddCustomRowBtn" onclick="openCustomRowModal()"
+            class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
+            ➕ 新增該表資料
+          </button>
+        </div>
+      </div>
+
+      <!-- 自訂工作表選擇分頁標籤 -->
+      <div id="customSheetTabs" class="flex gap-2 border-b border-slate-200 pb-2 overflow-x-auto text-xs"></div>
+      <div id="customSheetContent" class="space-y-4"></div>
+    </section>
+  </main>
+
+  <!-- 模態對話盒 (Modals) -->
+
+  <!-- 1. 管理員登入 Modal -->
+  <div id="loginModal"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-200">
+      <h3 class="text-base font-bold text-slate-900 mb-1">校務管理身分驗證</h3>
+      <p class="text-xs text-slate-500 mb-4">請輸入管理密鑰以啟用維護管理權限。</p>
+      <input type="password" id="passwordInput" placeholder="請輸入管理密鑰"
+        class="w-full px-3 py-2 text-sm border rounded-xl mb-4 focus:ring-2 focus:ring-blue-500 outline-none">
+      <div class="flex justify-end gap-2">
+        <button onclick="closeModal('loginModal')"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer">取消</button>
+        <button onclick="loginAsAdmin()"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">驗證登入</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 全域設定 Modal -->
+  <div id="settingsModal"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div
+      class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <h3 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">⚙️ 校務系統與布景設定</h3>
+      <div class="space-y-4 text-sm">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">系統抬頭名稱</label>
+          <input type="text" id="set_school_title" class="w-full px-3 py-2 border rounded-xl">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">系統副標題描述</label>
+          <input type="text" id="set_school_subtitle" class="w-full px-3 py-2 border rounded-xl">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-2">色系主題挑選</label>
+          <div class="grid grid-cols-3 gap-2 text-xs">
+            <button onclick="selectTheme('ocean')" id="theme-btn-ocean"
+              class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span
+                class="w-5 h-5 rounded-full bg-blue-600"></span><span class="font-bold">公務湛藍</span></button>
+            <button onclick="selectTheme('forest')" id="theme-btn-forest"
+              class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span
+                class="w-5 h-5 rounded-full bg-emerald-600"></span><span class="font-bold">校園翡翠</span></button>
+            <button onclick="selectTheme('sunset')" id="theme-btn-sunset"
+              class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span
+                class="w-5 h-5 rounded-full bg-orange-600"></span><span class="font-bold">暖日晨曦</span></button>
+            <button onclick="selectTheme('lavender')" id="theme-btn-lavender"
+              class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span
+                class="w-5 h-5 rounded-full bg-violet-600"></span><span class="font-bold">人文典雅</span></button>
+            <button onclick="selectTheme('rose')" id="theme-btn-rose"
+              class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span
+                class="w-5 h-5 rounded-full bg-rose-600"></span><span class="font-bold">活力朱紅</span></button>
+            <button onclick="selectTheme('slate')" id="theme-btn-slate"
+              class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span
+                class="w-5 h-5 rounded-full bg-slate-700"></span><span class="font-bold">極簡石墨</span></button>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-2">前台功能模組顯示/隱藏設定 (取消勾選即對訪客隱藏)</label>
+          <div class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
+            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📢 行政公告</span><input
+                type="checkbox" id="set_show_announcements" class="w-4 h-4"></label>
+            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📝
+                研習派代系統</span><input type="checkbox" id="set_show_training" class="w-4 h-4"></label>
+            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📜
+                校園大事紀</span><input type="checkbox" id="set_show_chronicle" class="w-4 h-4"></label>
+            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">🏆
+                師生榮譽榜</span><input type="checkbox" id="set_show_honors" class="w-4 h-4"></label>
+            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">🌐 處室常用網
+                (業務交接)</span><input type="checkbox" id="set_show_links" class="w-4 h-4"></label>
+            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📁
+                自訂擴充項目</span><input type="checkbox" id="set_show_custom" class="w-4 h-4"></label>
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-6">
+        <button onclick="closeModal('settingsModal')"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitSystemSettings()" id="saveSettingsBtn"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">儲存全域設定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 處室清單管理 Modal -->
+  <div id="officeManageModal"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div
+      class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <h3 class="text-base font-bold text-slate-900 mb-1">🏢 行政處室與組別管理</h3>
+      <p class="text-xs text-slate-500 mb-4">管理公告發布及常用網站所使用的處室清單，支援刪除與新增。</p>
+
+      <div class="mb-4">
+        <label class="block text-xs font-bold text-slate-700 mb-2">現存處室清單：</label>
+        <div id="existingOfficesList" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+      </div>
+
+      <div class="border-t border-slate-200 pt-4 space-y-3">
+        <label class="block text-xs font-bold text-slate-700">➕ 新增行政處室或組別</label>
+        <div class="flex gap-2">
+          <input type="text" id="newOfficeInput" placeholder="例如：圖書館、實習處、研發處"
+            class="flex-1 px-3 py-2 text-sm border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+          <button onclick="submitNewOffice()"
+            class="text-xs font-semibold px-4 py-2 rounded-xl text-white theme-bg whitespace-nowrap cursor-pointer">確定新增</button>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 mt-6">
+        <button onclick="closeModal('officeManageModal')"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 新增教師名冊 Modal -->
+  <div id="addTeacherModal"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200">
+      <h3 class="text-base font-bold text-slate-900 mb-2">👥 新增同仁至教師名冊</h3>
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">姓名</label>
+          <input type="text" id="newTeacherName" placeholder="請輸入教師姓名" class="w-full px-3 py-2 border rounded-xl">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">職稱身分</label>
+          <select id="newTeacherRole" class="w-full px-3 py-2 border rounded-xl">
+            <option value="行政">行政人員</option>
+            <option value="教師">專任教師 / 導師</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">所屬處室或年級</label>
+          <input type="text" id="newTeacherOffice" placeholder="例如：教導處、三年級" class="w-full px-3 py-2 border rounded-xl">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-5">
+        <button onclick="closeModal('addTeacherModal')"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitNewTeacher()"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">加入名冊</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 行政公告編輯 Modal -->
+  <div id="announceModal"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div
+      class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <h3 class="text-base font-bold text-slate-900 mb-3" id="annModalTitle">發布行政公告</h3>
+      <input type="hidden" id="annId">
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">發布處室</label>
+          <select id="annOfficeSelect" class="w-full px-3 py-2 border rounded-xl"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">公告標題</label>
+          <input type="text" id="annTitle" placeholder="例如：115學年度第一學期校務會議日程" class="w-full px-3 py-2 border rounded-xl">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">公告內容</label>
+          <textarea id="annContent" rows="4" placeholder="請填寫詳細行政公告事項..."
+            class="w-full px-3 py-2 border rounded-xl"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">附件下載或線上連結 (選填)</label>
+          <input type="text" id="annLink" placeholder="https://..." class="w-full px-3 py-2 border rounded-xl">
+        </div>
+        <label class="flex items-center gap-2 pt-1 cursor-pointer">
+          <input type="checkbox" id="annTop" class="w-4 h-4 text-blue-600">
+          <span class="text-xs font-bold text-red-600">📌 置頂此公告於首頁</span>
+        </label>
+      </div>
+      <div class="flex justify-end gap-2 mt-5">
+        <button onclick="closeModal('announceModal')"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitAnnouncement()"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認發布</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. 研習派代編輯 Modal -->
+  <div id="trainingModal"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div
+      class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <h3 class="text-base font-bold text-slate-900 mb-3" id="trainingModalTitle">登記研習派代</h3>
+      <input type="hidden" id="trainingId">
+      <div class="space-y-3 text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">1. 職稱身分</label>
+            <select id="trainingRole" class="w-full px-3 py-2 border rounded-xl">
+              <option value="教師">教師</option>
+              <option value="行政">行政人員</option>
+            </select>
+          </div>
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="text-xs font-bold text-slate-700">3. 研習教師</label>
+              <button type="button" onclick="openAddTeacherModal()"
+                class="text-[11px] text-blue-600 hover:underline cursor-pointer">＋新名額</button>
+            </div>
+            <select id="trainingTeacherSelect" class="w-full px-3 py-2 border rounded-xl"></select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">2. 研習活動名稱</label>
+          <input type="text" id="trainingName" placeholder="例如：素養導向評量實務工作坊" class="w-full px-3 py-2 border rounded-xl">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">4. 研習地點</label>
+            <input type="text" id="trainingLocation" placeholder="例如：國家教育研究院"
+              class="w-full px-3 py-2 border rounded-xl">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">5. 職務代理人</label>
+            <select id="trainingSubSelect" class="w-full px-3 py-2 border rounded-xl"></select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">研習日期/時間</label>
+            <input type="text" id="trainingDateTime" placeholder="例如：2026-09-18 全日"
+              class="w-full px-3 py-2 border rounded-xl">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">差假及派代說明</label>
+            <input type="text" id="trainingNote" placeholder="例如：公假排代、已簽核" class="w-full px-3 py-2 border rounded-xl">
+          </div>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-5">
+        <button onclick="closeModal('trainingModal')"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitTraining()"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. 校園大事紀編輯 Modal -->
+  <div id="chronicleModal"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div
+      class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <h3 class="text-base font-bold text-slate-900 mb-3" id="chronicleModalTitle">記錄校園大事紀</h3>
+      <input type="hidden" id="chronicleId">
+      <div class="space-y-3 text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">時 (發生時間/年代)</label>
+            <input type="text" id="chrTime" placeholder="例如：民國五十八年三月" class="w-full px-3 py-2 border rounded-xl">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">記錄人</label>
+            <input type="text" id="chrRecorder" placeholder="例如：曾壬保" class="w-full px-3 py-2 border rounded-xl">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">人 (主要人物)</label>
+            <input type="text" id="chrPeople" placeholder="例如：小林登八夫婦、歷任校長" class="w-full px-3 py-2 border rounded-xl">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">地 (發生地點)</label>
+            <input type="text" id="chrLocation" placeholder="例如：本校校史館前廣場" class="w-full px-3 py-2 border rounded-xl">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">物 (紀念文物/照片/重要事物)</label>
+          <input type="text" id="chrObjects" placeholder="例如：訪校留念照片與墨寶" class="w-full px-3 py-2 border rounded-xl">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">事 (大事紀內容詳細描述)</label>
+          <textarea id="chrDetail" rows="3" placeholder="例如：本校首任校長小林登八夫婦返校訪問..."
+            class="w-full px-3 py-2 border rounded-xl"></textarea>
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-5">
+        <button onclick="closeModal('chronicleModal')"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitChronicle()"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">記錄封存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. 師生榮譽榜 Modal -->
+  <div id="honorModal"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200">
+      <h3 class="text-base font-bold text-slate-900 mb-3" id="honorModalTitle">登錄師生榮譽榜</h3>
+      <input type="hidden" id="honorId">
+      <div class="space-y-3 text-sm">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">對象類別</label>
+            <select id="honorCategory" class="w-full px-3 py-2 border rounded-xl">
+              <option value="學生組">學生組</option>
+              <option value="教師組">教師組</option>
+              <option value="團體組">學校團體組</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">獲獎日期</label>
+            <input type="date" id="honorDate" class="w-full px-3 py-2 border rounded-xl">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">競賽或榮譽名稱</label>
+          <input type="text" id="honorContest" placeholder="例如：全國中小學科展環境科學組" class="w-full px-3 py-2 border rounded-xl">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">得獎人或班級</label>
+            <input type="text" id="honorWinner" placeholder="例如：六年甲班 吳念真" class="w-full px-3 py-2 border rounded-xl">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">名次或獎項</label>
+            <input type="text" id="honorRank" placeholder="例如：特優第一名"
+              class="w-full px-3 py-2 border rounded-xl font-bold text-amber-600">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">指導老師或主辦單位</label>
+          <input type="text" id="honorMentor" placeholder="例如：指導老師：李宗翰" class="w-full px-3 py-2 border rounded-xl">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-5">
+        <button onclick="closeModal('honorModal')"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitHonor()"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認登錄</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. 處室常用網 Modal -->
+  <div id="linkModal"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200">
+      <h3 class="text-base font-bold text-slate-900 mb-3" id="linkModalTitle">登錄常用業務網站 (交接備忘)</h3>
+      <input type="hidden" id="linkId">
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">所屬處室</label>
+          <select id="linkOfficeSelect" class="w-full px-3 py-2 border rounded-xl"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">網站或系統名稱</label>
+          <input type="text" id="linkName" placeholder="例如：主計會計整合帳務系統" class="w-full px-3 py-2 border rounded-xl">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">系統網址 (URL)</label>
+          <input type="text" id="linkUrl" placeholder="https://..." class="w-full px-3 py-2 border rounded-xl">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">功能說明與交接要點</label>
+          <textarea id="linkDesc" rows="2" placeholder="說明本系統用途及日常作業交接注意流程..."
+            class="w-full px-3 py-2 border rounded-xl"></textarea>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">帳號權限或備註提醒</label>
+          <input type="text" id="linkAccountTip" placeholder="例如：新進同仁需向教務組申請自然人憑證權限"
+            class="w-full px-3 py-2 border rounded-xl">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-5">
+        <button onclick="closeModal('linkModal')"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitPortalLink()"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">儲存網站</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. 建立自訂工作表 Modal -->
+  <div id="createSheetModal"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200">
+      <h3 class="text-base font-bold text-slate-900 mb-2">📄 建立全新自訂工作表</h3>
+      <p class="text-xs text-slate-500 mb-4">系統將自動於後端試算表建立新分頁，並立即在前台生成管理介面。</p>
+      <div class="space-y-3 text-sm">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">工作表名稱 (試算表分頁名)</label>
+          <input type="text" id="newCustomSheetName" placeholder="例如：設備維修登記表"
+            class="w-full px-3 py-2 border rounded-xl">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">前台顯示中文標題</label>
+          <input type="text" id="newCustomSheetTitle" placeholder="例如：校園水電與資訊設備維修"
+            class="w-full px-3 py-2 border rounded-xl">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">自訂欄位清單 (以逗號分隔)</label>
+          <input type="text" id="newCustomSheetCols" placeholder="例如：報修日期, 處室地點, 損壞狀況, 申請人, 處理進度"
+            class="w-full px-3 py-2 border rounded-xl">
+          <p class="text-[11px] text-slate-400 mt-1">※ 系統會自動為您追加 ID 與登錄時間欄位。</p>
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">備註說明</label>
+          <input type="text" id="newCustomSheetNote" placeholder="例如：供各班級與處室即時填報修繕"
+            class="w-full px-3 py-2 border rounded-xl">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 mt-5">
+        <button onclick="closeModal('createSheetModal')"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitCreateSheet()"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">建立工作表</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11. 自訂工作表資料列填寫 Modal -->
+  <div id="customRowModal"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div
+      class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <h3 class="text-base font-bold text-slate-900 mb-1" id="customRowModalTitle">新增資料</h3>
+      <p class="text-xs text-slate-500 mb-4" id="customRowModalSub"></p>
+      <input type="hidden" id="customRowId">
+      <div id="customRowFieldsContainer" class="space-y-3 text-sm"></div>
+      <div class="flex justify-end gap-2 mt-5">
+        <button onclick="closeModal('customRowModal')"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitCustomRow()"
+          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認存檔</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12. 系統通知與確認訊息 Modal -->
+  <div id="msgModal"
+    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-60 hidden">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-center">
+      <div id="msgModalIcon" class="text-3xl mb-2">🔔</div>
+      <h4 id="msgModalTitle" class="text-sm font-bold text-slate-900 mb-1.5">系統訊息</h4>
+      <p id="msgModalContent" class="text-xs text-slate-600 mb-5 whitespace-pre-line leading-relaxed"></p>
+      <div id="msgModalActions" class="flex justify-center gap-2">
+        <button id="msgModalCancelBtn"
+          class="hidden text-xs font-semibold px-4 py-2 rounded-xl text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer">取消</button>
+        <button id="msgModalOkBtn" class="text-xs font-semibold px-5 py-2 rounded-xl text-white theme-bg cursor-pointer">確認</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 前端核心程式邏輯 -->
+  <script>
+    let schoolData = null;
+    let isAdmin = false;
+    let adminPassword = '';
+    let currentActiveTab = 'announcements';
+    let selectedThemeKey = 'ocean';
+    let currentOfficeFilter = 'all';
+    let currentHonorFilter = 'all';
+    let selectedCustomSheetKey = '';
+
+    function showNotice(title, message, icon = 'ℹ️') {
+      document.getElementById('msgModalIcon').innerText = icon;
+      document.getElementById('msgModalTitle').innerText = title;
+      document.getElementById('msgModalContent').innerText = message;
+      document.getElementById('msgModalCancelBtn').classList.add('hidden');
+      const okBtn = document.getElementById('msgModalOkBtn');
+      okBtn.onclick = () => closeModal('msgModal');
+      document.getElementById('msgModal').classList.remove('hidden');
+    }
+
+    function showConfirmDialog(title, message, onConfirm, icon = '❓') {
+      document.getElementById('msgModalIcon').innerText = icon;
+      document.getElementById('msgModalTitle').innerText = title;
+      document.getElementById('msgModalContent').innerText = message;
+      const cancelBtn = document.getElementById('msgModalCancelBtn');
+      cancelBtn.classList.remove('hidden');
+      cancelBtn.onclick = () => closeModal('msgModal');
+      const okBtn = document.getElementById('msgModalOkBtn');
+      okBtn.onclick = () => {
+        closeModal('msgModal');
+        if (typeof onConfirm === 'function') onConfirm();
+      };
+      document.getElementById('msgModal').classList.remove('hidden');
+    }
+
+    window.onload = function () {
+      loadAllData();
+    };
+
+    function loadAllData() {
+      const loader = document.getElementById('mainLoader');
+      loader.classList.remove('hidden');
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(function (res) {
+            loader.classList.add('hidden');
+            if (!res || !res.success) {
+              showNotice('載入失敗', (res && res.error) ? res.error : '資料庫回應異常', '❌');
+              return;
+            }
+            handleDataLoaded(res);
+          })
+          .withFailureHandler(function (err) {
+            loader.classList.add('hidden');
+            showNotice('連線雲端異常', '連線雲端資料庫時發生錯誤：\n' + err.message + '\n\n請確認試算表 ID 設定與共用存取權限。', '⚠️');
+          })
+          .getAllSchoolData();
+      } else {
+        setTimeout(() => {
+          loader.classList.add('hidden');
+          const mockData = getMockSchoolData();
+          handleDataLoaded(mockData);
+        }, 300);
+      }
+    }
+
+    function handleDataLoaded(res) {
+      schoolData = res;
+      if (res.settings) {
+        document.getElementById('headerTitle').innerText = res.settings.school_title || '智慧校務行政整合系統';
+        document.getElementById('headerSubtitle').innerText = res.settings.school_subtitle || '行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網';
+        applyTheme(res.settings.theme || 'ocean');
+      }
+      populateSelectOptions();
+      updateModuleVisibility();
+      renderAllModules();
+    }
+
+    function applyTheme(themeKey) {
+      selectedThemeKey = themeKey;
+      document.body.setAttribute('data-theme', themeKey);
+      ['ocean', 'forest', 'sunset', 'lavender', 'rose', 'slate'].forEach(k => {
+        const btn = document.getElementById(`theme-btn-${k}`);
+        if (btn) {
+          if (k === themeKey) {
+            btn.classList.add('ring-2', 'ring-blue-500', 'border-blue-500', 'bg-slate-100');
+          } else {
+            btn.classList.remove('ring-2', 'ring-blue-500', 'border-blue-500', 'bg-slate-100');
+          }
+        }
+      });
+    }
+
+    function selectTheme(k) { applyTheme(k); }
+
+    function populateSelectOptions() {
+      if (!schoolData) return;
+      const offices = schoolData.offices || [];
+      const teachers = schoolData.teachers || [];
+
+      const annSel = document.getElementById('annOfficeSelect');
+      annSel.innerHTML = offices.map(o => `<option value="${o}">${o}</option>`).join('');
+
+      const linkSel = document.getElementById('linkOfficeSelect');
+      linkSel.innerHTML = offices.map(o => `<option value="${o}">${o}</option>`).join('');
+
+      const tSel = document.getElementById('trainingTeacherSelect');
+      const subSel = document.getElementById('trainingSubSelect');
+      const teacherOpts = teachers.map(t => `<option value="${t['教師姓名']}">${t['教師姓名']} (${t['身分職稱'] || '同仁'})</option>`).join('');
+      tSel.innerHTML = teacherOpts;
+      subSel.innerHTML = `<option value="無派代">無派代 (無課務)</option>` + teacherOpts;
+    }
+
+    function updateModuleVisibility() {
+      const s = (schoolData && schoolData.settings) ? schoolData.settings : {};
+      const modules = [
+        { key: 'announcements', show: (s.show_announcements !== false && s.show_announcements !== 'false') },
+        { key: 'training', show: (s.show_training !== false && s.show_training !== 'false') },
+        { key: 'chronicle', show: (s.show_chronicle !== false && s.show_chronicle !== 'false') },
+        { key: 'honors', show: (s.show_honors !== false && s.show_honors !== 'false') },
+        { key: 'links', show: (s.show_links !== false && s.show_links !== 'false') },
+        { key: 'custom', show: (s.show_custom !== false && s.show_custom !== 'false') }
+      ];
+
+      let firstVisible = null;
+      modules.forEach(m => {
+        const tabBtn = document.getElementById(`tab-${m.key}`);
+        const badge = document.getElementById(`badge-${m.key}-hidden`);
+        const banner = document.getElementById(`banner-${m.key}-hidden`);
+
+        if (isAdmin) {
+          tabBtn.classList.remove('hidden');
+          if (!m.show) {
+            if (badge) badge.classList.remove('hidden');
+            if (banner) banner.classList.remove('hidden');
+          } else {
+            if (badge) badge.classList.add('hidden');
+            if (banner) banner.classList.add('hidden');
+          }
+          if (!firstVisible) firstVisible = m.key;
+        } else {
+          if (badge) badge.classList.add('hidden');
+          if (banner) banner.classList.add('hidden');
+          if (m.show) {
+            tabBtn.classList.remove('hidden');
+            if (!firstVisible) firstVisible = m.key;
+          } else {
+            tabBtn.classList.add('hidden');
+            document.getElementById(`view-${m.key}`).classList.add('hidden');
+          }
+        }
+      });
+
+      const currentMod = modules.find(m => m.key === currentActiveTab);
+      if (!isAdmin && currentMod && !currentMod.show && firstVisible) {
+        switchTab(firstVisible);
+      } else {
+        switchTab(currentActiveTab);
+      }
+    }
+
+    function updateAdminUI() {
+      const badge = document.getElementById('adminBadge');
+      const authBtn = document.getElementById('authBtn');
+      const setBtn = document.getElementById('systemSettingsBtn');
+      const btns = [
+        'adminAddAnnounceBtn', 'adminManageOfficeBtn', 'adminAddTeacherBtn',
+        'adminAddTrainingBtn', 'adminAddChronicleBtn', 'adminAddHonorBtn',
+        'adminAddLinkBtn', 'adminCreateSheetBtn', 'adminAddCustomRowBtn',
+        'adminDeleteSheetBtn'
+      ];
+
+      if (isAdmin) {
+        badge.classList.remove('hidden');
+        setBtn.classList.remove('hidden');
+        authBtn.innerText = '登出管理';
+        btns.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.remove('hidden');
+        });
+      } else {
+        badge.classList.add('hidden');
+        setBtn.classList.add('hidden');
+        authBtn.innerText = '管理員登入';
+        btns.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add('hidden');
+        });
+      }
+      updateModuleVisibility();
+      renderAllModules();
+    }
+
+    function toggleAdminLogin() {
+      if (isAdmin) {
+        showConfirmDialog('確認登出', '確定要登出行政管理模式嗎？', () => {
+          isAdmin = false;
+          adminPassword = '';
+          updateAdminUI();
+          showNotice('已登出', '已退出校務管理模式。', '🚪');
+        });
+      } else {
+        document.getElementById('passwordInput').value = '';
+        document.getElementById('loginModal').classList.remove('hidden');
+      }
+    }
+
+    function loginAsAdmin() {
+      const pwd = document.getElementById('passwordInput').value.trim();
+      if (!pwd) return showNotice('請輸入密鑰', '請輸入管理密鑰！', '⚠️');
+      adminPassword = pwd;
+      isAdmin = true;
+      closeModal('loginModal');
+      document.getElementById('passwordInput').value = '';
+      updateAdminUI();
+      showNotice('登入成功', '已啟用行政管理模式，您現在可新增、編輯、刪除各模組項目與處室。', '🎉');
+    }
+
+    function switchTab(tabId) {
+      currentActiveTab = tabId;
+      ['announcements', 'training', 'chronicle', 'honors', 'links', 'custom'].forEach(t => {
+        document.getElementById(`view-${t}`).classList.add('hidden');
+        const tabEl = document.getElementById(`tab-${t}`);
+        if (tabEl) {
+          tabEl.classList.remove('tab-active');
+          tabEl.classList.add('text-slate-500');
+        }
+      });
+      const targetView = document.getElementById(`view-${tabId}`);
+      if (targetView) targetView.classList.remove('hidden');
+      const targetTab = document.getElementById(`tab-${tabId}`);
+      if (targetTab) {
+        targetTab.classList.add('tab-active');
+        targetTab.classList.remove('text-slate-500');
+      }
+    }
+
+    function renderAllModules() {
+      renderAnnouncements();
+      renderTraining();
+      renderChronicle();
+      renderHonors();
+      renderLinks();
+      renderCustomSheets();
+    }
+
+    function renderAnnouncements(filter = currentOfficeFilter) {
+      currentOfficeFilter = filter;
+      const chipContainer = document.getElementById('officeFilterChips');
+      const offices = (schoolData && schoolData.offices) ? schoolData.offices : [];
+      const list = (schoolData && schoolData.announcements) ? schoolData.announcements : [];
+
+      chipContainer.innerHTML = '';
+      const allOffices = ['全部處室', ...offices];
+      allOffices.forEach(off => {
+        const isAct = (filter === 'all' && off === '全部處室') || filter === off;
+        const btn = document.createElement('button');
+        btn.className = isAct
+          ? 'theme-bg text-white px-3 py-1 rounded-lg font-bold transition-all shadow-xs cursor-pointer'
+          : 'bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1 rounded-lg font-medium transition-all cursor-pointer';
+        btn.innerText = off;
+        btn.onclick = () => renderAnnouncements(off === '全部處室' ? 'all' : off);
+        chipContainer.appendChild(btn);
+      });
+
+      const container = document.getElementById('announcementsList');
+      container.innerHTML = '';
+      let filtered = (filter === 'all') ? list : list.filter(a => a['發布處室'] === filter);
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<p class="col-span-2 text-center text-slate-400 text-sm py-12">目前尚無此處室行政公告。</p>';
+        return;
+      }
+
+      filtered.forEach(a => {
+        const isTop = a['是否置頂'] === '是';
+        const card = document.createElement('div');
+        card.className = `p-5 rounded-2xl border ${isTop ? 'bg-amber-50/40 border-amber-300 ring-1 ring-amber-300/40' : 'bg-white border-slate-200'} shadow-xs flex flex-col justify-between`;
+        let linkHtml = a['附件或連結'] ? `<a href="${a['附件或連結']}" target="_blank" class="text-xs theme-text hover:underline inline-flex items-center gap-1 mt-3 font-semibold">🔗 檢視公務附件或相關連結</a>` : '';
+        let adminActions = isAdmin ? `
+          <div class="flex items-center gap-2">
+            <button onclick="editAnnouncement('${a['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button>
+            <button onclick="deleteAnnouncement('${a['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
+          </div>` : '';
+
+        card.innerHTML = `
+          <div>
+            <div class="flex justify-between items-start gap-2 mb-2">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                ${isTop ? '<span class="text-[10px] bg-red-600 text-white font-bold px-2 py-0.5 rounded">置頂公告</span>' : ''}
+                <span class="text-[11px] theme-soft-bg theme-text font-bold px-2.5 py-0.5 rounded-lg border theme-border">${a['發布處室'] || '行政處室'}</span>
+                <span class="text-xs text-slate-400">${a['發布日期'] || ''}</span>
+              </div>
+              ${adminActions}
+            </div>
+            <h4 class="text-base font-bold text-slate-900 mb-2 leading-snug">${a['公告標題']}</h4>
+            <p class="text-xs sm:text-sm text-slate-600 whitespace-pre-line leading-relaxed">${a['詳細內容']}</p>
+          </div>
+          ${linkHtml}`;
+        container.appendChild(card);
+      });
+    }
+
+    function renderTraining() {
+      const tbody = document.getElementById('trainingTableBody');
+      tbody.innerHTML = '';
+      const list = (schoolData && schoolData.training) ? schoolData.training : [];
+
+      document.querySelectorAll('.admin-col').forEach(el => {
+        if (isAdmin) el.classList.remove('hidden'); else el.classList.add('hidden');
+      });
+
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-slate-400 py-10 text-xs">目前尚無同仁登記研習派代。</td></tr>';
+        return;
+      }
+
+      list.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50/70 transition-colors";
+        let adminAction = isAdmin ? `
+          <td class="py-3 px-3 text-center admin-col">
+            <button onclick="editTraining('${t['ID']}')" class="text-blue-600 hover:underline mr-2 font-semibold cursor-pointer">編輯</button>
+            <button onclick="deleteTraining('${t['ID']}')" class="text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
+          </td>` : '';
+
+        tr.innerHTML = `
+          <td class="py-3 px-3"><span class="text-xs px-2 py-0.5 rounded-md font-bold ${t['身分職稱'] === '行政' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}">${t['身分職稱'] || '教師'}</span></td>
+          <td class="py-3 px-3 font-bold text-slate-900">${t['研習教師'] || '-'}</td>
+          <td class="py-3 px-4 font-medium text-slate-800 max-w-xs">${t['研習名稱'] || '-'}</td>
+          <td class="py-3 px-3 text-slate-600">${t['研習地點'] || '-'}</td>
+          <td class="py-3 px-3 text-slate-500 whitespace-nowrap">${t['研習日期時間'] || '-'}</td>
+          <td class="py-3 px-3 font-bold text-indigo-700">${t['職務代理人'] || '無派代'}</td>
+          <td class="py-3 px-3 text-xs text-slate-500">${t['備註與派代差假'] || '-'}</td>
+          ${adminAction}`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderChronicle() {
+      const container = document.getElementById('chronicleTimeline');
+      container.innerHTML = '';
+      const list = (schoolData && schoolData.chronicle) ? schoolData.chronicle : [];
+
+      if (list.length === 0) {
+        container.innerHTML = '<p class="text-center text-slate-400 py-12 text-xs">目前尚無校園大事紀記錄。</p>';
+        return;
+      }
+
+      list.forEach(c => {
+        const item = document.createElement('div');
+        item.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-xs relative";
+        let adminAction = isAdmin ? `
+          <div class="flex items-center gap-2">
+            <button onclick="editChronicle('${c['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button>
+            <button onclick="deleteChronicle('${c['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
+          </div>` : '';
+
+        item.innerHTML = `
+          <div class="flex justify-between items-start mb-2">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-white font-mono">📅 ${c['發生時間'] || '年代不詳'}</span>
+              <span class="text-xs font-bold theme-soft-bg theme-text px-2 py-0.5 rounded">📍 地點：${c['發生地點'] || '校內'}</span>
+            </div>
+            ${adminAction}
+          </div>
+          <h4 class="text-base font-bold text-slate-900 mb-2 leading-relaxed">${c['記事內容']}</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
+            <div><strong>👥 參與人物：</strong>${c['主要人物'] || '全校同仁'}</div>
+            <div><strong>📜 相關事物/文物：</strong>${c['關鍵事物或文物'] || '無特載'}</div>
+          </div>
+          <div class="text-right text-[11px] text-slate-400 mt-2 font-medium">記錄人：${c['記錄人'] || '校史室'}</div>`;
+        container.appendChild(item);
+      });
+    }
+
+    function renderHonors(filter = currentHonorFilter) {
+      currentHonorFilter = filter;
+      const chipContainer = document.getElementById('honorFilterChips');
+      const list = (schoolData && schoolData.honors) ? schoolData.honors : [];
+
+      const categories = ['全部', '學生組', '教師組', '團體組'];
+      chipContainer.innerHTML = '';
+      categories.forEach(cat => {
+        const isAct = (filter === 'all' && cat === '全部') || filter === cat;
+        const btn = document.createElement('button');
+        btn.className = isAct
+          ? 'theme-bg text-white px-2.5 py-1 rounded-lg font-bold shadow-xs cursor-pointer'
+          : 'bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1 rounded-lg font-medium cursor-pointer';
+        btn.innerText = cat;
+        btn.onclick = () => renderHonors(cat === '全部' ? 'all' : cat);
+        chipContainer.appendChild(btn);
+      });
+
+      const container = document.getElementById('honorsContainer');
+      container.innerHTML = '';
+      let filtered = (filter === 'all') ? list : list.filter(h => h['對象類別'] === filter);
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<p class="col-span-3 text-center text-slate-400 py-12 text-xs">目前尚無獲獎榮譽紀錄。</p>';
+        return;
+      }
+
+      filtered.forEach(h => {
+        const card = document.createElement('div');
+        card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between";
+        let adminAction = isAdmin ? `
+          <div class="flex items-center gap-2">
+            <button onclick="editHonor('${h['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button>
+            <button onclick="deleteHonor('${h['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
+          </div>` : '';
+
+        card.innerHTML = `
+          <div>
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-xs font-bold theme-soft-bg theme-text px-2 py-0.5 rounded-lg border theme-border">${h['對象類別'] || '榮譽'}</span>
+              ${adminAction}
+            </div>
+            <h4 class="text-base font-bold text-slate-900 mb-1 leading-snug">${h['競賽或榮譽名稱']}</h4>
+            <div class="text-sm font-bold text-amber-600 mb-2">🏆 ${h['名次或獎項']}</div>
+            <div class="text-xs text-slate-700 mb-1"><strong>得獎對象：</strong>${h['得獎人或班級']}</div>
+            ${h['指導老師或主辦單位'] ? `<div class="text-xs text-slate-500">${h['指導老師或主辦單位']}</div>` : ''}
+          </div>
+          <div class="text-[11px] text-slate-400 mt-3 border-t border-slate-100 pt-2 flex justify-between">
+            <span>獲獎日期：${h['獲獎日期'] || '-'}</span>
+          </div>`;
+        container.appendChild(card);
+      });
+    }
+
+    function renderLinks() {
+      const container = document.getElementById('linksContainer');
+      container.innerHTML = '';
+      const list = (schoolData && schoolData.links) ? schoolData.links : [];
+      const offices = (schoolData && schoolData.offices) ? schoolData.offices : [];
+
+      if (list.length === 0) {
+        container.innerHTML = '<p class="text-center text-slate-400 py-12 text-xs">目前尚無處室常用網紀錄。</p>';
+        return;
+      }
+
+      offices.forEach(office => {
+        const linksInOffice = list.filter(l => l['所屬處室'] === office);
+        if (linksInOffice.length === 0) return;
+
+        const groupDiv = document.createElement('div');
+        groupDiv.className = "space-y-3";
+        groupDiv.innerHTML = `<h3 class="text-sm font-bold text-slate-800 flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full theme-bg inline-block"></span>${office} 專用業務系統與資料庫</h3>`;
+
+        const grid = document.createElement('div');
+        grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3";
+
+        linksInOffice.forEach(l => {
+          const card = document.createElement('div');
+          card.className = "bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-blue-400 transition-colors";
+          let adminAction = isAdmin ? `
+            <div class="flex items-center gap-2">
+              <button onclick="editPortalLink('${l['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button>
+              <button onclick="deletePortalLink('${l['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
+            </div>` : '';
+
+          card.innerHTML = `
+            <div>
+              <div class="flex justify-between items-start mb-1">
+                <span class="text-xs text-slate-400">${office}</span>
+                ${adminAction}
+              </div>
+              <h4 class="text-sm font-bold text-slate-900 mb-1 leading-snug">
+                <a href="${l['系統網址']}" target="_blank" class="theme-text hover:underline inline-flex items-center gap-1">🔗 ${l['網站或系統名稱']}</a>
+              </h4>
+              <p class="text-xs text-slate-600 mb-2 leading-relaxed">${l['功能說明與交接備忘'] || '無特別說明'}</p>
+            </div>
+            ${l['帳號權限提醒'] ? `<div class="text-[11px] bg-amber-50 text-amber-800 p-2 rounded-xl border border-amber-200">🔑 權限備註：${l['帳號權限提醒']}</div>` : ''}`;
+          grid.appendChild(card);
+        });
+
+        groupDiv.appendChild(grid);
+        container.appendChild(groupDiv);
+      });
+    }
+
+    function renderCustomSheets() {
+      const tabContainer = document.getElementById('customSheetTabs');
+      const contentContainer = document.getElementById('customSheetContent');
+      tabContainer.innerHTML = '';
+      contentContainer.innerHTML = '';
+
+      const sheetsObj = (schoolData && schoolData.customSheets) ? schoolData.customSheets : {};
+      const sheetKeys = Object.keys(sheetsObj);
+
+      if (sheetKeys.length === 0) {
+        tabContainer.innerHTML = '<span class="text-xs text-slate-400">尚未建立任何自訂工作表。</span>';
+        contentContainer.innerHTML = '<p class="text-center text-slate-400 py-12 text-xs">管理者可點選上方「📄 建立全新工作表」按鈕，自由擴充自訂資料庫。</p>';
+        document.getElementById('adminDeleteSheetBtn').classList.add('hidden');
+        return;
+      }
+
+      if (!selectedCustomSheetKey || !sheetsObj[selectedCustomSheetKey]) {
+        selectedCustomSheetKey = sheetKeys[0];
+      }
+
+      if (isAdmin) {
+        document.getElementById('adminDeleteSheetBtn').classList.remove('hidden');
+      }
+
+      sheetKeys.forEach(k => {
+        const item = sheetsObj[k];
+        const displayTitle = (item.meta && item.meta['中文標題']) || k;
+        const btn = document.createElement('button');
+        const isAct = (k === selectedCustomSheetKey);
+        btn.className = isAct
+          ? 'theme-bg text-white px-3 py-1.5 rounded-xl font-bold transition-all shadow-xs cursor-pointer'
+          : 'bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl font-medium transition-all cursor-pointer';
+        btn.innerText = displayTitle;
+        btn.onclick = () => {
+          selectedCustomSheetKey = k;
+          renderCustomSheets();
+        };
+        tabContainer.appendChild(btn);
+      });
+
+      const current = sheetsObj[selectedCustomSheetKey];
+      if (!current) return;
+
+      const meta = current.meta || {};
+      const rows = current.rows || [];
+      const cols = (meta['欄位定義'] || '').split(',').map(s => s.trim()).filter(Boolean);
+
+      let headerHtml = cols.map(c => `<th class="py-3 px-3">${c}</th>`).join('');
+      if (isAdmin) headerHtml += `<th class="py-3 px-3 text-center">操作</th>`;
+
+      let rowsHtml = '';
+      if (rows.length === 0) {
+        rowsHtml = `<tr><td colspan="${cols.length + (isAdmin ? 1 : 0)}" class="text-center py-10 text-slate-400 text-xs">目前尚無資料列，請點選「新增該表資料」。</td></tr>`;
+      } else {
+        rows.forEach(r => {
+          let colsTd = cols.map(c => `<td class="py-2.5 px-3">${r[c] || '-'}</td>`).join('');
+          let actionTd = isAdmin ? `
+            <td class="py-2.5 px-3 text-center whitespace-nowrap">
+              <button onclick="deleteCustomRow('${selectedCustomSheetKey}', '${r['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
+            </td>` : '';
+          rowsHtml += `<tr class="hover:bg-slate-50 transition-colors">${colsTd}${actionTd}</tr>`;
+        });
+      }
+
+      contentContainer.innerHTML = `
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <div>
+              <h3 class="text-sm font-bold text-slate-900">${meta['中文標題'] || selectedCustomSheetKey}</h3>
+              <p class="text-xs text-slate-500">${meta['說明備忘'] || '線上動態擴充資料表'}</p>
+            </div>
+            <span class="text-xs text-slate-400">資料總筆數：${rows.length} 筆</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm">
+              <thead class="bg-slate-100 text-slate-700 border-b border-slate-200 font-bold">
+                <tr>${headerHtml}</tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">${rowsHtml}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    function onGlobalSearch(query) {
+      const q = query.trim().toLowerCase();
+      const resultView = document.getElementById('searchResultView');
+      const resultList = document.getElementById('searchResultList');
+      const clearBtn = document.getElementById('clearSearchBtn');
+      const keywordBadge = document.getElementById('searchKeywordBadge');
+
+      if (!q) { clearSearch(); return; }
+      clearBtn.classList.remove('hidden');
+      resultView.classList.remove('hidden');
+      keywordBadge.innerText = `"${query}"`;
+      resultList.innerHTML = '';
+
+      let matches = [];
+
+      (schoolData.announcements || []).forEach(a => {
+        if ((a['公告標題'] || '').toLowerCase().includes(q) || (a['詳細內容'] || '').toLowerCase().includes(q)) {
+          matches.push({ type: '行政公告', icon: '📢', title: `[${a['發布處室']}] ${a['公告標題']}`, desc: a['詳細內容'], action: () => { switchTab('announcements'); clearSearch(); } });
+        }
+      });
+
+      (schoolData.training || []).forEach(t => {
+        const text = `${t['研習教師']} ${t['研習名稱']} ${t['研習地點']} ${t['職務代理人']}`.toLowerCase();
+        if (text.includes(q)) {
+          matches.push({ type: '研習派代', icon: '📝', title: `${t['研習教師']} - ${t['研習名稱']}`, desc: `地點：${t['研習地點']} | 代理人：${t['職務代理人']}`, action: () => { switchTab('training'); clearSearch(); } });
+        }
+      });
+
+      (schoolData.chronicle || []).forEach(c => {
+        const text = `${c['發生時間']} ${c['主要人物']} ${c['發生地點']} ${c['記事內容']}`.toLowerCase();
+        if (text.includes(q)) {
+          matches.push({ type: '校園大事紀', icon: '📜', title: `${c['發生時間']} - ${c['發生地點']}`, desc: c['記事內容'], action: () => { switchTab('chronicle'); clearSearch(); } });
+        }
+      });
+
+      (schoolData.honors || []).forEach(h => {
+        const text = `${h['得獎人或班級']} ${h['競賽或榮譽名稱']} ${h['名次或獎項']}`.toLowerCase();
+        if (text.includes(q)) {
+          matches.push({ type: '師生榮譽榜', icon: '🏆', title: `[${h['名次或獎項']}] ${h['競賽或榮譽名稱']}`, desc: `得獎人：${h['得獎人或班級']}`, action: () => { switchTab('honors'); clearSearch(); } });
+        }
+      });
+
+      (schoolData.links || []).forEach(l => {
+        const text = `${l['所屬處室']} ${l['網站或系統名稱']} ${l['功能說明與交接備忘']}`.toLowerCase();
+        if (text.includes(q)) {
+          matches.push({ type: '處室常用網', icon: '🌐', title: `[${l['所屬處室']}] ${l['網站或系統名稱']}`, desc: l['功能說明與交接備忘'], action: () => { switchTab('links'); clearSearch(); } });
+        }
+      });
+
+      if (matches.length === 0) {
+        resultList.innerHTML = '<p class="text-center text-slate-400 text-xs py-6">查無符合關鍵字的紀錄。</p>';
+        return;
+      }
+
+      matches.forEach(m => {
+        const item = document.createElement('div');
+        item.className = "bg-white p-3.5 rounded-xl border border-slate-200 hover:border-blue-400 cursor-pointer shadow-2xs transition-all";
+        item.innerHTML = `
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-xs font-bold theme-soft-bg theme-text px-2 py-0.5 rounded">${m.icon} ${m.type}</span>
+            <h5 class="text-sm font-bold text-slate-900">${m.title}</h5>
+          </div>
+          <p class="text-xs text-slate-500 line-clamp-2">${m.desc}</p>`;
+        item.onclick = m.action;
+        resultList.appendChild(item);
+      });
+    }
+
+    function clearSearch() {
+      document.getElementById('globalSearchInput').value = '';
+      document.getElementById('clearSearchBtn').classList.add('hidden');
+      document.getElementById('searchResultView').classList.add('hidden');
+    }
+
+    function openOfficeManageModal() {
+      renderOfficeManageList();
+      document.getElementById('newOfficeInput').value = '';
+      document.getElementById('officeManageModal').classList.remove('hidden');
+    }
+
+    function renderOfficeManageList() {
+      const container = document.getElementById('existingOfficesList');
+      container.innerHTML = '';
+      const offices = (schoolData && schoolData.offices) ? schoolData.offices : [];
+
+      if (offices.length === 0) {
+        container.innerHTML = '<p class="text-slate-400 text-xs py-2">目前無處室資料。</p>';
+        return;
+      }
+
+      offices.forEach(officeName => {
+        const div = document.createElement('div');
+        div.className = "flex justify-between items-center bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 text-xs";
+        div.innerHTML = `
+          <span class="font-bold text-slate-800">🏢 ${officeName}</span>
+          <button onclick="deleteOfficeCategoryAction('${officeName}')" class="text-red-500 hover:text-red-700 font-semibold px-2 py-1 rounded hover:bg-red-50 transition-colors cursor-pointer">
+            🗑️ 刪除處室
+          </button>`;
+        container.appendChild(div);
+      });
+    }
+
+    function submitNewOffice() {
+      const name = document.getElementById('newOfficeInput').value.trim();
+      if (!name) return showNotice('提示', '請輸入處室名稱！', '⚠️');
+      callBackend('addOfficeCategory', [name, adminPassword], function (res) {
+        showNotice('成功', res.message, '✅');
+        document.getElementById('newOfficeInput').value = '';
+        loadAllData();
+        setTimeout(renderOfficeManageList, 600);
+      });
+    }
+
+    function deleteOfficeCategoryAction(officeName) {
+      showConfirmDialog('確認刪除處室', `確定要刪除處室【${officeName}】嗎？刪除後該處室將不會出現在公告與常用網清單中。`, () => {
+        callBackend('deleteOfficeCategory', [officeName, adminPassword], function (res) {
+          showNotice('刪除成功', res.message, '🗑️');
+          loadAllData();
+          setTimeout(renderOfficeManageList, 600);
+        });
+      });
+    }
+
+    function openAddTeacherModal() {
+      document.getElementById('newTeacherName').value = '';
+      document.getElementById('newTeacherOffice').value = '';
+      document.getElementById('addTeacherModal').classList.remove('hidden');
+    }
+
+    function submitNewTeacher() {
+      const payload = {
+        name: document.getElementById('newTeacherName').value.trim(),
+        title: document.getElementById('newTeacherRole').value,
+        office: document.getElementById('newTeacherOffice').value.trim()
+      };
+      if (!payload.name) return showNotice('提示', '請輸入同仁姓名！', '⚠️');
+      callBackend('addTeacherRecord', [payload, adminPassword], function (res) {
+        closeModal('addTeacherModal');
+        showNotice('新增成功', res.message, '👥');
+        loadAllData();
+      });
+    }
+
+    function openAnnounceModal() {
+      document.getElementById('annModalTitle').innerText = '發布行政公告';
+      document.getElementById('annId').value = '';
+      document.getElementById('annTitle').value = '';
+      document.getElementById('annContent').value = '';
+      document.getElementById('annLink').value = '';
+      document.getElementById('annTop').checked = false;
+      document.getElementById('announceModal').classList.remove('hidden');
+    }
+
+    function editAnnouncement(id) {
+      const item = (schoolData.announcements || []).find(a => String(a['ID']) === String(id));
+      if (!item) return;
+      document.getElementById('annModalTitle').innerText = '編輯行政公告';
+      document.getElementById('annId').value = item['ID'];
+      document.getElementById('annOfficeSelect').value = item['發布處室'] || '';
+      document.getElementById('annTitle').value = item['公告標題'] || '';
+      document.getElementById('annContent').value = item['詳細內容'] || '';
+      document.getElementById('annLink').value = item['附件或連結'] || '';
+      document.getElementById('annTop').checked = (item['是否置頂'] === '是');
+      document.getElementById('announceModal').classList.remove('hidden');
+    }
+
+    function submitAnnouncement() {
+      const payload = {
+        id: document.getElementById('annId').value,
+        office: document.getElementById('annOfficeSelect').value,
+        title: document.getElementById('annTitle').value.trim(),
+        content: document.getElementById('annContent').value.trim(),
+        link: document.getElementById('annLink').value.trim(),
+        isTop: document.getElementById('annTop').checked
+      };
+      if (!payload.title || !payload.content) return showNotice('提示', '公告標題與詳細內容為必填！', '⚠️');
+      callBackend('saveAnnouncement', [payload, adminPassword], function (res) {
+        closeModal('announceModal');
+        showNotice('成功', res.message, '📢');
+        loadAllData();
+      });
+    }
+
+    function deleteAnnouncement(id) {
+      showConfirmDialog('確認刪除公告', '確定刪除此篇公告嗎？', () => {
+        callBackend('deleteAnnouncement', [id, adminPassword], function (res) {
+          showNotice('已刪除', res.message, '🗑️');
+          loadAllData();
+        });
+      });
+    }
+
+    function openTrainingModal() {
+      document.getElementById('trainingModalTitle').innerText = '登記研習派代';
+      document.getElementById('trainingId').value = '';
+      document.getElementById('trainingName').value = '';
+      document.getElementById('trainingLocation').value = '';
+      document.getElementById('trainingDateTime').value = '';
+      document.getElementById('trainingNote').value = '';
+      document.getElementById('trainingModal').classList.remove('hidden');
+    }
+
+    function editTraining(id) {
+      const item = (schoolData.training || []).find(t => String(t['ID']) === String(id));
+      if (!item) return;
+      document.getElementById('trainingModalTitle').innerText = '編輯研習派代';
+      document.getElementById('trainingId').value = item['ID'];
+      document.getElementById('trainingRole').value = item['身分職稱'] || '教師';
+      document.getElementById('trainingTeacherSelect').value = item['研習教師'] || '';
+      document.getElementById('trainingName').value = item['研習名稱'] || '';
+      document.getElementById('trainingLocation').value = item['研習地點'] || '';
+      document.getElementById('trainingSubSelect').value = item['職務代理人'] || '無派代';
+      document.getElementById('trainingDateTime').value = item['研習日期時間'] || '';
+      document.getElementById('trainingNote').value = item['備註與派代差假'] || '';
+      document.getElementById('trainingModal').classList.remove('hidden');
+    }
+
+    function submitTraining() {
+      const payload = {
+        id: document.getElementById('trainingId').value,
+        roleType: document.getElementById('trainingRole').value,
+        teacherName: document.getElementById('trainingTeacherSelect').value,
+        trainingName: document.getElementById('trainingName').value.trim(),
+        location: document.getElementById('trainingLocation').value.trim(),
+        substituteTeacher: document.getElementById('trainingSubSelect').value,
+        dateTime: document.getElementById('trainingDateTime').value.trim(),
+        note: document.getElementById('trainingNote').value.trim()
+      };
+      if (!payload.trainingName) return showNotice('提示', '研習活動名稱為必填！', '⚠️');
+      callBackend('saveTrainingRecord', [payload, adminPassword], function (res) {
+        closeModal('trainingModal');
+        showNotice('成功', res.message, '📝');
+        loadAllData();
+      });
+    }
+
+    function deleteTraining(id) {
+      showConfirmDialog('確認刪除', '確定刪除此筆派代紀錄？', () => {
+        callBackend('deleteTrainingRecord', [id, adminPassword], function (res) {
+          showNotice('已刪除', res.message, '🗑️');
+          loadAllData();
+        });
+      });
+    }
+
+    function openChronicleModal() {
+      document.getElementById('chronicleModalTitle').innerText = '記錄校園大事紀';
+      document.getElementById('chronicleId').value = '';
+      document.getElementById('chrTime').value = '';
+      document.getElementById('chrRecorder').value = '';
+      document.getElementById('chrPeople').value = '';
+      document.getElementById('chrLocation').value = '';
+      document.getElementById('chrObjects').value = '';
+      document.getElementById('chrDetail').value = '';
+      document.getElementById('chronicleModal').classList.remove('hidden');
+    }
+
+    function editChronicle(id) {
+      const item = (schoolData.chronicle || []).find(c => String(c['ID']) === String(id));
+      if (!item) return;
+      document.getElementById('chronicleModalTitle').innerText = '編輯校園大事紀';
+      document.getElementById('chronicleId').value = item['ID'];
+      document.getElementById('chrTime').value = item['發生時間'] || '';
+      document.getElementById('chrRecorder').value = item['記錄人'] || '';
+      document.getElementById('chrPeople').value = item['主要人物'] || '';
+      document.getElementById('chrLocation').value = item['發生地點'] || '';
+      document.getElementById('chrObjects').value = item['關鍵事物或文物'] || '';
+      document.getElementById('chrDetail').value = item['記事內容'] || '';
+      document.getElementById('chronicleModal').classList.remove('hidden');
+    }
+
+    function submitChronicle() {
+      const payload = {
+        id: document.getElementById('chronicleId').value,
+        timeStr: document.getElementById('chrTime').value.trim(),
+        recorder: document.getElementById('chrRecorder').value.trim(),
+        people: document.getElementById('chrPeople').value.trim(),
+        location: document.getElementById('chrLocation').value.trim(),
+        objects: document.getElementById('chrObjects').value.trim(),
+        eventDetail: document.getElementById('chrDetail').value.trim()
+      };
+      if (!payload.timeStr || !payload.eventDetail) return showNotice('提示', '發生時間與記事內容為必填！', '⚠️');
+      callBackend('saveChronicleRecord', [payload, adminPassword], function (res) {
+        closeModal('chronicleModal');
+        showNotice('成功', res.message, '📜');
+        loadAllData();
+      });
+    }
+
+    function deleteChronicle(id) {
+      showConfirmDialog('確認刪除', '確定刪除此大事紀事？', () => {
+        callBackend('deleteChronicleRecord', [id, adminPassword], function (res) {
+          showNotice('已刪除', res.message, '🗑️');
+          loadAllData();
+        });
+      });
+    }
+
+    function openHonorModal() {
+      document.getElementById('honorModalTitle').innerText = '登錄師生榮譽榜';
+      document.getElementById('honorId').value = '';
+      document.getElementById('honorCategory').value = '學生組';
+      document.getElementById('honorDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('honorContest').value = '';
+      document.getElementById('honorWinner').value = '';
+      document.getElementById('honorRank').value = '';
+      document.getElementById('honorMentor').value = '';
+      document.getElementById('honorModal').classList.remove('hidden');
+    }
+
+    function editHonor(id) {
+      const item = (schoolData.honors || []).find(h => String(h['ID']) === String(id));
+      if (!item) return;
+      document.getElementById('honorModalTitle').innerText = '編輯榮譽紀錄';
+      document.getElementById('honorId').value = item['ID'];
+      document.getElementById('honorCategory').value = item['對象類別'] || '學生組';
+      document.getElementById('honorDate').value = item['獲獎日期'] || '';
+      document.getElementById('honorContest').value = item['競賽或榮譽名稱'] || '';
+      document.getElementById('honorWinner').value = item['得獎人或班級'] || '';
+      document.getElementById('honorRank').value = item['名次或獎項'] || '';
+      document.getElementById('honorMentor').value = item['指導老師或主辦單位'] || '';
+      document.getElementById('honorModal').classList.remove('hidden');
+    }
+
+    function submitHonor() {
+      const payload = {
+        id: document.getElementById('honorId').value,
+        category: document.getElementById('honorCategory').value,
+        awardDate: document.getElementById('honorDate').value,
+        contestName: document.getElementById('honorContest').value.trim(),
+        winnerName: document.getElementById('honorWinner').value.trim(),
+        awardRank: document.getElementById('honorRank').value.trim(),
+        mentor: document.getElementById('honorMentor').value.trim()
+      };
+      if (!payload.contestName || !payload.winnerName) return showNotice('提示', '榮譽名稱與得獎人為必填！', '⚠️');
+      callBackend('saveHonorRecord', [payload, adminPassword], function (res) {
+        closeModal('honorModal');
+        showNotice('成功', res.message, '🏆');
+        loadAllData();
+      });
+    }
+
+    function deleteHonor(id) {
+      showConfirmDialog('確認刪除', '確定刪除此榮譽榜紀錄？', () => {
+        callBackend('deleteHonorRecord', [id, adminPassword], function (res) {
+          showNotice('已刪除', res.message, '🗑️');
+          loadAllData();
+        });
+      });
+    }
+
+    function openLinkModal() {
+      document.getElementById('linkModalTitle').innerText = '登錄常用業務網站';
+      document.getElementById('linkId').value = '';
+      document.getElementById('linkName').value = '';
+      document.getElementById('linkUrl').value = '';
+      document.getElementById('linkDesc').value = '';
+      document.getElementById('linkAccountTip').value = '';
+      document.getElementById('linkModal').classList.remove('hidden');
+    }
+
+    function editPortalLink(id) {
+      const item = (schoolData.links || []).find(l => String(l['ID']) === String(id));
+      if (!item) return;
+      document.getElementById('linkModalTitle').innerText = '編輯常用業務網站';
+      document.getElementById('linkId').value = item['ID'];
+      document.getElementById('linkOfficeSelect').value = item['所屬處室'] || '';
+      document.getElementById('linkName').value = item['網站或系統名稱'] || '';
+      document.getElementById('linkUrl').value = item['系統網址'] || '';
+      document.getElementById('linkDesc').value = item['功能說明與交接備忘'] || '';
+      document.getElementById('linkAccountTip').value = item['帳號權限提醒'] || '';
+      document.getElementById('linkModal').classList.remove('hidden');
+    }
+
+    function submitPortalLink() {
+      const payload = {
+        id: document.getElementById('linkId').value,
+        office: document.getElementById('linkOfficeSelect').value,
+        name: document.getElementById('linkName').value.trim(),
+        url: document.getElementById('linkUrl').value.trim(),
+        desc: document.getElementById('linkDesc').value.trim(),
+        accountTip: document.getElementById('linkAccountTip').value.trim()
+      };
+      if (!payload.name || !payload.url) return showNotice('提示', '系統名稱與網址為必填！', '⚠️');
+      callBackend('savePortalLink', [payload, adminPassword], function (res) {
+        closeModal('linkModal');
+        showNotice('成功', res.message, '🌐');
+        loadAllData();
+      });
+    }
+
+    function deletePortalLink(id) {
+      showConfirmDialog('確認刪除', '確定刪除此常用網站嗎？', () => {
+        callBackend('deletePortalLink', [id, adminPassword], function (res) {
+          showNotice('已刪除', res.message, '🗑️');
+          loadAllData();
+        });
+      });
+    }
+
+    function openCreateSheetModal() {
+      document.getElementById('newCustomSheetName').value = '';
+      document.getElementById('newCustomSheetTitle').value = '';
+      document.getElementById('newCustomSheetCols').value = '';
+      document.getElementById('newCustomSheetNote').value = '';
+      document.getElementById('createSheetModal').classList.remove('hidden');
+    }
+
+    function submitCreateSheet() {
+      const payload = {
+        sheetName: document.getElementById('newCustomSheetName').value.trim(),
+        displayTitle: document.getElementById('newCustomSheetTitle').value.trim(),
+        columns: document.getElementById('newCustomSheetCols').value.trim(),
+        note: document.getElementById('newCustomSheetNote').value.trim()
+      };
+      if (!payload.sheetName || !payload.columns) return showNotice('提示', '工作表名稱與欄位定義為必填！', '⚠️');
+      callBackend('createCustomSheet', [payload, adminPassword], function (res) {
+        closeModal('createSheetModal');
+        showNotice('建立成功', res.message, '📄');
+        selectedCustomSheetKey = payload.sheetName;
+        loadAllData();
+      });
+    }
+
+    function deleteCurrentCustomSheet() {
+      const sheetsObj = (schoolData && schoolData.customSheets) ? schoolData.customSheets : {};
+      const current = sheetsObj[selectedCustomSheetKey];
+      if (!selectedCustomSheetKey || !current) {
+        return showNotice('提示', '目前無可刪除的自訂工作表！', '⚠️');
+      }
+
+      const displayTitle = (current.meta && current.meta['中文標題']) || selectedCustomSheetKey;
+      showConfirmDialog(
+        '確認刪除工作表',
+        `⚠️ 警告：即將永久刪除工作表【${displayTitle}】及其包含的所有資料列，此操作不可回復！確定要刪除嗎？`,
+        () => {
+          callBackend('deleteCustomSheet', [selectedCustomSheetKey, adminPassword], function (res) {
+            showNotice('刪除完成', res.message, '🗑️');
+            selectedCustomSheetKey = '';
+            loadAllData();
+          });
+        },
+        '⚠️'
+      );
+    }
+
+    function openCustomRowModal() {
+      const sheetsObj = (schoolData && schoolData.customSheets) ? schoolData.customSheets : {};
+      const current = sheetsObj[selectedCustomSheetKey];
+      if (!current) return showNotice('提示', '請先選取自訂工作表！', '⚠️');
+
+      const meta = current.meta || {};
+      const cols = (meta['欄位定義'] || '').split(',').map(s => s.trim()).filter(Boolean);
+
+      document.getElementById('customRowModalTitle').innerText = `新增資料至【${meta['中文標題'] || selectedCustomSheetKey}】`;
+      document.getElementById('customRowModalSub').innerText = meta['說明備忘'] || '';
+      document.getElementById('customRowId').value = '';
+
+      const container = document.getElementById('customRowFieldsContainer');
+      container.innerHTML = '';
+      cols.forEach(colName => {
+        const div = document.createElement('div');
+        div.innerHTML = `
+          <label class="block text-xs font-bold text-slate-700 mb-1">${colName}</label>
+          <input type="text" data-custom-col="${colName}" class="w-full px-3 py-2 border rounded-xl custom-dynamic-input">`;
+        container.appendChild(div);
+      });
+
+      document.getElementById('customRowModal').classList.remove('hidden');
+    }
+
+    function submitCustomRow() {
+      let rowData = {};
+      document.querySelectorAll('.custom-dynamic-input').forEach(input => {
+        const col = input.getAttribute('data-custom-col');
+        rowData[col] = input.value.trim();
+      });
+
+      callBackend('saveCustomSheetRow', [selectedCustomSheetKey, rowData, adminPassword], function (res) {
+        closeModal('customRowModal');
+        showNotice('成功', res.message, '✅');
+        loadAllData();
+      });
+    }
+
+    function deleteCustomRow(sheetName, id) {
+      showConfirmDialog('確認刪除資料', '確定刪除此筆自訂資料列？', () => {
+        callBackend('deleteCustomSheetRow', [sheetName, id, adminPassword], function (res) {
+          showNotice('已刪除', res.message, '🗑️');
+          loadAllData();
+        });
+      });
+    }
+
+    function openSettingsModal() {
+      const s = (schoolData && schoolData.settings) ? schoolData.settings : {};
+      document.getElementById('set_school_title').value = s.school_title || '智慧校務行政整合系統';
+      document.getElementById('set_school_subtitle').value = s.school_subtitle || '';
+
+      const isTrue = (v) => (v !== false && v !== 'false');
+      document.getElementById('set_show_announcements').checked = isTrue(s.show_announcements);
+      document.getElementById('set_show_training').checked = isTrue(s.show_training);
+      document.getElementById('set_show_chronicle').checked = isTrue(s.show_chronicle);
+      document.getElementById('set_show_honors').checked = isTrue(s.show_honors);
+      document.getElementById('set_show_links').checked = isTrue(s.show_links);
+      document.getElementById('set_show_custom').checked = isTrue(s.show_custom);
+
+      applyTheme(s.theme || 'ocean');
+      document.getElementById('settingsModal').classList.remove('hidden');
+    }
+
+    function submitSystemSettings() {
+      const payload = {
+        theme: selectedThemeKey,
+        school_title: document.getElementById('set_school_title').value.trim(),
+        school_subtitle: document.getElementById('set_school_subtitle').value.trim(),
+        show_announcements: document.getElementById('set_show_announcements').checked,
+        show_training: document.getElementById('set_show_training').checked,
+        show_chronicle: document.getElementById('set_show_chronicle').checked,
+        show_honors: document.getElementById('set_show_honors').checked,
+        show_links: document.getElementById('set_show_links').checked,
+        show_custom: document.getElementById('set_show_custom').checked
+      };
+
+      const btn = document.getElementById('saveSettingsBtn');
+      btn.innerText = '儲存中...';
+      btn.disabled = true;
+
+      callBackend('saveSystemSettings', [payload, adminPassword], function (res) {
+        btn.innerText = '儲存全域設定';
+        btn.disabled = false;
+        closeModal('settingsModal');
+        showNotice('成功', res.message, '⚙️');
+        loadAllData();
+      }, function () {
+        btn.innerText = '儲存全域設定';
+        btn.disabled = false;
+      });
+    }
+
+    function callBackend(fnName, args, onSuccess, onFail) {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run
+          .withSuccessHandler(onSuccess)
+          .withFailureHandler(function (err) {
+            if (onFail) onFail(err);
+            showNotice('操作失敗', err.message, '❌');
+          })[fnName](...args);
+      } else {
+        setTimeout(() => {
+          onSuccess({ success: true, message: '（離線預覽模式）操作模擬完成！' });
+        }, 200);
+      }
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function getMockSchoolData() {
+      return {
+        success: true,
+        today: new Date().toISOString().split('T')[0],
+        settings: {
+          theme: 'ocean',
+          school_title: '智慧校務行政整合系統',
+          school_subtitle: '行政公告 · 研習派代 · 校園大事紀 · 師生榮譽榜 · 處室常用網',
+          show_announcements: true,
+          show_training: true,
+          show_chronicle: true,
+          show_honors: true,
+          show_links: true,
+          show_custom: true
+        },
+        offices: ['教導處', '總務處', '教務組', '學務組', '輔導室', '校長室'],
+        teachers: [
+          { '教師姓名': '林志遠', '身分職稱': '主任', '所屬處室': '教導處' },
+          { '教師姓名': '陳雅婷', '身分職稱': '組長', '所屬處室': '教務組' },
+          { '教師姓名': '張建華', '身分職稱': '組長', '所屬處室': '學務組' },
+          { '教師姓名': '黃文信', '身分職稱': '主任', '所屬處室': '總務處' },
+          { '教師姓名': '李宗翰', '身分職稱': '教師', '所屬處室': '導師' }
+        ],
+        announcements: [
+          { 'ID': '1', '發布處室': '教導處', '公告標題': '115學年度第一學期開學初全校校務會議日程通知', '詳細內容': '請全體同仁於本週三下午13:30準時於三樓多功能視聽會議室出席。', '是否置頂': '是', '發布日期': '2026-09-01', '附件或連結': 'https://meet.google.com/' },
+          { 'ID': '2', '發布處室': '總務處', '公告標題': '各辦公室及專科教室節能用電與冷氣使用規範說明', '詳細內容': '配合節能減碳政策，室溫達28度始得開啟冷氣，下班離開請各組人員確實巡視電源關閉。', '是否置頂': '否', '發布日期': '2026-09-02' }
+        ],
+        training: [
+          { 'ID': '1', '身分職稱': '教師', '研習教師': '陳雅婷', '研習名稱': '教育部素養導向評量與命題實務工作坊', '研習地點': '國家教育研究院臺北院區', '職務代理人': '李宗翰', '研習日期時間': '2026-09-18 全日', '備註與派代差假': '公假排代（已陳核）' }
+        ],
+        chronicle: [
+          { 'ID': '1', '發生時間': '民國五十八年三月', '主要人物': '小林登八夫婦、校友代表', '發生地點': '本校校史館前廣場', '關鍵事物或文物': '訪校留念照片與墨寶', '記事內容': '本校首任校長小林登八夫婦由日本返校訪問，全校師生夾道歡迎並合影留念。', '記錄人': '曾壬保' }
+        ],
+        honors: [
+          { 'ID': '1', '獲獎日期': '2026-06-20', '對象類別': '學生組', '競賽或榮譽名稱': '全國中小學科展環境科學組', '得獎人或班級': '六年甲班 吳念真', '名次或獎項': '特優第一名', '指導老師或主辦單位': '指導老師：李宗翰' }
+        ],
+        links: [
+          { 'ID': '1', '所屬處室': '總務處', '網站或系統名稱': '主計會計Web版帳務整合系統', '系統網址': 'https://example.gov.tw', '功能說明與交接備忘': '年度歲出歲入預算編列、核銷請款專用系統。', '帳號權限提醒': '交接請向主計主任申請新憑證' },
+          { 'ID': '2', '所屬處室': '教導處', '網站或系統名稱': '全誼校務行政資訊系統', '系統網址': 'https://example.edu.tw', '功能說明與交接備忘': '學籍異動、成績輸入、學生基本資料管理核心系統。', '帳號權限提醒': '開學前需指派新學年班級導師權限' }
+        ],
+        customSheets: {
+          '設備維修登記': {
+            meta: { '中文標題': '校園設備修繕登記', '欄位定義': '報修日期,處室地點,報修項目,狀況說明,報修人,維修進度', '說明備忘': '供同仁日常登記水電、門窗或各項硬體耗損' },
+            rows: [
+              { 'ID': '1', '報修日期': '2026-09-02', '處室地點': '教導處', '報修項目': '冷氣遙控器', '狀況說明': '顯示螢幕異常，無法開機', '報修人': '陳組長', '維修進度': '已報請廠商修繕' }
+            ]
+          }
+        }
+      };
+    }
+  <\/script>
+</body>
+</html></script>
+
+  <!-- ==================== 頁面互動、穩健複製與代碼生成腳本 ==================== -->
+  <script>
+    /* 彈出通用自訂通知訊息 (取代 alert) */
+    function showCustomNotice(title, message, icon = 'ℹ️') {
+      document.getElementById('noticeModalIcon').innerText = icon;
+      document.getElementById('noticeModalTitle').innerText = title;
+      document.getElementById('noticeModalContent').innerText = message;
+      document.getElementById('noticeModal').classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    /* 終極安全剪貼簿複製引擎 (參照原版穩定雙重備援機制) */
+    function safeCopyToClipboard(text, onSuccess, onError) {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text)
+          .then(onSuccess)
+          .catch(function() {
+            fallbackCopy(text, onSuccess, onError);
+          });
+      } else {
+        fallbackCopy(text, onSuccess, onError);
+      }
+    }
+
+    function fallbackCopy(text, onSuccess, onError) {
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.top = "-9999px";
+        textArea.style.left = "-9999px";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        if (successful) {
+          onSuccess();
+        } else {
+          if (onError) onError();
+        }
+      } catch (err) {
+        if (onError) onError(err);
+      }
+    }
+
+    function extractSpreadsheetId(url) {
+      const trimmed = (url || '').trim();
+      const match = trimmed.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      if (match && match[1]) return match[1];
+      if (/^[a-zA-Z0-9-_]{30,60}$/.test(trimmed)) return trimmed;
+      return '1Xgy6NWfWOwQTuE46aZzCpuBmD232x5lw5Lc0agBDuEY';
+    }
+
+    function updateConfig() {
+      const rawUrl = document.getElementById('inputSheetUrl').value;
+      const parsedId = extractSpreadsheetId(rawUrl);
+      document.getElementById('displaySheetId').innerText = parsedId;
+    }
+
+    function getCustomizedCodeGs() {
+      const rawUrl = document.getElementById('inputSheetUrl').value;
+      const parsedId = extractSpreadsheetId(rawUrl);
+      const pwd = document.getElementById('inputPassword').value.trim() || 'AdminSchool2026';
+      
+      const tplEl = document.getElementById('tpl-code-gs');
+      let code = tplEl.value || tplEl.textContent || '';
+      code = code.replace(/\{\{SPREADSHEET_ID\}\}/g, parsedId);
+      code = code.replace(/\{\{ADMIN_PASSWORD\}\}/g, pwd);
+      return code;
+    }
+
+    function getCustomizedIndexHtml() {
+      const tplEl = document.getElementById('tpl-index-html');
+      let code = tplEl.textContent || tplEl.innerHTML || '';
+      // 復原隔離之 script 標籤 (將 <\/script> 替換回正常的閉合標籤)
+      code = code.replace(/<\\\/script>/g, '</' + 'script>');
+      return code;
+    }
+
+    function copyGeneratedCodeGs() {
+      const code = getCustomizedCodeGs();
+      if (!code || code.trim() === '') {
+        return showCustomNotice('錯誤', '未讀取到程式碼內容，請確認輸入後再試。', '⚠️');
+      }
+      const btn = document.getElementById('btnCopyCode');
+      safeCopyToClipboard(
+        code,
+        function() {
+          const oldHtml = btn.innerHTML;
+          btn.innerHTML = '<span>✅</span><span>已成功複製 Code.gs！</span>';
+          btn.classList.replace('bg-blue-700', 'bg-emerald-600');
+          setTimeout(() => {
+            btn.innerHTML = oldHtml;
+            btn.classList.replace('bg-emerald-600', 'bg-blue-700');
+          }, 2500);
+        },
+        function() {
+          showCustomNotice('複製失敗', '您的瀏覽器環境封鎖了自動複製權限，請嘗試在電腦端操作或更換瀏覽器！', '⚠️');
+        }
+      );
+    }
+
+    function copyGeneratedIndexHtml() {
+      const code = getCustomizedIndexHtml();
+      if (!code || code.trim() === '') {
+        return showCustomNotice('錯誤', '未讀取到程式碼內容，請確認輸入後再試。', '⚠️');
+      }
+      const btn = document.getElementById('btnCopyHtml');
+      safeCopyToClipboard(
+        code,
+        function() {
+          const oldHtml = btn.innerHTML;
+          btn.innerHTML = '<span>✅</span><span>已成功複製 Index.html！</span>';
+          btn.classList.replace('bg-slate-800', 'bg-emerald-600');
+          setTimeout(() => {
+            btn.innerHTML = oldHtml;
+            btn.classList.replace('bg-emerald-600', 'bg-slate-800');
+          }, 2500);
+        },
+        function() {
+          showCustomNotice('複製失敗', '您的瀏覽器環境封鎖了自動複製權限，請嘗試在電腦端操作或更換瀏覽器！', '⚠️');
+        }
+      );
+    }
+  </script>
+</body>
+</html>

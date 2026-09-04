@@ -275,6 +275,16 @@ window.APP_DATA = {
       "icon": "BookOpen",
       "color": "slate",
       "grade": "其他"
+    },
+    {
+      "id": "item_1788492559500",
+      "title": "校務行政整合系統",
+      "category": "校務",
+      "description": "5 分鐘，建立全校專屬的雲端校務行政整合中心，\n整合行政處室公告、教職員研習差假派代、校園大事紀 (校史人事物)、師生榮譽榜、各處室常用系統與業務交接專區、線上動態自訂擴充工作表。 系統完全基於 Google 試算表與 Google Apps Script 運行，零伺服器維護成本，全校同仁與家長手機掃碼即可即時查閱！",
+      "link": "School_administration_integration_system.html",
+      "icon": "Building2",
+      "color": "orange",
+      "grade": "校務"
     }
   ]
 };
