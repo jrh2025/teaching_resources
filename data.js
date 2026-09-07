@@ -285,6 +285,46 @@ window.APP_DATA = {
       "icon": "Building2",
       "color": "orange",
       "grade": "校務"
+    },
+    {
+      "id": "item_1788758109105",
+      "title": "初級-LINE Bot 與 Google Sheets 客服機器人完整實作指南",
+      "category": "其他",
+      "description": "【初級教學】利用 Google Apps Script (GAS) 作為中繼伺服器（Web App），整合 LINE Messaging API 與 Google Sheets 試算表。當訪客在 LINE 發送訊息時，LINE 伺服器會透過 Webhook 將 HTTP POST 請求推播至 GAS，由 GAS 檢索試算表內的關鍵字，並即時透過 Reply API 回傳解答。",
+      "link": "初級-LINE Bot 與 Google Sheets 客服機器人完整實作指南.html",
+      "icon": "Bot",
+      "color": "indigo",
+      "grade": "其他"
+    },
+    {
+      "id": "item_1788758385079",
+      "title": "進階版-LINE Bot + Google Sheets 實作指南",
+      "category": "其他",
+      "description": "【進階教學】LINE Bot + Google Sheets 智慧客服系統\n多工作表分類與雲端網頁管理後台\n利用 Google Apps Script 的 HTTP Request 分流特性，在同一組 Web App 網址下實現「Webhook 背景服務（doPost）」與「現代化 SPA 視覺管理後台（doGet）」的雙工運作。支援跨分頁穿透檢索、模糊／精確比對演算法，管理者更可直接在瀏覽器即時維護問答資料庫。",
+      "link": "進階版-LINE Bot + Google Sheets 實作指南.html",
+      "icon": "Bot",
+      "color": "rose",
+      "grade": "其他"
+    },
+    {
+      "id": "item_1788758709412",
+      "title": "新多益閱讀特訓學習門戶",
+      "category": "其他",
+      "description": "新多益閱讀互動學習平台！在此您可以直接閱讀 A4 排版的高可讀性複習筆記、下載 PDF 離線學習，或是使用高度互動的 3D 閃卡與測驗系統進行自測反饋。",
+      "link": "https://jrh2025.github.io/pyta/",
+      "icon": "NotebookPen",
+      "color": "purple",
+      "grade": "其他"
+    },
+    {
+      "id": "item_1788758868444",
+      "title": "台股盤後大數據與籌碼動向觀測站",
+      "category": "其他",
+      "description": "【每日更新】自動整合加權與櫃買雙折線圖、三大法人4系列柱狀圖、信用交易與成交金額 TOP 20 爆量強勢股。ETF 5日大數據與前100名排行榜觀測站",
+      "link": "https://jain-ze.github.io/tw_stock/",
+      "icon": "MonitorStop",
+      "color": "blue",
+      "grade": "其他"
     }
   ]
 };

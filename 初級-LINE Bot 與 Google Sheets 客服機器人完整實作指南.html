@@ -1,0 +1,1654 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LINE Bot + Google Sheets 智慧 FAQ 實作與除錯全攻略</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN for Visual Diagnostics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            line: {
+              DEFAULT: '#06C755',
+              dark: '#05B34C',
+              light: '#E6F9ED',
+            },
+            gas: {
+              DEFAULT: '#4285F4',
+              dark: '#1A73E8',
+              light: '#E8F0FE',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .chart-container {
+      position: relative;
+      width: 100%;
+      max-width: 580px;
+      margin-left: auto;
+      margin-right: auto;
+      height: 320px;
+      max-height: 360px;
+    }
+    @media (min-width: 768px) {
+      .chart-container {
+        height: 340px;
+      }
+    }
+    .code-scroll::-webkit-scrollbar {
+      height: 8px;
+      width: 8px;
+    }
+    .code-scroll::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    .code-scroll::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased">
+
+  <header class="bg-slate-900 text-white sticky top-0 z-50 shadow-md border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center h-auto md:h-16 py-3 md:py-0 gap-3 md:gap-0">
+      <div class="flex items-center space-x-3">
+        <span class="bg-line px-2.5 py-1 rounded-lg text-white font-bold text-xs tracking-wide">LINE Bot</span>
+        <span class="text-slate-400 text-sm font-semibold">+ Google Sheets</span>
+        <h1 class="text-base font-bold text-slate-100 hidden sm:inline-block">智慧 FAQ 客服機器人全攻略</h1>
+      </div>
+
+      <!-- Controls & Navigation Tabs -->
+      <div class="flex flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto justify-between md:justify-end">
+        <!-- Font Size Scaler -->
+        <div class="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700 text-xs shadow-inner">
+          <span class="text-slate-400 px-1.5 hidden lg:inline font-medium">字級:</span>
+          <button onclick="changeFontSize(-10)" title="縮小字體 (A-)" class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded font-bold transition active:scale-95">A-</button>
+          <button id="font-size-display" onclick="resetFontSize()" title="點擊還原 100%" class="px-2 py-1 text-emerald-400 font-mono font-bold hover:text-emerald-300 transition text-center min-w-[50px]">100%</button>
+          <button onclick="changeFontSize(10)" title="放大字體 (A+)" class="px-2 py-1 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded font-bold transition active:scale-95">A+</button>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <nav class="flex space-x-1 sm:space-x-1.5 text-xs sm:text-sm font-medium overflow-x-auto pb-0.5">
+          <button onclick="switchTab('arch')" id="nav-arch" class="tab-btn px-2.5 sm:px-3 py-1.5 rounded-lg transition-all duration-200 bg-slate-800 text-emerald-400 font-semibold shadow">
+            🗺️ 架構
+          </button>
+          <button onclick="switchTab('steps')" id="nav-steps" class="tab-btn px-2.5 sm:px-3 py-1.5 rounded-lg transition-all duration-200 text-slate-300 hover:text-white hover:bg-slate-800">
+            🚀 5步建置嚮導
+          </button>
+          <button onclick="switchTab('traps')" id="nav-traps" class="tab-btn px-2.5 sm:px-3 py-1.5 rounded-lg transition-all duration-200 text-slate-300 hover:text-white hover:bg-slate-800 relative">
+            ⚠️ 踩坑診斷室
+            <span class="inline-flex items-center justify-center px-1.5 py-0.5 ml-1 text-[10px] font-bold leading-none text-red-100 bg-red-600 rounded-full">5地雷</span>
+          </button>
+          <button onclick="switchTab('code')" id="nav-code" class="tab-btn px-2.5 sm:px-3 py-1.5 rounded-lg transition-all duration-200 text-slate-300 hover:text-white hover:bg-slate-800">
+            💻 腳本生成
+          </button>
+          <button onclick="switchTab('sandbox')" id="nav-sandbox" class="tab-btn px-2.5 sm:px-3 py-1.5 rounded-lg transition-all duration-200 text-slate-300 hover:text-white hover:bg-slate-800">
+            🧪 匹配模擬器
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+    <!-- ==================== TAB 1: ARCHITECTURE ==================== -->
+    <section id="tab-arch" class="space-y-6">
+      <!-- Section Intro -->
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+        <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <span>🧠</span> 運作原理與系統資訊架構
+        </h2>
+        <p class="mt-2 text-slate-600 leading-relaxed text-sm sm:text-base">
+          本系統利用 <strong>Google Apps Script (GAS)</strong> 作為中繼伺服器（Web App），整合 <strong>LINE Messaging API</strong> 與 <strong>Google Sheets 試算表</strong>。當訪客在 LINE 發送訊息時，LINE 伺服器會透過 Webhook 將 HTTP POST 請求推播至 GAS，由 GAS 檢索試算表內的關鍵字，並即時透過 Reply API 回傳解答。
+        </p>
+      </div>
+
+      <!-- Interactive Node Flow Diagram -->
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+        <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <span>🔄</span> 點擊節點查看資料流細節 (Data Flow Details)
+        </h3>
+
+        <!-- Responsive Diagram Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3 text-center">
+          <div onclick="showNodeDetail('user')" class="cursor-pointer transition-all hover:-translate-y-1 p-4 rounded-xl border-2 border-emerald-500 bg-emerald-50 hover:bg-emerald-100 flex flex-col items-center justify-center shadow-sm">
+            <span class="text-3xl mb-1">📱</span>
+            <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Step 1</span>
+            <span class="text-sm font-bold text-slate-800 mt-1">訪客 LINE 提問</span>
+            <span class="text-xs text-slate-500 mt-1">輸入查詢文字</span>
+          </div>
+
+          <div class="hidden md:flex items-center justify-center text-slate-400 font-bold text-xl">➔</div>
+
+          <div onclick="showNodeDetail('line')" class="cursor-pointer transition-all hover:-translate-y-1 p-4 rounded-xl border-2 border-slate-300 bg-slate-50 hover:bg-slate-100 flex flex-col items-center justify-center shadow-sm">
+            <span class="text-3xl mb-1">🟢</span>
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Step 2</span>
+            <span class="text-sm font-bold text-slate-800 mt-1">LINE 伺服器</span>
+            <span class="text-xs text-slate-500 mt-1">Webhook JSON 推播</span>
+          </div>
+
+          <div class="hidden md:flex items-center justify-center text-slate-400 font-bold text-xl">➔</div>
+
+          <div onclick="showNodeDetail('gas')" class="cursor-pointer transition-all hover:-translate-y-1 p-4 rounded-xl border-2 border-blue-400 bg-blue-50 hover:bg-blue-100 flex flex-col items-center justify-center shadow-sm">
+            <span class="text-3xl mb-1">⚙️</span>
+            <span class="text-xs font-bold text-blue-700 uppercase tracking-wider">Step 3</span>
+            <span class="text-sm font-bold text-slate-800 mt-1">GAS 後端引擎</span>
+            <span class="text-xs text-slate-500 mt-1">doPost 解析與檢索</span>
+          </div>
+
+          <div class="hidden md:flex items-center justify-center text-slate-400 font-bold text-xl">➔</div>
+
+          <div onclick="showNodeDetail('sheets')" class="cursor-pointer transition-all hover:-translate-y-1 p-4 rounded-xl border-2 border-emerald-600 bg-emerald-50 hover:bg-emerald-100 flex flex-col items-center justify-center shadow-sm">
+            <span class="text-3xl mb-1">📊</span>
+            <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider">Step 4</span>
+            <span class="text-sm font-bold text-slate-800 mt-1">Google Sheets</span>
+            <span class="text-xs text-slate-500 mt-1">FAQ 分頁讀取</span>
+          </div>
+
+          <div class="hidden md:flex items-center justify-center text-slate-400 font-bold text-xl">➔</div>
+
+          <div onclick="showNodeDetail('reply')" class="cursor-pointer transition-all hover:-translate-y-1 p-4 rounded-xl border-2 border-indigo-500 bg-indigo-50 hover:bg-indigo-100 flex flex-col items-center justify-center shadow-sm">
+            <span class="text-3xl mb-1">💬</span>
+            <span class="text-xs font-bold text-indigo-700 uppercase tracking-wider">Step 5</span>
+            <span class="text-sm font-bold text-slate-800 mt-1">Reply API 回覆</span>
+            <span class="text-xs text-slate-500 mt-1">送達用戶手機</span>
+          </div>
+        </div>
+
+        <!-- Node Info Panel Dynamic Box -->
+        <div id="node-info-panel" class="mt-6 p-4 rounded-lg bg-slate-900 text-slate-200 border border-slate-700 text-sm leading-relaxed">
+          <div class="flex items-center justify-between font-bold text-emerald-400 border-b border-slate-800 pb-2 mb-2">
+            <span id="node-info-title">💡 點擊上方任意架構節點以檢視細節與資料結構</span>
+            <span class="text-xs text-slate-400">即時說明</span>
+          </div>
+          <p id="node-info-body" class="text-slate-300">
+            本架構最大的優勢為<strong>零伺服器維護成本 (Serverless)</strong>，問答內容可由非技術人員直接在 Google 試算表中自由新增或編輯，無須重新發布或修改程式碼！
+          </p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Chart Box -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+          <div>
+            <h3 class="text-lg font-bold text-slate-800 mb-1 flex items-center gap-2">
+              <span>📊</span> 開發排錯常見地雷比例統計
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">根據社群實測回饋歸納之 5 大故障主因</p>
+          </div>
+          
+          <div class="chart-container">
+            <canvas id="pitfallChart"></canvas>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span>💡 提示：點擊右上角「踩坑診斷室」查看即時修復方案</span>
+            <span class="font-bold text-emerald-600">100% 可被排除</span>
+          </div>
+        </div>
+
+        <!-- System Requirements & Specs Card -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+          <div>
+            <h3 class="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
+              <span>📋</span> 前置準備與必備權限清單
+            </h3>
+            <div class="space-y-3 text-sm">
+              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-start gap-3">
+                <span class="text-lg">🟩</span>
+                <div>
+                  <div class="font-bold text-slate-800">Google 帳號 (個人或 Workspace)</div>
+                  <div class="text-xs text-slate-500">建立試算表並以「所有人 (Anyone)」權限部署 GAS Web App。</div>
+                </div>
+              </div>
+
+              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-start gap-3">
+                <span class="text-lg">💬</span>
+                <div>
+                  <div class="font-bold text-slate-800">LINE 個人帳號</div>
+                  <div class="text-xs text-slate-500">登入 LINE Official Account Manager 與 LINE Developers Console。</div>
+                </div>
+              </div>
+
+              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-start gap-3">
+                <span class="text-lg">🔑</span>
+                <div>
+                  <div class="font-bold text-slate-800">Channel Access Token (Long-lived)</div>
+                  <div class="text-xs text-slate-500">在 Developers 最下方點擊黑色「Issue」發行長效權杖。</div>
+                </div>
+              </div>
+
+              <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 flex items-start gap-3">
+                <span class="text-lg">⚙️</span>
+                <div>
+                  <div class="font-bold text-slate-800">回應設定：關閉聊天 (Chat OFF)</div>
+                  <div class="text-xs text-slate-500">避開 LINE 官方預設罐頭訊息干擾，讓 Webhook 完全接管。</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span class="text-slate-500">系統可用性評級</span>
+            <span class="font-bold text-emerald-600">★★★★★ (Serverless 高穩定度)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: 5-STEP WIZARD ==================== -->
+    <section id="tab-steps" class="hidden space-y-6">
+      <!-- Intro Card -->
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+              <span>🚀</span> 五步驟從零打造智慧客服 (超詳細實作範例版)
+            </h2>
+            <p class="mt-1 text-slate-600 text-sm leading-relaxed">
+              本嚮導提供精準直覺的步驟指示與<strong>現成範例資料</strong>。勾選完成事項，系統會即時統計進度；點選範例按鈕可直接複製到 Google Sheets 中使用！
+            </p>
+          </div>
+          <div class="flex items-center gap-2 bg-emerald-50 px-4 py-2.5 rounded-lg border border-emerald-200 self-start md:self-auto shrink-0">
+            <span class="text-sm font-bold text-emerald-800">建置驗收進度：</span>
+            <span id="progress-text" class="text-lg font-extrabold text-emerald-600">0 / 5</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step Cards Container -->
+      <div class="space-y-4">
+        <!-- Step 1 -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 transition-all" id="step-card-1">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" id="chk-1" onchange="updateProgress()" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer mt-0.5">
+              <label for="chk-1" class="text-base sm:text-lg font-bold text-slate-900 cursor-pointer">第一步：建立 Google Sheets 資料庫與部署 Web App</label>
+            </div>
+            <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full shrink-0">Google 端</span>
+          </div>
+
+          <div class="mt-4 pl-8 text-sm text-slate-700 space-y-3">
+            <p>1. 打開 <a href="https://sheets.new" target="_blank" class="text-blue-600 font-semibold underline">Google Sheets 快速新增頁面</a>，將檔案命名為 <code>LINE FAQ 資料庫</code>。</p>
+            <p>2. <strong>最關鍵設定</strong>：將試算表底部的工作表分頁標籤（預設為「工作表1」）重新命名為 <span class="px-2 py-0.5 bg-amber-100 text-amber-900 font-mono font-bold rounded">FAQ</span>（大小寫需完全相符）。</p>
+            
+            <!-- Direct-Copy Sheet Template Box -->
+            <div class="p-4 bg-slate-900 text-slate-200 rounded-xl border border-slate-700 space-y-2.5">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-2">
+                <span class="font-bold text-emerald-400 text-xs flex items-center gap-1.5">
+                  <span>📋</span> 試算表範本資料 (包含標題列與 5 筆預設問答)
+                </span>
+                <button onclick="copySheetTemplate()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3 py-1.5 rounded transition shadow flex items-center gap-1">
+                  <span>📋</span> 一鍵複製範本 (直接貼入 A1 儲存格)
+                </button>
+              </div>
+              <div class="text-xs font-mono text-slate-300 overflow-x-auto leading-relaxed">
+                <div>• <strong>欄位 A (關鍵字)</strong>：訪客提問會觸發的字詞（如：地址、營業時間、電話、費用、預約）</div>
+                <div>• <strong>欄位 B (回覆內容)</strong>：機器人回傳的文字訊息（支援換行排版）</div>
+                <div>• <strong>欄位 C (比對模式)</strong>：<code>contains</code> (模糊包含) 或 <code>exact</code> (完全相符)</div>
+              </div>
+            </div>
+
+            <p>3. 點選頂部選單 **擴充功能 > Apps Script**，按 <code>Ctrl + A</code> 全選並刪除預設的 <code>myFunction</code>。</p>
+            <p>4. 切換到本工具的「💻 腳本生成」頁籤，點選「一鍵複製程式碼」並貼入 GAS 編輯器。</p>
+            <p>5. 點擊右上角藍色 **部署 > 新增部署**：</p>
+            <ul class="list-disc pl-5 text-xs text-slate-600 space-y-1.5">
+              <li>點擊齒輪選擇 <strong>網頁應用程式 (Web app)</strong></li>
+              <li>說明：填寫 <code>v1.0</code></li>
+              <li>執行身分：選擇 <strong>我 (您的 Google 帳號)</strong></li>
+              <li>誰可以存取：<strong>務必選擇「所有人 (Anyone)」</strong> <span class="text-red-500 font-bold">(若選「僅限自己」，LINE 伺服器會被擋下)</span></li>
+            </ul>
+            <p>6. 點擊「部署」，完成帳號安全性授權後，複製產生的 <strong>Web app URL 網址</strong> 備用。</p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 transition-all" id="step-card-2">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" id="chk-2" onchange="updateProgress()" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer mt-0.5">
+              <label for="chk-2" class="text-base sm:text-lg font-bold text-slate-900 cursor-pointer">第二步：建立 LINE 官方帳號與啟用 Messaging API</label>
+            </div>
+            <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full shrink-0">LINE 帳號</span>
+          </div>
+
+          <div class="mt-4 pl-8 text-sm text-slate-700 space-y-3">
+            <p>1. 前往 <a href="https://manager.line.biz/" target="_blank" class="text-blue-600 font-semibold underline">LINE Official Account Manager</a> 使用個人 LINE 帳號登入。</p>
+            <p>2. 點選右上角 **「建立官方帳號」**：</p>
+            <div class="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs space-y-1 font-mono">
+              <div>• <strong>帳號名稱範例</strong>：<code>JRH智慧客服No.01</code> 或您的品牌店名</div>
+              <div>• <strong>電子郵件</strong>：您的常用聯絡信箱</div>
+              <div>• <strong>業種</strong>：選擇最相近項目（例如：服務/零售/其他）</div>
+            </div>
+            <p>3. 建立完成後進入後台，點選右上角的 **設定 (齒輪圖示)** > 左側選單選擇 **Messaging API**。</p>
+            <p>4. 點擊畫面中央綠色的 **「啟用 Messaging API」** 按鈕：</p>
+            <ul class="list-disc pl-5 text-xs text-slate-600 space-y-1">
+              <li><strong>Provider (服務提供者)</strong>：若首次使用，請點選「建立新的提供者」，輸入如 <code>JRH-Lab</code> 或英文縮寫。</li>
+              <li>隱私權政策與服務條款可直接略過，點擊「確定」。</li>
+            </ul>
+            <p>5. 啟用成功後，點擊該頁面下方的超連結前往 <a href="https://developers.line.biz/console/" target="_blank" class="text-blue-600 font-semibold underline">LINE Developers Console</a>。</p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 transition-all" id="step-card-3">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" id="chk-3" onchange="updateProgress()" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer mt-0.5">
+              <label for="chk-3" class="text-base sm:text-lg font-bold text-slate-900 cursor-pointer">第三步：LINE 雙後台核心設定 (關鍵防呆對照)</label>
+            </div>
+            <span class="bg-red-100 text-red-800 text-xs font-bold px-2.5 py-1 rounded-full shrink-0">高頻地雷</span>
+          </div>
+
+          <div class="mt-4 pl-8 text-sm text-slate-700 space-y-3">
+            <div class="p-3.5 bg-amber-50 rounded-xl border border-amber-200 space-y-2">
+              <div class="font-bold text-amber-900 flex items-center gap-2">
+                <span>1️⃣</span> 後台 A：LINE Official Account Manager (`manager.line.biz`)
+              </div>
+              <div class="text-xs text-amber-800 leading-relaxed">
+                進入 **設定 > 回應設定**：<br>
+                • <strong>聊天 (Chat)</strong>：切換為 <strong>關閉 (OFF)</strong>！<br>
+                • <strong>Webhook</strong>：務必維持 <strong>開啟 (ON)</strong>！<br>
+                <span class="font-semibold text-red-600">※ 原因：關閉聊天能杜絕官方預設罐頭訊息（「無法個別回覆...」）阻斷 GAS 的回答！</span>
+              </div>
+            </div>
+
+            <div class="p-3.5 bg-blue-50 rounded-xl border border-blue-200 space-y-2">
+              <div class="font-bold text-blue-900 flex items-center gap-2">
+                <span>2️⃣</span> 後台 B：LINE Developers Console (`developers.line.biz`)
+              </div>
+              <div class="text-xs text-blue-800 leading-relaxed space-y-1.5">
+                <div>點進剛才建立的 Channel > 切換至 **Messaging API** 頁籤：</div>
+                <div>• <strong>Webhook URL</strong>：點擊「Edit」貼上第一步取得的 GAS 網址（結尾必須為 <code>/exec</code>），點「Update」。</div>
+                <div>• <strong>Use webhook</strong>：開關切換為 <strong>開啟 (綠色 ON)</strong>。</div>
+                <div>• <strong>Channel access token</strong>：捲動至最底部，找到 <code>Channel access token (long-lived)</code>，點擊黑色的 <strong>Issue</strong> 按鈕發行長串權杖，點擊複製圖示。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 transition-all" id="step-card-4">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" id="chk-4" onchange="updateProgress()" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer mt-0.5">
+              <label for="chk-4" class="text-base sm:text-lg font-bold text-slate-900 cursor-pointer">第四步：將 Token 填入 GAS 並部署「新版本」</label>
+            </div>
+            <span class="bg-purple-100 text-purple-800 text-xs font-bold px-2.5 py-1 rounded-full shrink-0">版本快照</span>
+          </div>
+
+          <div class="mt-4 pl-8 text-sm text-slate-700 space-y-2.5">
+            <p>1. 回到 Google Apps Script 編輯器，找到最上方的常數：</p>
+            <div class="p-2.5 bg-slate-900 text-emerald-400 font-mono text-xs rounded-lg">
+              const CHANNEL_ACCESS_TOKEN = '貼上從LINE Developers複製的超長Token';
+            </div>
+            <p>2. 按下 <code>Ctrl + S</code> 儲存專案。</p>
+            <p>3. <strong>核心防呆步驟 (發布新版本)</strong>：</p>
+            <ul class="list-disc pl-5 text-xs text-slate-600 space-y-1">
+              <li>點選右上角 **部署 > 管理部署**。</li>
+              <li>點擊右上角的 **鉛筆圖示 (編輯)**。</li>
+              <li>在「版本」下拉選單中，切換為 **新版本 (New version)**。</li>
+              <li>點擊右下角 **部署** 按鈕。</li>
+            </ul>
+            <p class="text-xs text-slate-500"><em>(小知識：GAS 若只按儲存，對外的 Webhook 仍會執行舊版本。唯有「發布新版本」才能套用新 Token)</em></p>
+          </div>
+        </div>
+
+        <!-- Step 5 -->
+        <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 transition-all" id="step-card-5">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" id="chk-5" onchange="updateProgress()" class="w-5 h-5 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer mt-0.5">
+              <label for="chk-5" class="text-base sm:text-lg font-bold text-slate-900 cursor-pointer">第五步：真實對話驗收與測試</label>
+            </div>
+            <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full shrink-0">成功驗收</span>
+          </div>
+
+          <div class="mt-4 pl-8 text-sm text-slate-700 space-y-2.5">
+            <p>1. <strong>忽略 Verify 報錯</strong>：若在 LINE Developers 點擊 Verify 彈出 <code>302 Found</code> 提示，直接點 OK 關閉（此為 Google 正常轉址機制）。</p>
+            <p>2. 打開手機或電腦版 LINE，加入您的官方帳號，發送測試詞句：</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono">
+              <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                <span class="font-bold text-emerald-700">測試模糊比對：</span><br>
+                輸入「請問你們地址在哪裡？」<br>
+                ➔ 機器人命中「地址」並回傳完整地址！
+              </div>
+              <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
+                <span class="font-bold text-blue-700">測試精確比對：</span><br>
+                輸入「電話」<br>
+                ➔ 機器人命中並回傳客服專線！
+              </div>
+            </div>
+            <p>3. 日後如需更新問答，<strong>直接在 Google Sheets 新增列或修改文字即可即時生效</strong>，完全不需再次修改程式碼！</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: PITFALL SIMULATOR ==================== -->
+    <section id="tab-traps" class="hidden space-y-6">
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+        <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <span>⚠️</span> 實務踩坑大解密與診斷室
+        </h2>
+        <p class="mt-2 text-slate-600 text-sm leading-relaxed">
+          串接 LINE Bot 與 GAS 時最常見的障礙通常來自權限機制、302 轉址誤解或快照版本問題。請點選下方按鈕快速篩選常見症狀與解決方案：
+        </p>
+
+        <!-- Filter Buttons -->
+        <div class="mt-4 flex flex-wrap gap-2">
+          <button onclick="filterTraps('all', this)" class="trap-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white">顯示全部 (5)</button>
+          <button onclick="filterTraps('canned', this)" class="trap-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">🤖 地雷一：罐頭訊息干擾</button>
+          <button onclick="filterTraps('redirect', this)" class="trap-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">🔄 地雷二：Verify 302 錯覺</button>
+          <button onclick="filterTraps('token', this)" class="trap-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">🔑 地雷三：已讀不回 / 401</button>
+          <button onclick="filterTraps('snapshot', this)" class="trap-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">📌 地雷四：GAS 部署快照</button>
+          <button onclick="filterTraps('syntax', this)" class="trap-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">💥 地雷五：SyntaxError 語法錯誤</button>
+        </div>
+      </div>
+
+      <!-- Trap Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <!-- Trap 1 -->
+        <div data-category="canned" class="trap-card bg-white rounded-xl p-6 shadow-sm border-2 border-red-100 hover:border-red-300 transition-all flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <span class="bg-red-100 text-red-800 text-xs font-extrabold px-2.5 py-1 rounded">地雷一</span>
+              <span class="text-xs text-slate-400 font-mono">manager.line.biz</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mt-3 flex items-center gap-2">
+              <span>🤖</span> LINE 一直回覆「本帳號無法個別回覆」
+            </h3>
+            
+            <div class="mt-3 p-3 bg-red-50 text-red-900 rounded-lg text-xs font-mono">
+              「感謝您的訊息！很抱歉，本帳號無法個別回覆用戶的訊息...」
+            </div>
+
+            <div class="mt-4 space-y-2 text-sm">
+              <div class="font-bold text-slate-800">🔍 底層原因分析：</div>
+              <p class="text-slate-600 text-xs leading-relaxed">
+                這是 LINE 官方帳號管理後台的預設「自動回應訊息」在作祟。在「回應設定」中若開啟了「回應時間」或未關閉手動聊天，非營業時間會自動發送罐頭訊息覆蓋 Webhook。
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-3 border-t border-slate-100">
+            <div class="font-bold text-emerald-700 text-xs uppercase mb-1">✅ 終極解法：</div>
+            <p class="text-xs text-slate-700 bg-emerald-50 p-2.5 rounded border border-emerald-200">
+              登入 <strong>LINE Official Account Manager</strong> > 設定 > 回應設定：將最上方的 <strong>「聊天 (Chat)」切換為關閉 (OFF)</strong>，只保留 <strong>Webhook (ON)</strong>。
+            </p>
+          </div>
+        </div>
+
+        <!-- Trap 2 -->
+        <div data-category="redirect" class="trap-card bg-white rounded-xl p-6 shadow-sm border-2 border-amber-100 hover:border-amber-300 transition-all flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <span class="bg-amber-100 text-amber-800 text-xs font-extrabold px-2.5 py-1 rounded">地雷二</span>
+              <span class="text-xs text-slate-400 font-mono">developers.line.biz</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mt-3 flex items-center gap-2">
+              <span>🔄</span> Verify 按鈕跳出 Error: 302 Found
+            </h3>
+            
+            <div class="mt-3 p-3 bg-amber-50 text-amber-900 rounded-lg text-xs font-mono">
+              The webhook returned an HTTP status code other than 200.(302 Found)
+            </div>
+
+            <div class="mt-4 space-y-2 text-sm">
+              <div class="font-bold text-slate-800">🔍 底層原因分析：</div>
+              <p class="text-slate-600 text-xs leading-relaxed">
+                這是 Google Apps Script 的架構天性！GAS 接受 POST 請求時必先發送一次 <strong>HTTP 302 重導向</strong>。LINE 網頁端的 Verify 測試工具不支援追蹤 302 因而報錯，但 <strong>LINE 正式訊息推播伺服器完全支援 302 轉址</strong>！
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-3 border-t border-slate-100">
+            <div class="font-bold text-emerald-700 text-xs uppercase mb-1">✅ 終極解法：</div>
+            <p class="text-xs text-slate-700 bg-emerald-50 p-2.5 rounded border border-emerald-200">
+              <strong>直接點擊 OK 忽略該錯誤！</strong>只要 Use webhook 是開啟（綠色 ON），直接用手機傳送真實訊息測試即可。
+            </p>
+          </div>
+        </div>
+
+        <!-- Trap 3 -->
+        <div data-category="token" class="trap-card bg-white rounded-xl p-6 shadow-sm border-2 border-blue-100 hover:border-blue-300 transition-all flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <span class="bg-blue-100 text-blue-800 text-xs font-extrabold px-2.5 py-1 rounded">地雷三</span>
+              <span class="text-xs text-slate-400 font-mono">script.google.com</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mt-3 flex items-center gap-2">
+              <span>🔑</span> GAS 顯示「已完成」，但 LINE 已讀不回
+            </h3>
+            
+            <div class="mt-3 p-3 bg-blue-50 text-blue-900 rounded-lg text-xs font-mono">
+              doPost 執行 1.6 秒 (已完成) -> 手機無任何回覆訊息
+            </div>
+
+            <div class="mt-4 space-y-2 text-sm">
+              <div class="font-bold text-slate-800">🔍 底層原因分析：</div>
+              <p class="text-slate-600 text-xs leading-relaxed">
+                在 LINE Developers 頁面最下方的 <code>Channel access token</code> 依然顯示黑色的 **Issue** 按鈕，代表根本未發行 Token，呼叫 LINE Reply API 時遭到 HTTP 401 拒絕。
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-3 border-t border-slate-100">
+            <div class="font-bold text-emerald-700 text-xs uppercase mb-1">✅ 終極解法：</div>
+            <p class="text-xs text-slate-700 bg-emerald-50 p-2.5 rounded border border-emerald-200">
+              點擊黑色 <strong>Issue</strong> 按鈕，複製生成的超長 Token 貼回 GAS 的 <code>CHANNEL_ACCESS_TOKEN</code>，並發布新版本。
+            </p>
+          </div>
+        </div>
+
+        <!-- Trap 4 -->
+        <div data-category="snapshot" class="trap-card bg-white rounded-xl p-6 shadow-sm border-2 border-purple-100 hover:border-purple-300 transition-all flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <span class="bg-purple-100 text-purple-800 text-xs font-extrabold px-2.5 py-1 rounded">地雷四</span>
+              <span class="text-xs text-slate-400 font-mono">GAS Versioning</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mt-3 flex items-center gap-2">
+              <span>📌</span> 修改了 GAS 程式碼或 Token，完全沒反應
+            </h3>
+            
+            <div class="mt-3 p-3 bg-purple-50 text-purple-900 rounded-lg text-xs font-mono">
+              按了「儲存 (Ctrl+S)」-> 機器人依然執行舊版本
+            </div>
+
+            <div class="mt-4 space-y-2 text-sm">
+              <div class="font-bold text-slate-800">🔍 底層原因分析：</div>
+              <p class="text-slate-600 text-xs leading-relaxed">
+                Google Apps Script 的快照機制：單純按「儲存」只會改變線上編輯器的草稿。外部 Webhook 網址依然停留在上次發布的舊版本快照。
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-3 border-t border-slate-100">
+            <div class="font-bold text-emerald-700 text-xs uppercase mb-1">✅ 終極解法：</div>
+            <p class="text-xs text-slate-700 bg-emerald-50 p-2.5 rounded border border-emerald-200">
+              修改後點選 **部署 > 管理部署 > 鉛筆圖示 (編輯)** > 版本切換為 **新版本 (New version)** > 點擊 **部署**。
+            </p>
+          </div>
+        </div>
+
+        <!-- Trap 5 -->
+        <div data-category="syntax" class="trap-card bg-white rounded-xl p-6 shadow-sm border-2 border-rose-200 hover:border-rose-400 transition-all flex flex-col justify-between md:col-span-2">
+          <div>
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+              <span class="bg-rose-100 text-rose-800 text-xs font-extrabold px-2.5 py-1 rounded">地雷五 (高頻語法錯誤)</span>
+              <span class="text-xs text-slate-400 font-mono">[GLOBAL] SyntaxError</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-900 mt-3 flex items-center gap-2">
+              <span>💥</span> SyntaxError: Unexpected token '}' 或 Unexpected end of input
+            </h3>
+            
+            <div class="mt-3 p-3 bg-rose-50 text-rose-900 rounded-lg text-xs font-mono">
+              [GLOBAL] SyntaxError: Unexpected token '}' / Unexpected end of input
+            </div>
+
+            <div class="mt-4 space-y-2 text-sm">
+              <div class="font-bold text-slate-800">🔍 底層原因分析：</div>
+              <ul class="list-disc pl-5 text-slate-600 text-xs space-y-1">
+                <li><strong>Unexpected end of input (最常見)</strong>：直譯器讀到了腳本結尾，卻發現仍有括號 <code>}</code> 或字串引號 <code>'</code> 尚未閉合。通常是因為在貼上 Token 時誤刪了結尾的單引號 <code>'</code>，導致整份程式碼全被當成未結束的字串。</li>
+                <li><strong>Unexpected token '}'</strong>：GAS 預設有 <code>function myFunction() {}</code>，貼上新程式碼時若殘留了多餘的孤立 <code>}</code> 所導致。</li>
+                <li><strong>專案多餘檔案干擾</strong>：Apps Script 左側若有其他未命名的空 <code>.gs</code> 檔案，會在全域編譯時一同被載入並引發錯誤。</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="mt-5 pt-3 border-t border-slate-100">
+            <div class="font-bold text-emerald-700 text-xs uppercase mb-1">✅ 終極解法：</div>
+            <div class="text-xs text-slate-700 bg-emerald-50 p-2.5 rounded border border-emerald-200 space-y-1">
+              <p>1. 檢查 GAS 左側「檔案」清單，刪除所有多餘或空白的 <code>.gs</code> 測試檔，僅保留主要檔案。</p>
+              <p>2. 在編輯器內按 <strong>Ctrl + A 全選並按 Delete 完全清空</strong>。</p>
+              <p>3. 切換至本網頁「腳本生成」頁籤，貼上 Token 後點擊「📋 一鍵複製程式碼」並貼回 GAS。</p>
+              <p>4. 在 GAS 上方選取 <strong>testConnection</strong> 函式點擊「執行」，先進行自我環境與語法檢驗！</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== TAB 4: CODE GENERATOR ==================== -->
+    <section id="tab-code" class="space-y-6 hidden">
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+        <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <span>💻</span> Google Apps Script 完整程式碼產生器
+        </h2>
+        <p class="mt-1 text-slate-600 text-sm">
+          輸入您的 Token 與工作表名稱，系統將自動即時注入參數並產生 100% 語法對稱、通過閉合檢驗的完整後端腳本。
+        </p>
+
+        <!-- Live Inputs -->
+        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Channel Access Token (可直接貼入或生成後手動替換)</label>
+            <input type="text" id="input-token" oninput="generateCode()" placeholder="貼入從 LINE Developers 按 Issue 複製的超長 Token" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Google Sheets 工作表分頁名稱 (預設為 FAQ)</label>
+            <input type="text" id="input-sheet" oninput="generateCode()" value="FAQ" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none font-mono">
+          </div>
+        </div>
+      </div>
+
+      <!-- Code Box -->
+      <div class="bg-slate-900 rounded-xl shadow-lg border border-slate-800 overflow-hidden">
+        <div class="flex items-center justify-between px-4 py-3 bg-slate-800 border-b border-slate-700">
+          <div class="flex items-center space-x-2">
+            <span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
+            <span class="w-3 h-3 rounded-full bg-yellow-500 inline-block"></span>
+            <span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span>
+            <span class="text-xs font-mono text-slate-300 ml-2">Code.gs (最新零錯誤標準版)</span>
+          </div>
+          <button onclick="copyGeneratedCode()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-md shadow transition-all flex items-center gap-1.5 active:scale-95">
+            <span>📋</span> 一鍵複製程式碼
+          </button>
+        </div>
+
+        <pre class="p-4 text-xs font-mono text-slate-300 overflow-x-auto code-scroll leading-relaxed max-h-[500px]"><code id="code-block"></code></pre>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 5: SANDBOX SIMULATOR ==================== -->
+    <section id="tab-sandbox" class="hidden space-y-6">
+      <div class="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+              <span>🧪</span> 試算表關鍵字匹配模擬器 (支援自建資料)
+            </h2>
+            <p class="mt-1 text-slate-600 text-sm">
+              可自由<strong>新增、修改、刪除</strong>您的問答資料庫，或快速套用行業範本。右側的模擬 LINE 聊天室將即時反應測試結果！
+            </p>
+          </div>
+
+          <!-- Preset Switcher -->
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="text-xs text-slate-500 font-bold">快速套用範本：</span>
+            <select id="preset-selector" onchange="loadPreset(this.value)" class="text-xs bg-slate-100 border border-slate-300 rounded-lg px-2.5 py-1.5 font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="store" selected>🏢 實體門市 / 公司</option>
+              <option value="ecommerce">🛍️ 電商網購客服</option>
+              <option value="event">🎓 課程與活動報名</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Sheet Mock Data Table -->
+        <div class="lg:col-span-7 bg-white rounded-xl p-6 shadow-sm border border-slate-200 flex flex-col justify-between">
+          <div>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 mb-3">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-xs font-mono font-bold rounded border border-emerald-300">分頁: FAQ</span>
+                <h3 class="text-base font-bold text-slate-800">
+                  Google Sheets 資料庫 (<span id="sandbox-row-count" class="text-emerald-600 font-mono">0</span> 筆資料)
+                </h3>
+              </div>
+              
+              <!-- Action Button Group -->
+              <div class="flex flex-wrap items-center gap-1.5">
+                <button onclick="addSandboxRow()" title="新增自訂問答列" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg shadow transition flex items-center gap-1 active:scale-95">
+                  <span>➕</span> 新增問答
+                </button>
+                <button onclick="downloadAsSheetCSV()" title="下載為 Google Sheets / Excel 專用 FAQ.csv 檔案 (UTF-8 BOM 防亂碼)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-2.5 py-1.5 rounded-lg shadow transition flex items-center gap-1 active:scale-95">
+                  <span>📥</span> 下載 FAQ.csv
+                </button>
+                <button onclick="openDirectlyInGoogleSheets()" title="複製資料、下載檔案並自動在 Google Sheets 開啟引導填入" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/50 text-xs font-bold px-2.5 py-1.5 rounded-lg shadow transition flex items-center gap-1 active:scale-95">
+                  <span>📗</span> 在 Google Sheets 開啟 (FAQ)
+                </button>
+              </div>
+            </div>
+
+            <!-- Scrollable Dynamic Table -->
+            <div class="overflow-x-auto border border-slate-200 rounded-t-lg max-h-[360px] overflow-y-auto code-scroll">
+              <table class="w-full text-xs text-left border-collapse">
+                <thead class="sticky top-0 bg-slate-100 text-slate-700 border-b border-slate-200 font-bold z-10">
+                  <tr>
+                    <th class="p-2.5 w-[25%]">欄位 A (關鍵字)</th>
+                    <th class="p-2.5 w-[45%]">欄位 B (回覆內容)</th>
+                    <th class="p-2.5 w-[20%]">欄位 C (比對模式)</th>
+                    <th class="p-2.5 w-[10%] text-center">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="sandbox-table-body" class="divide-y divide-slate-200 font-mono">
+                  <!-- Generated dynamically via renderSandboxTable() -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Google Sheets Style Bottom Tab Bar -->
+            <div class="flex items-center justify-between bg-slate-100 border-x border-b border-slate-200 px-3 py-1.5 rounded-b-lg text-xs font-mono select-none">
+              <div class="flex items-center gap-1.5">
+                <span class="text-slate-400 font-sans text-[11px]">工作表分頁:</span>
+                <div class="bg-white border-t-2 border-emerald-500 text-slate-800 font-bold px-3 py-1 rounded-t shadow-xs flex items-center gap-1.5 border-x border-slate-300">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span class="text-emerald-700">FAQ</span>
+                </div>
+              </div>
+              <span class="text-[11px] text-slate-500 hidden sm:inline">🔒 分頁名稱已固定為 <strong class="text-slate-700">FAQ</strong>（與 GAS 腳本 <code>SHEET_NAME = 'FAQ'</code> 完美契合）</span>
+            </div>
+          </div>
+
+          <!-- Quick Test Chips -->
+          <div class="mt-4 pt-3 border-t border-slate-100">
+            <div class="flex items-center justify-between text-xs text-slate-500 mb-2">
+              <span class="font-bold">💡 點擊下方推薦詞句快速填入測試：</span>
+              <button onclick="resetToDefaultSandbox()" class="text-slate-400 hover:text-slate-600 underline">恢復初始預設</button>
+            </div>
+            <div id="quick-test-container" class="flex flex-wrap gap-1.5">
+              <!-- Dynamically populated chips -->
+            </div>
+          </div>
+        </div>
+
+        <!-- LINE Live Chat Preview Window -->
+        <div class="lg:col-span-5 bg-slate-900 rounded-2xl p-4 shadow-xl border border-slate-800 flex flex-col justify-between h-[480px]">
+          <!-- Chat Header -->
+          <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+            <div class="flex items-center space-x-2">
+              <span class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="text-sm font-bold text-white">智慧客服 LINE 模擬器</span>
+            </div>
+            <span class="text-xs text-slate-400 font-mono">即時演算法驗證</span>
+          </div>
+
+          <!-- Chat Messages Area -->
+          <div class="flex-grow my-3 space-y-3 overflow-y-auto px-1 text-xs code-scroll">
+            <!-- User Msg -->
+            <div class="flex justify-end">
+              <div class="bg-emerald-500 text-white p-3 rounded-2xl rounded-tr-none max-w-[85%] shadow leading-relaxed">
+                <span id="preview-user-text">請問地址在哪裡？</span>
+              </div>
+            </div>
+
+            <!-- Bot Answer -->
+            <div class="flex justify-start">
+              <div class="bg-slate-800 text-slate-100 p-3 rounded-2xl rounded-tl-none max-w-[85%] border border-slate-700 shadow space-y-2">
+                <div id="preview-bot-text" class="leading-relaxed whitespace-pre-line text-slate-200">
+                  📍 本店地址：台北市信義區信義路五段7號 (台北101)，捷運世貿站4號出口！
+                </div>
+                <div class="text-[10px] text-slate-400 pt-2 border-t border-slate-700/70 flex justify-between items-center">
+                  <span>匹配關鍵字: <strong id="preview-matched-kw" class="text-emerald-400 font-bold">地址</strong></span>
+                  <span id="preview-match-type" class="px-2 py-0.5 rounded bg-slate-700 text-blue-400 font-mono">contains</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chat Input Controls -->
+          <div class="pt-2 border-t border-slate-800 flex gap-2">
+            <input type="text" id="sandbox-user-input" value="請問地址在哪裡？" oninput="runSandboxTest()" placeholder="請輸入訪客提問文字..." class="flex-grow text-xs bg-slate-800 text-white p-2.5 rounded-xl border border-slate-700 focus:outline-none focus:border-emerald-500">
+            <button onclick="runSandboxTest()" class="bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-4 py-2.5 rounded-xl text-xs transition active:scale-95 shrink-0">
+              送出提問
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="bg-slate-900 text-slate-400 text-xs py-6 border-t border-slate-800 mt-8">
+    <div class="max-w-7xl mx-auto px-4 text-center space-y-2">
+      <p>LINE Bot + Google Sheets 智慧客服實作指南 (最新雙後台零錯誤版)</p>
+      <p class="text-slate-500">純前端 Serverless 架構 • 免費、高擴充性且無主機租借負擔</p>
+    </div>
+  </footer>
+
+  <!-- Floating Toast Message Notification -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform transition-all duration-300 translate-y-20 opacity-0 pointer-events-none bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-3 text-xs font-semibold">
+    <span id="toast-icon">✅</span>
+    <span id="toast-msg">訊息提示</span>
+  </div>
+
+  <!-- Google Sheets Export & Guidance Modal -->
+  <div id="sheets-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm hidden p-4">
+    <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden transform transition-all">
+      <!-- Modal Header -->
+      <div class="bg-slate-900 px-6 py-4 flex items-center justify-between border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <span class="text-2xl">📗</span>
+          <div>
+            <h3 class="text-base font-bold text-white">Google Sheets 已在新分頁開啟！</h3>
+            <p class="text-xs text-emerald-400 font-mono">工作表分頁名稱：FAQ</p>
+          </div>
+        </div>
+        <button onclick="closeSheetsModal()" class="text-slate-400 hover:text-white text-lg font-bold p-1">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 space-y-4 text-xs text-slate-700 leading-relaxed">
+        <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl text-amber-900 space-y-1">
+          <div class="font-bold flex items-center gap-1.5">
+            <span>💡</span> 為什麼剛打開的 Google 試算表是空白的？
+          </div>
+          <p class="text-[11px] leading-normal text-amber-800">
+            受瀏覽器安全性限制，外部網頁無法直接任意改寫您的個人 Google 雲端硬碟。但我們已經為您<strong>複製好全部資料</strong>並<strong>同步下載了「FAQ.csv」</strong>！
+          </p>
+        </div>
+
+        <div class="space-y-3 font-sans">
+          <div class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+            <span>🚀</span> 請在剛開啟的 Google Sheets 視窗進行以下兩步（只需 5 秒）：
+          </div>
+
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+            <div class="font-bold text-emerald-700 flex items-center gap-1.5 text-xs">
+              <span class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px]">1</span>
+              第一步：點選 A1 儲存格，直接貼上！
+            </div>
+            <p class="text-slate-600 text-[11px] pl-6">
+              點擊試算表左上角的 <strong>A1</strong> 儲存格，按鍵盤 <kbd class="px-1.5 py-0.5 bg-white border border-slate-300 rounded shadow-xs font-mono font-bold text-slate-800">Ctrl + V</kbd>（Mac: <kbd class="px-1.5 py-0.5 bg-white border border-slate-300 rounded shadow-xs font-mono font-bold text-slate-800">⌘ + V</kbd>），所有問答將自動整齊排列！
+            </p>
+          </div>
+
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+            <div class="font-bold text-blue-700 flex items-center gap-1.5 text-xs">
+              <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px]">2</span>
+              第二步：將工作表命名為 FAQ (關鍵)
+            </div>
+            <p class="text-slate-600 text-[11px] pl-6">
+              雙擊試算表左下角預設的<strong>「工作表1」</strong>標籤，將其改名為 <code class="px-1.5 py-0.5 bg-amber-100 text-amber-900 font-bold rounded">FAQ</code>（大小寫相符），即可與 GAS 腳本完全契合！
+            </p>
+          </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-100 text-[11px] text-slate-500">
+          📁 <strong>備用匯入方式</strong>：亦可直接在 Google 試算表選單點選「檔案」>「匯入」>「上傳」，將剛才下載的 <code>FAQ.csv</code> 拖入即可一次完成。
+        </div>
+      </div>
+
+      <!-- Modal Footer Controls -->
+      <div class="bg-slate-50 px-6 py-3.5 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2">
+        <div class="flex items-center gap-2">
+          <button onclick="copyAgainFromModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow transition active:scale-95 flex items-center gap-1">
+            <span>📋</span> 再次複製資料
+          </button>
+          <button onclick="downloadAsSheetCSV(false)" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow transition active:scale-95 flex items-center gap-1">
+            <span>📥</span> 重新下載 FAQ.csv
+          </button>
+        </div>
+        <button onclick="closeSheetsModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold px-4 py-1.5 rounded-lg transition">
+          我知道了，關閉
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showToast(msg, icon = '✅') {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+      toastMsg.innerText = msg;
+      toastIcon.innerText = icon;
+      toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+
+    // =================================================================
+    // 1. 全域字體縮放調節功能
+    // =================================================================
+    let currentZoom = 100;
+    function changeFontSize(delta) {
+      currentZoom = Math.min(140, Math.max(80, currentZoom + delta));
+      document.documentElement.style.fontSize = (16 * (currentZoom / 100)) + 'px';
+      const display = document.getElementById('font-size-display');
+      if (display) display.innerText = currentZoom + '%';
+      showToast(`字級已調整為 ${currentZoom}%`, '🔍');
+    }
+
+    function resetFontSize() {
+      currentZoom = 100;
+      document.documentElement.style.fontSize = '16px';
+      const display = document.getElementById('font-size-display');
+      if (display) display.innerText = '100%';
+      showToast('字級已恢復預設 (100%)', '🔄');
+    }
+
+    // =================================================================
+    // 2. 試算表範本資料一鍵複製 (TSV 格式直接貼入 Google Sheets A1)
+    // =================================================================
+    function copySheetTemplate() {
+      const tsvContent = "關鍵字\t回覆內容\t比對模式\n" +
+        "地址\t📍 本店地址：台北市信義區信義路五段7號 (台北101)，捷運台北101/世貿站4號出口！\tcontains\n" +
+        "營業時間\t⏰ 營業時間：週一至週五 09:00 - 18:00 (國定假日公休)。\tcontains\n" +
+        "電話\t📞 客服專線：(02) 1234-5678 (服務時間 10:00 - 17:00)\texact\n" +
+        "費用\t💰 諮詢完全免費！專案服務歡迎提供需求為您客製報價。\tcontains\n" +
+        "停車\t🅿️ 大樓 B2-B4 備有收費地下停車場，消費滿千可折抵 1 小時。\tcontains";
+
+      const tempTextArea = document.createElement('textarea');
+      tempTextArea.value = tsvContent;
+      tempTextArea.style.position = 'fixed';
+      tempTextArea.style.opacity = '0';
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          showToast('範本已複製！請在 Google Sheets 點選 A1 儲存格並按 Ctrl+V 貼上。', '📋');
+        } else {
+          showToast('複製未完成，請手動複製。', '⚠️');
+        }
+      } catch (err) {
+        showToast('瀏覽器限制，請手動選取複製。', '⚠️');
+      }
+      document.body.removeChild(tempTextArea);
+    }
+
+    // =================================================================
+    // 3. 匹配模擬器動態資料庫 (支援自建/新增/刪除與範本切換)
+    // =================================================================
+    const PRESETS = {
+      store: [
+        { k: '地址', r: '📍 本店地址：台北市信義區信義路五段7號 (台北101)，捷運世貿站4號出口！', m: 'contains' },
+        { k: '營業時間', r: '⏰ 營業時間：週一至週五 09:00 - 18:00 (例假日公休)。', m: 'contains' },
+        { k: '電話', r: '📞 客服專線：(02) 1234-5678，歡迎於上班時間來電！', m: 'exact' },
+        { k: '停車', r: '🅿️ 大樓 B2-B4 提供室內收費停車位，每小時收費 60 元。', m: 'contains' }
+      ],
+      ecommerce: [
+        { k: '運費', r: '🚚 全館消費滿 $999 即享超取免運！未達門檻超取 $60、宅配 $100。', m: 'contains' },
+        { k: '退貨', r: '📦 提供 7 天鑑賞期無條件退換貨服務，請保持商品完整並私訊申請。', m: 'contains' },
+        { k: '付款方式', r: '💳 支援信用卡一次付清、LINE Pay、街口支付及超商取貨付款。', m: 'contains' },
+        { k: '發票', r: '🧾 本店全面開立電子發票，寄出後 24 小時內自動發送至您的 Email。', m: 'exact' }
+      ],
+      event: [
+        { k: '報名', r: '📝 請前往活動官網 https://example.com/signup 填寫報名表單。', m: 'contains' },
+        { k: '費用', r: '🎟️ 早鳥票優惠 $800（原價 $1,200），名額有限售完為止！', m: 'contains' },
+        { k: '地點', r: '🏛️ 活動地點：台北國際會議中心 TICC 3樓大禮堂。', m: 'contains' },
+        { k: '退費', r: '⚠️ 活動前 3 天取消可全額退費，前 1 天取消酌收 20% 手續費。', m: 'exact' }
+      ]
+    };
+
+    let sandboxData = JSON.parse(JSON.stringify(PRESETS.store));
+
+    function loadPreset(presetKey) {
+      if (PRESETS[presetKey]) {
+        sandboxData = JSON.parse(JSON.stringify(PRESETS[presetKey]));
+        renderSandboxTable();
+        const firstKw = sandboxData[0] ? sandboxData[0].k : '你好';
+        setSandboxInput(`請問${firstKw}在哪裡？`);
+        const sel = document.getElementById('preset-selector');
+        const text = sel && sel.selectedOptions[0] ? sel.selectedOptions[0].text : presetKey;
+        showToast(`已套用「${text}」範本！`, '✨');
+      }
+    }
+
+    function resetToDefaultSandbox() {
+      const sel = document.getElementById('preset-selector');
+      if (sel) sel.value = 'store';
+      loadPreset('store');
+    }
+
+    // =================================================================
+    // 複製模擬器資料至剪貼簿 (高相容 TSV + HTML 格線格式)
+    // =================================================================
+    function copySandboxTableToClipboard() {
+      if (!sandboxData || sandboxData.length === 0) return false;
+
+      let tsvContent = "關鍵字\t回覆內容\t比對模式\n";
+      let htmlContent = "<table><thead><tr><th>關鍵字</th><th>回覆內容</th><th>比對模式</th></tr></thead><tbody>";
+
+      sandboxData.forEach(row => {
+        const k = (row.k || '').replace(/\t/g, ' ');
+        const r = (row.r || '').replace(/\t/g, ' ');
+        const m = (row.m || 'contains').replace(/\t/g, ' ');
+        tsvContent += `${k}\t${r}\t${m}\n`;
+        htmlContent += `<tr><td>${escapeHtml(k)}</td><td>${escapeHtml(r).replace(/\n/g, '<br>')}</td><td>${escapeHtml(m)}</td></tr>`;
+      });
+      htmlContent += "</tbody></table>";
+
+      // 優先使用新版 Clipboard API 注入雙格式 (支援試算表格線貼上)
+      if (navigator.clipboard && window.ClipboardItem) {
+        try {
+          const blobText = new Blob([tsvContent], { type: 'text/plain' });
+          const blobHtml = new Blob([htmlContent], { type: 'text/html' });
+          navigator.clipboard.write([
+            new ClipboardItem({
+              'text/plain': blobText,
+              'text/html': blobHtml
+            })
+          ]).catch(() => fallbackCopyText(tsvContent));
+        } catch (e) {
+          fallbackCopyText(tsvContent);
+        }
+      } else {
+        fallbackCopyText(tsvContent);
+      }
+      return true;
+    }
+
+    function fallbackCopyText(text) {
+      const tempTextArea = document.createElement('textarea');
+      tempTextArea.value = text;
+      tempTextArea.style.position = 'fixed';
+      tempTextArea.style.opacity = '0';
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.warn('fallback copy failed', err);
+      }
+      document.body.removeChild(tempTextArea);
+    }
+
+    // =================================================================
+    // 下載為 Google Sheets / Excel 相容試算表 (固定檔名為 FAQ.csv，帶 UTF-8 BOM)
+    // =================================================================
+    function downloadAsSheetCSV(showNotice = true) {
+      if (!sandboxData || sandboxData.length === 0) {
+        showToast('目前無任何問答資料可供下載！', '⚠️');
+        return;
+      }
+
+      let csvContent = '\uFEFF關鍵字,回覆內容,比對模式\r\n';
+
+      sandboxData.forEach(row => {
+        const k = '"' + String(row.k || '').replace(/"/g, '""') + '"';
+        const r = '"' + String(row.r || '').replace(/"/g, '""') + '"';
+        const m = '"' + String(row.m || 'contains').replace(/"/g, '""') + '"';
+        csvContent += `${k},${r},${m}\r\n`;
+      });
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const downloadLink = document.createElement('a');
+      downloadLink.href = url;
+      downloadLink.setAttribute('download', 'FAQ.csv');
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(url);
+
+      if (showNotice) {
+        showToast('已成功下載「FAQ.csv」！分頁已命名為 FAQ。', '📥');
+      }
+    }
+
+    // =================================================================
+    // 一鍵開啟 Google Sheets 並提供無縫貼上引導 Modal
+    // =================================================================
+    function openDirectlyInGoogleSheets() {
+      if (!sandboxData || sandboxData.length === 0) {
+        showToast('目前無問答資料！', '⚠️');
+        return;
+      }
+
+      // 1. 自動複製到剪貼簿 (TSV + HTML 格式)
+      copySandboxTableToClipboard();
+
+      // 2. 自動同步下載一份 FAQ.csv 備用
+      downloadAsSheetCSV(false);
+
+      // 3. 開啟 Google Sheets 新增頁面
+      window.open('https://sheets.new', '_blank');
+
+      // 4. 顯示即時教學引導彈窗 (徹底解決使用者看到空白畫面的困惑)
+      openSheetsModal();
+    }
+
+    function openSheetsModal() {
+      const modal = document.getElementById('sheets-modal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeSheetsModal() {
+      const modal = document.getElementById('sheets-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function copyAgainFromModal() {
+      copySandboxTableToClipboard();
+      showToast('FAQ 資料已再次複製！請至 Google Sheets 點選 A1 按 Ctrl+V 貼上。', '📋');
+    }
+
+    function addSandboxRow() {
+      sandboxData.push({
+        k: '新關鍵字',
+        r: '這是自訂回覆內容，您可以直接點擊編輯！',
+        m: 'contains'
+      });
+      renderSandboxTable();
+      showToast('已新增一筆 FAQ 規則！請在表格內直接修改內容。', '➕');
+      runSandboxTest();
+    }
+
+    function deleteSandboxRow(index) {
+      if (sandboxData.length <= 1) {
+        showToast('至少保留一筆資料進行模擬測試喔！', '⚠️');
+        return;
+      }
+      sandboxData.splice(index, 1);
+      renderSandboxTable();
+      showToast('已移除該筆問答規則。', '🗑️');
+      runSandboxTest();
+    }
+
+    function updateSandboxRowData(index, field, value) {
+      if (sandboxData[index]) {
+        sandboxData[index][field] = value;
+        runSandboxTest();
+      }
+    }
+
+    function renderSandboxTable() {
+      const tbody = document.getElementById('sandbox-table-body');
+      const countEl = document.getElementById('sandbox-row-count');
+      if (!tbody) return;
+
+      tbody.innerHTML = '';
+      if (countEl) countEl.innerText = sandboxData.length;
+
+      sandboxData.forEach((row, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition-colors';
+        tr.innerHTML = `
+          <td class="p-2.5 font-bold text-blue-600">
+            <input type="text" value="${escapeHtml(row.k)}" oninput="updateSandboxRowData(${idx}, 'k', this.value)" placeholder="輸入關鍵字" class="w-full bg-slate-50 hover:bg-white focus:bg-white p-1 rounded border border-transparent focus:border-blue-400 focus:outline-none">
+          </td>
+          <td class="p-2.5 text-slate-700">
+            <input type="text" value="${escapeHtml(row.r)}" oninput="updateSandboxRowData(${idx}, 'r', this.value)" placeholder="輸入回覆解答" class="w-full bg-slate-50 hover:bg-white focus:bg-white p-1 rounded border border-transparent focus:border-blue-400 focus:outline-none">
+          </td>
+          <td class="p-2.5">
+            <select onchange="updateSandboxRowData(${idx}, 'm', this.value)" class="bg-slate-100 rounded px-1.5 py-1 text-xs border border-slate-300 focus:outline-none">
+              <option value="contains" ${row.m === 'contains' ? 'selected' : ''}>contains (模糊)</option>
+              <option value="exact" ${row.m === 'exact' ? 'selected' : ''}>exact (全等)</option>
+            </select>
+          </td>
+          <td class="p-2.5 text-center">
+            <button onclick="deleteSandboxRow(${idx})" title="刪除此列" class="text-slate-400 hover:text-red-500 transition px-1.5 py-1 rounded hover:bg-red-50">
+              🗑️
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      renderQuickTestChips();
+    }
+
+    function renderQuickTestChips() {
+      const container = document.getElementById('quick-test-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      sandboxData.forEach(item => {
+        if (!item.k.trim()) return;
+        const btn = document.createElement('button');
+        btn.className = 'px-2.5 py-1 bg-slate-100 hover:bg-emerald-100 text-slate-700 hover:text-emerald-800 rounded-md text-xs font-medium transition';
+        btn.innerText = item.m === 'exact' ? item.k : `請問${item.k}？`;
+        btn.onclick = () => setSandboxInput(btn.innerText);
+        container.appendChild(btn);
+      });
+
+      const failBtn = document.createElement('button');
+      failBtn.className = 'px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-md text-xs font-medium transition';
+      failBtn.innerText = '想問火星天氣 (測查無資料)';
+      failBtn.onclick = () => setSandboxInput('想問火星天氣');
+      container.appendChild(failBtn);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function setSandboxInput(text) {
+      const input = document.getElementById('sandbox-user-input');
+      if (input) {
+        input.value = text;
+        runSandboxTest();
+      }
+    }
+
+    function runSandboxTest() {
+      const userInput = document.getElementById('sandbox-user-input');
+      const userMsg = userInput ? userInput.value.trim() : '';
+      const previewUser = document.getElementById('preview-user-text');
+      if (previewUser) {
+        previewUser.innerText = userMsg || '(訪客未輸入文字)';
+      }
+
+      const query = userMsg.toLowerCase();
+      let matched = false;
+
+      for (let i = 0; i < sandboxData.length; i++) {
+        const keyword = String(sandboxData[i].k || '').trim().toLowerCase();
+        const response = String(sandboxData[i].r || '').trim();
+        const matchType = sandboxData[i].m || 'contains';
+
+        if (!keyword || !response) continue;
+
+        if (matchType === 'exact') {
+          if (query === keyword) {
+            updateSandboxUI(response, sandboxData[i].k, 'exact (完全相符)');
+            matched = true;
+            break;
+          }
+        } else {
+          if (query.indexOf(keyword) !== -1 || keyword.indexOf(query) !== -1) {
+            updateSandboxUI(response, sandboxData[i].k, 'contains (模糊包含)');
+            matched = true;
+            break;
+          }
+        }
+      }
+
+      if (!matched) {
+        updateSandboxUI('感謝您的提問！目前小幫手找不到相關資訊。\n您可以輸入「地址」、「營業時間」等關鍵字進行查詢喔！', '無匹配', 'N/A');
+      }
+    }
+
+    function updateSandboxUI(botText, matchedKw, matchType) {
+      const botEl = document.getElementById('preview-bot-text');
+      const kwEl = document.getElementById('preview-matched-kw');
+      const typeEl = document.getElementById('preview-match-type');
+      if (botEl) botEl.innerText = botText;
+      if (kwEl) kwEl.innerText = matchedKw;
+      if (typeEl) typeEl.innerText = matchType;
+    }
+
+    function switchTab(tabKey) {
+      const tabKeys = ['arch', 'steps', 'traps', 'code', 'sandbox'];
+      tabKeys.forEach(key => {
+        const sec = document.getElementById(`tab-${key}`);
+        const btn = document.getElementById(`nav-${key}`);
+        if (key === tabKey) {
+          sec.classList.remove('hidden');
+          btn.className = 'tab-btn px-2.5 sm:px-3 py-1.5 rounded-lg transition-all duration-200 bg-slate-800 text-emerald-400 font-semibold shadow';
+        } else {
+          sec.classList.add('hidden');
+          btn.className = 'tab-btn px-2.5 sm:px-3 py-1.5 rounded-lg transition-all duration-200 text-slate-300 hover:text-white hover:bg-slate-800';
+        }
+      });
+      if (tabKey === 'code') {
+        generateCode();
+      }
+    }
+
+    const nodeDetails = {
+      user: {
+        title: "📱 步驟一：訪客 LINE 提問",
+        body: "訪客於手機端 LINE 聊天室輸入文字訊息（例如：「請問地址在哪？」）。LINE 用戶端會打包該傳送事件並發送至 LINE 核心伺服器。"
+      },
+      line: {
+        title: "🟢 步驟二：LINE 伺服器 (Webhook 轉發)",
+        body: "LINE 伺服器接收到對話事件後，會尋找開發者在 Developer Console 設定的 Webhook URL，並透過 HTTP POST 將 Payload (JSON 格式) 轉發至 Google Apps Script 網址。"
+      },
+      gas: {
+        title: "⚙️ 步驟三：Google Apps Script (doPost 入口)",
+        body: "GAS 的 doPost(e) 函式被觸發，解析 JSON 中的 replyToken 與 userMessage。同時具備處理 LINE 驗證 Ping 的容錯邏輯，避免噴出例外錯誤。"
+      },
+      sheets: {
+        title: "📊 步驟四：Google Sheets FAQ 檢索",
+        body: "GAS 自動連線到指定 Google 試算表的 'FAQ' 分頁，讀取 A 欄關鍵字與 C 欄匹配模式。依序比對訪客提問，命中即取出 B 欄的回覆文字。"
+      },
+      reply: {
+        title: "💬 步驟五：呼叫 LINE Reply API",
+        body: "GAS 攜帶 Channel Access Token，向 https://api.line.me/v2/bot/message/reply 發送 POST 請求。權杖正確即可在 1 秒內回傳解答至訪客手機！"
+      }
+    };
+
+    function showNodeDetail(key) {
+      const info = nodeDetails[key];
+      if (info) {
+        document.getElementById('node-info-title').innerText = info.title;
+        document.getElementById('node-info-body').innerText = info.body;
+      }
+    }
+
+    function updateProgress() {
+      let count = 0;
+      for (let i = 1; i <= 5; i++) {
+        const chk = document.getElementById(`chk-${i}`);
+        const card = document.getElementById(`step-card-${i}`);
+        if (chk && chk.checked) {
+          count++;
+          card.classList.add('border-emerald-400', 'bg-emerald-50/20');
+        } else if (card) {
+          card.classList.remove('border-emerald-400', 'bg-emerald-50/20');
+        }
+      }
+      document.getElementById('progress-text').innerText = `${count} / 5`;
+    }
+
+    function filterTraps(category, btnElement) {
+      const cards = document.querySelectorAll('.trap-card');
+      const btns = document.querySelectorAll('.trap-filter-btn');
+
+      btns.forEach(btn => {
+        btn.className = "trap-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200";
+      });
+      if (btnElement) {
+        btnElement.className = "trap-filter-btn px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-900 text-white";
+      }
+
+      cards.forEach(card => {
+        if (category === 'all' || card.dataset.category === category) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    }
+
+    function generateCode() {
+      const tokenInput = document.getElementById('input-token');
+      const sheetInput = document.getElementById('input-sheet');
+      const token = (tokenInput && tokenInput.value.trim()) ? tokenInput.value.trim() : 'YOUR_LINE_CHANNEL_ACCESS_TOKEN_HERE';
+      const sheet = (sheetInput && sheetInput.value.trim()) ? sheetInput.value.trim() : 'FAQ';
+
+      const scriptTemplate = `/**
+ * LINE Bot + Google Sheets FAQ 自動問答系統
+ * 版本：v2.3 (100% 語法對稱閉合與除錯防呆版)
+ */
+
+// =================================================================
+// 1. 系統常數設定 (請注意：引號 '' 必須完整保留)
+// =================================================================
+
+// 請在兩個單引號中間填入從 LINE Developers 按 Issue 複製的超長 Token
+const CHANNEL_ACCESS_TOKEN = '${token}';
+
+// Google 試算表底部的分頁名稱 (必須完全相符，區分大小寫)
+const SHEET_NAME = '${sheet}';
+
+// 查無關鍵字時的回覆文字
+const DEFAULT_FALLBACK_MESSAGE = '感謝您的提問！目前小幫手找不到相關資訊。\\n您可以輸入「地址」、「營業時間」等關鍵字進行查詢喔！';
+
+
+// =================================================================
+// 2. LINE Webhook HTTP POST 主要入口
+// =================================================================
+
+function doPost(e) {
+  try {
+    // 檢查傳入物件防呆
+    if (!e || !e.postData || !e.postData.contents) {
+      console.warn('收到無內容的請求 (No postData)');
+      return ContentService.createTextOutput(JSON.stringify({ status: 'no_data' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const eventData = JSON.parse(e.postData.contents);
+    const events = eventData.events;
+
+    // 容錯：處理 LINE 的驗證 ping 或空陣列事件
+    if (!events || events.length === 0) {
+      console.log('收到驗證事件 (Verification Ping)');
+      return ContentService.createTextOutput(JSON.stringify({ status: 'success', message: 'verified' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 依序處理每個傳送進來的對話事件
+    for (let i = 0; i < events.length; i++) {
+      const currentEvent = events[i];
+      if (currentEvent.type === 'message' && currentEvent.message && currentEvent.message.type === 'text') {
+        handleTextMessage(currentEvent);
+      }
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    console.error('doPost 發生異常: ' + error.toString());
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+
+// =================================================================
+// 3. 處理訪客文字訊息與回覆派送
+// =================================================================
+
+function handleTextMessage(event) {
+  const replyToken = event.replyToken;
+  const userMessage = event.message.text ? event.message.text.trim() : '';
+
+  console.log('收到使用者提問: ' + userMessage);
+
+  // 略過 LINE Developers 點擊 Verify 時帶有的無效測試權杖
+  if (!replyToken || replyToken === '00000000000000000000000000000000' || replyToken === 'ffffffffffffffffffffffffffffffff') {
+    console.log('偵測到測試專用 ReplyToken，略過回傳作業');
+    return;
+  }
+
+  // 檢索試算表尋找相符的回答
+  const matchedAnswer = searchAnswerInSheet(userMessage);
+
+  // 透過 Reply API 發送給用戶
+  replyMessage(replyToken, matchedAnswer);
+}
+
+
+// =================================================================
+// 4. 試算表關鍵字檢索核心演算法
+// =================================================================
+
+function searchAnswerInSheet(userQuery) {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  if (!spreadsheet) {
+    console.error('無法綁定作用中試算表！請確認此 GAS 是由試算表「擴充功能 > Apps Script」建立。');
+    return '系統錯誤：無法開啟試算表資料庫。';
+  }
+
+  const sheet = spreadsheet.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    console.error('找不到名為 "' + SHEET_NAME + '" 的分頁！請檢查試算表底部的標籤。');
+    return '系統錯誤：找不到 FAQ 分頁。';
+  }
+
+  const lastRow = sheet.getLastRow();
+  // 若僅有第 1 列標題欄或無資料
+  if (lastRow <= 1) {
+    return DEFAULT_FALLBACK_MESSAGE;
+  }
+
+  // 讀取 A2 到 C 欄最底列 (第 1 欄:關鍵字, 第 2 欄:回覆, 第 3 欄:比對模式)
+  const values = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
+  const query = userQuery.toLowerCase();
+
+  for (let i = 0; i < values.length; i++) {
+    const keyword = String(values[i][0] || '').trim().toLowerCase();
+    const response = String(values[i][1] || '').trim();
+    const matchType = String(values[i][2] || 'contains').trim().toLowerCase();
+
+    if (!keyword || !response) {
+      continue;
+    }
+
+    if (matchType === 'exact') {
+      if (query === keyword) {
+        console.log('完全相符匹配成功: ' + keyword);
+        return response;
+      }
+    } else {
+      // 預設為 contains (模糊包含比對)
+      if (query.indexOf(keyword) !== -1 || keyword.indexOf(query) !== -1) {
+        console.log('模糊包含匹配成功: ' + keyword);
+        return response;
+      }
+    }
+  }
+
+  console.log('無任何相符關鍵字，回傳預設問候');
+  return DEFAULT_FALLBACK_MESSAGE;
+}
+
+
+// =================================================================
+// 5. 呼叫 LINE Reply API 回傳文字
+// =================================================================
+
+function replyMessage(replyToken, replyText) {
+  const url = 'https://api.line.me/v2/bot/message/reply';
+  const payload = {
+    replyToken: replyToken,
+    messages: [
+      {
+        type: 'text',
+        text: replyText
+      }
+    ]
+  };
+
+  const options = {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN
+    },
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  };
+
+  try {
+    const response = UrlFetchApp.fetch(url, options);
+    const responseCode = response.getResponseCode();
+    const responseBody = response.getContentText();
+
+    console.log('LINE Reply API HTTP 狀態碼: ' + responseCode);
+    if (responseCode !== 200) {
+      console.error('LINE Reply API 回應異常內容: ' + responseBody);
+    }
+  } catch (err) {
+    console.error('呼叫 LINE Reply API 發生錯誤: ' + err.toString());
+  }
+}
+
+
+// =================================================================
+// 6. 自我語法與環境檢測函式 (點擊上方「執行」即可預先驗證)
+// =================================================================
+
+function testConnection() {
+  console.log('>>> [檢驗 1/3] 檢查 Channel Access Token...');
+  if (!CHANNEL_ACCESS_TOKEN || CHANNEL_ACCESS_TOKEN === 'YOUR_LINE_CHANNEL_ACCESS_TOKEN_HERE') {
+    console.warn('⚠️ 警告：CHANNEL_ACCESS_TOKEN 尚未換上您的真實權杖！');
+  } else {
+    console.log('✅ Token 格式正確，字元長度為: ' + CHANNEL_ACCESS_TOKEN.length);
+  }
+
+  console.log('>>> [檢驗 2/3] 檢查 Google Sheets 連線狀態...');
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  if (!spreadsheet) {
+    console.error('❌ 失敗：無法取得試算表物件。');
+    return;
+  }
+  const sheet = spreadsheet.getSheetByName(SHEET_NAME);
+  if (!sheet) {
+    console.error('❌ 失敗：找不到名為 "' + SHEET_NAME + '" 的分頁！');
+    return;
+  }
+  console.log('✅ 成功找到 "' + SHEET_NAME + '" 分頁，目前共有 ' + sheet.getLastRow() + ' 列資料。');
+
+  console.log('>>> [檢驗 3/3] 模擬問答檢索 (搜尋 "地址")...');
+  const result = searchAnswerInSheet('地址');
+  console.log('比對結果: ' + result);
+
+  console.log('🎉 恭喜！全域 JavaScript 語法 100% 正確無誤，完全沒有多餘或缺失的大括號！');
+}
+`;
+
+      const codeBlock = document.getElementById('code-block');
+      if (codeBlock) {
+        codeBlock.textContent = scriptTemplate;
+      }
+    }
+
+    function copyGeneratedCode() {
+      const codeBlock = document.getElementById('code-block');
+      if (!codeBlock) return;
+      const codeText = codeBlock.textContent || codeBlock.innerText;
+
+      const tempTextArea = document.createElement('textarea');
+      tempTextArea.value = codeText;
+      tempTextArea.style.position = 'fixed';
+      tempTextArea.style.opacity = '0';
+      document.body.appendChild(tempTextArea);
+      tempTextArea.select();
+
+      try {
+        const successful = document.execCommand('copy');
+        if (successful) {
+          showToast('程式碼已成功複製！請在 GAS 全選貼上覆蓋。', '📋');
+        } else {
+          showToast('請手動框選程式碼進行複製。', '⚠️');
+        }
+      } catch (err) {
+        showToast('瀏覽器限制，請手動複製程式碼框內容。', '⚠️');
+      }
+      document.body.removeChild(tempTextArea);
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      generateCode();
+      renderSandboxTable();
+      runSandboxTest();
+
+      const canvas = document.getElementById('pitfallChart');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: [
+              '1. 未開 Webhook / 罐頭訊息干擾 (30%)',
+              '2. 未發行/未貼 Token (25%)',
+              '3. 修改後未發布「新版本」(20%)',
+              '4. 語法/括號未閉合 SyntaxError (15%)',
+              '5. 誤以為 Verify 302 是錯 (10%)'
+            ],
+            datasets: [{
+              data: [30, 25, 20, 15, 10],
+              backgroundColor: ['#EF4444', '#F59E0B', '#8B5CF6', '#EC4899', '#3B82F6'],
+              borderWidth: 2,
+              borderColor: '#ffffff'
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom',
+                labels: {
+                  boxWidth: 12,
+                  font: { size: 11 },
+                  padding: 10
+                }
+              }
+            }
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

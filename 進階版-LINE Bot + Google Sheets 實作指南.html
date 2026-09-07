@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LINE Bot + Google Sheets 智慧客服系統【進階版】實作指南</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+    code, pre {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* 自訂滾動條 */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-emerald-500 selection:text-white">
+
+  <!-- 頂部導覽列 -->
+  <header class="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-md border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-8 h-8 rounded-lg bg-[#06C755] flex items-center justify-center font-black text-white text-xs shadow-lg shadow-emerald-900/40">
+          LINE
+        </div>
+        <div>
+          <span class="text-xs uppercase tracking-widest text-emerald-400 font-bold">架構文檔 &amp; 原始碼</span>
+          <h1 class="text-sm sm:text-base font-bold text-white tracking-wide">LINE Bot + Google Sheets 多工作表分類客服系統</h1>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- 網頁字體縮放控制組 -->
+        <div class="flex items-center bg-slate-900/90 border border-slate-800 rounded-xl p-0.5 sm:p-1 text-xs shadow-inner">
+          <button onclick="changeFontSize(-1)" title="縮小字體 (A-)" class="w-7 h-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold text-xs transition active:scale-90" aria-label="縮小字體">
+            A-
+          </button>
+          <button onclick="resetFontSize()" id="font-scale-indicator" title="點擊還原預設字體大小 (100%)" class="px-2 h-7 rounded-lg hover:bg-slate-800 text-emerald-400 font-mono text-[11px] font-bold flex items-center justify-center transition">
+            100%
+          </button>
+          <button onclick="changeFontSize(1)" title="放大字體 (A+)" class="w-7 h-7 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold text-xs transition active:scale-90" aria-label="放大字體">
+            A+
+          </button>
+        </div>
+
+        <a href="#code-section" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow transition-all duration-150 flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          <span class="hidden sm:inline">前往</span>完整程式碼
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主要內容區 -->
+  <div id="main-layout-container" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 relative">
+    
+    <!-- 左側快速導覽選單 (Desktop Sticky Sidebar) -->
+    <aside id="desktop-sidebar" class="hidden lg:block lg:col-span-3 transition-all duration-300">
+      <nav class="sticky top-24 p-4 rounded-2xl bg-slate-900/60 border border-slate-800 text-xs font-medium text-slate-400 shadow-xl backdrop-blur-sm transition-all duration-300">
+        
+        <!-- 目錄頂部標題與收合控制列 -->
+        <div class="flex items-center justify-between pb-2 border-b border-slate-800/80 select-none">
+          <div class="flex items-center gap-2 text-slate-200 font-bold uppercase tracking-wider text-[11px] cursor-pointer" onclick="toggleTocContent()" title="點擊收合或展開目錄清單">
+            <span>📑</span>
+            <span>目錄索引</span>
+            <span id="toc-collapse-badge" class="hidden text-[10px] px-1.5 py-0.2 rounded bg-slate-800 text-slate-400 font-normal">已收合</span>
+          </div>
+
+          <div class="flex items-center gap-1">
+            <!-- 收合清單按鈕 -->
+            <button onclick="toggleTocContent()" id="toc-toggle-btn" class="px-2 py-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-emerald-400 transition flex items-center gap-1 text-[11px]" title="收合 / 展開目錄清單">
+              <span id="toc-toggle-text">收合</span>
+              <svg id="toc-chevron" class="w-3.5 h-3.5 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+
+            <!-- 專注全寬模式按鈕 (隱藏側邊欄) -->
+            <button onclick="toggleFullWidthMode(true)" class="p-1 rounded-lg hover:bg-slate-800 text-slate-500 hover:text-white transition" title="全寬閱讀模式 (隱藏側欄)">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 可折疊目錄連結清單 -->
+        <div id="toc-links-wrapper" class="mt-2 space-y-1 transition-all duration-300 max-h-[500px] opacity-100 overflow-hidden">
+          <a href="#overview" class="block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition">系統核心架構與雙工運作</a>
+          <a href="#step1" class="block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition">第一步：Google 試算表規格</a>
+          <a href="#step2" class="block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition">第二步：部署 GAS 程式碼</a>
+          <a href="#code-section" class="block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-emerald-400 text-emerald-400 font-semibold transition">📜 進階完整程式碼 (Code.gs)</a>
+          <a href="#step3" class="block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition">第三步：LINE 雙後台連動綁定</a>
+          <a href="#step4" class="block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition">第四步：網頁管理後台使用說明</a>
+          <a href="#step5" class="block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition">第五步：跨表檢索演算法邏輯</a>
+          <a href="#step6" class="block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition">實務維運、排錯與資安</a>
+        </div>
+      </nav>
+    </aside>
+
+    <!-- 右側主要文檔內容 (支援動態切換 lg:col-span-9 與 lg:col-span-12) -->
+    <main id="main-content-area" class="lg:col-span-9 space-y-10 transition-all duration-300">
+
+      <!-- 行動版摺疊目錄 (Mobile & Tablet Accordion) -->
+      <div class="block lg:hidden rounded-2xl bg-slate-900/80 border border-slate-800 overflow-hidden text-xs">
+        <button onclick="toggleMobileToc()" class="w-full p-4 flex items-center justify-between text-left font-bold text-slate-200 hover:bg-slate-800/50 transition">
+          <span class="flex items-center gap-2">
+            <span>📑</span>
+            <span>目錄索引 (點擊切換)</span>
+          </span>
+          <svg id="mobile-toc-chevron" class="w-4 h-4 text-slate-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div id="mobile-toc-drawer" class="hidden px-4 pb-4 space-y-1 border-t border-slate-800/60 pt-2 text-slate-300">
+          <a href="#overview" onclick="toggleMobileToc()" class="block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition">系統核心架構與雙工運作</a>
+          <a href="#step1" onclick="toggleMobileToc()" class="block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition">第一步：Google 試算表規格</a>
+          <a href="#step2" onclick="toggleMobileToc()" class="block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition">第二步：部署 GAS 程式碼</a>
+          <a href="#code-section" onclick="toggleMobileToc()" class="block px-3 py-2 rounded-lg hover:bg-slate-800 text-emerald-400 font-semibold transition">📜 進階完整程式碼 (Code.gs)</a>
+          <a href="#step3" onclick="toggleMobileToc()" class="block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition">第三步：LINE 雙後台連動綁定</a>
+          <a href="#step4" onclick="toggleMobileToc()" class="block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition">第四步：網頁管理後台使用說明</a>
+          <a href="#step5" onclick="toggleMobileToc()" class="block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition">第五步：跨表檢索演算法邏輯</a>
+          <a href="#step6" onclick="toggleMobileToc()" class="block px-3 py-2 rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition">實務維運、排錯與資安</a>
+        </div>
+      </div>
+
+      <!-- Hero Banner -->
+      <section class="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950/40 border border-slate-800 shadow-2xl relative overflow-hidden">
+        <div class="absolute right-0 bottom-0 translate-x-10 translate-y-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-4">
+          <span class="w-2 h-2 rounded-full bg-[#06C755] animate-pulse"></span>
+          版本：v3.0 企業雙工架構
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight leading-tight">
+          LINE Bot + Google Sheets 智慧客服系統<br class="hidden sm:inline">
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200">
+            多工作表分類與雲端網頁管理後台
+          </span>
+        </h2>
+        <p class="mt-4 text-sm text-slate-300 leading-relaxed max-w-3xl">
+          利用 Google Apps Script 的 HTTP Request 分流特性，在同一組 Web App 網址下實現「Webhook 背景服務（doPost）」與「現代化 SPA 視覺管理後台（doGet）」的雙工運作。支援跨分頁穿透檢索、模糊／精確比對演算法，管理者更可直接在瀏覽器即時維護問答資料庫。
+        </p>
+      </section>
+
+      <!-- 1. 系統核心架構圖解 -->
+      <section id="overview" class="space-y-4">
+        <div class="flex items-center gap-2 text-lg font-bold text-white border-b border-slate-800 pb-2">
+          <span class="text-emerald-400 font-mono">01.</span>
+          <h3>系統核心架構與雙工運作圖解</h3>
+        </div>
+        <p class="text-sm text-slate-300">
+          透過單一 GAS 部署網址（Web App URL），系統會根據請求方法（Method）進行精準分流：
+        </p>
+
+        <!-- ASCII Architecture Container -->
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 font-mono text-xs overflow-x-auto text-emerald-300/90 leading-relaxed shadow-inner">
+<pre>
+                      ┌─────────────────────────────────┐
+                      │    同一個 GAS Web App 部署網址    │
+                      │   https://.../macros/s/.../exec │
+                      └────────────────┬────────────────┘
+                                       │
+            ┌──────────────────────────┴──────────────────────────┐
+            │ HTTP POST 請求                                       │ HTTP GET 請求
+            ▼                                                     ▼
+┌───────────────────────┐                             ┌───────────────────────┐
+│     LINE 核心伺服器     │                             │   管理者瀏覽器 (Chrome) │
+│ (訪客在 LINE 提問推播)  │                             │ (點擊網址直接開啟後台) │
+└───────────┬───────────┘                             └───────────┬───────────┘
+            │ 觸發 doPost(e)                                      │ 觸發 doGet(e)
+            ▼                                                     ▼
+┌───────────────────────┐                             ┌───────────────────────┐
+│ 跨工作表分類搜尋引擎    │                             │ 單頁管理前台 (Tailwind)│
+│ (自動排除系統保留分頁) │                             │ - 切換分類分頁標籤    │
+└───────────┬───────────┘                             │ - 即時搜尋、編輯問答  │
+            │                                         │ - 一鍵建立新分類分頁  │
+            ▼                                         └───────────┬───────────┘
+┌─────────────────────────────────────────────────────────────────┴───────────┐
+│                         Google Sheets 雲端資料庫                            │
+│ ┌───────────────┐ ┌───────────────┐ ┌───────────────┐ ┌──────────────────┐ │
+│ │ 分頁 1: 門市資訊│ │ 分頁 2: 購物運費│ │ 分頁 3: 售後維修│ │ 分頁 4: (系統日誌)│ │
+│ └───────────────┘ └───────────────┘ └───────────────┘ └──────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────────┘
+</pre>
+        </div>
+      </section>
+
+      <!-- 2. Google 試算表規格 -->
+      <section id="step1" class="space-y-4">
+        <div class="flex items-center gap-2 text-lg font-bold text-white border-b border-slate-800 pb-2">
+          <span class="text-emerald-400 font-mono">02.</span>
+          <h3>第一步：準備 Google 試算表與欄位規格</h3>
+        </div>
+        <p class="text-sm text-slate-300">
+          在雲端硬碟建立一份試算表（例如：<code class="px-1.5 py-0.5 rounded bg-slate-800 text-emerald-400">LINE Bot 智慧客服資料庫</code>）。每個業務分頁皆須遵循前三欄標準規範：
+        </p>
+
+        <!-- 試算表表格預覽 -->
+        <div class="overflow-x-auto rounded-2xl border border-slate-800 shadow-md">
+          <table class="w-full text-left text-xs border-collapse font-mono">
+            <thead>
+              <tr class="bg-slate-900 text-slate-200 border-b border-slate-800">
+                <th class="p-3 w-1/4">欄位 A (關鍵字)</th>
+                <th class="p-3 w-1/2">欄位 B (回覆內容)</th>
+                <th class="p-3 w-1/4">欄位 C (比對模式)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800 bg-slate-900/40 text-slate-300">
+              <tr>
+                <td class="p-3 font-semibold text-emerald-400">地址</td>
+                <td class="p-3">本店地址：台北市信義區信義路五段7號 (台北101)。</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-blue-950 text-blue-400 border border-blue-800">contains</span></td>
+              </tr>
+              <tr>
+                <td class="p-3 font-semibold text-emerald-400">營業時間</td>
+                <td class="p-3">營業時間：週一至週五 09:00 - 18:00。</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-blue-950 text-blue-400 border border-blue-800">contains</span></td>
+              </tr>
+              <tr>
+                <td class="p-3 font-semibold text-emerald-400">聯絡電話</td>
+                <td class="p-3">客服專線：(02) 1234-5678。</td>
+                <td class="p-3"><span class="px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800">exact</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+          <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+            <span class="font-bold text-slate-100 flex items-center gap-1.5">
+              <span>🎯</span> 欄位 C 比對模式說明
+            </span>
+            <ul class="space-y-1.5 text-slate-300 list-disc list-inside">
+              <li><strong class="text-blue-400">contains (模糊包含)</strong>：提問句包含此字詞即觸發（如「請問地址在哪」命中「地址」）。</li>
+              <li><strong class="text-amber-400">exact (完全相符)</strong>：訪客必須百分之百精確輸入相同字詞。</li>
+            </ul>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
+            <span class="font-bold text-slate-100 flex items-center gap-1.5">
+              <span>🛡️</span> 系統保留分頁（黑名單）
+            </span>
+            <p class="text-slate-300">
+              若建立名為 <code class="text-emerald-400">設定</code>、<code class="text-emerald-400">日誌</code>、<code class="text-emerald-400">Logs</code>、<code class="text-emerald-400">Config</code> 的分頁，系統搜尋引擎會自動忽略，絕不對訪客暴露內部資料。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. 部署 GAS 步驟 -->
+      <section id="step2" class="space-y-4">
+        <div class="flex items-center gap-2 text-lg font-bold text-white border-b border-slate-800 pb-2">
+          <span class="text-emerald-400 font-mono">03.</span>
+          <h3>第二步：部署進階版 GAS 程式碼 (Code.gs)</h3>
+        </div>
+        <ol class="space-y-3 text-xs sm:text-sm text-slate-300 list-decimal list-inside leading-relaxed">
+          <li>在 Google 試算表上方工具列點選 <strong class="text-white">擴充功能 > Apps Script</strong>。</li>
+          <li>將下方完整程式碼貼入編輯器中，並於第 11 行填入您的 LINE Channel Access Token，且<strong class="text-emerald-400">務必於第 14 行自訂專屬的「管理員密碼 (ADMIN_PASSWORD)」</strong>。</li>
+          <li>點選右上角藍色按鈕 <strong class="text-white">「部署」 > 「新增部署」</strong>。</li>
+          <li>左側齒輪選擇 <strong class="text-white">「網頁應用程式 (Web app)」</strong>，關鍵權限設定如下：
+            <div class="mt-2 p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1 font-mono text-xs">
+              <div>• 說明：<span class="text-emerald-400">進階安全防護版 v3.1</span></div>
+              <div>• 執行身分：<span class="text-emerald-400">我 (您的 Google 帳號)</span></div>
+              <div>• 誰可以存取：<span class="text-amber-400 font-bold">所有人 (Anyone)</span> <span class="text-slate-400">(供 LINE 伺服器傳送 Webhook；網頁後台已全面由密碼伺服器端鎖定)</span></div>
+            </div>
+          </li>
+          <li>授權審查：點選「審查權限」 > 選擇帳號 > 點選「進階 (Advanced)」 > 「前往『未命名的專案』(不安全)」 > 「允許」。</li>
+          <li>複製產生的 <strong class="text-white">網頁應用程式網址 (Web app URL)</strong>（結尾為 <code class="text-emerald-400">/exec</code>）。</li>
+        </ol>
+      </section>
+
+      <!-- 核心程式碼區塊 (Code block with Copy) -->
+      <section id="code-section" class="space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900 p-4 rounded-2xl border border-slate-800">
+          <div>
+            <span class="text-xs text-emerald-400 font-bold uppercase tracking-wider">Production Ready • 密碼安全鎖定版</span>
+            <h4 class="text-base font-bold text-white">Google Apps Script 完整雙工原始碼 (Code.gs)</h4>
+            <p class="text-xs text-slate-400 mt-0.5">內含 LINE Webhook 解析、管理員密碼驗證、伺服器端安全防護與 SPA 視覺管理後台</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="downloadCode()" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition active:scale-95 shrink-0">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+              <span>下載 Code.gs</span>
+            </button>
+            <button onclick="copyFullCode()" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#06C755] hover:bg-[#05B34C] text-white font-bold text-xs shadow-lg shadow-emerald-950 transition active:scale-95 shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+              <span id="copy-btn-text">一鍵複製完整程式碼</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 程式碼視窗 -->
+        <div class="relative rounded-2xl border border-slate-800 bg-slate-950 overflow-hidden shadow-2xl">
+          <!-- 虛擬標籤列 -->
+          <div class="flex items-center justify-between px-4 py-2.5 bg-slate-900/90 border-b border-slate-800 text-xs text-slate-400">
+            <div class="flex items-center space-x-2">
+              <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block"></span>
+              <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block"></span>
+              <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
+              <span class="font-mono text-slate-300 ml-2 font-semibold">Code.gs (進階安全密碼鎖定版)</span>
+            </div>
+            <span class="font-mono text-[11px] text-slate-500">GAS (JavaScript) + HTML5 SPA + Auth Guard</span>
+          </div>
+
+          <!-- Code View Area: 已做實體標籤轉義保護，保證呈現完整且複製無誤 -->
+          <pre class="p-5 text-xs text-slate-300 overflow-x-auto max-h-[580px] overflow-y-auto leading-relaxed selection:bg-emerald-700 selection:text-white"><code id="code-content">/**
+ * LINE Bot + Google Sheets 多工作表分類客服系統 &amp; 網頁管理後台
+ * 版本：v3.1 (進階安全版：伺服器端管理員密碼驗證 + 前台身分鎖定)
+ */
+
+// =================================================================
+// 1. 系統常數設定區
+// =================================================================
+
+// 請在兩個單引號中間填入從 LINE Developers 按 Issue 複製的長效 Token
+const CHANNEL_ACCESS_TOKEN = 'YOUR_LINE_CHANNEL_ACCESS_TOKEN_HERE';
+
+// 🛡️ 後台管理員專屬密碼（請務必自行修改，防止未授權人員透過網頁端竄改試算表）
+const ADMIN_PASSWORD = 'YOUR_ADMIN_PASSWORD_HERE';
+
+// 排除在客服檢索之外的系統分頁名稱（如留空則所有工作表皆作為分類）
+const EXCLUDED_SHEETS = ['設定', '日誌', 'Logs', 'Config'];
+
+// 查無關鍵字時的回覆文字
+const DEFAULT_FALLBACK_MESSAGE = '感謝您的提問！目前小幫手找不到相關資訊。\n您可以輸入「地址」、「營業時間」或「退換貨」等關鍵字進行查詢喔！';
+
+// =================================================================
+// 2. 網頁管理前台入口 (doGet)：提供管理者以瀏覽器維護資料
+// =================================================================
+
+function doGet(e) {
+  const htmlContent = getAdminHtml();
+  return HtmlService.createHtmlOutput(htmlContent)
+    .setTitle('LINE Bot 智慧客服 • 雲端資料庫管理後台')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1.0');
+}
+
+// =================================================================
+// 3. LINE Webhook HTTP POST 入口 (doPost)：處理訪客對話
+// =================================================================
+
+function doPost(e) {
+  try {
+    if (!e || !e.postData || !e.postData.contents) {
+      console.warn('收到無內容的請求 (No postData)');
+      return ContentService.createTextOutput(JSON.stringify({ status: 'no_data' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const eventData = JSON.parse(e.postData.contents);
+    const events = eventData.events;
+
+    // 容錯：處理 LINE 的驗證 ping 或空陣列事件
+    if (!events || events.length === 0) {
+      console.log('收到驗證事件 (Verification Ping)');
+      return ContentService.createTextOutput(JSON.stringify({ status: 'success', message: 'verified' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    for (let i = 0; i &lt; events.length; i++) {
+      const currentEvent = events[i];
+      if (currentEvent.type === 'message' && currentEvent.message && currentEvent.message.type === 'text') {
+        handleTextMessage(currentEvent);
+      }
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ status: 'success' }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    console.error('doPost 發生異常: ' + error.toString());
+    return ContentService.createTextOutput(JSON.stringify({ status: 'error', message: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// =================================================================
+// 4. 訊息派送與多工作表檢索演算法
+// =================================================================
+function handleTextMessage(event) {
+  const replyToken = event.replyToken;
+  const userMessage = event.message.text ? event.message.text.trim() : '';
+
+  console.log('收到使用者提問: ' + userMessage);
+
+  if (!replyToken || replyToken === '00000000000000000000000000000000' || replyToken === 'ffffffffffffffffffffffffffffffff') {
+    console.log('偵測到測試專用 ReplyToken，略過回傳作業');
+    return;
+  }
+
+  // 跨工作表檢索相應解答
+  const matchedAnswer = searchAnswerAcrossAllSheets(userMessage);
+
+  // 透過 LINE Reply API 發送給用戶
+  replyMessage(replyToken, matchedAnswer);
+}
+
+function searchAnswerAcrossAllSheets(userQuery) {
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  if (!spreadsheet) {
+    console.error('無法綁定作用中試算表！');
+    return '系統錯誤：無法開啟試算表。';
+  }
+
+  const allSheets = spreadsheet.getSheets();
+  const query = userQuery.toLowerCase();
+  let fallbackCandidate = null;
+
+  for (let s = 0; s &lt; allSheets.length; s++) {
+    const sheet = allSheets[s];
+    const sheetName = sheet.getName();
+
+    // 略過排除清單中的系統分頁
+    if (EXCLUDED_SHEETS.indexOf(sheetName) !== -1) {
+      continue;
+    }
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow &lt;= 1) continue;
+
+    // 讀取 A2:C最底列 (A:關鍵字, B:回覆內容, C:比對模式)
+    const values = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
+
+    for (let i = 0; i &lt; values.length; i++) {
+      const keyword = String(values[i][0] || '').trim().toLowerCase();
+      const response = String(values[i][1] || '').trim();
+      const matchType = String(values[i][2] || 'contains').trim().toLowerCase();
+
+      if (!keyword || !response) continue;
+
+      if (matchType === 'exact') {
+        if (query === keyword) {
+          console.log(`[完全相符] 命中分頁 [${sheetName}], 關鍵字: ${keyword}`);
+          return response;
+        }
+      } else {
+        if (query.indexOf(keyword) !== -1 || keyword.indexOf(query) !== -1) {
+          console.log(`[模糊包含] 命中分頁 [${sheetName}], 關鍵字: ${keyword}`);
+          if (!fallbackCandidate) {
+            fallbackCandidate = response;
+          }
+        }
+      }
+    }
+  }
+
+  return fallbackCandidate ? fallbackCandidate : DEFAULT_FALLBACK_MESSAGE;
+}
+
+// =================================================================
+// 5. 呼叫 LINE Reply API 回傳文字
+// =================================================================
+
+function replyMessage(replyToken, replyText) {
+  const url = 'https://api.line.me/v2/bot/message/reply';
+  const payload = {
+    replyToken: replyToken,
+    messages: [{ type: 'text', text: replyText }]
+  };
+
+  const options = {
+    method: 'post',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + CHANNEL_ACCESS_TOKEN
+    },
+    payload: JSON.stringify(payload),
+    muteHttpExceptions: true
+  };
+
+  try {
+    const response = UrlFetchApp.fetch(url, options);
+    const responseCode = response.getResponseCode();
+    if (responseCode !== 200) {
+      console.error('LINE Reply API 異常: ' + response.getContentText());
+    }
+  } catch (err) {
+    console.error('呼叫 LINE Reply API 發生錯誤: ' + err.toString());
+  }
+}
+
+// =================================================================
+// 6. 前台專用 RPC API (包含管理員密碼安全性驗證)
+// =================================================================
+
+// 🔒 伺服器端核心驗證函式：阻絕未授權的修改與查詢
+function verifyAdminAuth(password) {
+  if (!ADMIN_PASSWORD || ADMIN_PASSWORD === 'YOUR_ADMIN_PASSWORD_HERE') {
+    throw new Error('系統安全提示：請先於 Code.gs 第 14 行設定 ADMIN_PASSWORD 管理員密碼！');
+  }
+  if (!password || String(password) !== String(ADMIN_PASSWORD)) {
+    throw new Error('存取遭拒：管理員密碼錯誤或登入已過期！');
+  }
+}
+
+// 驗證管理員密碼
+function apiVerifyAdmin(password) {
+  verifyAdminAuth(password);
+  return { success: true, message: '驗證通過' };
+}
+
+// 取得所有分類工作表清單 (需密碼)
+function apiGetCategories(password) {
+  verifyAdminAuth(password);
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheets = spreadsheet.getSheets();
+  const categories = [];
+
+  for (let i = 0; i &lt; sheets.length; i++) {
+    const name = sheets[i].getName();
+    if (EXCLUDED_SHEETS.indexOf(name) === -1) {
+      categories.push({
+        name: name,
+        rowCount: Math.max(0, sheets[i].getLastRow() - 1)
+      });
+    }
+  }
+
+  // 若完全無有效分頁，自動初始化建立 FAQ 分頁
+  if (categories.length === 0) {
+    const defaultSheet = spreadsheet.insertSheet('FAQ');
+    defaultSheet.appendRow(['關鍵字', '回覆內容', '比對模式']);
+    categories.push({ name: 'FAQ', rowCount: 0 });
+  }
+
+  return {
+    spreadsheetUrl: spreadsheet.getUrl(),
+    categories: categories
+  };
+}
+
+// 讀取指定工作表的所有問答項目 (需密碼)
+function apiGetSheetData(password, sheetName) {
+  verifyAdminAuth(password);
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = spreadsheet.getSheetByName(sheetName);
+  if (!sheet) throw new Error('找不到工作表: ' + sheetName);
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow &lt;= 1) return [];
+
+  const values = sheet.getRange(2, 1, lastRow - 1, 3).getValues();
+  const items = [];
+
+  for (let i = 0; i &lt; values.length; i++) {
+    items.push({
+      rowIndex: i + 2, // 試算表中的實際行數 (1-based)
+      keyword: String(values[i][0] || ''),
+      response: String(values[i][1] || ''),
+      matchType: String(values[i][2] || 'contains')
+    });
+  }
+
+  return items;
+}
+
+// 儲存或新增問答項目 (需密碼)
+function apiSaveFaqItem(password, sheetName, item) {
+  verifyAdminAuth(password);
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = spreadsheet.getSheetByName(sheetName);
+  if (!sheet) throw new Error('找不到工作表: ' + sheetName);
+
+  const keyword = String(item.keyword || '').trim();
+  const response = String(item.response || '').trim();
+  const matchType = String(item.matchType || 'contains').trim();
+
+  if (!keyword || !response) {
+    throw new Error('關鍵字與回覆內容不能為空白！');
+  }
+
+  if (item.rowIndex && item.rowIndex &gt; 1) {
+    // 編輯現有項目
+    sheet.getRange(item.rowIndex, 1, 1, 3).setValues([[keyword, response, matchType]]);
+    return { action: 'updated', rowIndex: item.rowIndex };
+  } else {
+    // 新增項目至最後一行
+    sheet.appendRow([keyword, response, matchType]);
+    return { action: 'created', rowIndex: sheet.getLastRow() };
+  }
+}
+
+// 刪除問答項目 (需密碼)
+function apiDeleteFaqItem(password, sheetName, rowIndex) {
+  verifyAdminAuth(password);
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = spreadsheet.getSheetByName(sheetName);
+  if (!sheet) throw new Error('找不到工作表: ' + sheetName);
+
+  if (rowIndex &gt; 1 && rowIndex &lt;= sheet.getLastRow()) {
+    sheet.deleteRow(rowIndex);
+    return { success: true };
+  }
+  throw new Error('指定刪除的行號無效');
+}
+
+// 新增一個新的分類分頁 (需密碼)
+function apiCreateCategory(password, newCategoryName) {
+  verifyAdminAuth(password);
+  const name = String(newCategoryName || '').trim();
+  if (!name) throw new Error('分類名稱不可為空！');
+
+  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  if (spreadsheet.getSheetByName(name)) {
+    throw new Error('此分類分頁已存在！');
+  }
+
+  const newSheet = spreadsheet.insertSheet(name);
+  newSheet.appendRow(['關鍵字', '回覆內容', '比對模式']);
+  // 將標題列置中加粗
+  newSheet.getRange('A1:C1').setFontWeight('bold').setBackground('#E6F4EA');
+  return { success: true, name: name };
+}
+
+// =================================================================
+// 7. 前台管理網頁 HTML/CSS/JS (嵌入式單頁應用程式 + 登入安全鎖)
+// =================================================================
+function getAdminHtml() {
+  return `&lt;!DOCTYPE html&gt;
+&lt;html lang="zh-TW"&gt;
+&lt;head&gt;
+  &lt;meta charset="UTF-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;
+  &lt;title&gt;LINE Bot 智慧客服資料管理後台&lt;/title&gt;
+  &lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;
+  &lt;style&gt;
+    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased relative"&gt;
+
+  &lt;!-- 登入驗證遮罩屏 (未通過驗證前全面覆蓋) --&gt;
+  &lt;div id="login-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/85 backdrop-blur-md p-4 transition-all duration-300"&gt;
+    &lt;div class="bg-white rounded-3xl max-w-sm w-full p-6 sm:p-8 shadow-2xl border border-slate-200 text-center space-y-5"&gt;
+      &lt;div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl mx-auto flex items-center justify-center text-3xl shadow-inner border border-emerald-100"&gt;
+        🔒
+      &lt;/div&gt;
+      &lt;div&gt;
+        &lt;h2 class="text-xl font-extrabold text-slate-900 tracking-tight"&gt;管理者身分驗證&lt;/h2&gt;
+        &lt;p class="text-xs text-slate-500 mt-1 leading-relaxed"&gt;
+          本系統已啟用伺服器端存取控制，請輸入管理員密碼以解鎖客服資料庫。
+        &lt;/p&gt;
+      &lt;/div&gt;
+      &lt;form onsubmit="handleLoginSubmit(event)" class="space-y-3"&gt;
+        &lt;input type="password" id="login-password-input" placeholder="請輸入管理員密碼" class="w-full text-center text-sm p-3 rounded-xl border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none focus:border-transparent font-mono tracking-wider transition" autofocus&gt;
+        &lt;p id="login-error-hint" class="text-xs text-rose-500 font-bold hidden text-left pl-1"&gt;&lt;/p&gt;
+        &lt;button type="submit" id="login-submit-btn" class="w-full py-3 bg-[#06C755] hover:bg-[#05B34C] text-white font-bold text-sm rounded-xl shadow-lg shadow-emerald-600/30 transition active:scale-95 flex items-center justify-center gap-1.5"&gt;
+          &lt;span&gt;解鎖進入後台&lt;/span&gt;
+          &lt;span&gt;➔&lt;/span&gt;
+        &lt;/button&gt;
+      &lt;/form&gt;
+      &lt;p class="text-[11px] text-slate-400"&gt;💡 密碼可在 Code.gs 頂部 ADMIN_PASSWORD 進行修改&lt;/p&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Header --&gt;
+  &lt;header class="bg-slate-900 text-white sticky top-0 z-30 shadow-md border-b border-slate-800"&gt;
+    &lt;div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between"&gt;
+      &lt;div class="flex items-center space-x-3"&gt;
+        &lt;span class="bg-[#06C755] px-2.5 py-1 rounded-lg text-white font-bold text-xs tracking-wider"&gt;LINE BOT&lt;/span&gt;
+        &lt;h1 class="text-base sm:text-lg font-bold text-slate-100 flex items-center gap-2"&gt;
+          &lt;span&gt;⚙️&lt;/span&gt; 客服問答資料管理後台
+        &lt;/h1&gt;
+      &lt;/div&gt;
+
+      &lt;div class="flex items-center gap-2"&gt;
+        &lt;a id="sheet-link" href="#" target="_blank" class="hidden sm:flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/40 transition"&gt;
+          &lt;span&gt;📊&lt;/span&gt; 開啟原始 Google 試算表 ↗
+        &lt;/a&gt;
+        &lt;button onclick="loadCategories()" title="重新整理" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-bold transition"&gt;
+          🔄 重新載入
+        &lt;/button&gt;
+        &lt;button onclick="logoutAdmin()" title="登出並鎖定後台" class="px-2.5 py-1.5 bg-rose-950/50 hover:bg-rose-900/80 text-rose-300 border border-rose-800/60 rounded-lg text-xs font-bold transition flex items-center gap-1"&gt;
+          🚪 登出
+        &lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/header&gt;
+
+  &lt;!-- Main Container --&gt;
+  &lt;main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6"&gt;
+
+    &lt;!-- Category Tabs Bar --&gt;
+    &lt;div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 space-y-3"&gt;
+      &lt;div class="flex items-center justify-between"&gt;
+        &lt;span class="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5"&gt;
+          &lt;span&gt;📁&lt;/span&gt; 客服分類工作表 (切換分頁)
+        &lt;/span&gt;
+        &lt;button onclick="openNewCategoryModal()" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-300 transition flex items-center gap-1"&gt;
+          &lt;span&gt;➕&lt;/span&gt; 新增分類分頁
+        &lt;/button&gt;
+      &lt;/div&gt;
+
+      &lt;!-- Categories Container --&gt;
+      &lt;div id="category-pills" class="flex flex-wrap items-center gap-2 overflow-x-auto pb-1"&gt;
+        &lt;div class="text-xs text-slate-400 py-1"&gt;載入分類中...&lt;/div&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+
+    &lt;!-- Active Sheet QA Management Table --&gt;
+    &lt;div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 space-y-4"&gt;
+      
+      &lt;!-- Top Actions Bar --&gt;
+      &lt;div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100"&gt;
+        &lt;div class="flex items-center gap-2"&gt;
+          &lt;span class="text-base sm:text-lg font-bold text-slate-800 flex items-center gap-2"&gt;
+            &lt;span&gt;🏷️&lt;/span&gt; 目前分類：&lt;span id="current-category-name" class="text-emerald-600 font-bold"&gt;載入中&lt;/span&gt;
+          &lt;/span&gt;
+          &lt;span id="item-count-badge" class="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full text-xs font-mono font-bold"&gt;0 筆&lt;/span&gt;
+        &lt;/div&gt;
+
+        &lt;div class="flex items-center gap-2"&gt;
+          &lt;!-- Search input --&gt;
+          &lt;div class="relative w-full sm:w-64"&gt;
+            &lt;input type="text" id="search-input" oninput="filterItems()" placeholder="搜尋關鍵字或回覆..." class="w-full text-xs bg-slate-50 border border-slate-300 rounded-lg pl-8 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"&gt;
+            &lt;span class="absolute left-2.5 top-2.5 text-xs text-slate-400"&gt;🔍&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;!-- Add Button --&gt;
+          &lt;button onclick="openItemModal()" class="bg-[#06C755] hover:bg-[#05B34C] text-white font-bold text-xs px-3.5 py-2 rounded-lg shadow transition active:scale-95 flex items-center gap-1 shrink-0"&gt;
+            &lt;span&gt;➕&lt;/span&gt; 新增問答
+          &lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;!-- Data Table --&gt;
+      &lt;div class="overflow-x-auto border border-slate-200 rounded-xl max-h-[500px] overflow-y-auto custom-scroll"&gt;
+        &lt;table class="w-full text-left text-xs border-collapse"&gt;
+          &lt;thead class="sticky top-0 bg-slate-100 text-slate-700 border-b border-slate-200 font-bold z-10"&gt;
+            &lt;tr&gt;
+              &lt;th class="p-3 w-[25%]"&gt;欄位 A (關鍵字)&lt;/th&gt;
+              &lt;th class="p-3 w-[50%]"&gt;欄位 B (回覆內容)&lt;/th&gt;
+              &lt;th class="p-3 w-[15%]"&gt;欄位 C (比對模式)&lt;/th&gt;
+              &lt;th class="p-3 w-[10%] text-center"&gt;操作&lt;/th&gt;
+            &lt;/tr&gt;
+          &lt;/thead&gt;
+          &lt;tbody id="table-body" class="divide-y divide-slate-200 font-mono"&gt;
+            &lt;tr&gt;
+              &lt;td colspan="4" class="p-8 text-center text-slate-400"&gt;載入中...&lt;/td&gt;
+            &lt;/tr&gt;
+          &lt;/tbody&gt;
+        &lt;/table&gt;
+      &lt;/div&gt;
+
+    &lt;/div&gt;
+  &lt;/main&gt;
+
+  &lt;!-- Modal: Add / Edit FAQ Item --&gt;
+  &lt;div id="item-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs hidden p-4"&gt;
+    &lt;div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden transform transition-all"&gt;
+      &lt;div class="bg-slate-900 px-6 py-4 flex items-center justify-between text-white border-b border-slate-800"&gt;
+        &lt;h3 id="modal-title" class="font-bold text-sm flex items-center gap-2"&gt;
+          &lt;span&gt;📝&lt;/span&gt; 編輯問答規則
+        &lt;/h3&gt;
+        &lt;button onclick="closeItemModal()" class="text-slate-400 hover:text-white font-bold text-base p-1"&gt;✕&lt;/button&gt;
+      &lt;/div&gt;
+
+      &lt;div class="p-6 space-y-4 text-xs"&gt;
+        &lt;input type="hidden" id="modal-row-index" value=""&gt;
+
+        &lt;div&gt;
+          &lt;label class="block font-bold text-slate-700 mb-1"&gt;關鍵字 (訪客觸發詞)&lt;/label&gt;
+          &lt;input type="text" id="modal-keyword" placeholder="例如：營業時間、退貨、捷運站" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none"&gt;
+        &lt;/div&gt;
+
+        &lt;div&gt;
+          &lt;label class="block font-bold text-slate-700 mb-1"&gt;回覆內容 (機器人回答文字，支援換行)&lt;/label&gt;
+          &lt;textarea id="modal-response" rows="4" placeholder="請填寫解答內容..." class="w-full text-xs p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none"&gt;&lt;/textarea&gt;
+        &lt;/div&gt;
+
+        &lt;div&gt;
+          &lt;label class="block font-bold text-slate-700 mb-1"&gt;比對模式&lt;/label&gt;
+          &lt;select id="modal-match-type" class="w-full text-xs p-2.5 rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-none font-sans"&gt;
+            &lt;option value="contains"&gt;contains (模糊比對：只要訪客句子包含此關鍵字即回覆)&lt;/option&gt;
+            &lt;option value="exact"&gt;exact (完全相符：訪客必須 100% 精準輸入相同字詞)&lt;/option&gt;
+          &lt;/select&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+
+      &lt;div class="bg-slate-50 px-6 py-3.5 border-t border-slate-200 flex justify-end gap-2"&gt;
+        &lt;button onclick="closeItemModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-bold text-xs transition"&gt;取消&lt;/button&gt;
+        &lt;button id="modal-save-btn" onclick="saveFaqItem()" class="px-4 py-2 bg-[#06C755] hover:bg-[#05B34C] text-white rounded-lg font-bold text-xs shadow transition"&gt;儲存資料&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Modal: Create New Category Sheet --&gt;
+  &lt;div id="category-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs hidden p-4"&gt;
+    &lt;div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-slate-200 overflow-hidden"&gt;
+      &lt;div class="bg-slate-900 px-6 py-4 flex items-center justify-between text-white border-b border-slate-800"&gt;
+        &lt;h3 class="font-bold text-sm flex items-center gap-2"&gt;
+          &lt;span&gt;📁&lt;/span&gt; 新增分類分頁
+        &lt;/h3&gt;
+        &lt;button onclick="closeNewCategoryModal()" class="text-slate-400 hover:text-white font-bold text-base p-1"&gt;✕&lt;/button&gt;
+      &lt;/div&gt;
+      &lt;div class="p-6 space-y-3 text-xs"&gt;
+        &lt;label class="block font-bold text-slate-700"&gt;新工作表名稱 (分類名)&lt;/label&gt;
+        &lt;input type="text" id="new-category-input" placeholder="例如：門市常見問答、退換貨須知" class="w-full p-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-emerald-500 focus:outline-none"&gt;
+        &lt;p class="text-[11px] text-slate-500"&gt;系統將在您的 Google 試算表中自動建立新分頁與標準標題列。&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;div class="bg-slate-50 px-6 py-3 border-t border-slate-200 flex justify-end gap-2"&gt;
+        &lt;button onclick="closeNewCategoryModal()" class="px-3.5 py-1.5 bg-slate-200 text-slate-700 rounded-lg text-xs font-bold"&gt;取消&lt;/button&gt;
+        &lt;button onclick="submitNewCategory()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold"&gt;確認建立&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Delete Confirm Modal --&gt;
+  &lt;div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs hidden p-4"&gt;
+    &lt;div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-200 space-y-4"&gt;
+      &lt;div class="text-center space-y-2"&gt;
+        &lt;span class="text-3xl"&gt;🗑️&lt;/span&gt;
+        &lt;h3 class="font-bold text-slate-800 text-sm"&gt;確認刪除此筆問答？&lt;/h3&gt;
+        &lt;p id="delete-target-text" class="text-xs text-slate-500 font-mono"&gt;&lt;/p&gt;
+      &lt;/div&gt;
+      &lt;div class="flex justify-center gap-2 pt-2"&gt;
+        &lt;button onclick="closeDeleteModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold"&gt;取消&lt;/button&gt;
+        &lt;button id="confirm-delete-btn" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold"&gt;確認刪除&lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;!-- Toast Notification --&gt;
+  &lt;div id="toast" class="fixed bottom-6 right-6 z-50 transform transition-all duration-300 translate-y-20 opacity-0 pointer-events-none bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-2.5 text-xs font-semibold"&gt;
+    &lt;span id="toast-icon"&gt;✅&lt;/span&gt;
+    &lt;span id="toast-msg"&gt;提示訊息&lt;/span&gt;
+  &lt;/div&gt;
+
+  &lt;script&gt;
+    let activeCategory = '';
+    let categoryList = [];
+    let currentItems = [];
+    // 儲存於瀏覽器 sessionStorage，關閉分頁自動銷毀
+    let adminToken = sessionStorage.getItem('line_bot_admin_pwd') || '';
+
+    function showToast(msg, icon = '✅') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-msg').innerText = msg;
+      document.getElementById('toast-icon').innerText = icon;
+      toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+      setTimeout(() =&gt; {
+        toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+
+    // 處理登入表單提交
+    function handleLoginSubmit(e) {
+      if (e) e.preventDefault();
+      const pwdInput = document.getElementById('login-password-input');
+      const errHint = document.getElementById('login-error-hint');
+      const submitBtn = document.getElementById('login-submit-btn');
+      const pwd = pwdInput.value.trim();
+
+      if (!pwd) {
+        errHint.innerText = '請填寫管理員密碼！';
+        errHint.classList.remove('hidden');
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerText = '驗證密碼中...';
+      errHint.classList.add('hidden');
+
+      google.script.run
+        .withSuccessHandler(() =&gt; {
+          submitBtn.disabled = false;
+          submitBtn.innerText = '解鎖進入後台 ➔';
+          adminToken = pwd;
+          sessionStorage.setItem('line_bot_admin_pwd', pwd);
+          document.getElementById('login-overlay').classList.add('hidden');
+          showToast('身分驗證成功，歡迎進入管理後台！', '🔓');
+          loadCategories();
+        })
+        .withFailureHandler((err) =&gt; {
+          submitBtn.disabled = false;
+          submitBtn.innerText = '解鎖進入後台 ➔';
+          errHint.innerText = err.message || '密碼錯誤，請再試一次！';
+          errHint.classList.remove('hidden');
+          pwdInput.select();
+        })
+        .apiVerifyAdmin(pwd);
+    }
+
+    // 登出管理員身分
+    function logoutAdmin() {
+      sessionStorage.removeItem('line_bot_admin_pwd');
+      adminToken = '';
+      document.getElementById('login-password-input').value = '';
+      document.getElementById('login-error-hint').classList.add('hidden');
+      document.getElementById('login-overlay').classList.remove('hidden');
+      showToast('已安全登出後台！', '🔒');
+    }
+
+    // 處理伺服器端鑑權錯誤
+    function handleAuthFailure(err) {
+      if (err && (err.message.includes('身分驗證失敗') || err.message.includes('存取遭拒') || err.message.includes('密碼錯誤'))) {
+        showToast('密碼無效或已過期，請重新驗證！', '🔒');
+        logoutAdmin();
+      } else {
+        showToast('操作失敗: ' + err.message, '❌');
+      }
+    }
+
+    function loadCategories() {
+      if (!adminToken) return;
+
+      google.script.run
+        .withSuccessHandler((res) =&gt; {
+          if (res.spreadsheetUrl) {
+            document.getElementById('sheet-link').href = res.spreadsheetUrl;
+          }
+          categoryList = res.categories;
+          renderCategoryPills();
+          if (categoryList.length &gt; 0) {
+            switchCategory(categoryList[0].name);
+          }
+        })
+        .withFailureHandler(handleAuthFailure)
+        .apiGetCategories(adminToken);
+    }
+
+    function renderCategoryPills() {
+      const container = document.getElementById('category-pills');
+      container.innerHTML = '';
+
+      categoryList.forEach(cat =&gt; {
+        const btn = document.createElement('button');
+        const isActive = cat.name === activeCategory;
+        btn.className = isActive
+          ? 'px-3.5 py-1.5 rounded-xl font-bold text-xs bg-slate-900 text-white shadow-sm border border-slate-900 transition flex items-center gap-1.5'
+          : 'px-3.5 py-1.5 rounded-xl font-medium text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 transition flex items-center gap-1.5';
+        btn.innerHTML = '&lt;span&gt;📄 ' + escapeHtml(cat.name) + '&lt;/span&gt;&lt;span class="text-[10px] opacity-75 font-mono"&gt;(' + cat.rowCount + ')&lt;/span&gt;';
+        btn.onclick = () =&gt; switchCategory(cat.name);
+        container.appendChild(btn);
+      });
+    }
+
+    function switchCategory(catName) {
+      activeCategory = catName;
+      document.getElementById('current-category-name').innerText = catName;
+      renderCategoryPills();
+
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '&lt;tr&gt;&lt;td colspan="4" class="p-8 text-center text-slate-400"&gt;正在讀取 [' + escapeHtml(catName) + '] 資料...&lt;/td&gt;&lt;/tr&gt;';
+
+      google.script.run
+        .withSuccessHandler((items) =&gt; {
+          currentItems = items;
+          document.getElementById('item-count-badge').innerText = items.length + ' 筆';
+          renderTable(items);
+        })
+        .withFailureHandler((err) =&gt; {
+          tbody.innerHTML = '&lt;tr&gt;&lt;td colspan="4" class="p-8 text-center text-red-500"&gt;載入失敗: ' + escapeHtml(err.message) + '&lt;/td&gt;&lt;/tr&gt;';
+          handleAuthFailure(err);
+        })
+        .apiGetSheetData(adminToken, catName);
+    }
+
+    function renderTable(items) {
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+
+      if (items.length === 0) {
+        tbody.innerHTML = '&lt;tr&gt;&lt;td colspan="4" class="p-8 text-center text-slate-400"&gt;目前此分類尚無任何問答資料，點擊右上角「➕ 新增問答」建立第一筆！&lt;/td&gt;&lt;/tr&gt;';
+        return;
+      }
+
+      items.forEach(item =&gt; {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition-colors';
+        tr.innerHTML = \`
+          &lt;td class="p-3 font-bold text-blue-600 align-top"&gt;\${escapeHtml(item.keyword)}&lt;/td&gt;
+          &lt;td class="p-3 text-slate-700 whitespace-pre-line align-top leading-relaxed"&gt;\${escapeHtml(item.response)}&lt;/td&gt;
+          &lt;td class="p-3 align-top"&gt;
+            &lt;span class="px-2 py-0.5 rounded text-[11px] font-mono \${item.matchType === 'exact' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}"&gt;
+              \${escapeHtml(item.matchType)}
+            &lt;/span&gt;
+          &lt;/td&gt;
+          &lt;td class="p-3 text-center align-top whitespace-nowrap"&gt;
+            &lt;button onclick='editItem(\${JSON.stringify(item)})' class="text-blue-600 hover:text-blue-800 font-bold px-2 py-1 rounded hover:bg-blue-50 transition"&gt;✏️ 編輯&lt;/button&gt;
+            &lt;button onclick="requestDelete(\${item.rowIndex}, '\${escapeHtml(item.keyword)}')" class="text-rose-600 hover:text-rose-800 font-bold px-2 py-1 rounded hover:bg-rose-50 transition"&gt;🗑️ 刪除&lt;/button&gt;
+          &lt;/td&gt;
+        \`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function filterItems() {
+      const query = document.getElementById('search-input').value.toLowerCase().trim();
+      if (!query) {
+        renderTable(currentItems);
+        return;
+      }
+      const filtered = currentItems.filter(item =&gt;
+        item.keyword.toLowerCase().includes(query) ||
+        item.response.toLowerCase().includes(query)
+      );
+      renderTable(filtered);
+    }
+
+    function openItemModal(item = null) {
+      const modal = document.getElementById('item-modal');
+      const title = document.getElementById('modal-title');
+      const rowIdx = document.getElementById('modal-row-index');
+      const kw = document.getElementById('modal-keyword');
+      const resp = document.getElementById('modal-response');
+      const match = document.getElementById('modal-match-type');
+
+      if (item) {
+        title.innerHTML = '&lt;span&gt;✏️&lt;/span&gt; 編輯問答 (第 ' + item.rowIndex + ' 列)';
+        rowIdx.value = item.rowIndex;
+        kw.value = item.keyword;
+        resp.value = item.response;
+        match.value = item.matchType || 'contains';
+      } else {
+        title.innerHTML = '&lt;span&gt;➕&lt;/span&gt; 新增問答至 [' + escapeHtml(activeCategory) + ']';
+        rowIdx.value = '';
+        kw.value = '';
+        resp.value = '';
+        match.value = 'contains';
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function editItem(item) {
+      openItemModal(item);
+    }
+
+    function closeItemModal() {
+      document.getElementById('item-modal').classList.add('hidden');
+    }
+
+    function saveFaqItem() {
+      const rowIdx = document.getElementById('modal-row-index').value;
+      const kw = document.getElementById('modal-keyword').value.trim();
+      const resp = document.getElementById('modal-response').value.trim();
+      const match = document.getElementById('modal-match-type').value;
+
+      if (!kw || !resp) {
+        showToast('請填寫關鍵字與回覆內容！', '⚠️');
+        return;
+      }
+
+      const saveBtn = document.getElementById('modal-save-btn');
+      saveBtn.innerText = '儲存中...';
+      saveBtn.disabled = true;
+
+      const payload = {
+        rowIndex: rowIdx ? parseInt(rowIdx, 10) : null,
+        keyword: kw,
+        response: resp,
+        matchType: match
+      };
+
+      google.script.run
+        .withSuccessHandler(() =&gt; {
+          saveBtn.innerText = '儲存資料';
+          saveBtn.disabled = false;
+          closeItemModal();
+          showToast('資料已成功儲存至試算表！', '✅');
+          switchCategory(activeCategory);
+        })
+        .withFailureHandler((err) =&gt; {
+          saveBtn.innerText = '儲存資料';
+          saveBtn.disabled = false;
+          handleAuthFailure(err);
+        })
+        .apiSaveFaqItem(adminToken, activeCategory, payload);
+    }
+
+    function requestDelete(rowIndex, keyword) {
+      const modal = document.getElementById('delete-modal');
+      document.getElementById('delete-target-text').innerText = '關鍵字：' + keyword + ' (第 ' + rowIndex + ' 列)';
+      const confirmBtn = document.getElementById('confirm-delete-btn');
+      confirmBtn.onclick = () =&gt; confirmDelete(rowIndex);
+      modal.classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('delete-modal').classList.add('hidden');
+    }
+
+    function confirmDelete(rowIndex) {
+      closeDeleteModal();
+      showToast('正在刪除項目...', '⏳');
+
+      google.script.run
+        .withSuccessHandler(() =&gt; {
+          showToast('項目已成功刪除！', '🗑️');
+          switchCategory(activeCategory);
+        })
+        .withFailureHandler(handleAuthFailure)
+        .apiDeleteFaqItem(adminToken, activeCategory, rowIndex);
+    }
+
+    function openNewCategoryModal() {
+      document.getElementById('new-category-input').value = '';
+      document.getElementById('category-modal').classList.remove('hidden');
+    }
+
+    function closeNewCategoryModal() {
+      document.getElementById('category-modal').classList.add('hidden');
+    }
+
+    function submitNewCategory() {
+      const catName = document.getElementById('new-category-input').value.trim();
+      if (!catName) {
+        showToast('請輸入分類分頁名稱！', '⚠️');
+        return;
+      }
+      closeNewCategoryModal();
+      showToast('正在建立分頁 [' + catName + ']...', '⏳');
+
+      google.script.run
+        .withSuccessHandler(() =&gt; {
+          showToast('成功建立分類分頁！', '🎉');
+          loadCategories();
+        })
+        .withFailureHandler(handleAuthFailure)
+        .apiCreateCategory(adminToken, catName);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/&amp;/g, "&amp;amp;")
+        .replace(/&lt;/g, "&amp;lt;")
+        .replace(/&gt;/g, "&amp;gt;")
+        .replace(/"/g, "&amp;quot;")
+        .replace(/'/g, "&amp;#039;");
+    }
+
+    window.onload = function() {
+      if (adminToken) {
+        // 先驗證已記住的 Token 是否有效
+        google.script.run
+          .withSuccessHandler(() =&gt; {
+            document.getElementById('login-overlay').classList.add('hidden');
+            loadCategories();
+          })
+          .withFailureHandler(() =&gt; {
+            logoutAdmin();
+          })
+          .apiVerifyAdmin(adminToken);
+      } else {
+        document.getElementById('login-overlay').classList.remove('hidden');
+      }
+    };
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;`;
+}
+</code></pre>
+        </div>
+      </section>
+
+      <!-- 4. LINE 雙後台連動綁定 -->
+      <section id="step3" class="space-y-4">
+        <div class="flex items-center gap-2 text-lg font-bold text-white border-b border-slate-800 pb-2">
+          <span class="text-emerald-400 font-mono">04.</span>
+          <h3>第三步：LINE 雙後台連動綁定（權杖與 Webhook）</h3>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- 後台 A -->
+          <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">後台 A</span>
+              <span class="text-[11px] font-mono text-slate-400">manager.line.biz</span>
+            </div>
+            <h5 class="text-sm font-bold text-white">LINE Official Account Manager</h5>
+            <ol class="text-xs text-slate-300 space-y-2 list-decimal list-inside leading-relaxed">
+              <li>點選右上角 <strong class="text-slate-100">「設定 (齒輪)」 > 「回應設定」</strong>。</li>
+              <li><strong class="text-rose-400">聊天 (Chat)</strong>：切換為 <span class="text-rose-400 font-bold">關閉 (OFF)</span>。<span class="text-slate-400 block pl-4">（徹底杜絕「本帳號無法個別回覆...」的預設罐頭干擾）</span></li>
+              <li><strong class="text-emerald-400">Webhook</strong>：切換為 <span class="text-emerald-400 font-bold">開啟 (ON)</span>。</li>
+            </ol>
+          </div>
+
+          <!-- 後台 B -->
+          <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">後台 B</span>
+              <span class="text-[11px] font-mono text-slate-400">developers.line.biz</span>
+            </div>
+            <h5 class="text-sm font-bold text-white">LINE Developers Console</h5>
+            <ol class="text-xs text-slate-300 space-y-2 list-decimal list-inside leading-relaxed">
+              <li>進入 Messaging API 頻道，切至 <strong class="text-slate-100">Messaging API</strong> 標籤。</li>
+              <li><strong class="text-white">Webhook URL</strong>：填入 GAS 部署網址（結尾為 <code class="text-emerald-400">/exec</code>）並更新。</li>
+              <li><strong class="text-emerald-400">Use webhook</strong>：開關切換為 <span class="text-emerald-400 font-bold">開啟 (綠色 ON)</span>。</li>
+              <li><strong class="text-white">Channel access token</strong>：滑至最下方點擊「Issue」取得長效權杖，填回 GAS 程式碼。</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. 網頁管理後台操作說明 -->
+      <section id="step4" class="space-y-4">
+        <div class="flex items-center gap-2 text-lg font-bold text-white border-b border-slate-800 pb-2">
+          <span class="text-emerald-400 font-mono">05.</span>
+          <h3>第四步：如何使用「網頁管理後台」與安全登入</h3>
+        </div>
+        <p class="text-sm text-slate-300">
+          直接將 GAS 部署網址（Web app URL）貼在任何現代瀏覽器開啟，後台具備完善的存取控制：
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+          <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
+            <div class="text-base">🔒</div>
+            <strong class="text-white block">管理者密碼解鎖</strong>
+            <p class="text-slate-400">開啟網址時會先呈現密碼驗證卡片。密碼將暫存於當前工作階段（sessionStorage），關閉分頁自動上鎖。</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
+            <div class="text-base">🗂️</div>
+            <strong class="text-white block">工作表切換與統計</strong>
+            <p class="text-slate-400">分頁標籤會動態讀取所有試算表分頁與即時筆數，點擊標籤毫秒級載入問答列表。</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
+            <div class="text-base">✏️</div>
+            <strong class="text-white block">CRUD 即時維護</strong>
+            <p class="text-slate-400">支援關鍵字、換行回覆與比對模式新增／編輯，點擊「🗑️ 刪除」自帶防呆確認對話框。</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
+            <div class="text-base">🚪</div>
+            <strong class="text-white block">一鍵安全登出</strong>
+            <p class="text-slate-400">右上角提供「🚪 登出」按鈕，隨時清空本地身分暫存，切換回全屏上鎖防護狀態。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. 檢索演算法邏輯 -->
+      <section id="step5" class="space-y-4">
+        <div class="flex items-center gap-2 text-lg font-bold text-white border-b border-slate-800 pb-2">
+          <span class="text-emerald-400 font-mono">06.</span>
+          <h3>第五步：跨工作表檢索演算法與比對規則</h3>
+        </div>
+        <div class="p-5 rounded-2xl bg-slate-900 border border-slate-800 font-mono text-xs overflow-x-auto text-slate-300 leading-relaxed">
+<pre>
+訪客發送訊息：「請問信義門市的營業時間？」
+               │
+               ▼
+ [階段一：完全相符比對 (Exact Match)]
+ 依序掃描所有工作表，尋找是否有關鍵字 100% 全等於提問句？
+   ├─ 是 ──> 立即回傳該解答並結束 (優先權最高)
+   └─ 否 ──> 進入階段二
+               │
+               ▼
+ [階段二：模糊包含比對 (Contains Match)]
+ 依序掃描所有工作表，比對「提問句是否包含關鍵字」或「關鍵字是否包含提問句」？
+   ├─ 命中多個候選解答 ──> 取出第一個符合者
+   └─ 無任何項目符合 ────> 回傳 DEFAULT_FALLBACK_MESSAGE
+</pre>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-800">
+          <table class="w-full text-xs text-left font-sans">
+            <thead class="bg-slate-900 text-slate-300 font-bold border-b border-slate-800">
+              <tr>
+                <th class="p-3">使用情境</th>
+                <th class="p-3">建議模式</th>
+                <th class="p-3">範例說明</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800 text-slate-300">
+              <tr>
+                <td class="p-3 font-semibold text-white">通用常見問答</td>
+                <td class="p-3"><code class="text-blue-400 font-mono">contains</code></td>
+                <td class="p-3">關鍵字設為「營業時間」，訪客提問「請問你們營業時間到幾點？」因包含關鍵字而觸發。</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-semibold text-white">易衝突之簡短字詞</td>
+                <td class="p-3"><code class="text-amber-400 font-mono">exact</code></td>
+                <td class="p-3">關鍵字設為「會員」，訪客僅輸入「會員」才觸發；避免提問「非會員如何結帳」時誤觸發會員介紹。</td>
+              </tr>
+              <tr>
+                <td class="p-3 font-semibold text-white">特定優惠兌換代碼</td>
+                <td class="p-3"><code class="text-amber-400 font-mono">exact</code></td>
+                <td class="p-3">關鍵字設為「VIP2026」，避免字串子集誤判。</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- 7. 維運排錯與資安 -->
+      <section id="step6" class="space-y-4">
+        <div class="flex items-center gap-2 text-lg font-bold text-white border-b border-slate-800 pb-2">
+          <span class="text-emerald-400 font-mono">07.</span>
+          <h3>實務維運、排錯與安全性最佳實踐</h3>
+        </div>
+        <div class="space-y-3 text-xs sm:text-sm">
+          <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
+            <span class="font-bold text-emerald-400">Q1：在後台網頁新增資料後，LINE 機器人會即時生效嗎？</span>
+            <p class="text-slate-300">會！完全不需要重新部署。後台是直接對 Google Sheets 寫入，LINE 每次接收訪客對話皆即時讀取試算表儲存格。</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
+            <span class="font-bold text-emerald-400">Q2：在 GAS 修改了 ADMIN_PASSWORD 或 JavaScript 卻沒有生效？</span>
+            <p class="text-slate-300">這是 GAS 的版本快照機制所致。每次修改完 <code class="text-emerald-400">Code.gs</code> 的密碼或程式碼，必須點選「部署」 > 「管理部署」 > 鉛筆圖示 (編輯) > 版本選擇「新版本」 > 點擊「部署」。</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
+            <span class="font-bold text-emerald-400">Q3：為什麼 GAS 部署時必須選擇「所有人 (Anyone)」，這樣安全嗎？</span>
+            <p class="text-slate-300">選擇「所有人」是為了讓 LINE 伺服器能在免 Google 帳號授權的狀態下，順利發送 Webhook 請求（doPost）。<strong>安全性完全不用擔心：</strong>所有涉及讀取、修改、刪除試算表資料的 RPC 函式皆已在伺服器端實施嚴格的 <code class="text-emerald-400">verifyAdminAuth</code> 密碼檢查，外人即使知道網址或試圖竄改前端，伺服器端都會直接阻絕。</p>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Toast 提示組件 -->
+  <div id="page-toast" class="fixed bottom-6 right-6 z-50 transform transition-all duration-300 translate-y-20 opacity-0 pointer-events-none bg-emerald-950 text-emerald-200 border border-emerald-500/50 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-2.5 text-xs font-semibold">
+    <span class="text-base">📋</span>
+    <span id="page-toast-msg">已成功複製到剪貼簿！</span>
+  </div>
+
+  <!-- 全寬模式下喚回側欄的浮動捷徑按鈕 (預設隱藏) -->
+  <button id="restore-sidebar-btn" onclick="toggleFullWidthMode(false)" class="hidden fixed bottom-6 left-6 z-40 bg-slate-900/90 hover:bg-slate-800 text-emerald-400 border border-slate-700/80 px-3.5 py-2.5 rounded-2xl shadow-2xl backdrop-blur-md transition-all active:scale-95 flex items-center gap-2 text-xs font-bold" title="展開左側目錄欄">
+    <span>📑</span>
+    <span>開啟目錄選單</span>
+    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7"/>
+    </svg>
+  </button>
+
+  <!-- 互動腳本 (安全剪貼簿複製) -->
+  <script>
+    function showNotification(msg) {
+      const toast = document.getElementById('page-toast');
+      const text = document.getElementById('page-toast-msg');
+      text.innerText = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
+
+    function copyToClipboard(text) {
+      // 優先使用相容性最高、在 iframe/預覽環境穩定的 execCommand 模式
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      textarea.style.top = '0';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+
+      try {
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textarea);
+        if (successful) {
+          return true;
+        }
+      } catch (err) {
+        document.body.removeChild(textarea);
+      }
+
+      // Fallback: Clipboard API
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text);
+        return true;
+      }
+      return false;
+    }
+
+    function copyFullCode() {
+      const codeElement = document.getElementById('code-content');
+      // 使用 textContent 能夠自動將轉義的實體符號還原成原生純文字 JavaScript，且不會受排版標籤影響
+      const codeText = codeElement.textContent;
+      const success = copyToClipboard(codeText);
+
+      if (success) {
+        const btnText = document.getElementById('copy-btn-text');
+        btnText.innerText = '已複製到剪貼簿！';
+        showNotification('已複製完整的 Google Apps Script 程式碼！');
+        setTimeout(() => {
+          btnText.innerText = '一鍵複製完整程式碼';
+        }, 3000);
+      } else {
+        showNotification('複製失敗，請手動全選複製。');
+      }
+    }
+
+    function downloadCode() {
+      const codeElement = document.getElementById('code-content');
+      const codeText = codeElement.textContent;
+      const blob = new Blob([codeText], { type: 'text/javascript;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'Code.gs';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showNotification('已開始下載 Code.gs 檔案！');
+    }
+
+    // 字體大小階梯設定 (根節點 rem 基準值，預設為 16px = 100%)
+    const FONT_SCALES = [
+      { size: 14, label: '88%' },
+      { size: 16, label: '100%' },
+      { size: 18, label: '112%' },
+      { size: 20, label: '125%' },
+      { size: 22, label: '138%' }
+    ];
+    let currentFontIdx = 1; // 預設 16px (100%)
+
+    function applyFontSize(idx, notify = false) {
+      if (idx < 0) idx = 0;
+      if (idx >= FONT_SCALES.length) idx = FONT_SCALES.length - 1;
+      currentFontIdx = idx;
+
+      const target = FONT_SCALES[currentFontIdx];
+      // 動態改變 html 根節點的字體大小，所有 rem 單位排版將等比例同步縮放
+      document.documentElement.style.fontSize = target.size + 'px';
+      
+      const indicator = document.getElementById('font-scale-indicator');
+      if (indicator) {
+        indicator.innerText = target.label;
+      }
+
+      // 保存偏好至 LocalStorage
+      try {
+        localStorage.setItem('doc_font_scale_idx', currentFontIdx.toString());
+      } catch (e) {
+        // 忽略私密瀏覽模式下的儲存例外
+      }
+
+      if (notify) {
+        showNotification(`字體大小已設定為 ${target.label}`);
+      }
+    }
+
+    function changeFontSize(direction) {
+      const nextIdx = currentFontIdx + direction;
+      if (nextIdx < 0) {
+        showNotification('已達最小字體限制');
+        return;
+      }
+      if (nextIdx >= FONT_SCALES.length) {
+        showNotification('已達最大字體限制');
+        return;
+      }
+      applyFontSize(nextIdx, true);
+    }
+
+    function resetFontSize() {
+      applyFontSize(1, true);
+    }
+
+    // ==========================================
+    // 目錄索引收合與全寬閱讀模式控制邏輯
+    // ==========================================
+
+    let isTocCollapsed = false;
+    let isFullWidthMode = false;
+
+    // 1. 側欄內目錄清單收合/展開
+    function toggleTocContent(forceState = null) {
+      if (forceState !== null) {
+        isTocCollapsed = forceState;
+      } else {
+        isTocCollapsed = !isTocCollapsed;
+      }
+
+      const wrapper = document.getElementById('toc-links-wrapper');
+      const toggleText = document.getElementById('toc-toggle-text');
+      const chevron = document.getElementById('toc-chevron');
+      const badge = document.getElementById('toc-collapse-badge');
+
+      if (isTocCollapsed) {
+        // 收合狀態
+        wrapper.classList.remove('max-h-[500px]', 'opacity-100');
+        wrapper.classList.add('max-h-0', 'opacity-0', 'pointer-events-none');
+        toggleText.innerText = '展開';
+        chevron.classList.add('-rotate-90');
+        badge.classList.remove('hidden');
+      } else {
+        // 展開狀態
+        wrapper.classList.remove('max-h-0', 'opacity-0', 'pointer-events-none');
+        wrapper.classList.add('max-h-[500px]', 'opacity-100');
+        toggleText.innerText = '收合';
+        chevron.classList.remove('-rotate-90');
+        badge.classList.add('hidden');
+      }
+
+      try {
+        localStorage.setItem('doc_toc_collapsed', isTocCollapsed ? 'true' : 'false');
+      } catch (e) {}
+    }
+
+    // 2. 全寬閱讀模式 (側邊欄整體隱藏 / 復原)
+    function toggleFullWidthMode(enableFullWidth) {
+      isFullWidthMode = enableFullWidth;
+      const sidebar = document.getElementById('desktop-sidebar');
+      const mainContent = document.getElementById('main-content-area');
+      const restoreBtn = document.getElementById('restore-sidebar-btn');
+
+      if (isFullWidthMode) {
+        sidebar.classList.add('lg:hidden');
+        mainContent.classList.remove('lg:col-span-9');
+        mainContent.classList.add('lg:col-span-12');
+        restoreBtn.classList.remove('hidden');
+        showNotification('已進入全寬閱讀模式 (點擊左下角可喚回目錄)');
+      } else {
+        sidebar.classList.remove('lg:hidden');
+        mainContent.classList.remove('lg:col-span-12');
+        mainContent.classList.add('lg:col-span-9');
+        restoreBtn.classList.add('hidden');
+        showNotification('已還原側邊欄目錄');
+      }
+
+      try {
+        localStorage.setItem('doc_full_width_mode', isFullWidthMode ? 'true' : 'false');
+      } catch (e) {}
+    }
+
+    // 3. 行動版目錄抽屜展開 / 收合
+    function toggleMobileToc() {
+      const drawer = document.getElementById('mobile-toc-drawer');
+      const chevron = document.getElementById('mobile-toc-chevron');
+      const isHidden = drawer.classList.contains('hidden');
+
+      if (isHidden) {
+        drawer.classList.remove('hidden');
+        chevron.classList.add('rotate-180');
+      } else {
+        drawer.classList.add('hidden');
+        chevron.classList.remove('rotate-180');
+      }
+    }
+
+    // 頁面初次載入時自動恢復使用者的字體與目錄偏好
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        const savedIdx = localStorage.getItem('doc_font_scale_idx');
+        if (savedIdx !== null) {
+          applyFontSize(parseInt(savedIdx, 10), false);
+        }
+
+        const savedTocCollapsed = localStorage.getItem('doc_toc_collapsed');
+        if (savedTocCollapsed === 'true') {
+          toggleTocContent(true);
+        }
+
+        const savedFullWidth = localStorage.getItem('doc_full_width_mode');
+        if (savedFullWidth === 'true') {
+          toggleFullWidthMode(true);
+        }
+      } catch (e) {}
+    });
+  </script>
+</body>
+</html>
