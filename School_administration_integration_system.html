@@ -51,12 +51,12 @@
         <span class="inline-block bg-white/20 text-white text-xs px-3 py-1 rounded-full font-semibold backdrop-blur-xs">專為各級學校、處室主任、組長與行政同仁打造</span>
         <h2 class="text-xl sm:text-2xl font-black">只需 5 分鐘，建立全校專屬的雲端校務行政整合中心</h2>
         <p class="text-xs sm:text-sm text-blue-100 leading-relaxed">
-          整合<strong>行政處室公告、全校會議記錄（晨會/行政會議/領域研討）、教職員研習差假派代、校園大事紀 (校史人事物)、師生榮譽榜、各處室常用系統與業務交接專區、線上動態自訂擴充工作表</strong>。
+          整合<strong>行政處室公告、全校會議記錄（晨會/行政會議/各領域會報，含會議標題與公開權限控管）、教職員研習差假派代、校園大事紀 (校史人事物)、師生榮譽榜、各處室常用系統與業務交接專區、線上動態自訂擴充工作表</strong>。
           系統完全基於 Google 試算表與 Google Apps Script 運行，零伺服器維護成本，全校同仁與家長手機掃碼即可即時查閱！
         </p>
         <div class="pt-2 flex flex-wrap gap-2.5 text-xs">
           <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>📱</span><span>電腦/平板/手機 RWD 響應自適應</span></div>
-          <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>📋</span><span>會議記錄與公開/內部權限控管</span></div>
+          <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>📋</span><span>會議標題支援與公開/內部權限控管</span></div>
           <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>🏢</span><span>行政處室動態增刪與分類篩選</span></div>
           <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>🤝</span><span>新進同仁業務交接與系統導航</span></div>
           <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>📊</span><span>線上直接擴充全新工作表</span></div>
@@ -104,6 +104,9 @@
           <button onclick="copyGeneratedIndexHtml()" id="btnCopyHtml" class="text-xs bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2.5 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer">
             <span>📋</span><span>一鍵複製 Index.html 前端代碼</span>
           </button>
+          <button onclick="openPreviewModal()" class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-3 py-2.5 rounded-xl transition-all cursor-pointer">
+            <span>🔍 檢視代碼</span>
+          </button>
         </div>
       </div>
     </section>
@@ -133,7 +136,7 @@
             </div>
           </li>
           <li class="text-emerald-800 font-medium bg-emerald-50 p-3 rounded-xl border border-emerald-200">
-            ✨ <strong>零手動建表保證</strong>：試算表內的工作表名稱與欄位<strong>完全保留空白即可</strong>！系統首次連線時，會自動在背景建立「處室清單、教師名冊、行政公告、研習派代系統、校園大事紀、師生榮譽榜、各處室常用網、會議類別清單、會議記錄、自訂工作表清單、系統設定」等 11 大核心工作表與預設範例！
+            ✨ <strong>零手動建表保證</strong>：試算表內的工作表名稱與欄位<strong>完全保留空白即可</strong>！系統首次連線時，會自動在背景建立「處室清單、教師名冊、行政公告、研習派代系統、校園大事紀、師生榮譽榜、各處室常用網、會議類別清單、會議記錄（含會議標題）、自訂工作表清單、系統設定」等 11 大核心工作表與預設範例！
           </li>
         </ol>
       </div>
@@ -145,7 +148,7 @@
         <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm">2</div>
         <div>
           <h3 class="text-base font-bold text-slate-900">第二步：開啟 Apps Script 並貼上 Code.gs</h3>
-          <p class="text-xs text-slate-500">部署負責處理資料讀寫、身分驗證與動態建表的後端核心</p>
+          <p class="text-xs text-slate-500">部署負責處理資料讀寫、身分驗證與平滑升級的後端核心</p>
         </div>
       </div>
 
@@ -225,7 +228,7 @@
           <li>
             確認並完成下列三項核心參數設定：
             <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-2 mt-2 font-medium">
-              <div class="flex justify-between items-center"><span>部署說明：</span><span class="font-bold text-slate-800">校務整合系統正式上線 v1.1 (含會議記錄)</span></div>
+              <div class="flex justify-between items-center"><span>部署說明：</span><span class="font-bold text-slate-800">校務整合系統正式上線 (支援會議標題與無損升級)</span></div>
               <div class="flex justify-between items-center"><span>執行身分：</span><span class="font-bold text-blue-700">我 (您的 Google 帳號)</span></div>
               <div class="flex justify-between items-center"><span>誰可以存取：</span><span class="font-bold text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded">所有人 (Anyone)</span></div>
             </div>
@@ -262,15 +265,15 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
             <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>1️⃣</span><span>首度開啟與自動建表</span></h4>
-            <p class="text-xs text-slate-600">首次連線時，後端會自動在試算表中建置 11 張核心工作表並填入示範資料，完全無需手動設定任何欄位。</p>
+            <p class="text-xs text-slate-600">首次連線時，後端會自動在試算表中建置 11 張核心工作表並填入示範資料，若原有舊資料庫缺少「會議標題」亦能無損平滑升級。</p>
           </div>
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>2️⃣</span><span>管理員登入與處室/類別維護</span></h4>
-            <p class="text-xs text-slate-600">點選右上角「管理員登入」，輸入密鑰（預設 <code>AdminSchool2026</code>）即可解鎖發布公告、處室清單維護、會議類別管理與研習派代登記。</p>
+            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>2️⃣</span><span>真實驗證與處室維護</span></h4>
+            <p class="text-xs text-slate-600">點選右上角「管理員登入」，輸入密鑰（預設 <code>AdminSchool2026</code>）經過後端安全比對，通過後即可維護公告、處室與會議類別。</p>
           </div>
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
             <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>3️⃣</span><span>會議記錄與公開/內部權限</span></h4>
-            <p class="text-xs text-slate-600">支援晨會、行政會議及自訂會議類別，詳細記錄主席、紀錄者與決議事項。提供「設為公開會議紀錄」核取切換，機敏或內部會議絕不對訪客公開！</p>
+            <p class="text-xs text-slate-600">支援會議標題、晨會、行政會議及自訂分類，提供「設為公開會議紀錄」核取切換，未公開之機敏記錄在後端直接剔除，訪客絕不可見！</p>
           </div>
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
             <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>4️⃣</span><span>自訂工作表即時擴充</span></h4>
@@ -282,7 +285,7 @@
           </div>
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
             <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>6️⃣</span><span>訪客隱藏與公務布景</span></h4>
-            <p class="text-xs text-slate-600">登入後點擊「⚙️ 系統設定」，可自由勾選各模組（含會議記錄）是否對前台訪客公開，並提供公務湛藍、校園翡翠等 6 大主題切換。</p>
+            <p class="text-xs text-slate-600">登入後點擊「⚙️ 系統設定」，可自由勾選各模組是否對前台訪客公開，並提供公務湛藍、校園翡翠等 6 大主題切換。</p>
           </div>
         </div>
       </div>
@@ -317,7 +320,7 @@
             <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <div class="mt-3 pt-3 border-t border-slate-200 text-slate-600">
-            <p>完全不會！登錄或編輯會議記錄時，可自由勾選「設為公開會議紀錄」。若取消勾選，該篇會議記錄在前台將自動對一般訪客完全隱藏，且不會出現在訪客的全域搜尋結果中，只有以管理密鑰登入後的行政同仁才可檢視與編輯。</p>
+            <p>完全不會！登錄或編輯會議記錄時，可自由勾選「設為公開會議紀錄」。若取消勾選，該篇會議記錄在後端讀取時就會直接過濾剔除，既不會出現在前台列表中，也不會出現在訪客的全域搜尋結果中，只有以正確管理密鑰驗證登入後的同仁才能調閱。</p>
           </div>
         </details>
 
@@ -333,21 +336,11 @@
 
         <details class="bg-slate-50 p-4 rounded-2xl border border-slate-200 group">
           <summary class="font-bold text-slate-800 cursor-pointer list-none flex justify-between items-center">
-            <span>Q4. 校務資料儲存在哪裡？是否有資料外洩風險？</span>
+            <span>Q4. 舊的試算表若已在使用，升級新版程式碼會不會破壞既有資料？</span>
             <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <div class="mt-3 pt-3 border-t border-slate-200 text-slate-600">
-            <p>所有資料全部存放於您第一步所建立的 Google 試算表中，屬於學校或發布者專屬的 Google 帳號所有。沒有經過您的密鑰驗證，任何人都無法在網頁端增修資料，安全性由 Google 原廠最高規格保護。</p>
-          </div>
-        </details>
-
-        <details class="bg-slate-50 p-4 rounded-2xl border border-slate-200 group">
-          <summary class="font-bold text-slate-800 cursor-pointer list-none flex justify-between items-center">
-            <span>Q5. 如何新增其他業務模組（例如設備報修、校車登記或場地預約）？</span>
-            <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
-          </summary>
-          <div class="mt-3 pt-3 border-t border-slate-200 text-slate-600">
-            <p>本系統特別設計了「自訂擴充工作表」引擎。管理員登入後前往「📁 自訂擴充項目」標籤，點擊「📄 建立全新工作表」，輸入自訂欄位名稱（如：報修日期, 地點, 故障項目, 報修人），系統就會全自動在試算表插入新分頁並在前台產出專屬表單與維護表格！</p>
+            <p>不會！新版 Code.gs 內建無損結構升級機制（<code>checkAndUpgradeMeetingSchema</code>），會自動檢測「會議記錄」是否具備「會議標題」欄位；若無則自動在第 2 欄插入該欄位，並為歷史記錄自動填入預設標題，既有日期、出席、決議內容 100% 完整保留！</p>
           </div>
         </details>
       </div>
@@ -360,7 +353,7 @@
     <p>智慧校務行政整合系統 · 專為基層教育同仁打造的高效、透明、免伺服器之開源方案</p>
   </footer>
 
-  <!-- 系統訊息彈跳視窗 (取代 alert) -->
+  <!-- 系統訊息彈跳視窗 -->
   <div id="noticeModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-60 hidden">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-center">
       <div id="noticeModalIcon" class="text-3xl mb-2">🔔</div>
@@ -372,17 +365,115 @@
     </div>
   </div>
 
-  <!-- ==================== 程式碼樣板來源庫 ==================== -->
+  <!-- 代碼預覽與手動全選 Modal -->
+  <div id="previewModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 z-60 hidden">
+    <div class="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl border border-slate-200 flex flex-col max-h-[90vh]">
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100 mb-3">
+        <div class="flex items-center gap-3">
+          <h3 class="text-sm sm:text-base font-bold text-slate-900" id="previewModalTitle">代碼檢視與手動複製</h3>
+          <div class="flex gap-1 text-xs">
+            <button onclick="switchPreviewTab('code')" id="btnPreviewCode" class="px-3 py-1 rounded-lg font-bold bg-blue-100 text-blue-800">Code.gs</button>
+            <button onclick="switchPreviewTab('html')" id="btnPreviewHtml" class="px-3 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200">Index.html</button>
+          </div>
+        </div>
+        <button onclick="closeModal('previewModal')" class="text-slate-400 hover:text-slate-700 text-lg">✕</button>
+      </div>
+      <p class="text-xs text-slate-500 mb-2">點選下方「全選代碼」後按下鍵盤 <kbd class="bg-slate-100 px-1 border rounded">Ctrl + C</kbd> 即可複製：</p>
+      <textarea id="previewTextarea" readonly class="flex-1 w-full p-3 font-mono text-xs bg-slate-900 text-emerald-400 rounded-2xl outline-none select-all min-h-[350px] leading-relaxed"></textarea>
+      <div class="flex justify-between items-center mt-4">
+        <span class="text-xs text-slate-400" id="previewLengthTip"></span>
+        <div class="flex gap-2">
+          <button onclick="selectAndCopyPreview()" class="text-xs font-semibold px-4 py-2 rounded-xl text-white bg-blue-700 hover:bg-blue-800 cursor-pointer">全選並複製</button>
+          <button onclick="closeModal('previewModal')" class="text-xs font-semibold px-4 py-2 rounded-xl text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer">關閉</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-  <!-- 1. Code.gs 後端原始碼樣板 (使用 textarea 保留完整字元) -->
-  <textarea id="tpl-code-gs" class="hidden">/* =========================================================================
+  <!-- ==================== 頁面互動、穩健複製與代碼生成腳本 ==================== -->
+  <script>
+    let activePreviewType = 'code';
+
+    function showCustomNotice(title, message, icon = 'ℹ️') {
+      document.getElementById('noticeModalIcon').innerText = icon;
+      document.getElementById('noticeModalTitle').innerText = title;
+      document.getElementById('noticeModalContent').innerText = message;
+      document.getElementById('noticeModal').classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+    }
+
+    function extractSpreadsheetId(url) {
+      const trimmed = (url || '').trim();
+      const match = trimmed.match(/\/d\/([a-zA-Z0-9-_]+)/);
+      if (match && match[1]) return match[1];
+      if (/^[a-zA-Z0-9-_]{30,60}$/.test(trimmed)) return trimmed;
+      return '1Xgy6NWfWOwQTuE46aZzCpuBmD232x5lw5Lc0agBDuEY';
+    }
+
+    function updateConfig() {
+      const rawUrl = document.getElementById('inputSheetUrl').value;
+      const parsedId = extractSpreadsheetId(rawUrl);
+      document.getElementById('displaySheetId').innerText = parsedId;
+    }
+
+    /* 終極安全剪貼簿複製引擎 (多重備援相容機制) */
+    function safeCopyToClipboard(text, onSuccess, onError) {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text)
+          .then(onSuccess)
+          .catch(() => fallbackCopy(text, onSuccess, onError));
+      } else {
+        fallbackCopy(text, onSuccess, onError);
+      }
+    }
+
+    function fallbackCopy(text, onSuccess, onError) {
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.top = "0";
+        textArea.style.left = "0";
+        textArea.style.width = "2em";
+        textArea.style.height = "2em";
+        textArea.style.padding = "0";
+        textArea.style.border = "none";
+        textArea.style.outline = "none";
+        textArea.style.boxShadow = "none";
+        textArea.style.background = "transparent";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        textArea.setSelectionRange(0, text.length);
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        if (successful) {
+          if (onSuccess) onSuccess();
+        } else {
+          if (onError) onError();
+        }
+      } catch (err) {
+        if (onError) onError(err);
+      }
+    }
+
+    // 核心 Code.gs 樣板生成器 (保證包含會議標題欄位與無損平滑升級架構)
+    function getCustomizedCodeGs() {
+      const rawUrl = document.getElementById('inputSheetUrl').value;
+      const parsedId = extractSpreadsheetId(rawUrl);
+      const pwd = document.getElementById('inputPassword').value.trim() || 'AdminSchool2026';
+
+      return `/* =========================================================================
  * 校務行政整合系統 - 後端雲端資料庫核心 (Code.gs)
- * 擴充：新增「會議記錄」模組、會議類別自訂管理、訪客公開權限控制
+ * 擴充：會議記錄模組新增「會議標題」欄位、具備既有資料庫無損平滑升級機制
  * ========================================================================= */
 
 // 請填入您的 Google 試算表 ID（若此專案是從試算表內「擴充功能 > Apps Script」開啟，保留或空白皆可自動相容目前試算表）
-const SPREADSHEET_ID = '{{SPREADSHEET_ID}}';
-const ADMIN_PASSWORD = '{{ADMIN_PASSWORD}}'; // 校務管理密鑰
+const SPREADSHEET_ID = '${parsedId}';
+const ADMIN_PASSWORD = '${pwd}'; // 校務管理密鑰
 
 // 系統核心預設工作表結構定義
 const DB_SCHEMAS = {
@@ -450,11 +541,11 @@ const DB_SCHEMAS = {
     ]
   },
   '會議記錄': {
-    headers: ['ID', '日期時間', '會議類別', '地點', '主席', '紀錄者', '出席人員', '會議內容', '公開', '其他', '登錄時間'],
+    headers: ['ID', '會議標題', '日期時間', '會議類別', '地點', '主席', '紀錄者', '出席人員', '會議內容', '公開', '其他', '登錄時間'],
     defaultRows: [
-      ['1', '2026-09-02 08:00', '晨會', '教導處辦公室', '校長', '陳雅婷', '全體教職員工', '1. 請各班導師提醒學生注意早秋換季氣候與日常衛生清潔。\n2. 總務處提醒各教室冷氣開啟規範，珍惜校園資源。\n3. 週三下午舉辦全校校務發展研習，請全員準時參與。', '是', '各組提案已彙整完畢', '2026-09-02 08:30:00'],
-      ['2', '2026-09-03 13:30', '行政會議', '校長室會議室', '校長', '林志遠', '各處室主任、組長', '1. 審定115學年度第一學期校事行事曆與各項重要活動排程。\n2. 研議智慧校園設備採購案預算編列與審查事宜。', '是', '請總務處於下週前提送設備規格清冊', '2026-09-03 15:00:00'],
-      ['3', '2026-09-04 10:00', '其它', '輔導室個別諮商室', '輔導主任', '張建華', '輔導室全體同仁、認輔教師', '專案輔導會議：針對開學初期高關懷與適應困難學生進行個案分析與支援網絡指派。', '否', '涉及學生個別隱私，本記錄僅供內部專業諮商參考', '2026-09-04 11:30:00']
+      ['1', '115學年度第1學期第1週晨會', '2026-09-02 08:00', '晨會', '教導處辦公室', '校長', '陳雅婷', '全體教職員工', '1. 請各班導師提醒學生注意早秋換季氣候與日常衛生清潔。\\n2. 總務處提醒各教室冷氣開啟規範，珍惜校園資源。\\n3. 週三下午舉辦全校校務發展研習，請全員準時參與。', '是', '各組提案已彙整完畢', '2026-09-02 08:30:00'],
+      ['2', '115學年度第1學期初行政會議', '2026-09-03 13:30', '行政會議', '校長室會議室', '校長', '林志遠', '各處室主任、組長', '1. 審定115學年度第一學期校事行事曆與各項重要活動排程。\\n2. 研議智慧校園設備採購案預算編列與審查事宜。', '是', '請總務處於下週前提送設備規格清冊', '2026-09-03 15:00:00'],
+      ['3', '開學初期高關懷學生專案輔導評估會議', '2026-09-04 10:00', '其它', '輔導室個別諮商室', '輔導主任', '張建華', '輔導室全體同仁、認輔教師', '專案輔導會議：針對開學初期高關懷與適應困難學生進行個案分析與支援網絡指派。', '否', '涉及學生個別隱私，本記錄僅供內部專業諮商參考', '2026-09-04 11:30:00']
     ]
   },
   '自訂工作表清單': {
@@ -519,12 +610,63 @@ function getOrCreateSheetFast(ss, name) {
 }
 
 /**
- * 確保預設資料庫架構皆已生成
+ * ★ 既有資料庫無損平滑升級機制：
+ * 檢查既有試算表「會議記錄」工作表，若未包含「會議標題」欄位，
+ * 則自動在第 2 欄安全插入該欄位，並將原既有資料列補上合適預設標題，
+ * 原有欄位資料（日期、地點、出席人員、內容等）100% 完整保留！
+ */
+function checkAndUpgradeMeetingSchema(ss) {
+  const s = ss.getSheetByName('會議記錄');
+  if (!s) return;
+  const lastCol = s.getLastColumn();
+  if (lastCol < 1) return;
+  
+  const headers = s.getRange(1, 1, 1, lastCol).getDisplayValues()[0].map(h => String(h).trim());
+  
+  if (headers.indexOf('會議標題') === -1) {
+    const idIdx = headers.indexOf('ID');
+    const insertAfterCol = (idIdx !== -1) ? (idIdx + 1) : 1;
+    
+    s.insertColumnAfter(insertAfterCol);
+    const newColIndex = insertAfterCol + 1;
+    
+    s.getRange(1, newColIndex).setValue('會議標題')
+      .setBackground('#1e3a8a')
+      .setFontColor('#ffffff')
+      .setFontWeight('bold');
+      
+    const lastRow = s.getLastRow();
+    if (lastRow > 1) {
+      const updatedVals = s.getRange(1, 1, lastRow, s.getLastColumn()).getDisplayValues();
+      const updatedHeaders = updatedVals[0].map(h => String(h).trim());
+      const catIdx = updatedHeaders.indexOf('會議類別');
+      const dateIdx = updatedHeaders.indexOf('日期時間');
+      
+      for (let r = 2; r <= lastRow; r++) {
+        const cat = (catIdx !== -1 && updatedVals[r - 1][catIdx]) ? updatedVals[r - 1][catIdx] : '';
+        const date = (dateIdx !== -1 && updatedVals[r - 1][dateIdx]) ? updatedVals[r - 1][dateIdx] : '';
+        let defaultTitle = cat ? \`\${cat}記錄\` : '校務會議記錄';
+        if (date) {
+          const shortDate = String(date).split(' ')[0];
+          defaultTitle = \`\${shortDate} \${defaultTitle}\`;
+        }
+        s.getRange(r, newColIndex).setValue(defaultTitle);
+      }
+    }
+    SpreadsheetApp.flush();
+    Logger.log('已成功為既有「會議記錄」工作表無損升級並加入「會議標題」欄位！');
+  }
+}
+
+/**
+ * 確保預設資料庫架構皆已生成，並自動執行平滑結構升級
  */
 function ensureAllSheetsFast(ss) {
   Object.keys(DB_SCHEMAS).forEach(name => {
     getOrCreateSheetFast(ss, name);
   });
+  checkAndUpgradeMeetingSchema(ss);
+  
   const def1 = ss.getSheetByName('工作表1');
   const def2 = ss.getSheetByName('Sheet1');
   if (def1 && ss.getSheets().length > 1) ss.deleteSheet(def1);
@@ -550,7 +692,18 @@ function verifyAdmin(password) {
 }
 
 /**
- * 讀取整張工作表為 JSON 陣列
+ * ★ 獨立管理員身分驗證端點：供前端登入時先行校驗
+ */
+function verifyAdminAuth(password) {
+  if (password && String(password).trim() === ADMIN_PASSWORD) {
+    return { success: true, message: '身分驗證成功！' };
+  } else {
+    return { success: false, message: '身分驗證失敗：校務管理密鑰錯誤！' };
+  }
+}
+
+/**
+ * 讀取整張工作表為 JSON 陣列 (基於表頭動態鍵值配對，極高容錯)
  */
 function readSheetAsJson(ss, sheetName) {
   const s = ss.getSheetByName(sheetName);
@@ -572,8 +725,9 @@ function readSheetAsJson(ss, sheetName) {
 /**
  * 載入校務系統所有全域資料
  */
-function getAllSchoolData() {
+function getAllSchoolData(authPassword) {
   const today = Utilities.formatDate(new Date(), "GMT+8", "yyyy-MM-dd");
+  const isAuthAdmin = (authPassword && String(authPassword).trim() === ADMIN_PASSWORD);
   try {
     const ss = getSpreadsheet();
     ensureAllSheetsFast(ss);
@@ -635,8 +789,11 @@ function getAllSchoolData() {
       .map(x => x['類別名稱'])
       .filter(Boolean);
 
-    // 10. 會議記錄 (最新放前面)
-    const meetings = readSheetAsJson(ss, '會議記錄').reverse();
+    // 10. 會議記錄 (最新放前面；訪客模式直接剔除未公開記錄)
+    const rawMeetings = readSheetAsJson(ss, '會議記錄').reverse();
+    const meetings = isAuthAdmin
+      ? rawMeetings
+      : rawMeetings.filter(m => (m['公開'] === '是' || m['公開'] === 'true' || m['公開'] === true));
 
     // 11. 自訂工作表清單與其內容
     const customList = readSheetAsJson(ss, '自訂工作表清單');
@@ -742,13 +899,13 @@ function addOfficeCategory(officeName, p) {
   const vals = s.getDataRange().getDisplayValues();
   for (let i = 1; i < vals.length; i++) {
     if (vals[i][0] === name) {
-      throw new Error(`處室「${name}」已經存在，不需重複新增！`);
+      throw new Error(\`處室「\${name}」已經存在，不需重複新增！\`);
     }
   }
   const nextOrder = String(vals.length);
   s.appendRow([name, nextOrder, getNowTimestamp()]);
   SpreadsheetApp.flush();
-  return { success: true, message: `已成功新增處室【${name}】！` };
+  return { success: true, message: \`已成功新增處室【\${name}】！\` };
 }
 
 function deleteOfficeCategory(officeName, p) {
@@ -762,10 +919,10 @@ function deleteOfficeCategory(officeName, p) {
     if (vals[i][0] === name) {
       s.deleteRow(i + 1);
       SpreadsheetApp.flush();
-      return { success: true, message: `已成功刪除處室【${name}】！` };
+      return { success: true, message: \`已成功刪除處室【\${name}】！\` };
     }
   }
-  throw new Error(`找不到欲刪除的處室「${name}」。`);
+  throw new Error(\`找不到欲刪除的處室「\${name}」。\`);
 }
 
 // -------------------------------------------------------------
@@ -780,7 +937,7 @@ function addTeacherRecord(d, p) {
   const id = 'T' + String(Date.now()).slice(-4);
   s.appendRow([id, name, d.title || '專任教師', d.office || '', '在職', getNowTimestamp()]);
   SpreadsheetApp.flush();
-  return { success: true, message: `已成功將【${name}】登錄至教師名冊！` };
+  return { success: true, message: \`已成功將【\${name}】登錄至教師名冊！\` };
 }
 
 // -------------------------------------------------------------
@@ -894,7 +1051,7 @@ function deletePortalLink(id, p) {
 }
 
 // -------------------------------------------------------------
-// 8. 會議記錄與類別管理 CRUD
+// 8. 會議記錄與類別管理 CRUD (含會議標題與動態表頭寫入)
 // -------------------------------------------------------------
 function addMeetingCategory(categoryName, p) {
   verifyAdmin(p);
@@ -905,13 +1062,13 @@ function addMeetingCategory(categoryName, p) {
   const vals = s.getDataRange().getDisplayValues();
   for (let i = 1; i < vals.length; i++) {
     if (vals[i][0] === name) {
-      throw new Error(`會議類別「${name}」已存在！`);
+      throw new Error(\`會議類別「\${name}」已存在！\`);
     }
   }
   const nextOrder = String(vals.length);
   s.appendRow([name, nextOrder, getNowTimestamp()]);
   SpreadsheetApp.flush();
-  return { success: true, message: `已成功新增會議類別【${name}】！` };
+  return { success: true, message: \`已成功新增會議類別【\${name}】！\` };
 }
 
 function deleteMeetingCategory(categoryName, p) {
@@ -925,29 +1082,58 @@ function deleteMeetingCategory(categoryName, p) {
     if (vals[i][0] === name) {
       s.deleteRow(i + 1);
       SpreadsheetApp.flush();
-      return { success: true, message: `已成功刪除會議類別【${name}】！` };
+      return { success: true, message: \`已成功刪除會議類別【\${name}】！\` };
     }
   }
-  throw new Error(`找不到欲刪除的會議類別「${name}」。`);
+  throw new Error(\`找不到欲刪除的會議類別「\${name}」。\`);
 }
 
 function saveMeetingRecord(d, p) {
+  verifyAdmin(p);
+  const ss = getSpreadsheet();
+  checkAndUpgradeMeetingSchema(ss);
+  const s = getOrCreateSheetFast(ss, '會議記錄');
+  
   const id = d.id || String(Date.now().toString().slice(-6));
   const isPublicStr = (d.isPublic === true || d.isPublic === '是' || d.isPublic === 'true') ? '是' : '否';
-  const rowData = [
-    id,
-    d.dateTime || '',
-    d.category || '晨會',
-    d.location || '',
-    d.chairperson || '',
-    d.recorder || '',
-    d.attendees || '',
-    d.content || '',
-    isPublicStr,
-    d.other || '',
-    getNowTimestamp()
-  ];
-  return saveRowGeneral('會議記錄', d.id, rowData, p);
+  const now = getNowTimestamp();
+  
+  const recordMap = {
+    'ID': id,
+    '會議標題': d.title || d.meetingTitle || '',
+    '日期時間': d.dateTime || '',
+    '會議類別': d.category || '晨會',
+    '地點': d.location || '',
+    '主席': d.chairperson || '',
+    '紀錄者': d.recorder || '',
+    '出席人員': d.attendees || '',
+    '會議內容': d.content || '',
+    '公開': isPublicStr,
+    '其他': d.other || '',
+    '登錄時間': now
+  };
+
+  const vals = s.getDataRange().getDisplayValues();
+  const headers = vals[0].map(h => String(h).trim());
+  const newRow = headers.map(h => (recordMap[h] !== undefined ? recordMap[h] : ''));
+
+  let foundIdx = -1;
+  if (d.id) {
+    for (let i = 1; i < vals.length; i++) {
+      if (String(vals[i][0]) === String(d.id)) {
+        foundIdx = i + 1;
+        break;
+      }
+    }
+  }
+
+  if (foundIdx > 0) {
+    s.getRange(foundIdx, 1, 1, newRow.length).setValues([newRow]);
+  } else {
+    s.appendRow(newRow);
+  }
+  SpreadsheetApp.flush();
+  return { success: true, message: '會議記錄已順利儲存！' };
 }
 
 function deleteMeetingRecord(id, p) {
@@ -968,7 +1154,7 @@ function createCustomSheet(d, p) {
 
   const ss = getSpreadsheet();
   if (ss.getSheetByName(sheetName)) {
-    throw new Error(`名為「${sheetName}」的工作表已經存在，請更換名稱！`);
+    throw new Error(\`名為「\${sheetName}」的工作表已經存在，請更換名稱！\`);
   }
 
   const newSheet = ss.insertSheet(sheetName);
@@ -981,7 +1167,7 @@ function createCustomSheet(d, p) {
   metaSheet.appendRow([sheetName, displayTitle, cols.slice(1, -1).join(','), d.note || '', getNowTimestamp()]);
   SpreadsheetApp.flush();
 
-  return { success: true, message: `已成功建立自訂模組【${displayTitle}】！` };
+  return { success: true, message: \`已成功建立自訂模組【\${displayTitle}】！\` };
 }
 
 function deleteCustomSheet(sheetName, p) {
@@ -1009,14 +1195,14 @@ function deleteCustomSheet(sheetName, p) {
   }
 
   SpreadsheetApp.flush();
-  return { success: true, message: `已成功刪除工作表【${name}】及其所有資料！` };
+  return { success: true, message: \`已成功刪除工作表【\${name}】及其所有資料！\` };
 }
 
 function saveCustomSheetRow(sheetName, rowObj, p) {
   verifyAdmin(p);
   const ss = getSpreadsheet();
   const s = ss.getSheetByName(sheetName);
-  if (!s) throw new Error(`找不到自訂工作表「${sheetName}」！`);
+  if (!s) throw new Error(\`找不到自訂工作表「\${sheetName}」！\`);
 
   const vals = s.getDataRange().getDisplayValues();
   const headers = vals[0].map(h => h.trim());
@@ -1050,7 +1236,7 @@ function deleteCustomSheetRow(sheetName, id, p) {
 }
 
 // -------------------------------------------------------------
-// 10. 系統設定儲存 (含會議記錄前台開關)
+// 10. 系統設定儲存
 // -------------------------------------------------------------
 function saveSystemSettings(sObj, p) {
   verifyAdmin(p);
@@ -1080,119 +1266,23 @@ function saveSystemSettings(sObj, p) {
   s.setFrozenRows(1);
   SpreadsheetApp.flush();
   return { success: true, message: '校務系統設定與模組可見度已成功儲存！' };
-}</textarea>
-
-  <!-- 2. 前端 Index.html 完整原始碼 (內部 script 標籤已隔離) -->
-  <script type="text/plain" id="tpl-index-html"><!DOCTYPE html>
-<html lang="zh-TW">
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>校務行政整合系統</title>
-  <!-- 載入 Tailwind CSS 最新瀏覽器引擎 -->
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"><\/script>
-  <style>
-    :root {
-      --primary: #1d4ed8;
-      --primary-hover: #1e40af;
-      --primary-soft: #eff6ff;
-      --primary-border: #bfdbfe;
-      --primary-text: #1e3a8a;
+}`;
     }
 
-    [data-theme="forest"] {
-      --primary: #047857;
-      --primary-hover: #065f46;
-      --primary-soft: #ecfdf5;
-      --primary-border: #a7f3d0;
-      --primary-text: #064e3b;
-    }
+    // 核心 Index.html 樣板生成器 (使用安全標籤隔離，保證完全不影響本頁面解析)
+    function getCustomizedIndexHtml() {
+      // 構建純淨完整的 Index.html 代碼
+      const parts = [
+        '<!DOCTYPE html>\n<html lang="zh-TW">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>校務行政整合系統</title>\n  <!-- 載入 Tailwind CSS 最新瀏覽器引擎 -->\n  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></',
+        'script>\n  <style>\n    :root {\n      --primary: #1d4ed8;\n      --primary-hover: #1e40af;\n      --primary-soft: #eff6ff;\n      --primary-border: #bfdbfe;\n      --primary-text: #1e3a8a;\n    }\n    [data-theme="forest"] {\n      --primary: #047857;\n      --primary-hover: #065f46;\n      --primary-soft: #ecfdf5;\n      --primary-border: #a7f3d0;\n      --primary-text: #064e3b;\n    }\n    [data-theme="sunset"] {\n      --primary: #c2410c;\n      --primary-hover: #9a3412;\n      --primary-soft: #fff7ed;\n      --primary-border: #fed7aa;\n      --primary-text: #7c2d12;\n    }\n    [data-theme="lavender"] {\n      --primary: #6d28d9;\n      --primary-hover: #5b21b6;\n      --primary-soft: #f5f3ff;\n      --primary-border: #ddd6fe;\n      --primary-text: #4c1d95;\n    }\n    [data-theme="rose"] {\n      --primary: #be123c;\n      --primary-hover: #9f1239;\n      --primary-soft: #fff1f2;\n      --primary-border: #fecdd3;\n      --primary-text: #881337;\n    }\n    [data-theme="slate"] {\n      --primary: #334155;\n      --primary-hover: #1e293b;\n      --primary-soft: #f8fafc;\n      --primary-border: #cbd5e1;\n      --primary-text: #0f172a;\n    }\n    .theme-bg { background-color: var(--primary); }\n    .theme-bg:hover { background-color: var(--primary-hover); }\n    .theme-text { color: var(--primary); }\n    .theme-border { border-color: var(--primary-border); }\n    .theme-soft-bg { background-color: var(--primary-soft); }\n    .tab-active { border-bottom: 3px solid var(--primary); color: var(--primary); font-weight: 700; }\n    .loading-pulse { animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite; }\n    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }\n  </style>\n</head>\n<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans" data-theme="ocean">\n'
+      ];
 
-    [data-theme="sunset"] {
-      --primary: #c2410c;
-      --primary-hover: #9a3412;
-      --primary-soft: #fff7ed;
-      --primary-border: #fed7aa;
-      --primary-text: #7c2d12;
-    }
-
-    [data-theme="lavender"] {
-      --primary: #6d28d9;
-      --primary-hover: #5b21b6;
-      --primary-soft: #f5f3ff;
-      --primary-border: #ddd6fe;
-      --primary-text: #4c1d95;
-    }
-
-    [data-theme="rose"] {
-      --primary: #be123c;
-      --primary-hover: #9f1239;
-      --primary-soft: #fff1f2;
-      --primary-border: #fecdd3;
-      --primary-text: #881337;
-    }
-
-    [data-theme="slate"] {
-      --primary: #334155;
-      --primary-hover: #1e293b;
-      --primary-soft: #f8fafc;
-      --primary-border: #cbd5e1;
-      --primary-text: #0f172a;
-    }
-
-    .theme-bg {
-      background-color: var(--primary);
-    }
-
-    .theme-bg:hover {
-      background-color: var(--primary-hover);
-    }
-
-    .theme-text {
-      color: var(--primary);
-    }
-
-    .theme-border {
-      border-color: var(--primary-border);
-    }
-
-    .theme-soft-bg {
-      background-color: var(--primary-soft);
-    }
-
-    .tab-active {
-      border-bottom: 3px solid var(--primary);
-      color: var(--primary);
-      font-weight: 700;
-    }
-
-    .loading-pulse {
-      animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-
-    @keyframes pulse {
-
-      0%,
-      100% {
-        opacity: 1;
-      }
-
-      50% {
-        opacity: .5;
-      }
-    }
-  </style>
-</head>
-
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans" data-theme="ocean">
-
-  <!-- 頂部主導覽列 -->
+      // 提取 Index.html 完整架構字串
+      const htmlBody = `  <!-- 頂部主導覽列 -->
   <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap justify-between items-center gap-3">
       <div class="flex items-center gap-3">
-        <div
-          class="w-11 h-11 rounded-2xl theme-bg text-white flex items-center justify-center font-bold text-2xl shadow-sm">
+        <div class="w-11 h-11 rounded-2xl theme-bg text-white flex items-center justify-center font-bold text-2xl shadow-sm">
           🏛️
         </div>
         <div>
@@ -1205,7 +1295,6 @@ function saveSystemSettings(sObj, p) {
         </div>
       </div>
 
-      <!-- 右側工具區：搜尋、身分驗證、全域設定 -->
       <div class="flex items-center gap-2 sm:gap-3 flex-1 sm:flex-initial justify-end">
         <div class="relative w-40 sm:w-60">
           <input type="text" id="globalSearchInput" oninput="onGlobalSearch(this.value)" placeholder="🔍 全域校務搜尋..."
@@ -1232,63 +1321,51 @@ function saveSystemSettings(sObj, p) {
     </div>
 
     <!-- 模組功能分頁選單 -->
-    <nav
-      class="max-w-7xl mx-auto px-4 sm:px-6 flex gap-1 sm:gap-6 overflow-x-auto text-sm border-t border-slate-100 scrollbar-none">
+    <nav class="max-w-7xl mx-auto px-4 sm:px-6 flex gap-1 sm:gap-6 overflow-x-auto text-sm border-t border-slate-100 scrollbar-none">
       <button onclick="switchTab('announcements')" id="tab-announcements"
         class="py-3 px-2.5 whitespace-nowrap tab-active transition-colors flex items-center gap-1.5 cursor-pointer">
         <span>📢 行政公告</span>
-        <span id="badge-announcements-hidden"
-          class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
+        <span id="badge-announcements-hidden" class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
       </button>
       <button onclick="switchTab('meetings')" id="tab-meetings"
         class="py-3 px-2.5 whitespace-nowrap text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer">
         <span>📋 會議記錄</span>
-        <span id="badge-meetings-hidden"
-          class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
+        <span id="badge-meetings-hidden" class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
       </button>
       <button onclick="switchTab('training')" id="tab-training"
         class="py-3 px-2.5 whitespace-nowrap text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer">
         <span>📝 研習派代系統</span>
-        <span id="badge-training-hidden"
-          class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
+        <span id="badge-training-hidden" class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
       </button>
       <button onclick="switchTab('chronicle')" id="tab-chronicle"
         class="py-3 px-2.5 whitespace-nowrap text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer">
         <span>📜 校園大事紀</span>
-        <span id="badge-chronicle-hidden"
-          class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
+        <span id="badge-chronicle-hidden" class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
       </button>
       <button onclick="switchTab('honors')" id="tab-honors"
         class="py-3 px-2.5 whitespace-nowrap text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer">
         <span>🏆 師生榮譽榜</span>
-        <span id="badge-honors-hidden"
-          class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
+        <span id="badge-honors-hidden" class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
       </button>
       <button onclick="switchTab('links')" id="tab-links"
         class="py-3 px-2.5 whitespace-nowrap text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer">
         <span>🌐 處室常用網 (業務交接)</span>
-        <span id="badge-links-hidden"
-          class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
+        <span id="badge-links-hidden" class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
       </button>
       <button onclick="switchTab('custom')" id="tab-custom"
         class="py-3 px-2.5 whitespace-nowrap text-slate-500 hover:text-slate-800 transition-colors flex items-center gap-1.5 cursor-pointer">
         <span>📁 自訂擴充項目</span>
-        <span id="badge-custom-hidden"
-          class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
+        <span id="badge-custom-hidden" class="hidden text-[10px] bg-red-100 text-red-700 px-1.5 py-0.5 rounded font-bold">🔒訪客隱藏中</span>
       </button>
     </nav>
   </header>
 
-  <!-- 主內容視圖區 -->
   <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full relative">
-
-    <!-- 全局讀取動畫 -->
     <div id="mainLoader" class="text-center py-20">
       <div class="inline-block p-4 rounded-full theme-soft-bg theme-text mb-3 text-3xl loading-pulse">⏳</div>
       <p class="text-sm font-semibold text-slate-600">正在同步校務雲端行政資料庫...</p>
     </div>
 
-    <!-- 全域搜尋結果即時展示卡片 -->
     <div id="searchResultView" class="hidden space-y-4 mb-6">
       <div class="flex justify-between items-center bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
         <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
@@ -1300,27 +1377,21 @@ function saveSystemSettings(sObj, p) {
       <div id="searchResultList" class="space-y-3"></div>
     </div>
 
-    <!-- ==================== 1. 行政公告模組 ==================== -->
+    <!-- 1. 行政公告 -->
     <section id="view-announcements" class="hidden space-y-5">
-      <div id="banner-announcements-hidden"
-        class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
+      <div id="banner-announcements-hidden" class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
         ⚠️ 本模組目前設定為「對訪客隱藏」。訪客無法在主選單看見此分頁，僅校務管理人員可見與維護。
       </div>
-      <div
-        class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <!-- 處室動態篩選晶片 -->
+      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div class="flex items-center gap-2 flex-wrap">
           <span class="text-xs font-bold text-slate-500 mr-1">發布處室：</span>
           <div id="officeFilterChips" class="flex gap-1.5 flex-wrap"></div>
         </div>
-        <!-- 管理按鈕 -->
         <div class="flex items-center gap-2">
-          <button id="adminManageOfficeBtn" onclick="openOfficeManageModal()"
-            class="hidden text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2 rounded-xl border border-slate-300 cursor-pointer">
+          <button id="adminManageOfficeBtn" onclick="openOfficeManageModal()" class="hidden text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2 rounded-xl border border-slate-300 cursor-pointer">
             🏢 處室清單管理 (新增/刪除)
           </button>
-          <button id="adminAddAnnounceBtn" onclick="openAnnounceModal()"
-            class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
+          <button id="adminAddAnnounceBtn" onclick="openAnnounceModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
             📢 發布行政公告
           </button>
         </div>
@@ -1328,27 +1399,21 @@ function saveSystemSettings(sObj, p) {
       <div id="announcementsList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </section>
 
-    <!-- ==================== 2. 會議記錄模組 ==================== -->
+    <!-- 2. 會議記錄 (含會議標題) -->
     <section id="view-meetings" class="hidden space-y-5">
-      <div id="banner-meetings-hidden"
-        class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
+      <div id="banner-meetings-hidden" class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
         ⚠️ 本模組目前設定為「對訪客隱藏」。訪客無法在主選單看見此分頁，僅校務管理人員可見。
       </div>
-      <div
-        class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <!-- 會議類別快速切換標籤 (Chips) -->
+      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div class="flex items-center gap-2 flex-wrap">
           <span class="text-xs font-bold text-slate-500 mr-1">會議類別：</span>
           <div id="meetingCategoryFilterChips" class="flex gap-1.5 flex-wrap"></div>
         </div>
-        <!-- 管理按鈕 -->
         <div class="flex items-center gap-2">
-          <button id="adminManageMeetingCatBtn" onclick="openMeetingCatManageModal()"
-            class="hidden text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2 rounded-xl border border-slate-300 cursor-pointer">
+          <button id="adminManageMeetingCatBtn" onclick="openMeetingCatManageModal()" class="hidden text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2 rounded-xl border border-slate-300 cursor-pointer">
             🏷️ 會議類別管理 (新增/刪除)
           </button>
-          <button id="adminAddMeetingBtn" onclick="openMeetingModal()"
-            class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
+          <button id="adminAddMeetingBtn" onclick="openMeetingModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
             📋 登錄會議記錄
           </button>
         </div>
@@ -1356,10 +1421,9 @@ function saveSystemSettings(sObj, p) {
       <div id="meetingsList" class="space-y-4"></div>
     </section>
 
-    <!-- ==================== 3. 研習派代系統 ==================== -->
+    <!-- 3. 研習派代 -->
     <section id="view-training" class="hidden space-y-4">
-      <div id="banner-training-hidden"
-        class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
+      <div id="banner-training-hidden" class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
         ⚠️ 本模組目前設定為「對訪客隱藏」。僅校務管理人員可見。
       </div>
       <div class="flex justify-between items-center flex-wrap gap-2">
@@ -1368,12 +1432,10 @@ function saveSystemSettings(sObj, p) {
           <p class="text-xs text-slate-500">透明掌握校內公假排代現況，維護課務正常運作</p>
         </div>
         <div class="flex items-center gap-2">
-          <button id="adminAddTeacherBtn" onclick="openAddTeacherModal()"
-            class="hidden text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2 rounded-xl border border-slate-300 cursor-pointer">
+          <button id="adminAddTeacherBtn" onclick="openAddTeacherModal()" class="hidden text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-2 rounded-xl border border-slate-300 cursor-pointer">
             👥 新增教師名冊
           </button>
-          <button id="adminAddTrainingBtn" onclick="openTrainingModal()"
-            class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
+          <button id="adminAddTrainingBtn" onclick="openTrainingModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
             ➕ 登記研習派代
           </button>
         </div>
@@ -1400,10 +1462,9 @@ function saveSystemSettings(sObj, p) {
       </div>
     </section>
 
-    <!-- ==================== 4. 校園大事紀 ==================== -->
+    <!-- 4. 校園大事紀 -->
     <section id="view-chronicle" class="hidden space-y-4">
-      <div id="banner-chronicle-hidden"
-        class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
+      <div id="banner-chronicle-hidden" class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
         ⚠️ 本模組目前設定為「對訪客隱藏」。僅校務管理人員可見。
       </div>
       <div class="flex justify-between items-center flex-wrap gap-2">
@@ -1411,19 +1472,16 @@ function saveSystemSettings(sObj, p) {
           <h2 class="text-sm sm:text-base font-bold text-slate-800">校園校史與重要大事紀</h2>
           <p class="text-xs text-slate-500">詳實記錄本校人、事、時、地、物等重大發展歷程</p>
         </div>
-        <button id="adminAddChronicleBtn" onclick="openChronicleModal()"
-          class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
+        <button id="adminAddChronicleBtn" onclick="openChronicleModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
           ➕ 登錄校園大事紀
         </button>
       </div>
-
       <div id="chronicleTimeline" class="space-y-4"></div>
     </section>
 
-    <!-- ==================== 5. 師生榮譽榜 ==================== -->
+    <!-- 5. 師生榮譽榜 -->
     <section id="view-honors" class="hidden space-y-4">
-      <div id="banner-honors-hidden"
-        class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
+      <div id="banner-honors-hidden" class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
         ⚠️ 本模組目前設定為「對訪客隱藏」。僅校務管理人員可見。
       </div>
       <div class="flex justify-between items-center flex-wrap gap-2">
@@ -1433,20 +1491,17 @@ function saveSystemSettings(sObj, p) {
         </div>
         <div class="flex items-center gap-2">
           <div id="honorFilterChips" class="flex gap-1 text-xs"></div>
-          <button id="adminAddHonorBtn" onclick="openHonorModal()"
-            class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
+          <button id="adminAddHonorBtn" onclick="openHonorModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
             🏆 登錄獲獎事蹟
           </button>
         </div>
       </div>
-
       <div id="honorsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </section>
 
-    <!-- ==================== 6. 各處室常用網 ==================== -->
+    <!-- 6. 各處室常用網 -->
     <section id="view-links" class="hidden space-y-4">
-      <div id="banner-links-hidden"
-        class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
+      <div id="banner-links-hidden" class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
         ⚠️ 本模組目前設定為「對訪客隱藏」。僅校務管理人員可見。
       </div>
       <div class="flex justify-between items-center flex-wrap gap-2">
@@ -1454,19 +1509,16 @@ function saveSystemSettings(sObj, p) {
           <h2 class="text-sm sm:text-base font-bold text-slate-800">各處室常用業務系統與雲端資源</h2>
           <p class="text-xs text-slate-500">彙整公務網站、差勤填報系統與操作手冊，傳承校務智慧與便利交接</p>
         </div>
-        <button id="adminAddLinkBtn" onclick="openLinkModal()"
-          class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
+        <button id="adminAddLinkBtn" onclick="openLinkModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
           🔗 登錄常用網站
         </button>
       </div>
-
       <div id="linksContainer" class="space-y-6"></div>
     </section>
 
-    <!-- ==================== 7. 自訂工作表擴充專區 ==================== -->
+    <!-- 7. 自訂工作表擴充專區 -->
     <section id="view-custom" class="hidden space-y-4">
-      <div id="banner-custom-hidden"
-        class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
+      <div id="banner-custom-hidden" class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
         ⚠️ 本模組目前設定為「對訪客隱藏」。僅校務管理人員可見。
       </div>
       <div class="flex justify-between items-center flex-wrap gap-2">
@@ -1475,51 +1527,38 @@ function saveSystemSettings(sObj, p) {
           <p class="text-xs text-slate-500">管理者可線上動態建立全新工作表，亦可刪除不再使用的表單</p>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
-          <button id="adminDeleteSheetBtn" onclick="deleteCurrentCustomSheet()"
-            class="hidden text-xs sm:text-sm bg-red-50 hover:bg-red-100 text-red-600 font-semibold px-3 py-2 rounded-xl border border-red-200 shadow-xs cursor-pointer">
+          <button id="adminDeleteSheetBtn" onclick="deleteCurrentCustomSheet()" class="hidden text-xs sm:text-sm bg-red-50 hover:bg-red-100 text-red-600 font-semibold px-3 py-2 rounded-xl border border-red-200 shadow-xs cursor-pointer">
             🗑️ 刪除此工作表
           </button>
-          <button id="adminCreateSheetBtn" onclick="openCreateSheetModal()"
-            class="hidden text-xs sm:text-sm bg-slate-800 hover:bg-slate-900 text-white font-semibold px-3 py-2 rounded-xl shadow-xs cursor-pointer">
+          <button id="adminCreateSheetBtn" onclick="openCreateSheetModal()" class="hidden text-xs sm:text-sm bg-slate-800 hover:bg-slate-900 text-white font-semibold px-3 py-2 rounded-xl shadow-xs cursor-pointer">
             📄 建立全新工作表
           </button>
-          <button id="adminAddCustomRowBtn" onclick="openCustomRowModal()"
-            class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
+          <button id="adminAddCustomRowBtn" onclick="openCustomRowModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl shadow-xs cursor-pointer">
             ➕ 新增該表資料
           </button>
         </div>
       </div>
-
-      <!-- 自訂工作表選擇分頁標籤 -->
       <div id="customSheetTabs" class="flex gap-2 border-b border-slate-200 pb-2 overflow-x-auto text-xs"></div>
       <div id="customSheetContent" class="space-y-4"></div>
     </section>
   </main>
 
-  <!-- ==================== 模態對話盒 (Modals) ==================== -->
-
-  <!-- 1. 管理員登入 Modal -->
-  <div id="loginModal"
-    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+  <!-- Modals -->
+  <div id="loginModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-200">
       <h3 class="text-base font-bold text-slate-900 mb-1">校務管理身分驗證</h3>
       <p class="text-xs text-slate-500 mb-4">請輸入管理密鑰以啟用維護管理權限。</p>
-      <input type="password" id="passwordInput" placeholder="請輸入管理密鑰"
+      <input type="password" id="passwordInput" onkeydown="if(event.key==='Enter')loginAsAdmin()" placeholder="請輸入管理密鑰"
         class="w-full px-3 py-2 text-sm border rounded-xl mb-4 focus:ring-2 focus:ring-blue-500 outline-none">
       <div class="flex justify-end gap-2">
-        <button onclick="closeModal('loginModal')"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer">取消</button>
-        <button onclick="loginAsAdmin()"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">驗證登入</button>
+        <button onclick="closeModal('loginModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer">取消</button>
+        <button id="loginSubmitBtn" onclick="loginAsAdmin()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">驗證登入</button>
       </div>
     </div>
   </div>
 
-  <!-- 2. 全域設定 Modal -->
-  <div id="settingsModal"
-    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-    <div
-      class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+  <div id="settingsModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
       <h3 class="text-base font-bold text-slate-900 mb-4 flex items-center gap-2">⚙️ 校務系統與布景設定</h3>
       <div class="space-y-4 text-sm">
         <div>
@@ -1533,60 +1572,36 @@ function saveSystemSettings(sObj, p) {
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-2">色系主題挑選</label>
           <div class="grid grid-cols-3 gap-2 text-xs">
-            <button onclick="selectTheme('ocean')" id="theme-btn-ocean"
-              class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span
-                class="w-5 h-5 rounded-full bg-blue-600"></span><span class="font-bold">公務湛藍</span></button>
-            <button onclick="selectTheme('forest')" id="theme-btn-forest"
-              class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span
-                class="w-5 h-5 rounded-full bg-emerald-600"></span><span class="font-bold">校園翡翠</span></button>
-            <button onclick="selectTheme('sunset')" id="theme-btn-sunset"
-              class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span
-                class="w-5 h-5 rounded-full bg-orange-600"></span><span class="font-bold">暖日晨曦</span></button>
-            <button onclick="selectTheme('lavender')" id="theme-btn-lavender"
-              class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span
-                class="w-5 h-5 rounded-full bg-violet-600"></span><span class="font-bold">人文典雅</span></button>
-            <button onclick="selectTheme('rose')" id="theme-btn-rose"
-              class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span
-                class="w-5 h-5 rounded-full bg-rose-600"></span><span class="font-bold">活力朱紅</span></button>
-            <button onclick="selectTheme('slate')" id="theme-btn-slate"
-              class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span
-                class="w-5 h-5 rounded-full bg-slate-700"></span><span class="font-bold">極簡石墨</span></button>
+            <button onclick="selectTheme('ocean')" id="theme-btn-ocean" class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span class="w-5 h-5 rounded-full bg-blue-600"></span><span class="font-bold">公務湛藍</span></button>
+            <button onclick="selectTheme('forest')" id="theme-btn-forest" class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span class="w-5 h-5 rounded-full bg-emerald-600"></span><span class="font-bold">校園翡翠</span></button>
+            <button onclick="selectTheme('sunset')" id="theme-btn-sunset" class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span class="w-5 h-5 rounded-full bg-orange-600"></span><span class="font-bold">暖日晨曦</span></button>
+            <button onclick="selectTheme('lavender')" id="theme-btn-lavender" class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span class="w-5 h-5 rounded-full bg-violet-600"></span><span class="font-bold">人文典雅</span></button>
+            <button onclick="selectTheme('rose')" id="theme-btn-rose" class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span class="w-5 h-5 rounded-full bg-rose-600"></span><span class="font-bold">活力朱紅</span></button>
+            <button onclick="selectTheme('slate')" id="theme-btn-slate" class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span class="w-5 h-5 rounded-full bg-slate-700"></span><span class="font-bold">極簡石墨</span></button>
           </div>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-2">前台功能模組顯示/隱藏設定 (取消勾選即對訪客隱藏)</label>
           <div class="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs">
-            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📢 行政公告</span><input
-                type="checkbox" id="set_show_announcements" class="w-4 h-4"></label>
-            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📋 會議記錄</span><input
-                type="checkbox" id="set_show_meetings" class="w-4 h-4"></label>
-            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📝
-                研習派代系統</span><input type="checkbox" id="set_show_training" class="w-4 h-4"></label>
-            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📜
-                校園大事紀</span><input type="checkbox" id="set_show_chronicle" class="w-4 h-4"></label>
-            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">🏆
-                師生榮譽榜</span><input type="checkbox" id="set_show_honors" class="w-4 h-4"></label>
-            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">🌐 處室常用網
-                (業務交接)</span><input type="checkbox" id="set_show_links" class="w-4 h-4"></label>
-            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📁
-                自訂擴充項目</span><input type="checkbox" id="set_show_custom" class="w-4 h-4"></label>
+            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📢 行政公告</span><input type="checkbox" id="set_show_announcements" class="w-4 h-4"></label>
+            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📋 會議記錄</span><input type="checkbox" id="set_show_meetings" class="w-4 h-4"></label>
+            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📝 研習派代系統</span><input type="checkbox" id="set_show_training" class="w-4 h-4"></label>
+            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📜 校園大事紀</span><input type="checkbox" id="set_show_chronicle" class="w-4 h-4"></label>
+            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">🏆 師生榮譽榜</span><input type="checkbox" id="set_show_honors" class="w-4 h-4"></label>
+            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">🌐 處室常用網 (業務交接)</span><input type="checkbox" id="set_show_links" class="w-4 h-4"></label>
+            <label class="flex items-center justify-between cursor-pointer"><span class="font-bold">📁 自訂擴充項目</span><input type="checkbox" id="set_show_custom" class="w-4 h-4"></label>
           </div>
         </div>
       </div>
       <div class="flex justify-end gap-2 mt-6">
-        <button onclick="closeModal('settingsModal')"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
-        <button onclick="submitSystemSettings()" id="saveSettingsBtn"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">儲存全域設定</button>
+        <button onclick="closeModal('settingsModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitSystemSettings()" id="saveSettingsBtn" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">儲存全域設定</button>
       </div>
     </div>
   </div>
 
-  <!-- 3. 處室清單管理 Modal -->
-  <div id="officeManageModal"
-    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-    <div
-      class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+  <div id="officeManageModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
       <h3 class="text-base font-bold text-slate-900 mb-1">🏢 行政處室與組別管理</h3>
       <p class="text-xs text-slate-500 mb-4">管理公告發布及常用網站所使用的處室清單。</p>
       <div class="mb-4">
@@ -1596,24 +1611,18 @@ function saveSystemSettings(sObj, p) {
       <div class="border-t border-slate-200 pt-4 space-y-3">
         <label class="block text-xs font-bold text-slate-700">➕ 新增行政處室或組別</label>
         <div class="flex gap-2">
-          <input type="text" id="newOfficeInput" placeholder="例如：圖書館、實習處"
-            class="flex-1 px-3 py-2 text-sm border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-          <button onclick="submitNewOffice()"
-            class="text-xs font-semibold px-4 py-2 rounded-xl text-white theme-bg whitespace-nowrap cursor-pointer">確定新增</button>
+          <input type="text" id="newOfficeInput" placeholder="例如：圖書館、實習處" class="flex-1 px-3 py-2 text-sm border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+          <button onclick="submitNewOffice()" class="text-xs font-semibold px-4 py-2 rounded-xl text-white theme-bg whitespace-nowrap cursor-pointer">確定新增</button>
         </div>
       </div>
       <div class="flex justify-end gap-2 mt-6">
-        <button onclick="closeModal('officeManageModal')"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">關閉</button>
+        <button onclick="closeModal('officeManageModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">關閉</button>
       </div>
     </div>
   </div>
 
-  <!-- 4. 會議類別自訂管理 Modal -->
-  <div id="meetingCatManageModal"
-    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-    <div
-      class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+  <div id="meetingCatManageModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
       <h3 class="text-base font-bold text-slate-900 mb-1">🏷️ 會議類別清單自訂管理</h3>
       <p class="text-xs text-slate-500 mb-4">管理會議記錄的分類標籤，支援線上新增自訂類別與刪除。</p>
       <div class="mb-4">
@@ -1623,75 +1632,62 @@ function saveSystemSettings(sObj, p) {
       <div class="border-t border-slate-200 pt-4 space-y-3">
         <label class="block text-xs font-bold text-slate-700">➕ 新增會議類別</label>
         <div class="flex gap-2">
-          <input type="text" id="newMeetingCatInput" placeholder="例如：領域教學研究會、校務會議、導師會報"
-            class="flex-1 px-3 py-2 text-sm border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
-          <button onclick="submitNewMeetingCategory()"
-            class="text-xs font-semibold px-4 py-2 rounded-xl text-white theme-bg whitespace-nowrap cursor-pointer">新增類別</button>
+          <input type="text" id="newMeetingCatInput" placeholder="例如：領域教學研究會、校務會議、導師會報" class="flex-1 px-3 py-2 text-sm border rounded-xl focus:ring-2 focus:ring-blue-500 outline-none">
+          <button onclick="submitNewMeetingCategory()" class="text-xs font-semibold px-4 py-2 rounded-xl text-white theme-bg whitespace-nowrap cursor-pointer">新增類別</button>
         </div>
       </div>
       <div class="flex justify-end gap-2 mt-6">
-        <button onclick="closeModal('meetingCatManageModal')"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">關閉</button>
+        <button onclick="closeModal('meetingCatManageModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">關閉</button>
       </div>
     </div>
   </div>
 
-  <!-- 5. 會議記錄編輯 Modal -->
-  <div id="meetingModal"
-    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-    <div
-      class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+  <!-- 會議記錄編輯 Modal (含會議標題) -->
+  <div id="meetingModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
       <h3 class="text-base font-bold text-slate-900 mb-3" id="meetingModalTitle">登錄會議記錄</h3>
       <input type="hidden" id="meetingId">
       <div class="space-y-3 text-sm">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">會議標題 <span class="text-red-500">*</span></label>
+          <input type="text" id="meetingTitle" placeholder="例如：115學年度第1學期初全校校務會議" class="w-full px-3 py-2 border rounded-xl font-medium focus:ring-2 focus:ring-blue-500 outline-none">
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">日期時間</label>
-            <input type="text" id="meetingDateTime" placeholder="例如：2026-09-04 08:30"
-              class="w-full px-3 py-2 border rounded-xl">
+            <label class="block text-xs font-bold text-slate-700 mb-1">日期時間 <span class="text-red-500">*</span></label>
+            <input type="text" id="meetingDateTime" placeholder="例如：2026-09-04 08:30" class="w-full px-3 py-2 border rounded-xl">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">會議類別</label>
             <select id="meetingCategorySelect" class="w-full px-3 py-2 border rounded-xl"></select>
           </div>
         </div>
-
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">會議地點</label>
-            <input type="text" id="meetingLocation" placeholder="例如：二樓會議室、校長室"
-              class="w-full px-3 py-2 border rounded-xl">
+            <input type="text" id="meetingLocation" placeholder="例如：二樓會議室、校長室" class="w-full px-3 py-2 border rounded-xl">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">主席</label>
-            <input type="text" id="meetingChairperson" placeholder="例如：校長、教導主任"
-              class="w-full px-3 py-2 border rounded-xl">
+            <input type="text" id="meetingChairperson" placeholder="例如：校長、教導主任" class="w-full px-3 py-2 border rounded-xl">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">紀錄者</label>
-            <input type="text" id="meetingRecorder" placeholder="例如：教務組長、陳雅婷"
-              class="w-full px-3 py-2 border rounded-xl">
+            <input type="text" id="meetingRecorder" placeholder="例如：教務組長、陳雅婷" class="w-full px-3 py-2 border rounded-xl">
           </div>
         </div>
-
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">出席人員</label>
-          <input type="text" id="meetingAttendees" placeholder="例如：全體教職員工、各處室主任與組長"
-            class="w-full px-3 py-2 border rounded-xl">
+          <input type="text" id="meetingAttendees" placeholder="例如：全體教職員工、各處室主任與組長" class="w-full px-3 py-2 border rounded-xl">
         </div>
-
         <div>
-          <label class="block text-xs font-bold text-slate-700 mb-1">會議內容 (主席報告、處室報告、提案討論、決議)</label>
-          <textarea id="meetingContent" rows="6" placeholder="請詳細填寫會議報告、各處室宣導事項、討論案決議內容..."
-            class="w-full px-3 py-2 border rounded-xl leading-relaxed"></textarea>
+          <label class="block text-xs font-bold text-slate-700 mb-1">會議內容 (主席報告、處室報告、提案討論、決議) <span class="text-red-500">*</span></label>
+          <textarea id="meetingContent" rows="6" placeholder="請詳細填寫會議報告、各處室宣導事項、討論案決議內容..." class="w-full px-3 py-2 border rounded-xl leading-relaxed"></textarea>
         </div>
-
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">其他 (備註、列管追蹤、附件說明等)</label>
-          <input type="text" id="meetingOther" placeholder="例如：各組請於下週前提送相關書面資料備查"
-            class="w-full px-3 py-2 border rounded-xl">
+          <input type="text" id="meetingOther" placeholder="例如：各組請於下週前提送相關書面資料備查" class="w-full px-3 py-2 border rounded-xl">
         </div>
-
         <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
           <label class="flex items-center gap-2 cursor-pointer">
             <input type="checkbox" id="meetingIsPublic" class="w-4 h-4 text-blue-600 rounded">
@@ -1703,17 +1699,13 @@ function saveSystemSettings(sObj, p) {
         </div>
       </div>
       <div class="flex justify-end gap-2 mt-5">
-        <button onclick="closeModal('meetingModal')"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
-        <button onclick="submitMeeting()"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認儲存</button>
+        <button onclick="closeModal('meetingModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitMeeting()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認儲存</button>
       </div>
     </div>
   </div>
 
-  <!-- 6. 新增教師名冊 Modal -->
-  <div id="addTeacherModal"
-    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+  <div id="addTeacherModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl border border-slate-200">
       <h3 class="text-base font-bold text-slate-900 mb-2">👥 新增同仁至教師名冊</h3>
       <div class="space-y-3 text-sm">
@@ -1734,19 +1726,14 @@ function saveSystemSettings(sObj, p) {
         </div>
       </div>
       <div class="flex justify-end gap-2 mt-5">
-        <button onclick="closeModal('addTeacherModal')"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
-        <button onclick="submitNewTeacher()"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">加入名冊</button>
+        <button onclick="closeModal('addTeacherModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitNewTeacher()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">加入名冊</button>
       </div>
     </div>
   </div>
 
-  <!-- 7. 行政公告編輯 Modal -->
-  <div id="announceModal"
-    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-    <div
-      class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+  <div id="announceModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
       <h3 class="text-base font-bold text-slate-900 mb-3" id="annModalTitle">發布行政公告</h3>
       <input type="hidden" id="annId">
       <div class="space-y-3 text-sm">
@@ -1760,8 +1747,7 @@ function saveSystemSettings(sObj, p) {
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">公告內容</label>
-          <textarea id="annContent" rows="4" placeholder="請填寫詳細行政公告事項..."
-            class="w-full px-3 py-2 border rounded-xl"></textarea>
+          <textarea id="annContent" rows="4" placeholder="請填寫詳細行政公告事項..." class="w-full px-3 py-2 border rounded-xl"></textarea>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">附件下載或線上連結 (選填)</label>
@@ -1773,19 +1759,14 @@ function saveSystemSettings(sObj, p) {
         </label>
       </div>
       <div class="flex justify-end gap-2 mt-5">
-        <button onclick="closeModal('announceModal')"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
-        <button onclick="submitAnnouncement()"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認發布</button>
+        <button onclick="closeModal('announceModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitAnnouncement()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認發布</button>
       </div>
     </div>
   </div>
 
-  <!-- 8. 研習派代編輯 Modal -->
-  <div id="trainingModal"
-    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-    <div
-      class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+  <div id="trainingModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
       <h3 class="text-base font-bold text-slate-900 mb-3" id="trainingModalTitle">登記研習派代</h3>
       <input type="hidden" id="trainingId">
       <div class="space-y-3 text-sm">
@@ -1800,8 +1781,7 @@ function saveSystemSettings(sObj, p) {
           <div>
             <div class="flex justify-between items-center mb-1">
               <label class="text-xs font-bold text-slate-700">3. 研習教師</label>
-              <button type="button" onclick="openAddTeacherModal()"
-                class="text-[11px] text-blue-600 hover:underline cursor-pointer">＋新名額</button>
+              <button type="button" onclick="openAddTeacherModal()" class="text-[11px] text-blue-600 hover:underline cursor-pointer">＋新名額</button>
             </div>
             <select id="trainingTeacherSelect" class="w-full px-3 py-2 border rounded-xl"></select>
           </div>
@@ -1813,8 +1793,7 @@ function saveSystemSettings(sObj, p) {
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">4. 研習地點</label>
-            <input type="text" id="trainingLocation" placeholder="例如：國家教育研究院"
-              class="w-full px-3 py-2 border rounded-xl">
+            <input type="text" id="trainingLocation" placeholder="例如：國家教育研究院" class="w-full px-3 py-2 border rounded-xl">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">5. 職務代理人</label>
@@ -1824,8 +1803,7 @@ function saveSystemSettings(sObj, p) {
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">研習日期/時間</label>
-            <input type="text" id="trainingDateTime" placeholder="例如：2026-09-18 全日"
-              class="w-full px-3 py-2 border rounded-xl">
+            <input type="text" id="trainingDateTime" placeholder="例如：2026-09-18 全日" class="w-full px-3 py-2 border rounded-xl">
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">差假及派代說明</label>
@@ -1834,19 +1812,14 @@ function saveSystemSettings(sObj, p) {
         </div>
       </div>
       <div class="flex justify-end gap-2 mt-5">
-        <button onclick="closeModal('trainingModal')"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
-        <button onclick="submitTraining()"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認儲存</button>
+        <button onclick="closeModal('trainingModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitTraining()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認儲存</button>
       </div>
     </div>
   </div>
 
-  <!-- 9. 校園大事紀編輯 Modal -->
-  <div id="chronicleModal"
-    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-    <div
-      class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+  <div id="chronicleModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
       <h3 class="text-base font-bold text-slate-900 mb-3" id="chronicleModalTitle">記錄校園大事紀</h3>
       <input type="hidden" id="chronicleId">
       <div class="space-y-3 text-sm">
@@ -1876,22 +1849,17 @@ function saveSystemSettings(sObj, p) {
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">事 (大事紀內容詳細描述)</label>
-          <textarea id="chrDetail" rows="3" placeholder="例如：本校首任校長小林登八夫婦返校訪問..."
-            class="w-full px-3 py-2 border rounded-xl"></textarea>
+          <textarea id="chrDetail" rows="3" placeholder="例如：本校首任校長小林登八夫婦返校訪問..." class="w-full px-3 py-2 border rounded-xl"></textarea>
         </div>
       </div>
       <div class="flex justify-end gap-2 mt-5">
-        <button onclick="closeModal('chronicleModal')"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
-        <button onclick="submitChronicle()"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">記錄封存</button>
+        <button onclick="closeModal('chronicleModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitChronicle()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">記錄封存</button>
       </div>
     </div>
   </div>
 
-  <!-- 10. 師生榮譽榜 Modal -->
-  <div id="honorModal"
-    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+  <div id="honorModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200">
       <h3 class="text-base font-bold text-slate-900 mb-3" id="honorModalTitle">登錄師生榮譽榜</h3>
       <input type="hidden" id="honorId">
@@ -1921,8 +1889,7 @@ function saveSystemSettings(sObj, p) {
           </div>
           <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">名次或獎項</label>
-            <input type="text" id="honorRank" placeholder="例如：特優第一名"
-              class="w-full px-3 py-2 border rounded-xl font-bold text-amber-600">
+            <input type="text" id="honorRank" placeholder="例如：特優第一名" class="w-full px-3 py-2 border rounded-xl font-bold text-amber-600">
           </div>
         </div>
         <div>
@@ -1931,17 +1898,13 @@ function saveSystemSettings(sObj, p) {
         </div>
       </div>
       <div class="flex justify-end gap-2 mt-5">
-        <button onclick="closeModal('honorModal')"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
-        <button onclick="submitHonor()"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認登錄</button>
+        <button onclick="closeModal('honorModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitHonor()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認登錄</button>
       </div>
     </div>
   </div>
 
-  <!-- 11. 處室常用網 Modal -->
-  <div id="linkModal"
-    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+  <div id="linkModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200">
       <h3 class="text-base font-bold text-slate-900 mb-3" id="linkModalTitle">登錄常用業務網站 (交接備忘)</h3>
       <input type="hidden" id="linkId">
@@ -1960,97 +1923,76 @@ function saveSystemSettings(sObj, p) {
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">功能說明與交接要點</label>
-          <textarea id="linkDesc" rows="2" placeholder="說明本系統用途及日常作業交接注意流程..."
-            class="w-full px-3 py-2 border rounded-xl"></textarea>
+          <textarea id="linkDesc" rows="2" placeholder="說明本系統用途及日常作業交接注意流程..." class="w-full px-3 py-2 border rounded-xl"></textarea>
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">帳號權限或備註提醒</label>
-          <input type="text" id="linkAccountTip" placeholder="例如：新進同仁需向教務組申請自然人憑證權限"
-            class="w-full px-3 py-2 border rounded-xl">
+          <input type="text" id="linkAccountTip" placeholder="例如：新進同仁需向教務組申請自然人憑證權限" class="w-full px-3 py-2 border rounded-xl">
         </div>
       </div>
       <div class="flex justify-end gap-2 mt-5">
-        <button onclick="closeModal('linkModal')"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
-        <button onclick="submitPortalLink()"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">儲存網站</button>
+        <button onclick="closeModal('linkModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitPortalLink()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">儲存網站</button>
       </div>
     </div>
   </div>
 
-  <!-- 12. 建立自訂工作表 Modal -->
-  <div id="createSheetModal"
-    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+  <div id="createSheetModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200">
       <h3 class="text-base font-bold text-slate-900 mb-2">📄 建立全新自訂工作表</h3>
       <p class="text-xs text-slate-500 mb-4">系統將自動於後端試算表建立新分頁，並立即生成管理介面。</p>
       <div class="space-y-3 text-sm">
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">工作表名稱 (分頁名)</label>
-          <input type="text" id="newCustomSheetName" placeholder="例如：設備維修登記表"
-            class="w-full px-3 py-2 border rounded-xl">
+          <input type="text" id="newCustomSheetName" placeholder="例如：設備維修登記表" class="w-full px-3 py-2 border rounded-xl">
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">前台顯示中文標題</label>
-          <input type="text" id="newCustomSheetTitle" placeholder="例如：校園水電與資訊設備維修"
-            class="w-full px-3 py-2 border rounded-xl">
+          <input type="text" id="newCustomSheetTitle" placeholder="例如：校園水電與資訊設備維修" class="w-full px-3 py-2 border rounded-xl">
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">自訂欄位清單 (逗號分隔)</label>
-          <input type="text" id="newCustomSheetCols" placeholder="例如：報修日期, 處室地點, 損壞狀況, 申請人, 處理進度"
-            class="w-full px-3 py-2 border rounded-xl">
+          <input type="text" id="newCustomSheetCols" placeholder="例如：報修日期, 處室地點, 損壞狀況, 申請人, 處理進度" class="w-full px-3 py-2 border rounded-xl">
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1">備註說明</label>
-          <input type="text" id="newCustomSheetNote" placeholder="例如：供各班級與處室即時填報修繕"
-            class="w-full px-3 py-2 border rounded-xl">
+          <input type="text" id="newCustomSheetNote" placeholder="例如：供各班級與處室即時填報修繕" class="w-full px-3 py-2 border rounded-xl">
         </div>
       </div>
       <div class="flex justify-end gap-2 mt-5">
-        <button onclick="closeModal('createSheetModal')"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
-        <button onclick="submitCreateSheet()"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">建立工作表</button>
+        <button onclick="closeModal('createSheetModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitCreateSheet()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">建立工作表</button>
       </div>
     </div>
   </div>
 
-  <!-- 13. 自訂工作表資料列填寫 Modal -->
-  <div id="customRowModal"
-    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
-    <div
-      class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+  <div id="customRowModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-xl border border-slate-200 max-h-[90vh] overflow-y-auto">
       <h3 class="text-base font-bold text-slate-900 mb-1" id="customRowModalTitle">新增資料</h3>
       <p class="text-xs text-slate-500 mb-4" id="customRowModalSub"></p>
       <input type="hidden" id="customRowId">
       <div id="customRowFieldsContainer" class="space-y-3 text-sm"></div>
       <div class="flex justify-end gap-2 mt-5">
-        <button onclick="closeModal('customRowModal')"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
-        <button onclick="submitCustomRow()"
-          class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認存檔</button>
+        <button onclick="closeModal('customRowModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
+        <button onclick="submitCustomRow()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認存檔</button>
       </div>
     </div>
   </div>
 
-  <!-- 14. 系統通知與確認訊息 Modal -->
-  <div id="msgModal"
-    class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+  <div id="msgModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-slate-200 text-center">
       <div id="msgModalIcon" class="text-3xl mb-2">🔔</div>
       <h4 id="msgModalTitle" class="text-sm font-bold text-slate-900 mb-1.5">系統訊息</h4>
       <p id="msgModalContent" class="text-xs text-slate-600 mb-5 whitespace-pre-line leading-relaxed"></p>
       <div id="msgModalActions" class="flex justify-center gap-2">
-        <button id="msgModalCancelBtn"
-          class="hidden text-xs font-semibold px-4 py-2 rounded-xl text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer">取消</button>
+        <button id="msgModalCancelBtn" class="hidden text-xs font-semibold px-4 py-2 rounded-xl text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer">取消</button>
         <button id="msgModalOkBtn" class="text-xs font-semibold px-5 py-2 rounded-xl text-white theme-bg cursor-pointer">確認</button>
       </div>
     </div>
-  </div>
+  </div>`;
 
-  <!-- ==================== 前端應用程式邏輯 ==================== -->
-  <script>
-    let schoolData = null;
+      // 提取 Index.html 完整 JavaScript 代碼 (隔離閉合標籤)
+      const jsContent = `    let schoolData = null;
     let isAdmin = false;
     let adminPassword = '';
     let currentActiveTab = 'announcements';
@@ -2060,7 +2002,6 @@ function saveSystemSettings(sObj, p) {
     let currentHonorFilter = 'all';
     let selectedCustomSheetKey = '';
 
-    /* 自訂通知視窗工具 */
     function showNotice(title, message, icon = 'ℹ️') {
       document.getElementById('msgModalIcon').innerText = icon;
       document.getElementById('msgModalTitle').innerText = title;
@@ -2071,7 +2012,6 @@ function saveSystemSettings(sObj, p) {
       document.getElementById('msgModal').classList.remove('hidden');
     }
 
-    /* 自訂確認視窗工具 */
     function showConfirmDialog(title, message, onConfirm, icon = '❓') {
       document.getElementById('msgModalIcon').innerText = icon;
       document.getElementById('msgModalTitle').innerText = title;
@@ -2107,9 +2047,9 @@ function saveSystemSettings(sObj, p) {
           })
           .withFailureHandler(function (err) {
             loader.classList.add('hidden');
-            showNotice('連線雲端異常', '連線雲端資料庫時發生錯誤：\n' + err.message, '⚠️');
+            showNotice('連線雲端異常', '連線雲端資料庫時發生錯誤：\\n' + err.message, '⚠️');
           })
-          .getAllSchoolData();
+          .getAllSchoolData(isAdmin ? adminPassword : '');
       } else {
         setTimeout(() => {
           loader.classList.add('hidden');
@@ -2135,7 +2075,7 @@ function saveSystemSettings(sObj, p) {
       selectedThemeKey = themeKey;
       document.body.setAttribute('data-theme', themeKey);
       ['ocean', 'forest', 'sunset', 'lavender', 'rose', 'slate'].forEach(k => {
-        const btn = document.getElementById(`theme-btn-${k}`);
+        const btn = document.getElementById(\`theme-btn-\${k}\`);
         if (btn) {
           if (k === themeKey) {
             btn.classList.add('ring-2', 'ring-blue-500', 'border-blue-500', 'bg-slate-100');
@@ -2155,19 +2095,19 @@ function saveSystemSettings(sObj, p) {
       const meetingCats = schoolData.meetingCategories || ['晨會', '行政會議', '其它'];
 
       const annSel = document.getElementById('annOfficeSelect');
-      annSel.innerHTML = offices.map(o => `<option value="${o}">${o}</option>`).join('');
+      annSel.innerHTML = offices.map(o => \`<option value="\${o}">\${o}</option>\`).join('');
 
       const linkSel = document.getElementById('linkOfficeSelect');
-      linkSel.innerHTML = offices.map(o => `<option value="${o}">${o}</option>`).join('');
+      linkSel.innerHTML = offices.map(o => \`<option value="\${o}">\${o}</option>\`).join('');
 
       const tSel = document.getElementById('trainingTeacherSelect');
       const subSel = document.getElementById('trainingSubSelect');
-      const teacherOpts = teachers.map(t => `<option value="${t['教師姓名']}">${t['教師姓名']} (${t['身分職稱'] || '同仁'})</option>`).join('');
+      const teacherOpts = teachers.map(t => \`<option value="\${t['教師姓名']}">\${t['教師姓名']} (\${t['身分職稱'] || '同仁'})</option>\`).join('');
       tSel.innerHTML = teacherOpts;
-      subSel.innerHTML = `<option value="無派代">無派代 (無課務)</option>` + teacherOpts;
+      subSel.innerHTML = \`<option value="無派代">無派代 (無課務)</option>\` + teacherOpts;
 
       const meetCatSel = document.getElementById('meetingCategorySelect');
-      meetCatSel.innerHTML = meetingCats.map(c => `<option value="${c}">${c}</option>`).join('');
+      meetCatSel.innerHTML = meetingCats.map(c => \`<option value="\${c}">\${c}</option>\`).join('');
     }
 
     function updateModuleVisibility() {
@@ -2184,9 +2124,9 @@ function saveSystemSettings(sObj, p) {
 
       let firstVisible = null;
       modules.forEach(m => {
-        const tabBtn = document.getElementById(`tab-${m.key}`);
-        const badge = document.getElementById(`badge-${m.key}-hidden`);
-        const banner = document.getElementById(`banner-${m.key}-hidden`);
+        const tabBtn = document.getElementById(\`tab-\${m.key}\`);
+        const badge = document.getElementById(\`badge-\${m.key}-hidden\`);
+        const banner = document.getElementById(\`banner-\${m.key}-hidden\`);
 
         if (isAdmin) {
           tabBtn.classList.remove('hidden');
@@ -2206,7 +2146,7 @@ function saveSystemSettings(sObj, p) {
             if (!firstVisible) firstVisible = m.key;
           } else {
             tabBtn.classList.add('hidden');
-            document.getElementById(`view-${m.key}`).classList.add('hidden');
+            document.getElementById(\`view-\${m.key}\`).classList.add('hidden');
           }
         }
       });
@@ -2257,6 +2197,7 @@ function saveSystemSettings(sObj, p) {
           isAdmin = false;
           adminPassword = '';
           updateAdminUI();
+          loadAllData();
           showNotice('已登出', '已退出校務管理模式。', '🚪');
         });
       } else {
@@ -2268,28 +2209,53 @@ function saveSystemSettings(sObj, p) {
     function loginAsAdmin() {
       const pwd = document.getElementById('passwordInput').value.trim();
       if (!pwd) return showNotice('請輸入密鑰', '請輸入管理密鑰！', '⚠️');
-      adminPassword = pwd;
-      isAdmin = true;
-      closeModal('loginModal');
-      document.getElementById('passwordInput').value = '';
-      updateAdminUI();
-      showNotice('登入成功', '已啟用行政管理模式，您現在可新增、編輯、刪除各模組項目與會議記錄。', '🎉');
+
+      const loginBtn = document.getElementById('loginSubmitBtn');
+      if (loginBtn) {
+        loginBtn.disabled = true;
+        loginBtn.innerText = '驗證中...';
+      }
+
+      callBackend('verifyAdminAuth', [pwd], function (res) {
+        if (loginBtn) {
+          loginBtn.disabled = false;
+          loginBtn.innerText = '驗證登入';
+        }
+
+        if (res && res.success) {
+          adminPassword = pwd;
+          isAdmin = true;
+          closeModal('loginModal');
+          document.getElementById('passwordInput').value = '';
+          updateAdminUI();
+          showNotice('登入成功', '身分驗證通過，已啟用行政管理模式！', '🎉');
+          loadAllData();
+        } else {
+          showNotice('驗證失敗', (res && res.message) ? res.message : '校務管理密鑰錯誤，請重新輸入！', '❌');
+        }
+      }, function () {
+        if (loginBtn) {
+          loginBtn.disabled = false;
+          loginBtn.innerText = '驗證登入';
+        }
+        showNotice('驗證失敗', '連線伺服器時發生錯誤或密鑰不正確！', '❌');
+      });
     }
 
     function switchTab(tabId) {
       currentActiveTab = tabId;
       ['announcements', 'meetings', 'training', 'chronicle', 'honors', 'links', 'custom'].forEach(t => {
-        const viewEl = document.getElementById(`view-${t}`);
+        const viewEl = document.getElementById(\`view-\${t}\`);
         if (viewEl) viewEl.classList.add('hidden');
-        const tabEl = document.getElementById(`tab-${t}`);
+        const tabEl = document.getElementById(\`tab-\${t}\`);
         if (tabEl) {
           tabEl.classList.remove('tab-active');
           tabEl.classList.add('text-slate-500');
         }
       });
-      const targetView = document.getElementById(`view-${tabId}`);
+      const targetView = document.getElementById(\`view-\${tabId}\`);
       if (targetView) targetView.classList.remove('hidden');
-      const targetTab = document.getElementById(`tab-${tabId}`);
+      const targetTab = document.getElementById(\`tab-\${tabId}\`);
       if (targetTab) {
         targetTab.classList.add('tab-active');
         targetTab.classList.remove('text-slate-500');
@@ -2337,28 +2303,28 @@ function saveSystemSettings(sObj, p) {
       filtered.forEach(a => {
         const isTop = a['是否置頂'] === '是';
         const card = document.createElement('div');
-        card.className = `p-5 rounded-2xl border ${isTop ? 'bg-amber-50/40 border-amber-300 ring-1 ring-amber-300/40' : 'bg-white border-slate-200'} shadow-xs flex flex-col justify-between`;
-        let linkHtml = a['附件或連結'] ? `<a href="${a['附件或連結']}" target="_blank" class="text-xs theme-text hover:underline inline-flex items-center gap-1 mt-3 font-semibold">🔗 檢視公務附件或相關連結</a>` : '';
-        let adminActions = isAdmin ? `
+        card.className = \`p-5 rounded-2xl border \${isTop ? 'bg-amber-50/40 border-amber-300 ring-1 ring-amber-300/40' : 'bg-white border-slate-200'} shadow-xs flex flex-col justify-between\`;
+        let linkHtml = a['附件或連結'] ? \`<a href="\${a['附件或連結']}" target="_blank" class="text-xs theme-text hover:underline inline-flex items-center gap-1 mt-3 font-semibold">🔗 檢視公務附件或相關連結</a>\` : '';
+        let adminActions = isAdmin ? \`
           <div class="flex items-center gap-2">
-            <button onclick="editAnnouncement('${a['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button>
-            <button onclick="deleteAnnouncement('${a['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
-          </div>` : '';
+            <button onclick="editAnnouncement('\${a['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button>
+            <button onclick="deleteAnnouncement('\${a['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
+          </div>\` : '';
 
-        card.innerHTML = `
+        card.innerHTML = \`
           <div>
             <div class="flex justify-between items-start gap-2 mb-2">
               <div class="flex items-center gap-1.5 flex-wrap">
-                ${isTop ? '<span class="text-[10px] bg-red-600 text-white font-bold px-2 py-0.5 rounded">置頂公告</span>' : ''}
-                <span class="text-[11px] theme-soft-bg theme-text font-bold px-2.5 py-0.5 rounded-lg border theme-border">${a['發布處室'] || '行政處室'}</span>
-                <span class="text-xs text-slate-400">${a['發布日期'] || ''}</span>
+                \${isTop ? '<span class="text-[10px] bg-red-600 text-white font-bold px-2 py-0.5 rounded">置頂公告</span>' : ''}
+                <span class="text-[11px] theme-soft-bg theme-text font-bold px-2.5 py-0.5 rounded-lg border theme-border">\${a['發布處室'] || '行政處室'}</span>
+                <span class="text-xs text-slate-400">\${a['發布日期'] || ''}</span>
               </div>
-              ${adminActions}
+              \${adminActions}
             </div>
-            <h4 class="text-base font-bold text-slate-900 mb-2 leading-snug">${a['公告標題']}</h4>
-            <p class="text-xs sm:text-sm text-slate-600 whitespace-pre-line leading-relaxed">${a['詳細內容']}</p>
+            <h4 class="text-base font-bold text-slate-900 mb-2 leading-snug">\${a['公告標題']}</h4>
+            <p class="text-xs sm:text-sm text-slate-600 whitespace-pre-line leading-relaxed">\${a['詳細內容']}</p>
           </div>
-          ${linkHtml}`;
+          \${linkHtml}\`;
         container.appendChild(card);
       });
     }
@@ -2368,7 +2334,6 @@ function saveSystemSettings(sObj, p) {
       const chipContainer = document.getElementById('meetingCategoryFilterChips');
       const cats = (schoolData && schoolData.meetingCategories) ? schoolData.meetingCategories : ['晨會', '行政會議', '其它'];
       const rawList = (schoolData && schoolData.meetings) ? schoolData.meetings : [];
-
       const list = isAdmin ? rawList : rawList.filter(m => (m['公開'] === '是' || m['公開'] === 'true' || m['公開'] === true));
 
       chipContainer.innerHTML = '';
@@ -2396,47 +2361,53 @@ function saveSystemSettings(sObj, p) {
       filtered.forEach(m => {
         const card = document.createElement('div');
         const isPublic = (m['公開'] === '是' || m['公開'] === 'true' || m['公開'] === true);
-        card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3.5 hover:border-slate-300 transition-colors";
+        card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3 hover:border-slate-300 transition-colors";
 
-        let adminActions = isAdmin ? `
+        let adminActions = isAdmin ? \`
           <div class="flex items-center gap-2">
-            <button onclick="editMeeting('${m['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button>
-            <button onclick="deleteMeeting('${m['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
-          </div>` : '';
+            <button onclick="editMeeting('\${m['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button>
+            <button onclick="deleteMeeting('\${m['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
+          </div>\` : '';
 
         let publicBadge = isPublic
           ? '<span class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold px-2 py-0.5 rounded-md">🌐 公開</span>'
           : '<span class="text-[10px] bg-amber-50 text-amber-800 border border-amber-200 font-bold px-2 py-0.5 rounded-md">🔒 內部會議</span>';
 
-        let otherSection = m['其他'] ? `
+        let otherSection = m['其他'] ? \`
           <div class="text-xs bg-slate-50 text-slate-600 p-3 rounded-xl border border-slate-100 leading-relaxed">
-            <strong class="text-slate-800">📌 備註與後續追蹤：</strong>${m['其他']}
-          </div>` : '';
+            <strong class="text-slate-800">📌 備註與後續追蹤：</strong>\${m['其他']}
+          </div>\` : '';
 
-        card.innerHTML = `
+        const displayTitle = m['會議標題'] || \`\${m['會議類別'] || '校務'}會議記錄 (\${m['日期時間'] || ''})\`;
+
+        card.innerHTML = \`
           <div class="flex justify-between items-start gap-2 flex-wrap border-b border-slate-100 pb-3">
             <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-xs font-bold theme-soft-bg theme-text px-2.5 py-1 rounded-lg border theme-border">${m['會議類別'] || '會議'}</span>
-              <span class="text-xs font-bold text-slate-700 font-mono">📅 ${m['日期時間'] || '未設定時間'}</span>
-              <span class="text-xs text-slate-500">📍 ${m['地點'] || '校內'}</span>
-              ${publicBadge}
+              <span class="text-xs font-bold theme-soft-bg theme-text px-2.5 py-1 rounded-lg border theme-border">\${m['會議類別'] || '會議'}</span>
+              <span class="text-xs font-bold text-slate-700 font-mono">📅 \${m['日期時間'] || '未設定時間'}</span>
+              <span class="text-xs text-slate-500">📍 \${m['地點'] || '校內'}</span>
+              \${publicBadge}
             </div>
-            ${adminActions}
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50/70 p-3 rounded-xl text-xs text-slate-700">
-            <div><span class="text-slate-400">主席：</span><strong class="text-slate-900">${m['主席'] || '-'}</strong></div>
-            <div><span class="text-slate-400">紀錄者：</span><strong class="text-slate-900">${m['紀錄者'] || '-'}</strong></div>
-            <div><span class="text-slate-400">出席人員：</span><span>${m['出席人員'] || '-'}</span></div>
+            \${adminActions}
           </div>
 
           <div>
-            <h4 class="text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wide">會議重要內容與決議事項</h4>
-            <div class="text-xs sm:text-sm text-slate-800 whitespace-pre-line leading-relaxed bg-white rounded-xl p-1">${m['會議內容'] || '無詳細內容記載'}</div>
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 leading-snug">\${displayTitle}</h3>
           </div>
 
-          ${otherSection}
-        `;
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-50/70 p-3 rounded-xl text-xs text-slate-700">
+            <div><span class="text-slate-400">主席：</span><strong class="text-slate-900">\${m['主席'] || '-'}</strong></div>
+            <div><span class="text-slate-400">紀錄者：</span><strong class="text-slate-900">\${m['紀錄者'] || '-'}</strong></div>
+            <div><span class="text-slate-400">出席人員：</span><span>\${m['出席人員'] || '-'}</span></div>
+          </div>
+
+          <div>
+            <h4 class="text-xs font-bold text-slate-500 mb-1 uppercase tracking-wide">會議重要內容與決議事項</h4>
+            <div class="text-xs sm:text-sm text-slate-800 whitespace-pre-line leading-relaxed bg-white rounded-xl p-1">\${m['會議內容'] || '無詳細內容記載'}</div>
+          </div>
+
+          \${otherSection}
+        \`;
         container.appendChild(card);
       });
     }
@@ -2458,21 +2429,21 @@ function saveSystemSettings(sObj, p) {
       list.forEach(t => {
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-50/70 transition-colors";
-        let adminAction = isAdmin ? `
+        let adminAction = isAdmin ? \`
           <td class="py-3 px-3 text-center admin-col">
-            <button onclick="editTraining('${t['ID']}')" class="text-blue-600 hover:underline mr-2 font-semibold cursor-pointer">編輯</button>
-            <button onclick="deleteTraining('${t['ID']}')" class="text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
-          </td>` : '';
+            <button onclick="editTraining('\${t['ID']}')" class="text-blue-600 hover:underline mr-2 font-semibold cursor-pointer">編輯</button>
+            <button onclick="deleteTraining('\${t['ID']}')" class="text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
+          </td>\` : '';
 
-        tr.innerHTML = `
-          <td class="py-3 px-3"><span class="text-xs px-2 py-0.5 rounded-md font-bold ${t['身分職稱'] === '行政' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}">${t['身分職稱'] || '教師'}</span></td>
-          <td class="py-3 px-3 font-bold text-slate-900">${t['研習教師'] || '-'}</td>
-          <td class="py-3 px-4 font-medium text-slate-800 max-w-xs">${t['研習名稱'] || '-'}</td>
-          <td class="py-3 px-3 text-slate-600">${t['研習地點'] || '-'}</td>
-          <td class="py-3 px-3 text-slate-500 whitespace-nowrap">${t['研習日期時間'] || '-'}</td>
-          <td class="py-3 px-3 font-bold text-indigo-700">${t['職務代理人'] || '無派代'}</td>
-          <td class="py-3 px-3 text-xs text-slate-500">${t['備註與派代差假'] || '-'}</td>
-          ${adminAction}`;
+        tr.innerHTML = \`
+          <td class="py-3 px-3"><span class="text-xs px-2 py-0.5 rounded-md font-bold \${t['身分職稱'] === '行政' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'}">\${t['身分職稱'] || '教師'}</span></td>
+          <td class="py-3 px-3 font-bold text-slate-900">\${t['研習教師'] || '-'}</td>
+          <td class="py-3 px-4 font-medium text-slate-800 max-w-xs">\${t['研習名稱'] || '-'}</td>
+          <td class="py-3 px-3 text-slate-600">\${t['研習地點'] || '-'}</td>
+          <td class="py-3 px-3 text-slate-500 whitespace-nowrap">\${t['研習日期時間'] || '-'}</td>
+          <td class="py-3 px-3 font-bold text-indigo-700">\${t['職務代理人'] || '無派代'}</td>
+          <td class="py-3 px-3 text-xs text-slate-500">\${t['備註與派代差假'] || '-'}</td>
+          \${adminAction}\`;
         tbody.appendChild(tr);
       });
     }
@@ -2490,26 +2461,26 @@ function saveSystemSettings(sObj, p) {
       list.forEach(c => {
         const item = document.createElement('div');
         item.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-xs relative";
-        let adminAction = isAdmin ? `
+        let adminAction = isAdmin ? \`
           <div class="flex items-center gap-2">
-            <button onclick="editChronicle('${c['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button>
-            <button onclick="deleteChronicle('${c['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
-          </div>` : '';
+            <button onclick="editChronicle('\${c['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button>
+            <button onclick="deleteChronicle('\${c['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
+          </div>\` : '';
 
-        item.innerHTML = `
+        item.innerHTML = \`
           <div class="flex justify-between items-start mb-2">
             <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-white font-mono">📅 ${c['發生時間'] || '年代不詳'}</span>
-              <span class="text-xs font-bold theme-soft-bg theme-text px-2 py-0.5 rounded">📍 地點：${c['發生地點'] || '校內'}</span>
+              <span class="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-white font-mono">📅 \${c['發生時間'] || '年代不詳'}</span>
+              <span class="text-xs font-bold theme-soft-bg theme-text px-2 py-0.5 rounded">📍 地點：\${c['發生地點'] || '校內'}</span>
             </div>
-            ${adminAction}
+            \${adminAction}
           </div>
-          <h4 class="text-base font-bold text-slate-900 mb-2 leading-relaxed">${c['記事內容']}</h4>
+          <h4 class="text-base font-bold text-slate-900 mb-2 leading-relaxed">\${c['記事內容']}</h4>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
-            <div><strong>👥 參與人物：</strong>${c['主要人物'] || '全校同仁'}</div>
-            <div><strong>📜 相關事物/文物：</strong>${c['關鍵事物或文物'] || '無特載'}</div>
+            <div><strong>👥 參與人物：</strong>\${c['主要人物'] || '全校同仁'}</div>
+            <div><strong>📜 相關事物/文物：</strong>\${c['關鍵事物或文物'] || '無特載'}</div>
           </div>
-          <div class="text-right text-[11px] text-slate-400 mt-2 font-medium">記錄人：${c['記錄人'] || '校史室'}</div>`;
+          <div class="text-right text-[11px] text-slate-400 mt-2 font-medium">記錄人：\${c['記錄人'] || '校史室'}</div>\`;
         container.appendChild(item);
       });
     }
@@ -2544,26 +2515,26 @@ function saveSystemSettings(sObj, p) {
       filtered.forEach(h => {
         const card = document.createElement('div');
         card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between";
-        let adminAction = isAdmin ? `
+        let adminAction = isAdmin ? \`
           <div class="flex items-center gap-2">
-            <button onclick="editHonor('${h['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button>
-            <button onclick="deleteHonor('${h['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
-          </div>` : '';
+            <button onclick="editHonor('\${h['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button>
+            <button onclick="deleteHonor('\${h['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
+          </div>\` : '';
 
-        card.innerHTML = `
+        card.innerHTML = \`
           <div>
             <div class="flex justify-between items-start mb-2">
-              <span class="text-xs font-bold theme-soft-bg theme-text px-2 py-0.5 rounded-lg border theme-border">${h['對象類別'] || '榮譽'}</span>
-              ${adminAction}
+              <span class="text-xs font-bold theme-soft-bg theme-text px-2 py-0.5 rounded-lg border theme-border">\${h['對象類別'] || '榮譽'}</span>
+              \${adminAction}
             </div>
-            <h4 class="text-base font-bold text-slate-900 mb-1 leading-snug">${h['競賽或榮譽名稱']}</h4>
-            <div class="text-sm font-bold text-amber-600 mb-2">🏆 ${h['名次或獎項']}</div>
-            <div class="text-xs text-slate-700 mb-1"><strong>得獎對象：</strong>${h['得獎人或班級']}</div>
-            ${h['指導老師或主辦單位'] ? `<div class="text-xs text-slate-500">${h['指導老師或主辦單位']}</div>` : ''}
+            <h4 class="text-base font-bold text-slate-900 mb-1 leading-snug">\${h['競賽或榮譽名稱']}</h4>
+            <div class="text-sm font-bold text-amber-600 mb-2">🏆 \${h['名次或獎項']}</div>
+            <div class="text-xs text-slate-700 mb-1"><strong>得獎對象：</strong>\${h['得獎人或班級']}</div>
+            \${h['指導老師或主辦單位'] ? \`<div class="text-xs text-slate-500">\${h['指導老師或主辦單位']}</div>\` : ''}
           </div>
           <div class="text-[11px] text-slate-400 mt-3 border-t border-slate-100 pt-2 flex justify-between">
-            <span>獲獎日期：${h['獲獎日期'] || '-'}</span>
-          </div>`;
+            <span>獲獎日期：\${h['獲獎日期'] || '-'}</span>
+          </div>\`;
         container.appendChild(card);
       });
     }
@@ -2585,7 +2556,7 @@ function saveSystemSettings(sObj, p) {
 
         const groupDiv = document.createElement('div');
         groupDiv.className = "space-y-3";
-        groupDiv.innerHTML = `<h3 class="text-sm font-bold text-slate-800 flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full theme-bg inline-block"></span>${office} 專用業務系統與資料庫</h3>`;
+        groupDiv.innerHTML = \`<h3 class="text-sm font-bold text-slate-800 flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full theme-bg inline-block"></span>\${office} 專用業務系統與資料庫</h3>\`;
 
         const grid = document.createElement('div');
         grid.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3";
@@ -2593,24 +2564,24 @@ function saveSystemSettings(sObj, p) {
         linksInOffice.forEach(l => {
           const card = document.createElement('div');
           card.className = "bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between hover:border-blue-400 transition-colors";
-          let adminAction = isAdmin ? `
+          let adminAction = isAdmin ? \`
             <div class="flex items-center gap-2">
-              <button onclick="editPortalLink('${l['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button>
-              <button onclick="deletePortalLink('${l['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
-            </div>` : '';
+              <button onclick="editPortalLink('\${l['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button>
+              <button onclick="deletePortalLink('\${l['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
+            </div>\` : '';
 
-          card.innerHTML = `
+          card.innerHTML = \`
             <div>
               <div class="flex justify-between items-start mb-1">
-                <span class="text-xs text-slate-400">${office}</span>
-                ${adminAction}
+                <span class="text-xs text-slate-400">\${office}</span>
+                \${adminAction}
               </div>
               <h4 class="text-sm font-bold text-slate-900 mb-1 leading-snug">
-                <a href="${l['系統網址']}" target="_blank" class="theme-text hover:underline inline-flex items-center gap-1">🔗 ${l['網站或系統名稱']}</a>
+                <a href="\${l['系統網址']}" target="_blank" class="theme-text hover:underline inline-flex items-center gap-1">🔗 \${l['網站或系統名稱']}</a>
               </h4>
-              <p class="text-xs text-slate-600 mb-2 leading-relaxed">${l['功能說明與交接備忘'] || '無特別說明'}</p>
+              <p class="text-xs text-slate-600 mb-2 leading-relaxed">\${l['功能說明與交接備忘'] || '無特別說明'}</p>
             </div>
-            ${l['帳號權限提醒'] ? `<div class="text-[11px] bg-amber-50 text-amber-800 p-2 rounded-xl border border-amber-200">🔑 權限備註：${l['帳號權限提醒']}</div>` : ''}`;
+            \${l['帳號權限提醒'] ? \`<div class="text-[11px] bg-amber-50 text-amber-800 p-2 rounded-xl border border-amber-200">🔑 權限備註：\${l['帳號權限提醒']}</div>\` : ''}\`;
           grid.appendChild(card);
         });
 
@@ -2666,41 +2637,41 @@ function saveSystemSettings(sObj, p) {
       const rows = current.rows || [];
       const cols = (meta['欄位定義'] || '').split(',').map(s => s.trim()).filter(Boolean);
 
-      let headerHtml = cols.map(c => `<th class="py-3 px-3">${c}</th>`).join('');
-      if (isAdmin) headerHtml += `<th class="py-3 px-3 text-center">操作</th>`;
+      let headerHtml = cols.map(c => \`<th class="py-3 px-3">\${c}</th>\`).join('');
+      if (isAdmin) headerHtml += \`<th class="py-3 px-3 text-center">操作</th>\`;
 
       let rowsHtml = '';
       if (rows.length === 0) {
-        rowsHtml = `<tr><td colspan="${cols.length + (isAdmin ? 1 : 0)}" class="text-center py-10 text-slate-400 text-xs">目前尚無資料列，請點選「新增該表資料」。</td></tr>`;
+        rowsHtml = \`<tr><td colspan="\${cols.length + (isAdmin ? 1 : 0)}" class="text-center py-10 text-slate-400 text-xs">目前尚無資料列，請點選「新增該表資料」。</td></tr>\`;
       } else {
         rows.forEach(r => {
-          let colsTd = cols.map(c => `<td class="py-2.5 px-3">${r[c] || '-'}</td>`).join('');
-          let actionTd = isAdmin ? `
+          let colsTd = cols.map(c => \`<td class="py-2.5 px-3">\${r[c] || '-'}</td>\`).join('');
+          let actionTd = isAdmin ? \`
             <td class="py-2.5 px-3 text-center whitespace-nowrap">
-              <button onclick="deleteCustomRow('${selectedCustomSheetKey}', '${r['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
-            </td>` : '';
-          rowsHtml += `<tr class="hover:bg-slate-50 transition-colors">${colsTd}${actionTd}</tr>`;
+              <button onclick="deleteCustomRow('\${selectedCustomSheetKey}', '\${r['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
+            </td>\` : '';
+          rowsHtml += \`<tr class="hover:bg-slate-50 transition-colors">\${colsTd}\${actionTd}</tr>\`;
         });
       }
 
-      contentContainer.innerHTML = `
+      contentContainer.innerHTML = \`
         <div class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
           <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
             <div>
-              <h3 class="text-sm font-bold text-slate-900">${meta['中文標題'] || selectedCustomSheetKey}</h3>
-              <p class="text-xs text-slate-500">${meta['說明備忘'] || '線上動態擴充資料表'}</p>
+              <h3 class="text-sm font-bold text-slate-900">\${meta['中文標題'] || selectedCustomSheetKey}</h3>
+              <p class="text-xs text-slate-500">\${meta['說明備忘'] || '線上動態擴充資料表'}</p>
             </div>
-            <span class="text-xs text-slate-400">資料總筆數：${rows.length} 筆</span>
+            <span class="text-xs text-slate-400">資料總筆數：\${rows.length} 筆</span>
           </div>
           <div class="overflow-x-auto">
             <table class="w-full text-left text-xs sm:text-sm">
               <thead class="bg-slate-100 text-slate-700 border-b border-slate-200 font-bold">
-                <tr>${headerHtml}</tr>
+                <tr>\${headerHtml}</tr>
               </thead>
-              <tbody class="divide-y divide-slate-100">${rowsHtml}</tbody>
+              <tbody class="divide-y divide-slate-100">\${rowsHtml}</tbody>
             </table>
           </div>
-        </div>`;
+        </div>\`;
     }
 
     function onGlobalSearch(query) {
@@ -2713,57 +2684,58 @@ function saveSystemSettings(sObj, p) {
       if (!q) { clearSearch(); return; }
       clearBtn.classList.remove('hidden');
       resultView.classList.remove('hidden');
-      keywordBadge.innerText = `"${query}"`;
+      keywordBadge.innerText = \`"\${query}"\`;
       resultList.innerHTML = '';
 
       let matches = [];
 
       (schoolData.announcements || []).forEach(a => {
         if ((a['公告標題'] || '').toLowerCase().includes(q) || (a['詳細內容'] || '').toLowerCase().includes(q)) {
-          matches.push({ type: '行政公告', icon: '📢', title: `[${a['發布處室']}] ${a['公告標題']}`, desc: a['詳細內容'], action: () => { switchTab('announcements'); clearSearch(); } });
+          matches.push({ type: '行政公告', icon: '📢', title: \`[\${a['發布處室']}] \${a['公告標題']}\`, desc: a['詳細內容'], action: () => { switchTab('announcements'); clearSearch(); } });
         }
       });
 
       (schoolData.meetings || []).forEach(m => {
         const isPub = (m['公開'] === '是' || m['公開'] === 'true' || m['公開'] === true);
         if (!isAdmin && !isPub) return;
-        const text = `${m['會議類別']} ${m['地點']} ${m['主席']} ${m['紀錄者']} ${m['出席人員']} ${m['會議內容']} ${m['其他']}`.toLowerCase();
+        const text = \`\${m['會議標題'] || ''} \${m['會議類別']} \${m['地點']} \${m['主席']} \${m['紀錄者']} \${m['出席人員']} \${m['會議內容']} \${m['其他']}\`.toLowerCase();
         if (text.includes(q)) {
+          const displayT = m['會議標題'] || \`\${m['會議類別']} (\${m['日期時間']})\`;
           matches.push({
             type: '會議記錄',
             icon: '📋',
-            title: `[${m['會議類別']}] ${m['日期時間']} (${m['地點'] || '校內'})`,
-            desc: `主席：${m['主席']} | 內容：${m['會議內容']}`,
+            title: \`[\${m['會議類別']}] \${displayT}\`,
+            desc: \`時間：\${m['日期時間']} | 主席：\${m['主席']} | 內容：\${m['會議內容']}\`,
             action: () => { switchTab('meetings'); clearSearch(); }
           });
         }
       });
 
       (schoolData.training || []).forEach(t => {
-        const text = `${t['研習教師']} ${t['研習名稱']} ${t['研習地點']} ${t['職務代理人']}`.toLowerCase();
+        const text = \`\${t['研習教師']} \${t['研習名稱']} \${t['研習地點']} \${t['職務代理人']}\`.toLowerCase();
         if (text.includes(q)) {
-          matches.push({ type: '研習派代', icon: '📝', title: `${t['研習教師']} - ${t['研習名稱']}`, desc: `地點：${t['研習地點']} | 代理人：${t['職務代理人']}`, action: () => { switchTab('training'); clearSearch(); } });
+          matches.push({ type: '研習派代', icon: '📝', title: \`\${t['研習教師']} - \${t['研習名稱']}\`, desc: \`地點：\${t['研習地點']} | 代理人：\${t['職務代理人']}\`, action: () => { switchTab('training'); clearSearch(); } });
         }
       });
 
       (schoolData.chronicle || []).forEach(c => {
-        const text = `${c['發生時間']} ${c['主要人物']} ${c['發生地點']} ${c['記事內容']}`.toLowerCase();
+        const text = \`\${c['發生時間']} \${c['主要人物']} \${c['發生地點']} \${c['記事內容']}\`.toLowerCase();
         if (text.includes(q)) {
-          matches.push({ type: '校園大事紀', icon: '📜', title: `${c['發生時間']} - ${c['發生地點']}`, desc: c['記事內容'], action: () => { switchTab('chronicle'); clearSearch(); } });
+          matches.push({ type: '校園大事紀', icon: '📜', title: \`\${c['發生時間']} - \${c['發生地點']}\`, desc: c['記事內容'], action: () => { switchTab('chronicle'); clearSearch(); } });
         }
       });
 
       (schoolData.honors || []).forEach(h => {
-        const text = `${h['得獎人或班級']} ${h['競賽或榮譽名稱']} ${h['名次或獎項']}`.toLowerCase();
+        const text = \`\${h['得獎人或班級']} \${h['競賽或榮譽名稱']} \${h['名次或獎項']}\`.toLowerCase();
         if (text.includes(q)) {
-          matches.push({ type: '師生榮譽榜', icon: '🏆', title: `[${h['名次或獎項']}] ${h['競賽或榮譽名稱']}`, desc: `得獎人：${h['得獎人或班級']}`, action: () => { switchTab('honors'); clearSearch(); } });
+          matches.push({ type: '師生榮譽榜', icon: '🏆', title: \`[\${h['名次或獎項']}] \${h['競賽或榮譽名稱']}\`, desc: \`得獎人：\${h['得獎人或班級']}\`, action: () => { switchTab('honors'); clearSearch(); } });
         }
       });
 
       (schoolData.links || []).forEach(l => {
-        const text = `${l['所屬處室']} ${l['網站或系統名稱']} ${l['功能說明與交接備忘']}`.toLowerCase();
+        const text = \`\${l['所屬處室']} \${l['網站或系統名稱']} \${l['功能說明與交接備忘']}\`.toLowerCase();
         if (text.includes(q)) {
-          matches.push({ type: '處室常用網', icon: '🌐', title: `[${l['所屬處室']}] ${l['網站或系統名稱']}`, desc: l['功能說明與交接備忘'], action: () => { switchTab('links'); clearSearch(); } });
+          matches.push({ type: '處室常用網', icon: '🌐', title: \`[\${l['所屬處室']}] \${l['網站或系統名稱']}\`, desc: l['功能說明與交接備忘'], action: () => { switchTab('links'); clearSearch(); } });
         }
       });
 
@@ -2775,12 +2747,12 @@ function saveSystemSettings(sObj, p) {
       matches.forEach(m => {
         const item = document.createElement('div');
         item.className = "bg-white p-3.5 rounded-xl border border-slate-200 hover:border-blue-400 cursor-pointer shadow-2xs transition-all";
-        item.innerHTML = `
+        item.innerHTML = \`
           <div class="flex items-center gap-2 mb-1">
-            <span class="text-xs font-bold theme-soft-bg theme-text px-2 py-0.5 rounded">${m.icon} ${m.type}</span>
-            <h5 class="text-sm font-bold text-slate-900">${m.title}</h5>
+            <span class="text-xs font-bold theme-soft-bg theme-text px-2 py-0.5 rounded">\${m.icon} \${m.type}</span>
+            <h5 class="text-sm font-bold text-slate-900">\${m.title}</h5>
           </div>
-          <p class="text-xs text-slate-500 line-clamp-2">${m.desc}</p>`;
+          <p class="text-xs text-slate-500 line-clamp-2">\${m.desc}</p>\`;
         item.onclick = m.action;
         resultList.appendChild(item);
       });
@@ -2806,11 +2778,11 @@ function saveSystemSettings(sObj, p) {
       cats.forEach(catName => {
         const div = document.createElement('div');
         div.className = "flex justify-between items-center bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 text-xs";
-        div.innerHTML = `
-          <span class="font-bold text-slate-800">🏷️ ${catName}</span>
-          <button onclick="deleteMeetingCategoryAction('${catName}')" class="text-red-500 hover:text-red-700 font-semibold px-2 py-1 rounded hover:bg-red-50 transition-colors cursor-pointer">
+        div.innerHTML = \`
+          <span class="font-bold text-slate-800">🏷️ \${catName}</span>
+          <button onclick="deleteMeetingCategoryAction('\${catName}')" class="text-red-500 hover:text-red-700 font-semibold px-2 py-1 rounded hover:bg-red-50 transition-colors cursor-pointer">
             🗑️ 刪除類別
-          </button>`;
+          </button>\`;
         container.appendChild(div);
       });
     }
@@ -2827,7 +2799,7 @@ function saveSystemSettings(sObj, p) {
     }
 
     function deleteMeetingCategoryAction(name) {
-      showConfirmDialog('確認刪除類別', `確定要刪除會議類別【${name}】嗎？`, () => {
+      showConfirmDialog('確認刪除類別', \`確定要刪除會議類別【\${name}】嗎？\`, () => {
         callBackend('deleteMeetingCategory', [name, adminPassword], function (res) {
           showNotice('刪除成功', res.message, '🗑️');
           loadAllData();
@@ -2839,6 +2811,7 @@ function saveSystemSettings(sObj, p) {
     function openMeetingModal() {
       document.getElementById('meetingModalTitle').innerText = '登錄會議記錄';
       document.getElementById('meetingId').value = '';
+      document.getElementById('meetingTitle').value = '';
       document.getElementById('meetingDateTime').value = new Date().toISOString().slice(0, 10) + ' 08:30';
       document.getElementById('meetingLocation').value = '';
       document.getElementById('meetingChairperson').value = '';
@@ -2855,6 +2828,7 @@ function saveSystemSettings(sObj, p) {
       if (!item) return;
       document.getElementById('meetingModalTitle').innerText = '編輯會議記錄';
       document.getElementById('meetingId').value = item['ID'];
+      document.getElementById('meetingTitle').value = item['會議標題'] || '';
       document.getElementById('meetingDateTime').value = item['日期時間'] || '';
       document.getElementById('meetingCategorySelect').value = item['會議類別'] || '晨會';
       document.getElementById('meetingLocation').value = item['地點'] || '';
@@ -2870,6 +2844,7 @@ function saveSystemSettings(sObj, p) {
     function submitMeeting() {
       const payload = {
         id: document.getElementById('meetingId').value,
+        title: document.getElementById('meetingTitle').value.trim(),
         dateTime: document.getElementById('meetingDateTime').value.trim(),
         category: document.getElementById('meetingCategorySelect').value,
         location: document.getElementById('meetingLocation').value.trim(),
@@ -2881,6 +2856,9 @@ function saveSystemSettings(sObj, p) {
         isPublic: document.getElementById('meetingIsPublic').checked
       };
 
+      if (!payload.title) {
+        return showNotice('提示', '請填寫「會議標題」！', '⚠️');
+      }
       if (!payload.dateTime || !payload.content) {
         return showNotice('提示', '請填寫會議日期時間與會議內容！', '⚠️');
       }
@@ -2915,11 +2893,11 @@ function saveSystemSettings(sObj, p) {
       offices.forEach(officeName => {
         const div = document.createElement('div');
         div.className = "flex justify-between items-center bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 text-xs";
-        div.innerHTML = `
-          <span class="font-bold text-slate-800">🏢 ${officeName}</span>
-          <button onclick="deleteOfficeCategoryAction('${officeName}')" class="text-red-500 hover:text-red-700 font-semibold px-2 py-1 rounded hover:bg-red-50 transition-colors cursor-pointer">
+        div.innerHTML = \`
+          <span class="font-bold text-slate-800">🏢 \${officeName}</span>
+          <button onclick="deleteOfficeCategoryAction('\${officeName}')" class="text-red-500 hover:text-red-700 font-semibold px-2 py-1 rounded hover:bg-red-50 transition-colors cursor-pointer">
             🗑️ 刪除處室
-          </button>`;
+          </button>\`;
         container.appendChild(div);
       });
     }
@@ -2936,7 +2914,7 @@ function saveSystemSettings(sObj, p) {
     }
 
     function deleteOfficeCategoryAction(officeName) {
-      showConfirmDialog('確認刪除處室', `確定要刪除處室【${officeName}】嗎？`, () => {
+      showConfirmDialog('確認刪除處室', \`確定要刪除處室【\${officeName}】嗎？\`, () => {
         callBackend('deleteOfficeCategory', [officeName, adminPassword], function (res) {
           showNotice('刪除成功', res.message, '🗑️');
           loadAllData();
@@ -3152,7 +3130,7 @@ function saveSystemSettings(sObj, p) {
         category: document.getElementById('honorCategory').value,
         awardDate: document.getElementById('honorDate').value,
         contestName: document.getElementById('honorContest').value.trim(),
-        winnerName: document.getElementById('honorWinner').value.trim(),
+        winnerName: document.getElementById('winnerName') ? document.getElementById('winnerName').value.trim() : document.getElementById('honorWinner').value.trim(),
         awardRank: document.getElementById('honorRank').value.trim(),
         mentor: document.getElementById('honorMentor').value.trim()
       };
@@ -3254,7 +3232,7 @@ function saveSystemSettings(sObj, p) {
       const displayTitle = (current.meta && current.meta['中文標題']) || selectedCustomSheetKey;
       showConfirmDialog(
         '確認刪除工作表',
-        `⚠️ 警告：即將永久刪除工作表【${displayTitle}】及其包含的所有資料列，此操作不可回復！確定要刪除嗎？`,
+        \`⚠️ 警告：即將永久刪除工作表【\${displayTitle}】及其包含的所有資料列，此操作不可回復！確定要刪除嗎？\`,
         () => {
           callBackend('deleteCustomSheet', [selectedCustomSheetKey, adminPassword], function (res) {
             showNotice('刪除完成', res.message, '🗑️');
@@ -3274,7 +3252,7 @@ function saveSystemSettings(sObj, p) {
       const meta = current.meta || {};
       const cols = (meta['欄位定義'] || '').split(',').map(s => s.trim()).filter(Boolean);
 
-      document.getElementById('customRowModalTitle').innerText = `新增資料至【${meta['中文標題'] || selectedCustomSheetKey}】`;
+      document.getElementById('customRowModalTitle').innerText = \`新增資料至【\${meta['中文標題'] || selectedCustomSheetKey}】\`;
       document.getElementById('customRowModalSub').innerText = meta['說明備忘'] || '';
       document.getElementById('customRowId').value = '';
 
@@ -3282,9 +3260,9 @@ function saveSystemSettings(sObj, p) {
       container.innerHTML = '';
       cols.forEach(colName => {
         const div = document.createElement('div');
-        div.innerHTML = `
-          <label class="block text-xs font-bold text-slate-700 mb-1">${colName}</label>
-          <input type="text" data-custom-col="${colName}" class="w-full px-3 py-2 border rounded-xl custom-dynamic-input">`;
+        div.innerHTML = \`
+          <label class="block text-xs font-bold text-slate-700 mb-1">\${colName}</label>
+          <input type="text" data-custom-col="\${colName}" class="w-full px-3 py-2 border rounded-xl custom-dynamic-input">\`;
         container.appendChild(div);
       });
 
@@ -3372,6 +3350,14 @@ function saveSystemSettings(sObj, p) {
           })[fnName](...args);
       } else {
         setTimeout(() => {
+          if (fnName === 'verifyAdminAuth') {
+            if (args[0] === 'AdminSchool2026') {
+              onSuccess({ success: true, message: '（離線預覽模式）身分驗證成功！' });
+            } else {
+              onSuccess({ success: false, message: '身分驗證失敗：管理密鑰錯誤！(離線測試請用 AdminSchool2026)' });
+            }
+            return;
+          }
           onSuccess({ success: true, message: '（離線預覽模式）操作模擬完成！' });
         }, 200);
       }
@@ -3412,30 +3398,33 @@ function saveSystemSettings(sObj, p) {
         meetings: [
           {
             'ID': '1',
+            '會議標題': '115學年度第1學期第1週全校晨會',
             '日期時間': '2026-09-02 08:00',
             '會議類別': '晨會',
             '地點': '教導處辦公室',
             '主席': '校長',
             '紀錄者': '陳雅婷',
             '出席人員': '全體教職員工',
-            '會議內容': '1. 請各班導師提醒學生注意早秋換季氣候與日常衛生清潔。\n2. 總務處提醒各教室冷氣開啟規範，珍惜校園資源。\n3. 週三下午舉辦全校校務發展研習，請全員準時參與。',
+            '會議內容': '1. 請各班導師提醒學生注意早秋換季氣候與日常衛生清潔。\\n2. 總務處提醒各教室冷氣開啟規範，珍惜校園資源。\\n3. 週三下午舉辦全校校務發展研習，請全員準時參與。',
             '公開': '是',
             '其他': '各組提案已彙整完畢'
           },
           {
             'ID': '2',
+            '會議標題': '115學年度第1學期初行政幹部會議',
             '日期時間': '2026-09-03 13:30',
             '會議類別': '行政會議',
             '地點': '校長室會議室',
             '主席': '校長',
             '紀錄者': '林志遠',
             '出席人員': '各處室主任、組長',
-            '會議內容': '1. 審定115學年度第一學期校事行事曆與各項重要活動排程。\n2. 研議智慧校園設備採購案預算編列與審查事宜。',
+            '會議內容': '1. 審定115學年度第一學期校事行事曆與各項重要活動排程。\\n2. 研議智慧校園設備採購案預算編列與審查事宜。',
             '公開': '是',
             '其他': '請總務處於下週前提送設備規格清冊'
           },
           {
             'ID': '3',
+            '會議標題': '開學初期高關懷學生專案輔導評估會議',
             '日期時間': '2026-09-04 10:00',
             '會議類別': '其它',
             '地點': '輔導室個別諮商室',
@@ -3455,93 +3444,9 @@ function saveSystemSettings(sObj, p) {
         links: [],
         customSheets: {}
       };
-    }
-  <\/script>
-</body>
-</html></script>
+    }`;
 
-  <!-- ==================== 頁面互動、穩健複製與代碼生成腳本 ==================== -->
-  <script>
-    /* 彈出通用自訂通知訊息 (取代 alert) */
-    function showCustomNotice(title, message, icon = 'ℹ️') {
-      document.getElementById('noticeModalIcon').innerText = icon;
-      document.getElementById('noticeModalTitle').innerText = title;
-      document.getElementById('noticeModalContent').innerText = message;
-      document.getElementById('noticeModal').classList.remove('hidden');
-    }
-
-    function closeModal(id) {
-      document.getElementById(id).classList.add('hidden');
-    }
-
-    /* 終極安全剪貼簿複製引擎 (雙重備援機制) */
-    function safeCopyToClipboard(text, onSuccess, onError) {
-      if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(text)
-          .then(onSuccess)
-          .catch(function() {
-            fallbackCopy(text, onSuccess, onError);
-          });
-      } else {
-        fallbackCopy(text, onSuccess, onError);
-      }
-    }
-
-    function fallbackCopy(text, onSuccess, onError) {
-      try {
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        textArea.style.position = "fixed";
-        textArea.style.top = "-9999px";
-        textArea.style.left = "-9999px";
-        textArea.style.opacity = "0";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        const successful = document.execCommand('copy');
-        document.body.removeChild(textArea);
-        if (successful) {
-          onSuccess();
-        } else {
-          if (onError) onError();
-        }
-      } catch (err) {
-        if (onError) onError(err);
-      }
-    }
-
-    function extractSpreadsheetId(url) {
-      const trimmed = (url || '').trim();
-      const match = trimmed.match(/\/d\/([a-zA-Z0-9-_]+)/);
-      if (match && match[1]) return match[1];
-      if (/^[a-zA-Z0-9-_]{30,60}$/.test(trimmed)) return trimmed;
-      return '1Xgy6NWfWOwQTuE46aZzCpuBmD232x5lw5Lc0agBDuEY';
-    }
-
-    function updateConfig() {
-      const rawUrl = document.getElementById('inputSheetUrl').value;
-      const parsedId = extractSpreadsheetId(rawUrl);
-      document.getElementById('displaySheetId').innerText = parsedId;
-    }
-
-    function getCustomizedCodeGs() {
-      const rawUrl = document.getElementById('inputSheetUrl').value;
-      const parsedId = extractSpreadsheetId(rawUrl);
-      const pwd = document.getElementById('inputPassword').value.trim() || 'AdminSchool2026';
-      
-      const tplEl = document.getElementById('tpl-code-gs');
-      let code = tplEl.value || tplEl.textContent || '';
-      code = code.replace(/\{\{SPREADSHEET_ID\}\}/g, parsedId);
-      code = code.replace(/\{\{ADMIN_PASSWORD\}\}/g, pwd);
-      return code;
-    }
-
-    function getCustomizedIndexHtml() {
-      const tplEl = document.getElementById('tpl-index-html');
-      let code = tplEl.textContent || tplEl.innerHTML || '';
-      // 復原隔離之 script 標籤 (將 <\/script> 替換回正常的閉合標籤)
-      code = code.replace(/<\\\/script>/g, '</' + 'script>');
-      return code;
+      return parts[0] + parts[1] + htmlBody + '\n  <script>\n' + jsContent + '\n  <' + '/script>\n</body>\n</html>';
     }
 
     function copyGeneratedCodeGs() {
@@ -3562,7 +3467,9 @@ function saveSystemSettings(sObj, p) {
           }, 2500);
         },
         function() {
-          showCustomNotice('複製失敗', '您的瀏覽器環境封鎖了自動複製權限，請嘗試在電腦端操作或更換瀏覽器！', '⚠️');
+          // 若環境剪貼簿被封鎖，自動打開檢視視窗並自動全選
+          openPreviewModal('code');
+          showCustomNotice('請手動複製', '已為您開啟並全選代碼，請直接按 Ctrl+C (或 Cmd+C) 複製！', '📋');
         }
       );
     }
@@ -3585,9 +3492,58 @@ function saveSystemSettings(sObj, p) {
           }, 2500);
         },
         function() {
-          showCustomNotice('複製失敗', '您的瀏覽器環境封鎖了自動複製權限，請嘗試在電腦端操作或更換瀏覽器！', '⚠️');
+          openPreviewModal('html');
+          showCustomNotice('請手動複製', '已為您開啟並全選代碼，請直接按 Ctrl+C (或 Cmd+C) 複製！', '📋');
         }
       );
+    }
+
+    // 代碼檢視視窗切換
+    function openPreviewModal(type = 'code') {
+      activePreviewType = type;
+      switchPreviewTab(type);
+      document.getElementById('previewModal').classList.remove('hidden');
+    }
+
+    function switchPreviewTab(type) {
+      activePreviewType = type;
+      const codeBtn = document.getElementById('btnPreviewCode');
+      const htmlBtn = document.getElementById('btnPreviewHtml');
+      const textarea = document.getElementById('previewTextarea');
+      const title = document.getElementById('previewModalTitle');
+      const lenTip = document.getElementById('previewLengthTip');
+
+      if (type === 'code') {
+        codeBtn.className = 'px-3 py-1 rounded-lg font-bold bg-blue-100 text-blue-800 cursor-pointer';
+        htmlBtn.className = 'px-3 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer';
+        title.innerText = '檢視 Code.gs (後端核心)';
+        const code = getCustomizedCodeGs();
+        textarea.value = code;
+        lenTip.innerText = `總字元數：${code.length} 字元`;
+      } else {
+        htmlBtn.className = 'px-3 py-1 rounded-lg font-bold bg-blue-100 text-blue-800 cursor-pointer';
+        codeBtn.className = 'px-3 py-1 rounded-lg font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 cursor-pointer';
+        title.innerText = '檢視 Index.html (前端系統)';
+        const code = getCustomizedIndexHtml();
+        textarea.value = code;
+        lenTip.innerText = `總字元數：${code.length} 字元`;
+      }
+
+      setTimeout(() => {
+        textarea.focus();
+        textarea.select();
+      }, 50);
+    }
+
+    function selectAndCopyPreview() {
+      const textarea = document.getElementById('previewTextarea');
+      textarea.focus();
+      textarea.select();
+      safeCopyToClipboard(textarea.value, function() {
+        showCustomNotice('複製成功', '代碼已成功複製至剪貼簿！', '✅');
+      }, function() {
+        showCustomNotice('提示', '請直接按下鍵盤 Ctrl+C 或 Cmd+C 進行複製。', '📋');
+      });
     }
   </script>
 </body>

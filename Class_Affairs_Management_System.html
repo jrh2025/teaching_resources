@@ -53,11 +53,11 @@
         <h2 class="text-xl sm:text-2xl font-black">只需 5 分鐘，打造專屬班級雲端事務中心</h2>
         <p class="text-xs sm:text-sm text-blue-100 leading-relaxed">
           本系統整合<strong>電子聯絡簿、班級公告、公約守則、課表作息、幹部名冊、親師問答 FAQ 與 6 種布景主題</strong>。
-          完全基於 Google 試算表與 Google Apps Script (GAS) 運行，不需購買任何主機與網址，家長與學生用手機掃碼即可即時查看！
+          完全基於 Google 試算表與 Google Apps Script (GAS) 運行，具備安全嚴格的教師密鑰校驗端點，家長與學生用手機掃碼即可即時查看！
         </p>
         <div class="pt-2 flex flex-wrap gap-3 text-xs">
           <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>📱</span><span>手機/平板/電腦自動排版</span></div>
-          <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>🔒</span><span>教師專屬密鑰保護</span></div>
+          <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>🔒</span><span>後端密鑰嚴格身分校驗</span></div>
           <div class="flex items-center gap-1.5 bg-white/10 px-3 py-1.5 rounded-xl"><span>📊</span><span>試算表雲端資料庫</span></div>
         </div>
       </div>
@@ -86,7 +86,7 @@
           <label class="block font-bold text-slate-700 mb-1">2. 自訂教師管理密鑰 (登入密碼)</label>
           <input type="text" id="inputPassword" oninput="updateConfig()" value="AdminTeacher2026" placeholder="例如：MyClass2026" 
                  class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-xs">
-          <p class="text-[11px] text-slate-400 mt-1">💡 這是您在網頁端登入「教師模式」發布與編輯資料時使用的密碼。</p>
+          <p class="text-[11px] text-slate-400 mt-1">💡 這是您在網頁端登入「教師模式」發布與編輯資料時使用的密鑰（後端將嚴格校驗）。</p>
         </div>
       </div>
 
@@ -144,7 +144,7 @@
         <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center text-sm">2</div>
         <div>
           <h3 class="text-base font-bold text-slate-900">第二步：開啟 Apps Script 並貼上 Code.gs</h3>
-          <p class="text-xs text-slate-500">建立後端邏輯與資料庫通訊核心</p>
+          <p class="text-xs text-slate-500">建立後端邏輯與安全驗證端點</p>
         </div>
       </div>
 
@@ -264,8 +264,8 @@
             <p class="text-xs text-slate-600">首次開啟網址時，系統會在背景自動於您的 Google 試算表中建立 7 大工作表並寫入預設範例資料，完全無需手動設定表格！</p>
           </div>
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
-            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>2️⃣</span><span>教師登入與管理</span></h4>
-            <p class="text-xs text-slate-600">點擊右上角「<strong>教師登入</strong>」，輸入您設定的密鑰（如 <code>AdminTeacher2026</code>），即可直接在網頁端發布聯絡簿、新增公告與編輯課表。</p>
+            <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>2️⃣</span><span>安全教師登入與管理</span></h4>
+            <p class="text-xs text-slate-600">點擊右上角「<strong>教師登入</strong>」，輸入您設定的密鑰（如 <code>AdminTeacher2026</code>），系統經由後端嚴格校驗通過後，即可發布聯絡簿、新增公告與編輯課表。</p>
           </div>
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
             <h4 class="font-bold text-slate-800 flex items-center gap-1.5"><span>3️⃣</span><span>布景與模組開關</span></h4>
@@ -294,7 +294,7 @@
           <div class="mt-3 pt-3 border-t border-slate-200 text-slate-600 space-y-2">
             <p>在 Google Apps Script 中，修改代碼儲存後，必須執行「更新部署」：</p>
             <ol class="list-decimal list-inside space-y-1 bg-white p-3 rounded-xl border border-slate-200">
-              <li>點擊右上角藍色 <strong>「部署」 ➔ 「管理部署」</strong>。</li>
+              <li>點擊右上角藍色 <strong>「部署」 ➔ 「管理部署作業」</strong>。</li>
               <li>點擊右上角的 <strong>鉛筆圖示（編輯）</strong>。</li>
               <li>在「版本」下拉選單中，務必選擇 <strong>「新版本 (New Version)」</strong>。</li>
               <li>點擊右下角 <strong>「部署」</strong> 即可生效！</li>
@@ -314,11 +314,11 @@
 
         <details class="bg-slate-50 p-4 rounded-2xl border border-slate-200 group">
           <summary class="font-bold text-slate-800 cursor-pointer list-none flex justify-between items-center">
-            <span>Q3. 資料儲存在哪裡？安全嗎？</span>
+            <span>Q3. 訪客能隨意輸入密碼登入教師模式嗎？</span>
             <span class="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
           </summary>
           <div class="mt-3 pt-3 border-t border-slate-200 text-slate-600">
-            <p>所有聯絡簿、公告、課表等資料全部儲存在您第一步建立的專屬 Google 試算表中，資料完全由您的 Google 帳號所有與掌控，具備 Google 原廠的高規格安全性與備份機制。</p>
+            <p>絕不可能！最新版本採用後端 <code>verifyTeacherLogin</code> 進行嚴格的身分密鑰校驗。只有輸入與後端設定完全相符的管理密鑰才會被授予編輯權限，訪客任意輸入錯誤密碼將直接遭到後端阻擋並提示錯誤。</p>
           </div>
         </details>
       </div>
@@ -333,10 +333,11 @@
 
   <!-- 腳本區域：包含完整原始代碼與安全剪貼簿複製邏輯 -->
   <script>
-    // 1. 後端 Code.gs 原始碼範本
+    // 1. 後端 Code.gs 原始碼範本 (含安全性修復端點 verifyTeacherLogin)
     const rawCodeGsTemplate = `/* =========================================================================
  * 班級事務管理系統 - 全方位旗艦版後端 (Code.gs)
  * 修正：課表 CRUD 三重容錯比對防重複原地更新、防連點連擊、全模組安全寫入
+ * 安全性修復：補上教師登入密鑰驗證端點 (verifyTeacherLogin)，徹底防杜未授權登入
  * ========================================================================= */
 
 const SPREADSHEET_ID = '{{SPREADSHEET_ID}}';
@@ -532,6 +533,23 @@ function getAllClassroomData() {
       contactList: [], announcements: [], rules: [], timetable: [], duties: [], faq: []
     };
   }
+}
+
+/**
+ * 前端「教師登入」專用驗證函式
+ * 嚴格比對輸入密鑰，回傳授權結果與提示訊息
+ */
+function verifyTeacherLogin(password) {
+  if (!password || String(password).trim() !== TEACHER_PASSWORD) {
+    return { 
+      success: false, 
+      message: '身分驗證失敗：管理密鑰錯誤！' 
+    };
+  }
+  return { 
+    success: true, 
+    message: '身分驗證成功，已進入教師管理模式！' 
+  };
 }
 
 function verifyTeacher(password) {
@@ -785,7 +803,7 @@ function saveSystemSettings(sObj, p) {
   return { success: true, message: '系統設定與布景主題已成功儲存！' };
 }`;
 
-    // 2. 前端 Index.html 完整代碼 (純字串封裝，避免 HTML Parser 標籤提早閉合)
+    // 2. 前端 Index.html 完整代碼 (含智慧雙模墊片、非同步登入校驗、Toast 與確認對話盒)
     const rawIndexHtmlCode = `<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -879,7 +897,7 @@ function saveSystemSettings(sObj, p) {
           <span>🔍 全域搜尋結果：</span>
           <span id="searchKeywordBadge" class="theme-soft-bg theme-text px-2 py-0.5 rounded-md font-semibold"></span>
         </h3>
-        <button onclick="clearSearch()" class="text-xs text-slate-500 hover:text-slate-800 cursor-pointer">關閉搜尋</button>
+        <button onclick="clearSearch()" class="text-xs text-slate-500 hover:text-slate-800">關閉搜尋</button>
       </div>
       <div id="searchResultList" class="space-y-3"></div>
     </div>
@@ -893,14 +911,14 @@ function saveSystemSettings(sObj, p) {
         <div class="flex items-center gap-2 flex-wrap">
           <label for="contactDatePicker" class="text-sm font-bold text-slate-700 whitespace-nowrap">選擇日期：</label>
           <input type="date" id="contactDatePicker" onchange="onDateChanged()" class="px-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-          <button onclick="setShortcutDate(0)" class="text-xs bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg font-medium cursor-pointer">今日</button>
-          <button onclick="setShortcutDate(1)" class="text-xs bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg font-medium cursor-pointer">昨日</button>
+          <button onclick="setShortcutDate(0)" class="text-xs bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg font-medium">今日</button>
+          <button onclick="setShortcutDate(1)" class="text-xs bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg font-medium">昨日</button>
         </div>
         <div class="flex items-center gap-2">
-          <button id="teacherDeleteContactBtn" onclick="deleteCurrentContact()" class="hidden text-xs sm:text-sm bg-red-50 hover:bg-red-100 text-red-600 font-semibold px-3 py-2 rounded-xl transition-colors border border-red-200 cursor-pointer">
+          <button id="teacherDeleteContactBtn" onclick="deleteCurrentContact()" class="hidden text-xs sm:text-sm bg-red-50 hover:bg-red-100 text-red-600 font-semibold px-3 py-2 rounded-xl transition-colors border border-red-200">
             🗑️ 刪除本日
           </button>
-          <button id="teacherEditContactBtn" onclick="openContactModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl transition-colors cursor-pointer">
+          <button id="teacherEditContactBtn" onclick="openContactModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl transition-colors">
             ✏️ 發布/編輯本日聯絡簿
           </button>
         </div>
@@ -915,7 +933,7 @@ function saveSystemSettings(sObj, p) {
       </div>
       <div class="flex justify-between items-center gap-2 flex-wrap">
         <div id="announceFilterChips" class="flex gap-2 overflow-x-auto pb-1 text-xs"></div>
-        <button id="teacherAddAnnounceBtn" onclick="openAnnounceModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl whitespace-nowrap cursor-pointer">
+        <button id="teacherAddAnnounceBtn" onclick="openAnnounceModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl whitespace-nowrap">
           ➕ 發布新公告
         </button>
       </div>
@@ -931,14 +949,14 @@ function saveSystemSettings(sObj, p) {
         <div class="theme-soft-bg theme-border border p-3 rounded-xl text-xs sm:text-sm font-medium theme-text">
           🌟 <strong>班級公約</strong>：自律自重、溫暖互助、主動學習、快樂成長！
         </div>
-        <button id="teacherAddRuleBtn" onclick="openRuleModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl whitespace-nowrap cursor-pointer">
+        <button id="teacherAddRuleBtn" onclick="openRuleModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl whitespace-nowrap">
           ➕ 新增公約
         </button>
       </div>
       <div id="rulesContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </section>
 
-    <!-- 4. 課表與作息 -->
+    <!-- 4. 課表與作息 (訪客端完全隱藏序號，教師端支援重設) -->
     <section id="view-timetable" class="hidden space-y-4">
       <div id="banner-timetable-hidden" class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs font-semibold">
         ⚠️ 本模組目前設定為「對訪客隱藏」。訪客無法在前台看見此分頁，僅教師登入後可見與編輯。
@@ -946,10 +964,10 @@ function saveSystemSettings(sObj, p) {
       <div class="flex justify-between items-center flex-wrap gap-2">
         <span class="text-xs text-slate-500">週一至週五每日課表與作息規劃</span>
         <div class="flex items-center gap-2">
-          <button id="teacherResetTimetableBtn" onclick="resetTimetable()" class="hidden text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold px-3 py-2 rounded-xl border border-slate-300 whitespace-nowrap cursor-pointer">
+          <button id="teacherResetTimetableBtn" onclick="resetTimetable()" class="hidden text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 font-semibold px-3 py-2 rounded-xl border border-slate-300 whitespace-nowrap">
             🔄 重設乾淨標準課表
           </button>
-          <button id="teacherAddPeriodBtn" onclick="openPeriodModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl whitespace-nowrap cursor-pointer">
+          <button id="teacherAddPeriodBtn" onclick="openPeriodModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl whitespace-nowrap">
             ➕ 新增節次
           </button>
         </div>
@@ -984,7 +1002,7 @@ function saveSystemSettings(sObj, p) {
       </div>
       <div class="flex justify-between items-center">
         <span class="text-xs text-slate-500">本學期班級幹部名冊與任務分工</span>
-        <button id="teacherAddDutyBtn" onclick="openDutyModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl whitespace-nowrap cursor-pointer">
+        <button id="teacherAddDutyBtn" onclick="openDutyModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl whitespace-nowrap">
           ➕ 新增幹部
         </button>
       </div>
@@ -998,7 +1016,7 @@ function saveSystemSettings(sObj, p) {
       </div>
       <div class="flex justify-between items-center gap-2 flex-wrap">
         <div id="faqFilterChips" class="flex gap-2 overflow-x-auto pb-1 text-xs"></div>
-        <button id="teacherAddFaqBtn" onclick="openFaqModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl whitespace-nowrap cursor-pointer">
+        <button id="teacherAddFaqBtn" onclick="openFaqModal()" class="hidden text-xs sm:text-sm theme-bg hover:opacity-90 text-white font-semibold px-4 py-2 rounded-xl whitespace-nowrap">
           ➕ 新增 FAQ
         </button>
       </div>
@@ -1008,15 +1026,17 @@ function saveSystemSettings(sObj, p) {
 
   <!-- ==================== 對話盒 (Modals) ==================== -->
 
-  <!-- 教師登入 Modal -->
+  <!-- 教師登入 Modal (支援 Enter 快捷與安全狀態提示) -->
   <div id="loginModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
     <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-200">
       <h3 class="text-base font-bold text-slate-900 mb-1">教師身分驗證</h3>
       <p class="text-xs text-slate-500 mb-4">請輸入教師管理密鑰以啟用管理權限。</p>
-      <input type="password" id="passwordInput" placeholder="請輸入管理密鑰" class="w-full px-3 py-2 text-sm border rounded-xl mb-4 focus:ring-2 focus:ring-blue-500 outline-none">
+      <input type="password" id="passwordInput" onkeydown="if(event.key==='Enter') loginAsTeacher()" placeholder="請輸入管理密鑰" class="w-full px-3 py-2 text-sm border rounded-xl mb-4 focus:ring-2 focus:ring-blue-500 outline-none">
       <div class="flex justify-end gap-2">
-        <button onclick="closeModal('loginModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer">取消</button>
-        <button onclick="loginAsTeacher()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">驗證登入</button>
+        <button onclick="closeModal('loginModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200">取消</button>
+        <button id="confirmLoginBtn" onclick="loginAsTeacher()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg flex items-center gap-1.5">
+          <span>驗證登入</span>
+        </button>
       </div>
     </div>
   </div>
@@ -1033,12 +1053,12 @@ function saveSystemSettings(sObj, p) {
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-2">挑選指定布景主題</label>
           <div class="grid grid-cols-3 gap-2 text-xs">
-            <button onclick="selectTheme('ocean')" id="theme-btn-ocean" class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span class="w-5 h-5 rounded-full bg-blue-600"></span><span class="font-bold">海洋湛藍</span></button>
-            <button onclick="selectTheme('forest')" id="theme-btn-forest" class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span class="w-5 h-5 rounded-full bg-emerald-600"></span><span class="font-bold">森林翠綠</span></button>
-            <button onclick="selectTheme('sunset')" id="theme-btn-sunset" class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span class="w-5 h-5 rounded-full bg-amber-600"></span><span class="font-bold">落日暖橘</span></button>
-            <button onclick="selectTheme('lavender')" id="theme-btn-lavender" class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span class="w-5 h-5 rounded-full bg-violet-600"></span><span class="font-bold">薰衣草紫</span></button>
-            <button onclick="selectTheme('rose')" id="theme-btn-rose" class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span class="w-5 h-5 rounded-full bg-rose-600"></span><span class="font-bold">櫻花粉漾</span></button>
-            <button onclick="selectTheme('slate')" id="theme-btn-slate" class="p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer"><span class="w-5 h-5 rounded-full bg-slate-700"></span><span class="font-bold">極簡石墨</span></button>
+            <button onclick="selectTheme('ocean')" id="theme-btn-ocean" class="p-2 rounded-xl border flex flex-col items-center gap-1"><span class="w-5 h-5 rounded-full bg-blue-600"></span><span class="font-bold">海洋湛藍</span></button>
+            <button onclick="selectTheme('forest')" id="theme-btn-forest" class="p-2 rounded-xl border flex flex-col items-center gap-1"><span class="w-5 h-5 rounded-full bg-emerald-600"></span><span class="font-bold">森林翠綠</span></button>
+            <button onclick="selectTheme('sunset')" id="theme-btn-sunset" class="p-2 rounded-xl border flex flex-col items-center gap-1"><span class="w-5 h-5 rounded-full bg-amber-600"></span><span class="font-bold">落日暖橘</span></button>
+            <button onclick="selectTheme('lavender')" id="theme-btn-lavender" class="p-2 rounded-xl border flex flex-col items-center gap-1"><span class="w-5 h-5 rounded-full bg-violet-600"></span><span class="font-bold">薰衣草紫</span></button>
+            <button onclick="selectTheme('rose')" id="theme-btn-rose" class="p-2 rounded-xl border flex flex-col items-center gap-1"><span class="w-5 h-5 rounded-full bg-rose-600"></span><span class="font-bold">櫻花粉漾</span></button>
+            <button onclick="selectTheme('slate')" id="theme-btn-slate" class="p-2 rounded-xl border flex flex-col items-center gap-1"><span class="w-5 h-5 rounded-full bg-slate-700"></span><span class="font-bold">極簡石墨</span></button>
           </div>
         </div>
         <div>
@@ -1054,8 +1074,8 @@ function saveSystemSettings(sObj, p) {
         </div>
       </div>
       <div class="flex justify-end gap-2 mt-6">
-        <button onclick="closeModal('settingsModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 cursor-pointer">取消</button>
-        <button onclick="submitSystemSettings()" id="saveSettingsBtn" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">儲存全域設定</button>
+        <button onclick="closeModal('settingsModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200">取消</button>
+        <button onclick="submitSystemSettings()" id="saveSettingsBtn" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg">儲存全域設定</button>
       </div>
     </div>
   </div>
@@ -1071,8 +1091,8 @@ function saveSystemSettings(sObj, p) {
         <div><label class="block text-xs font-bold text-slate-700 mb-1">重要叮嚀</label><textarea id="remindersInput" rows="2" class="w-full px-3 py-2 border rounded-xl"></textarea></div>
       </div>
       <div class="flex justify-end gap-2 mt-6">
-        <button onclick="closeModal('contactModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
-        <button onclick="submitContactBook()" id="saveContactBtn" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">儲存發布</button>
+        <button onclick="closeModal('contactModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100">取消</button>
+        <button onclick="submitContactBook()" id="saveContactBtn" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg">儲存發布</button>
       </div>
     </div>
   </div>
@@ -1098,8 +1118,8 @@ function saveSystemSettings(sObj, p) {
         <label class="flex items-center gap-2 pt-1 cursor-pointer"><input type="checkbox" id="annTop" class="w-4 h-4"><span class="text-xs font-bold text-blue-700">📌 置頂此公告</span></label>
       </div>
       <div class="flex justify-end gap-2 mt-5">
-        <button onclick="closeModal('announceModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
-        <button onclick="submitAnnouncement()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認發布</button>
+        <button onclick="closeModal('announceModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100">取消</button>
+        <button onclick="submitAnnouncement()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg">確認發布</button>
       </div>
     </div>
   </div>
@@ -1121,8 +1141,8 @@ function saveSystemSettings(sObj, p) {
         <div><label class="block text-xs font-bold text-slate-700 mb-1">獎勵與加分標準 (選填)</label><input type="text" id="ruleReward" class="w-full px-3 py-2 border rounded-xl"></div>
       </div>
       <div class="flex justify-end gap-2 mt-5">
-        <button onclick="closeModal('ruleModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
-        <button onclick="submitClassRule()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認儲存</button>
+        <button onclick="closeModal('ruleModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100">取消</button>
+        <button onclick="submitClassRule()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg">確認儲存</button>
       </div>
     </div>
   </div>
@@ -1157,8 +1177,8 @@ function saveSystemSettings(sObj, p) {
         <div><label class="block text-xs font-bold text-slate-700 mb-1">備註</label><input type="text" id="periodNote" class="w-full px-3 py-2 border rounded-xl"></div>
       </div>
       <div class="flex justify-end gap-2 mt-5">
-        <button onclick="closeModal('periodModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
-        <button onclick="submitPeriodRow()" id="savePeriodBtn" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認儲存</button>
+        <button onclick="closeModal('periodModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100">取消</button>
+        <button onclick="submitPeriodRow()" id="savePeriodBtn" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg">確認儲存</button>
       </div>
     </div>
   </div>
@@ -1178,8 +1198,8 @@ function saveSystemSettings(sObj, p) {
         <div><label class="block text-xs font-bold text-slate-700 mb-1">備註說明 (選填)</label><input type="text" id="dutyNote" placeholder="例如：認真負責、熱心服務" class="w-full px-3 py-2 border rounded-xl"></div>
       </div>
       <div class="flex justify-end gap-2 mt-5">
-        <button onclick="closeModal('dutyModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
-        <button onclick="submitDuty()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認儲存</button>
+        <button onclick="closeModal('dutyModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100">取消</button>
+        <button onclick="submitDuty()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg">確認儲存</button>
       </div>
     </div>
   </div>
@@ -1208,14 +1228,342 @@ function saveSystemSettings(sObj, p) {
         <div><label class="block text-xs font-bold text-slate-700 mb-1">相關連結 (選填)</label><input type="text" id="faqLink" placeholder="https://..." class="w-full px-3 py-2 border rounded-xl"></div>
       </div>
       <div class="flex justify-end gap-2 mt-5">
-        <button onclick="closeModal('faqModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 cursor-pointer">取消</button>
-        <button onclick="submitFaq()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg cursor-pointer">確認儲存</button>
+        <button onclick="closeModal('faqModal')" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100">取消</button>
+        <button onclick="submitFaq()" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg">確認儲存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 自訂提示訊息 Toast 與確認對話盒 (完全取代 alert 與 confirm) -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <div id="confirmModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-xl border border-slate-200">
+      <h3 class="text-base font-bold text-slate-900 mb-2">確認操作</h3>
+      <p id="confirmModalMsg" class="text-xs sm:text-sm text-slate-600 mb-5 leading-relaxed"></p>
+      <div class="flex justify-end gap-2">
+        <button id="confirmCancelBtn" class="text-xs font-semibold px-4 py-2 rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200">取消</button>
+        <button id="confirmOkBtn" class="text-xs font-semibold px-4 py-2 rounded-lg text-white theme-bg">確認</button>
       </div>
     </div>
   </div>
 
   <!-- 前端 JavaScript -->
   <script>
+    /**
+     * Google Apps Script 環境偵測與雙模容錯墊片 (Shim)
+     * 當在 GAS 正式環境中運行時，保留原生 google.script.run；
+     * 當在瀏覽器預覽、Blob 或本機環境中運行時，自動啟用擬真 Mock 引擎以避免 google is not defined。
+     */
+    (function initGoogleScriptShim() {
+      if (typeof window.google !== 'undefined' && window.google.script && window.google.script.run) {
+        return;
+      }
+
+      const MOCK_STORAGE_KEY = 'CLASS_MGMT_MOCK_STORAGE_V2';
+      const TEACHER_DEFAULT_KEY = 'AdminTeacher2026';
+
+      const DEFAULT_DATA = {
+        today: new Date().toISOString().split('T')[0],
+        settings: {
+          theme: 'ocean',
+          class_title: '六年甲班 雲端事務中心',
+          show_contact: true,
+          show_announcements: true,
+          show_rules: true,
+          show_timetable: true,
+          show_duties: true,
+          show_faq: true
+        },
+        contactList: [
+          {
+            '日期': new Date().toISOString().split('T')[0],
+            '每日作業': '1. 國語習作 P.4-P.5\\n2. 數學隨堂測驗訂正\\n3. 閱讀課外書 20 分鐘',
+            '攜帶物品': '1. 彩色筆\\n2. 抹布與衛生紙\\n3. 班費收據回條',
+            '重要叮嚀': '明日進行視力檢查，請有戴眼鏡的同學務必配戴至校。',
+            '發布人': '導師',
+            '更新時間': new Date().toISOString().split('T')[0] + ' 08:30:00'
+          },
+          {
+            '日期': '2026-08-28',
+            '每日作業': '1. 國語生字簿乙本 P.1-P.3\\n2. 數學習作 P.1-P.3',
+            '攜帶物品': '1. 註冊資料回條\\n2. 潔牙用具',
+            '重要叮嚀': '開學第一週請協助孩子調整作息，提早就寢。',
+            '發布人': '導師',
+            '更新時間': '2026-08-28 08:30:00'
+          }
+        ],
+        announcements: [
+          {
+            'ID': '1',
+            '分類': '行政通知',
+            '標題': '本學期學校日（親師座談會）邀請函',
+            '內容': '本週五晚間 18:30-20:30 將舉辦班級親師座談會，歡迎家長踴躍參與！',
+            '附件或相關連結': 'https://meet.google.com/',
+            '是否置頂': '是',
+            '發布日期': new Date().toISOString().split('T')[0],
+            '更新時間': new Date().toISOString().split('T')[0] + ' 09:00:00'
+          },
+          {
+            'ID': '2',
+            '分類': '課堂叮嚀',
+            '標題': '明日數學第二單元隨堂小考提醒',
+            '內容': '請同學回家複習課本 P.20-P.28，明日第一節進行隨堂小測驗。',
+            '附件或相關連結': '',
+            '是否置頂': '否',
+            '發布日期': new Date().toISOString().split('T')[0],
+            '更新時間': new Date().toISOString().split('T')[0] + ' 16:00:00'
+          }
+        ],
+        rules: [
+          {
+            'ID': '1',
+            '守則類別': '學習態度',
+            '公約條目': '上課專注，積極發言',
+            '詳細說明': '上課時不任意走動或干擾同學，發言前先舉手並經老師同意。',
+            '獎勵與加分標準': '每週主動發言滿 5 次記榮譽點數 1 點',
+            '更新時間': new Date().toISOString().split('T')[0] + ' 08:00:00'
+          },
+          {
+            'ID': '2',
+            '守則類別': '團體生活',
+            '公約條目': '友愛同學，互助合作',
+            '詳細說明': '遇到同學需要幫忙時主動協助，不說髒話、不搞小團體。',
+            '獎勵與加分標準': '獲選友善之星者可兌換班級特權獎卡',
+            '更新時間': new Date().toISOString().split('T')[0] + ' 08:00:00'
+          }
+        ],
+        timetable: [
+          { '序位': '1', '節次': '早自習', '時間區間': '07:50-08:30', '星期一': '晨讀時光', '星期二': '全校朝會', '星期三': '英語朗讀', '星期四': '導師時間', '星期五': '班會活動', '備註': '準時到校不遲到' },
+          { '序位': '2', '節次': '第一節', '時間區間': '08:40-09:20', '星期一': '國語', '星期二': '數學', '星期三': '英語', '星期四': '國語', '星期五': '數學', '備註': '' },
+          { '序位': '3', '節次': '第二節', '時間區間': '09:30-10:10', '星期一': '數學', '星期二': '國語', '星期三': '自然', '星期四': '社會', '星期五': '國語', '備註': '' },
+          { '序位': '4', '節次': '第三節', '時間區間': '10:30-11:10', '星期一': '英語', '星期二': '社會', '星期三': '音樂', '星期四': '數學', '星期五': '自然', '備註': '課間大下課' },
+          { '序位': '5', '節次': '第四節', '時間區間': '11:20-12:00', '星期一': '體育', '星期二': '自然', '星期三': '美勞', '星期四': '英語', '星期五': '社會', '備註': '' },
+          { '序位': '6', '節次': '午餐午休', '時間區間': '12:00-13:20', '星期一': '用餐潔牙', '星期二': '用餐潔牙', '星期三': '用餐潔牙', '星期四': '用餐潔牙', '星期五': '用餐潔牙', '備註': '12:40 靜息' },
+          { '序位': '7', '節次': '第五節', '時間區間': '13:30-14:10', '星期一': '社會', '星期二': '體育', '星期三': '放學', '星期四': '彈性課程', '星期五': '綜合活動', '備註': '' },
+          { '序位': '8', '節次': '第六節', '時間區間': '14:20-15:00', '星期一': '資訊', '星期二': '綜合', '星期三': '', '星期四': '體育', '星期五': '彈性課程', '備註': '' },
+          { '序位': '9', '節次': '第七節', '時間區間': '15:20-16:00', '星期一': '打掃放學', '星期二': '打掃放學', '星期三': '', '星期四': '打掃放學', '星期五': '打掃放學', '備註': '16:00 放學' }
+        ],
+        duties: [
+          { 'ID': '1', '職稱': '班長', '學生姓名': '王小明', '負責職責': '協助班級秩序、整隊、收發重要通知', '例行任務': '晨會整隊、課堂起立敬禮', '備註': '品學兼優' },
+          { 'ID': '2', '職稱': '副班長', '學生姓名': '李小華', '負責職責': '協助班長、點名與請假登記', '例行任務': '每日晨間向導師回報出缺席', '備註': '認真負責' },
+          { 'ID': '3', '職稱': '學藝股長', '學生姓名': '張小宇', '負責職責': '抄寫聯絡簿黑板、佈告欄維護', '例行任務': '每日放學前確認聯絡簿作業項目', '備註': '' }
+        ],
+        faq: [
+          { 'ID': '1', '分類': '請假規範', '常見問題': '孩子當天生病或事假該如何請假？', '說明與辦理流程': '請於當日早上 08:00 前利用學校請假專線或於班級 LINE 群組留言通知導師，事後三日內補交假單。', '相關連結': 'https://school.example.edu.tw/leave', '更新時間': new Date().toISOString().split('T')[0] + ' 08:00:00' },
+          { 'ID': '2', '分類': '作息與生活', '常見問題': '學校每週作息與便服日是哪一天？', '說明與辦理流程': '週三全校穿著便服，其餘天數請依課表穿著運動服或制服；週三中午 12:40 放學。', '相關連結': '', '更新時間': new Date().toISOString().split('T')[0] + ' 08:00:00' }
+        ]
+      };
+
+      function getStore() {
+        try {
+          const s = localStorage.getItem(MOCK_STORAGE_KEY);
+          if (s) return JSON.parse(s);
+        } catch(e) {}
+        return JSON.parse(JSON.stringify(DEFAULT_DATA));
+      }
+
+      function setStore(data) {
+        try {
+          localStorage.setItem(MOCK_STORAGE_KEY, JSON.stringify(data));
+        } catch(e) {}
+      }
+
+      const mockEndpoints = {
+        getAllClassroomData: function() {
+          const data = getStore();
+          return { success: true, today: data.today, settings: data.settings, contactList: data.contactList, announcements: data.announcements, rules: data.rules, timetable: data.timetable, duties: data.duties, faq: data.faq };
+        },
+        verifyTeacherLogin: function(pwd) {
+          if (pwd && String(pwd).trim() === TEACHER_DEFAULT_KEY) {
+            return { success: true, message: '身分驗證成功，已進入教師管理模式！' };
+          }
+          return { success: false, message: '身分驗證失敗：管理密鑰錯誤！(預設密鑰：AdminTeacher2026)' };
+        },
+        saveContactBook: function(d) {
+          const s = getStore();
+          const idx = s.contactList.findIndex(c => c['日期'] === d.date);
+          const row = { '日期': d.date, '每日作業': d.homework, '攜帶物品': d.supplies, '重要叮嚀': d.reminders, '發布人': d.author || '導師', '更新時間': new Date().toLocaleString() };
+          if (idx >= 0) s.contactList[idx] = row; else s.contactList.unshift(row);
+          setStore(s);
+          return { success: true, message: '聯絡簿已儲存成功！' };
+        },
+        deleteContactBook: function(date) {
+          const s = getStore();
+          s.contactList = s.contactList.filter(c => c['日期'] !== date);
+          setStore(s);
+          return { success: true, message: \`已成功刪除 \${date} 聯絡簿！\` };
+        },
+        saveAnnouncement: function(d) {
+          const s = getStore();
+          const id = d.id || String(Date.now());
+          const row = { 'ID': id, '分類': d.category, '標題': d.title, '內容': d.content, '附件或相關連結': d.link, '是否置頂': d.isTop ? '是' : '否', '發布日期': s.today, '更新時間': new Date().toLocaleString() };
+          const idx = s.announcements.findIndex(a => String(a.ID) === String(id));
+          if (idx >= 0) s.announcements[idx] = row; else s.announcements.unshift(row);
+          setStore(s);
+          return { success: true, message: '公告已成功發布！' };
+        },
+        deleteAnnouncement: function(id) {
+          const s = getStore();
+          s.announcements = s.announcements.filter(a => String(a.ID) !== String(id));
+          setStore(s);
+          return { success: true, message: '公告已成功刪除！' };
+        },
+        saveClassRule: function(d) {
+          const s = getStore();
+          const id = d.id || String(Date.now());
+          const row = { 'ID': id, '守則類別': d.category, '公約條目': d.title, '詳細說明': d.detail, '獎勵與加分標準': d.reward, '更新時間': new Date().toLocaleString() };
+          const idx = s.rules.findIndex(r => String(r.ID) === String(id));
+          if (idx >= 0) s.rules[idx] = row; else s.rules.push(row);
+          setStore(s);
+          return { success: true, message: '班級公約已儲存！' };
+        },
+        deleteClassRule: function(id) {
+          const s = getStore();
+          s.rules = s.rules.filter(r => String(r.ID) !== String(id));
+          setStore(s);
+          return { success: true, message: '班級公約已刪除！' };
+        },
+        saveTimetableRow: function(d) {
+          const s = getStore();
+          const orig = d.originalPeriod;
+          const row = { '序位': d.order, '節次': d.period, '時間區間': d.timeRange, '星期一': d.mon, '星期二': d.tue, '星期三': d.wed, '星期四': d.thu, '星期五': d.fri, '備註': d.note };
+          let idx = -1;
+          if (orig) idx = s.timetable.findIndex(t => t['節次'] === orig);
+          if (idx < 0) idx = s.timetable.findIndex(t => t['節次'] === d.period);
+          if (idx >= 0) s.timetable[idx] = row; else s.timetable.push(row);
+          s.timetable.sort((a, b) => (Number(a['序位']) || 99) - (Number(b['序位']) || 99));
+          setStore(s);
+          return { success: true, message: '課表節次已儲存！' };
+        },
+        deleteTimetableRow: function(periodName) {
+          const s = getStore();
+          s.timetable = s.timetable.filter(t => t['節次'] !== periodName);
+          setStore(s);
+          return { success: true, message: \`已成功刪除【\${periodName}】！\` };
+        },
+        resetTimetableToDefault: function() {
+          const s = getStore();
+          s.timetable = JSON.parse(JSON.stringify(DEFAULT_DATA.timetable));
+          setStore(s);
+          return { success: true, message: '課表已成功重設為標準乾淨範本！' };
+        },
+        saveDuty: function(d) {
+          const s = getStore();
+          const id = d.id || String(Date.now());
+          const row = { 'ID': id, '職稱': d.title, '學生姓名': d.name, '負責職責': d.duty, '例行任務': d.routine, '備註': d.note };
+          const idx = s.duties.findIndex(dt => String(dt.ID) === String(id) || dt['職稱'] === d.title);
+          if (idx >= 0) s.duties[idx] = row; else s.duties.push(row);
+          setStore(s);
+          return { success: true, message: '幹部職責已成功儲存！' };
+        },
+        deleteDuty: function(id) {
+          const s = getStore();
+          s.duties = s.duties.filter(dt => String(dt.ID) !== String(id));
+          setStore(s);
+          return { success: true, message: '幹部紀錄已成功刪除！' };
+        },
+        saveFAQ: function(d) {
+          const s = getStore();
+          const id = d.id || String(Date.now());
+          const row = { 'ID': id, '分類': d.category, '常見問題': d.question, '說明與辦理流程': d.answer, '相關連結': d.link, '更新時間': new Date().toLocaleString() };
+          const idx = s.faq.findIndex(f => String(f.ID) === String(id));
+          if (idx >= 0) s.faq[idx] = row; else s.faq.push(row);
+          setStore(s);
+          return { success: true, message: '親師 FAQ 已成功儲存！' };
+        },
+        deleteFAQ: function(id) {
+          const s = getStore();
+          s.faq = s.faq.filter(f => String(f.ID) !== String(id));
+          setStore(s);
+          return { success: true, message: 'FAQ 已刪除！' };
+        },
+        saveSystemSettings: function(d) {
+          const s = getStore();
+          s.settings = Object.assign({}, s.settings, d);
+          setStore(s);
+          return { success: true, message: '系統設定與布景主題已成功儲存！' };
+        }
+      };
+
+      function createProxyRunner(successFn, failureFn) {
+        const target = {
+          withSuccessHandler: function(fn) { return createProxyRunner(fn, failureFn); },
+          withFailureHandler: function(fn) { return createProxyRunner(successFn, fn); }
+        };
+        return new Proxy(target, {
+          get: function(t, name) {
+            if (name in t) return t[name];
+            return function(...args) {
+              setTimeout(() => {
+                try {
+                  if (typeof mockEndpoints[name] === 'function') {
+                    const res = mockEndpoints[name](...args);
+                    if (successFn) successFn(res);
+                  } else {
+                    throw new Error('找不到對應的後端方法: ' + name);
+                  }
+                } catch(err) {
+                  if (failureFn) failureFn(err);
+                  else console.error('模擬後端執行錯誤:', err);
+                }
+              }, 100);
+            };
+          }
+        });
+      }
+
+      window.google = {
+        script: {
+          run: createProxyRunner(null, null)
+        }
+      };
+    })();
+
+    /**
+     * 自訂訊息提示與確認視窗工具函式（不使用原生 alert/confirm）
+     */
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      const bg = type === 'error' ? 'bg-rose-600 text-white' : (type === 'success' ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-white');
+      toast.className = \`\${bg} px-4 py-2.5 rounded-xl shadow-lg text-xs sm:text-sm font-semibold pointer-events-auto transition-all duration-300 transform translate-y-2 opacity-0 flex items-center gap-2\`;
+      const icon = type === 'error' ? '⚠️' : (type === 'success' ? '✅' : 'ℹ️');
+      toast.innerHTML = \`<span>\${icon}</span><span>\${message}</span>\`;
+      container.appendChild(toast);
+      setTimeout(() => { toast.classList.remove('translate-y-2', 'opacity-0'); }, 10);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    let pendingConfirmCallback = null;
+    function showConfirmModal(message, onConfirm) {
+      const modal = document.getElementById('confirmModal');
+      const msgEl = document.getElementById('confirmModalMsg');
+      const cancelBtn = document.getElementById('confirmCancelBtn');
+      const okBtn = document.getElementById('confirmOkBtn');
+      if (!modal || !msgEl) return;
+      msgEl.innerText = message;
+      modal.classList.remove('hidden');
+      pendingConfirmCallback = onConfirm;
+
+      cancelBtn.onclick = function() {
+        modal.classList.add('hidden');
+        pendingConfirmCallback = null;
+      };
+      okBtn.onclick = function() {
+        modal.classList.add('hidden');
+        if (typeof pendingConfirmCallback === 'function') {
+          const action = pendingConfirmCallback;
+          pendingConfirmCallback = null;
+          action();
+        }
+      };
+    }
+
     let classData = null;
     let isTeacher = false;
     let teacherPassword = '';
@@ -1246,7 +1594,7 @@ function saveSystemSettings(sObj, p) {
         })
         .withFailureHandler(function(err) {
           document.getElementById('mainLoader').classList.add('hidden');
-          alert('載入失敗: ' + err.message);
+          showToast('資料庫載入失敗: ' + err.message, 'error');
         })
         .getAllClassroomData();
     }
@@ -1319,7 +1667,6 @@ function saveSystemSettings(sObj, p) {
       renderFAQ();
     }
 
-    // 1. 聯絡簿
     function renderContact() {
       const targetDate = document.getElementById('contactDatePicker').value;
       const container = document.getElementById('contactContent');
@@ -1364,7 +1711,7 @@ function saveSystemSettings(sObj, p) {
     function onDateChanged() {
       const picker = document.getElementById('contactDatePicker');
       const today = (classData && classData.today) ? classData.today : new Date().toISOString().split('T')[0];
-      if (picker.value > today) { alert('不可查詢未來日期的聯絡簿！'); picker.value = today; }
+      if (picker.value > today) { showToast('不可查詢未來日期的聯絡簿！', 'error'); picker.value = today; }
       renderContact();
     }
 
@@ -1374,7 +1721,6 @@ function saveSystemSettings(sObj, p) {
       onDateChanged();
     }
 
-    // 2. 班級公告
     function renderAnnouncements(filter = currentAnnounceFilter) {
       currentAnnounceFilter = filter;
       const chipContainer = document.getElementById('announceFilterChips');
@@ -1389,8 +1735,8 @@ function saveSystemSettings(sObj, p) {
         const isAct = (filter === 'all' && cat === '全部') || filter === cat;
         const btn = document.createElement('button');
         btn.className = isAct 
-          ? 'theme-bg text-white px-3 py-1.5 rounded-lg font-bold announce-tag transition-all shadow-xs cursor-pointer' 
-          : 'bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg font-medium announce-tag transition-all cursor-pointer';
+          ? 'theme-bg text-white px-3 py-1.5 rounded-lg font-bold announce-tag transition-all shadow-xs' 
+          : 'bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg font-medium announce-tag transition-all';
         btn.innerText = cat;
         btn.onclick = () => renderAnnouncements(cat === '全部' ? 'all' : cat);
         chipContainer.appendChild(btn);
@@ -1407,7 +1753,7 @@ function saveSystemSettings(sObj, p) {
         const card = document.createElement('div');
         card.className = \`p-5 rounded-2xl border \${isTop ? 'bg-amber-50/40 border-amber-300' : 'bg-white border-slate-200'} shadow-xs flex flex-col justify-between\`;
         let linkHtml = a['附件或相關連結'] ? \`<a href="\${a['附件或相關連結']}" target="_blank" class="text-xs theme-text hover:underline inline-flex items-center gap-1 mt-3 font-semibold">🔗 檢視相關附件/連結</a>\` : '';
-        let teacherActions = isTeacher ? \`<div class="flex items-center gap-2"><button onclick="editAnnouncement('\${a['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button><button onclick="deleteAnnouncement('\${a['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button></div>\` : '';
+        let teacherActions = isTeacher ? \`<div class="flex items-center gap-2"><button onclick="editAnnouncement('\${a['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold">編輯</button><button onclick="deleteAnnouncement('\${a['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold">刪除</button></div>\` : '';
 
         card.innerHTML = \`
           <div>
@@ -1427,7 +1773,6 @@ function saveSystemSettings(sObj, p) {
       });
     }
 
-    // 3. 班級公約
     function renderRules() {
       const container = document.getElementById('rulesContainer');
       container.innerHTML = '';
@@ -1435,7 +1780,7 @@ function saveSystemSettings(sObj, p) {
       list.forEach(r => {
         const card = document.createElement('div');
         card.className = "bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-2";
-        let teacherActions = isTeacher ? \`<div class="flex items-center gap-2"><button onclick="editRule('\${r['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button><button onclick="deleteRule('\${r['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button></div>\` : '';
+        let teacherActions = isTeacher ? \`<div class="flex items-center gap-2"><button onclick="editRule('\${r['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold">編輯</button><button onclick="deleteRule('\${r['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold">刪除</button></div>\` : '';
         card.innerHTML = \`
           <div class="flex justify-between items-center">
             <span class="text-xs font-bold theme-soft-bg theme-text px-2 py-0.5 rounded-full">\${r['守則類別'] || '公約'}</span>
@@ -1448,7 +1793,6 @@ function saveSystemSettings(sObj, p) {
       });
     }
 
-    // 4. 課表與作息
     function renderTimetable() {
       const body = document.getElementById('timetableBody');
       body.innerHTML = '';
@@ -1473,8 +1817,8 @@ function saveSystemSettings(sObj, p) {
         let orderCol = isTeacher ? \`<td class="py-2.5 px-1.5 text-xs text-slate-400 font-bold bg-slate-50/70">\${t['序位'] || '-'}</td>\` : '';
         let teacherActions = isTeacher ? \`
           <td class="py-2.5 px-2 text-xs">
-            <button onclick="editPeriodRow('\${t['節次']}')" class="text-blue-600 hover:underline mr-1 font-semibold cursor-pointer">編輯</button>
-            <button onclick="deletePeriodRow('\${t['節次']}')" class="text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
+            <button onclick="editPeriodRow('\${t['節次']}')" class="text-blue-600 hover:underline mr-1 font-semibold">編輯</button>
+            <button onclick="deletePeriodRow('\${t['節次']}')" class="text-red-500 hover:text-red-700 font-semibold">刪除</button>
           </td>\` : '';
         tr.innerHTML = \`
           \${orderCol}
@@ -1491,7 +1835,6 @@ function saveSystemSettings(sObj, p) {
       });
     }
 
-    // 5. 幹部名冊
     function renderDuties() {
       const container = document.getElementById('dutiesContainer');
       container.innerHTML = '';
@@ -1503,8 +1846,8 @@ function saveSystemSettings(sObj, p) {
         card.className = "bg-white p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between";
         let teacherActions = isTeacher ? \`
           <div class="flex items-center gap-2">
-            <button onclick="editDuty('\${d['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯</button>
-            <button onclick="deleteDuty('\${d['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
+            <button onclick="editDuty('\${d['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold">編輯</button>
+            <button onclick="deleteDuty('\${d['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold">刪除</button>
           </div>\` : '';
         card.innerHTML = \`
           <div>
@@ -1521,7 +1864,6 @@ function saveSystemSettings(sObj, p) {
       });
     }
 
-    // 6. 親師專區 FAQ
     function renderFAQ(filter = currentFaqFilter) {
       currentFaqFilter = filter;
       const chipContainer = document.getElementById('faqFilterChips');
@@ -1536,8 +1878,8 @@ function saveSystemSettings(sObj, p) {
         const isAct = (filter === 'all' && cat === '全部') || filter === cat;
         const btn = document.createElement('button');
         btn.className = isAct 
-          ? 'theme-bg text-white px-3 py-1.5 rounded-lg font-bold announce-tag transition-all shadow-xs cursor-pointer' 
-          : 'bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg font-medium announce-tag transition-all cursor-pointer';
+          ? 'theme-bg text-white px-3 py-1.5 rounded-lg font-bold announce-tag transition-all shadow-xs' 
+          : 'bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg font-medium announce-tag transition-all';
         btn.innerText = cat;
         btn.onclick = () => renderFAQ(cat === '全部' ? 'all' : cat);
         chipContainer.appendChild(btn);
@@ -1554,8 +1896,8 @@ function saveSystemSettings(sObj, p) {
         card.className = "bg-white p-4 rounded-2xl border border-slate-200 shadow-xs group";
         let teacherActions = isTeacher ? \`
           <div class="flex items-center gap-2 pt-2 border-t mt-2">
-            <button onclick="editFaq('\${f['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold cursor-pointer">編輯 FAQ</button>
-            <button onclick="deleteFaq('\${f['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer">刪除</button>
+            <button onclick="editFaq('\${f['ID']}')" class="text-xs text-blue-600 hover:underline font-semibold">編輯 FAQ</button>
+            <button onclick="deleteFaq('\${f['ID']}')" class="text-xs text-red-500 hover:text-red-700 font-semibold">刪除</button>
           </div>\` : '';
         card.innerHTML = \`
           <summary class="font-bold text-sm text-slate-900 cursor-pointer list-none flex justify-between items-center">
@@ -1571,7 +1913,6 @@ function saveSystemSettings(sObj, p) {
       });
     }
 
-    // 全局即時關鍵字搜尋
     function onGlobalSearch(query) {
       const q = query.trim().toLowerCase();
       const resultView = document.getElementById('searchResultView');
@@ -1588,7 +1929,6 @@ function saveSystemSettings(sObj, p) {
       const s = (classData && classData.settings) ? classData.settings : {};
       let matches = [];
 
-      // 1. 聯絡簿
       if (isTeacher || s.show_contact !== false) {
         (classData.contactList || []).forEach(c => {
           if ((c['每日作業'] || '').toLowerCase().includes(q) || (c['攜帶物品'] || '').toLowerCase().includes(q) || (c['重要叮嚀'] || '').toLowerCase().includes(q)) {
@@ -1597,7 +1937,6 @@ function saveSystemSettings(sObj, p) {
         });
       }
 
-      // 2. 班級公告
       if (isTeacher || s.show_announcements !== false) {
         (classData.announcements || []).forEach(a => {
           if ((a['標題'] || '').toLowerCase().includes(q) || (a['內容'] || '').toLowerCase().includes(q)) {
@@ -1606,7 +1945,6 @@ function saveSystemSettings(sObj, p) {
         });
       }
 
-      // 3. 班級公約
       if (isTeacher || s.show_rules !== false) {
         (classData.rules || []).forEach(r => {
           if ((r['公約條目'] || '').toLowerCase().includes(q) || (r['詳細說明'] || '').toLowerCase().includes(q)) {
@@ -1615,7 +1953,6 @@ function saveSystemSettings(sObj, p) {
         });
       }
 
-      // 4. 課表
       if (isTeacher || s.show_timetable !== false) {
         (classData.timetable || []).forEach(t => {
           const rowText = \`\${t['節次']} \${t['星期一']} \${t['星期二']} \${t['星期三']} \${t['星期四']} \${t['星期五']}\`.toLowerCase();
@@ -1625,7 +1962,6 @@ function saveSystemSettings(sObj, p) {
         });
       }
 
-      // 5. 幹部名冊
       if (isTeacher || s.show_duties !== false) {
         (classData.duties || []).forEach(d => {
           if ((d['職稱'] || '').toLowerCase().includes(q) || (d['學生姓名'] || '').toLowerCase().includes(q) || (d['負責職責'] || '').toLowerCase().includes(q)) {
@@ -1634,7 +1970,6 @@ function saveSystemSettings(sObj, p) {
         });
       }
 
-      // 6. 親師專區 FAQ
       if (isTeacher || s.show_faq !== false) {
         (classData.faq || []).forEach(f => {
           if ((f['常見問題'] || '').toLowerCase().includes(q) || (f['說明與辦理流程'] || '').toLowerCase().includes(q)) {
@@ -1680,16 +2015,63 @@ function saveSystemSettings(sObj, p) {
 
     function toggleTeacherLogin() {
       if (isTeacher) {
-        if (confirm('確定要退出教師管理模式嗎？')) { isTeacher = false; teacherPassword = ''; updateTeacherUI(); }
-      } else { document.getElementById('loginModal').classList.remove('hidden'); }
+        showConfirmModal('確定要退出教師管理模式嗎？', function() {
+          isTeacher = false;
+          teacherPassword = '';
+          updateTeacherUI();
+          showToast('已退出教師管理模式。', 'info');
+        });
+      } else {
+        const pwdInput = document.getElementById('passwordInput');
+        if (pwdInput) {
+          pwdInput.value = '';
+          setTimeout(() => pwdInput.focus(), 150);
+        }
+        document.getElementById('loginModal').classList.remove('hidden');
+      }
     }
 
     function loginAsTeacher() {
-      const pwd = document.getElementById('passwordInput').value;
-      if (!pwd) return alert('請輸入密鑰！');
-      teacherPassword = pwd; isTeacher = true; closeModal('loginModal');
-      document.getElementById('passwordInput').value = '';
-      updateTeacherUI(); alert('已成功啟用教師管理模式！');
+      const pwdInput = document.getElementById('passwordInput');
+      const pwd = pwdInput ? pwdInput.value.trim() : '';
+      if (!pwd) return showToast('請輸入管理密鑰！', 'error');
+
+      const btn = document.getElementById('confirmLoginBtn');
+      const origText = btn ? btn.innerHTML : '驗證登入';
+      if (btn) {
+        btn.innerHTML = '<span>驗證中...</span>';
+        btn.disabled = true;
+      }
+
+      google.script.run
+        .withSuccessHandler(function(res) {
+          if (btn) {
+            btn.innerHTML = origText;
+            btn.disabled = false;
+          }
+          if (res && res.success) {
+            teacherPassword = pwd;
+            isTeacher = true;
+            closeModal('loginModal');
+            pwdInput.value = '';
+            updateTeacherUI();
+            showToast(res.message || '已成功啟用教師管理模式！', 'success');
+          } else {
+            showToast((res && res.message) ? res.message : '身分驗證失敗：管理密鑰錯誤！', 'error');
+            if (pwdInput) {
+              pwdInput.value = '';
+              pwdInput.focus();
+            }
+          }
+        })
+        .withFailureHandler(function(err) {
+          if (btn) {
+            btn.innerHTML = origText;
+            btn.disabled = false;
+          }
+          showToast('驗證連線失敗: ' + err.message, 'error');
+        })
+        .verifyTeacherLogin(pwd);
     }
 
     function updateTeacherUI() {
@@ -1719,9 +2101,6 @@ function saveSystemSettings(sObj, p) {
       renderAllModules();
     }
 
-    // ==================== CRUD 表單操作 ====================
-
-    // 1. 聯絡簿
     function openContactModal() {
       const cur = document.getElementById('contactDatePicker').value;
       document.getElementById('contactModalDate').innerText = \`編輯日期：\${cur}\`;
@@ -1744,21 +2123,28 @@ function saveSystemSettings(sObj, p) {
       const btn = document.getElementById('saveContactBtn');
       btn.innerText = '儲存中...'; btn.disabled = true;
       google.script.run
-        .withSuccessHandler(function(res) { btn.innerText = '儲存發布'; btn.disabled = false; closeModal('contactModal'); alert(res.message); loadAllData(); })
-        .withFailureHandler(function(err) { btn.innerText = '儲存發布'; btn.disabled = false; alert('儲存失敗: ' + err.message); })
+        .withSuccessHandler(function(res) { 
+          btn.innerText = '儲存發布'; btn.disabled = false; closeModal('contactModal'); 
+          showToast(res.message, 'success'); 
+          loadAllData(); 
+        })
+        .withFailureHandler(function(err) { 
+          btn.innerText = '儲存發布'; btn.disabled = false; 
+          showToast('儲存失敗: ' + err.message, 'error'); 
+        })
         .saveContactBook(payload, teacherPassword);
     }
 
     function deleteCurrentContact() {
       const cur = document.getElementById('contactDatePicker').value;
-      if (!confirm(\`確定刪除 \${cur} 聯絡簿？\`)) return;
-      google.script.run
-        .withSuccessHandler(function(res) { alert(res.message); loadAllData(); })
-        .withFailureHandler(function(err) { alert('刪除失敗: ' + err.message); })
-        .deleteContactBook(cur, teacherPassword);
+      showConfirmModal(\`確定刪除 \${cur} 聯絡簿？\`, function() {
+        google.script.run
+          .withSuccessHandler(function(res) { showToast(res.message, 'success'); loadAllData(); })
+          .withFailureHandler(function(err) { showToast('刪除失敗: ' + err.message, 'error'); })
+          .deleteContactBook(cur, teacherPassword);
+      });
     }
 
-    // 2. 公告
     function openAnnounceModal() {
       document.getElementById('announceModalTitle').innerText = '發布班級公告';
       document.getElementById('annId').value = ''; document.getElementById('annTitle').value = '';
@@ -1791,22 +2177,22 @@ function saveSystemSettings(sObj, p) {
         link: document.getElementById('annLink').value,
         isTop: document.getElementById('annTop').checked
       };
-      if (!payload.title || !payload.content) return alert('標題與內容為必填！');
+      if (!payload.title || !payload.content) return showToast('標題與內容為必填！', 'error');
       google.script.run
-        .withSuccessHandler(function(res) { closeModal('announceModal'); alert(res.message); loadAllData(); })
-        .withFailureHandler(function(err) { alert('發布失敗: ' + err.message); })
+        .withSuccessHandler(function(res) { closeModal('announceModal'); showToast(res.message, 'success'); loadAllData(); })
+        .withFailureHandler(function(err) { showToast('發布失敗: ' + err.message, 'error'); })
         .saveAnnouncement(payload, teacherPassword);
     }
 
     function deleteAnnouncement(id) {
-      if (!confirm('確定刪除此公告？')) return;
-      google.script.run
-        .withSuccessHandler(function(res) { alert(res.message); loadAllData(); })
-        .withFailureHandler(function(err) { alert('刪除失敗: ' + err.message); })
-        .deleteAnnouncement(id, teacherPassword);
+      showConfirmModal('確定刪除此公告？', function() {
+        google.script.run
+          .withSuccessHandler(function(res) { showToast(res.message, 'success'); loadAllData(); })
+          .withFailureHandler(function(err) { showToast('刪除失敗: ' + err.message, 'error'); })
+          .deleteAnnouncement(id, teacherPassword);
+      });
     }
 
-    // 3. 班級公約
     function openRuleModal() {
       document.getElementById('ruleModalTitle').innerText = '新增班級公約';
       document.getElementById('ruleId').value = ''; document.getElementById('ruleTitle').value = '';
@@ -1836,22 +2222,22 @@ function saveSystemSettings(sObj, p) {
         detail: document.getElementById('ruleDetail').value,
         reward: document.getElementById('ruleReward').value
       };
-      if (!payload.title) return alert('公約條目為必填！');
+      if (!payload.title) return showToast('公約條目為必填！', 'error');
       google.script.run
-        .withSuccessHandler(function(res) { closeModal('ruleModal'); alert(res.message); loadAllData(); })
-        .withFailureHandler(function(err) { alert('儲存失敗: ' + err.message); })
+        .withSuccessHandler(function(res) { closeModal('ruleModal'); showToast(res.message, 'success'); loadAllData(); })
+        .withFailureHandler(function(err) { showToast('儲存失敗: ' + err.message, 'error'); })
         .saveClassRule(payload, teacherPassword);
     }
 
     function deleteRule(id) {
-      if (!confirm('確定刪除此公約？')) return;
-      google.script.run
-        .withSuccessHandler(function(res) { alert(res.message); loadAllData(); })
-        .withFailureHandler(function(err) { alert('刪除失敗: ' + err.message); })
-        .deleteClassRule(id, teacherPassword);
+      showConfirmModal('確定刪除此公約？', function() {
+        google.script.run
+          .withSuccessHandler(function(res) { showToast(res.message, 'success'); loadAllData(); })
+          .withFailureHandler(function(err) { showToast('刪除失敗: ' + err.message, 'error'); })
+          .deleteClassRule(id, teacherPassword);
+      });
     }
 
-    // 4. 課表節次
     function openPeriodModal() {
       document.getElementById('periodModalTitle').innerText = '新增課表節次';
       const list = (classData && classData.timetable) ? classData.timetable : [];
@@ -1888,7 +2274,7 @@ function saveSystemSettings(sObj, p) {
 
     function submitPeriodRow() {
       const pName = document.getElementById('periodName').value.trim();
-      if (!pName) return alert('節次名稱為必填！');
+      if (!pName) return showToast('節次名稱為必填！', 'error');
 
       const btn = document.getElementById('savePeriodBtn');
       btn.innerText = '儲存中...';
@@ -1912,44 +2298,45 @@ function saveSystemSettings(sObj, p) {
           btn.innerText = '確認儲存';
           btn.disabled = false;
           closeModal('periodModal'); 
-          alert(res.message); 
+          showToast(res.message, 'success'); 
           loadAllData(); 
         })
         .withFailureHandler(function(err) { 
           btn.innerText = '確認儲存';
           btn.disabled = false;
-          alert('儲存失敗: ' + err.message); 
+          showToast('儲存失敗: ' + err.message, 'error'); 
         })
         .saveTimetableRow(payload, teacherPassword);
     }
 
     function deletePeriodRow(periodName) {
-      if (!confirm(\`確定刪除【\${periodName}】？\`)) return;
-      google.script.run
-        .withSuccessHandler(function(res) { 
-          alert(res.message); 
-          loadAllData(); 
-        })
-        .withFailureHandler(function(err) { 
-          alert('刪除失敗: ' + err.message); 
-        })
-        .deleteTimetableRow(periodName, teacherPassword);
+      showConfirmModal(\`確定刪除【\${periodName}】？\`, function() {
+        google.script.run
+          .withSuccessHandler(function(res) { 
+            showToast(res.message, 'success'); 
+            loadAllData(); 
+          })
+          .withFailureHandler(function(err) { 
+            showToast('刪除失敗: ' + err.message, 'error'); 
+          })
+          .deleteTimetableRow(periodName, teacherPassword);
+      });
     }
 
     function resetTimetable() {
-      if (!confirm('確定要將課表重設為標準 9 節課乾淨範本嗎？這將清除試算表內的重複列與錯置資料。')) return;
-      google.script.run
-        .withSuccessHandler(function(res) {
-          alert(res.message);
-          loadAllData();
-        })
-        .withFailureHandler(function(err) {
-          alert('重設失敗: ' + err.message);
-        })
-        .resetTimetableToDefault(teacherPassword);
+      showConfirmModal('確定要將課表重設為標準 9 節課乾淨範本嗎？這將清除試算表內的重複列與錯置資料。', function() {
+        google.script.run
+          .withSuccessHandler(function(res) {
+            showToast(res.message, 'success');
+            loadAllData();
+          })
+          .withFailureHandler(function(err) {
+            showToast('重設失敗: ' + err.message, 'error');
+          })
+          .resetTimetableToDefault(teacherPassword);
+      });
     }
 
-    // 5. 幹部職責
     function openDutyModal() {
       document.getElementById('dutyModalTitle').innerText = '新增幹部職責';
       document.getElementById('dutyId').value = ''; 
@@ -1984,22 +2371,22 @@ function saveSystemSettings(sObj, p) {
         routine: document.getElementById('dutyRoutine').value.trim(),
         note: document.getElementById('dutyNote').value.trim()
       };
-      if (!payload.title || !payload.name) return alert('職稱與姓名為必填欄位！');
+      if (!payload.title || !payload.name) return showToast('職稱與姓名為必填欄位！', 'error');
       google.script.run
-        .withSuccessHandler(function(res) { closeModal('dutyModal'); alert(res.message); loadAllData(); })
-        .withFailureHandler(function(err) { alert('儲存失敗: ' + err.message); })
+        .withSuccessHandler(function(res) { closeModal('dutyModal'); showToast(res.message, 'success'); loadAllData(); })
+        .withFailureHandler(function(err) { showToast('儲存失敗: ' + err.message, 'error'); })
         .saveDuty(payload, teacherPassword);
     }
 
     function deleteDuty(id) {
-      if (!confirm('確定要刪除此幹部紀錄嗎？')) return;
-      google.script.run
-        .withSuccessHandler(function(res) { alert(res.message); loadAllData(); })
-        .withFailureHandler(function(err) { alert('刪除失敗: ' + err.message); })
-        .deleteDuty(id, teacherPassword);
+      showConfirmModal('確定要刪除此幹部紀錄嗎？', function() {
+        google.script.run
+          .withSuccessHandler(function(res) { showToast(res.message, 'success'); loadAllData(); })
+          .withFailureHandler(function(err) { showToast('刪除失敗: ' + err.message, 'error'); })
+          .deleteDuty(id, teacherPassword);
+      });
     }
 
-    // 6. 親師專區 FAQ
     function onFaqCategorySelectChange(val) {
       const customInput = document.getElementById('faqCustomCategoryInput');
       if (val === '__custom__') {
@@ -2061,22 +2448,22 @@ function saveSystemSettings(sObj, p) {
         answer: document.getElementById('faqAnswer').value.trim(),
         link: document.getElementById('faqLink').value.trim()
       };
-      if (!payload.question || !payload.answer) return alert('問題與說明為必填！');
+      if (!payload.question || !payload.answer) return showToast('問題與說明為必填！', 'error');
       google.script.run
-        .withSuccessHandler(function(res) { closeModal('faqModal'); alert(res.message); loadAllData(); })
-        .withFailureHandler(function(err) { alert('儲存失敗: ' + err.message); })
+        .withSuccessHandler(function(res) { closeModal('faqModal'); showToast(res.message, 'success'); loadAllData(); })
+        .withFailureHandler(function(err) { showToast('儲存失敗: ' + err.message, 'error'); })
         .saveFAQ(payload, teacherPassword);
     }
 
     function deleteFaq(id) {
-      if (!confirm('確定要刪除此 FAQ 條目嗎？')) return;
-      google.script.run
-        .withSuccessHandler(function(res) { alert(res.message); loadAllData(); })
-        .withFailureHandler(function(err) { alert('刪除失敗: ' + err.message); })
-        .deleteFAQ(id, teacherPassword);
+      showConfirmModal('確定要刪除此 FAQ 條目嗎？', function() {
+        google.script.run
+          .withSuccessHandler(function(res) { showToast(res.message, 'success'); loadAllData(); })
+          .withFailureHandler(function(err) { showToast('刪除失敗: ' + err.message, 'error'); })
+          .deleteFAQ(id, teacherPassword);
+      });
     }
 
-    // 7. 系統設定
     function openSettingsModal() {
       const s = (classData && classData.settings) ? classData.settings : {};
       document.getElementById('set_class_title').value = s.class_title || '班級雲端事務中心';
@@ -2108,13 +2495,13 @@ function saveSystemSettings(sObj, p) {
           btn.innerText = '儲存全域設定'; 
           btn.disabled = false; 
           closeModal('settingsModal'); 
-          alert(res.message); 
+          showToast(res.message, 'success'); 
           loadAllData(); 
         })
         .withFailureHandler(function(err) { 
           btn.innerText = '儲存全域設定'; 
           btn.disabled = false; 
-          alert('儲存失敗: ' + err.message); 
+          showToast('儲存失敗: ' + err.message, 'error'); 
         })
         .saveSystemSettings(payload, teacherPassword);
     }
@@ -2200,7 +2587,7 @@ function saveSystemSettings(sObj, p) {
           }, 2500);
         },
         function() {
-          alert('複製失敗，請手動選取代碼複製！');
+          showToast('複製失敗，請手動選取代碼複製！', 'error');
         }
       );
     }
@@ -2219,7 +2606,7 @@ function saveSystemSettings(sObj, p) {
           }, 2500);
         },
         function() {
-          alert('複製失敗，請手動選取代碼複製！');
+          showToast('複製失敗，請手動選取代碼複製！', 'error');
         }
       );
     }
