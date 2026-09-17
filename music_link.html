@@ -148,7 +148,7 @@
         <!-- 左側：YouTube 影音播放器 (7 欄寬) -->
         <div class="lg:col-span-7 bg-black p-3 sm:p-5 flex flex-col justify-center items-center">
           <div class="w-full relative rounded-xl overflow-hidden shadow-2xl aspect-video bg-slate-950 border border-slate-800/80">
-            <div id="youtubePlayerContainer" class="w-full h-full">
+            <div id="youtubePlayerContainer" class="w-full h-full relative flex items-center justify-center">
               <!-- 動態掛載 YouTube 播放器節點 -->
               <div id="youtubePlayer" class="w-full h-full"></div>
             </div>
@@ -660,17 +660,54 @@
     let pendingAutoPlay = false;
     let isHandlingSongEnd = false;
     let playbackPollTimer = null;
+    let currentLoadedVideoId = null;
 
-    // YouTube Iframe API 準備完成回呼
+    // 全域宣告 API 就緒回呼（優先掛載，防止 GitHub Pages 載入競態條件）
     window.onYouTubeIframeAPIReady = function() {
       isYTReady = true;
+      initOrBindYTPlayer();
+    };
+
+    // 輪詢檢查 YouTube API 是否已存在於全域（雙重保障）
+    (function ensureYTAPIAvailable() {
+      if (window.YT && window.YT.Player) {
+        isYTReady = true;
+      } else {
+        const pollTimer = setInterval(() => {
+          if (window.YT && window.YT.Player) {
+            isYTReady = true;
+            clearInterval(pollTimer);
+            initOrBindYTPlayer();
+          }
+        }, 150);
+        setTimeout(() => clearInterval(pollTimer), 6000);
+      }
+    })();
+
+    function initOrBindYTPlayer() {
+      if (!isYTReady) return;
       if (pendingVideoId) {
         createYTPlayer(pendingVideoId, pendingAutoPlay);
         pendingVideoId = null;
+      } else if (!ytPlayer) {
+        const existingIframe = document.getElementById('youtubeFrame');
+        if (existingIframe) {
+          try {
+            ytPlayer = new YT.Player('youtubeFrame', {
+              events: {
+                'onReady': onPlayerReady,
+                'onStateChange': onPlayerStateChange,
+                'onError': onPlayerError
+              }
+            });
+          } catch (e) {
+            console.warn('綁定現有 YouTube iframe 略過：', e);
+          }
+        }
       }
-    };
+    }
 
-    // 全域監聽 YouTube iframe 的 postMessage，防止 file:// 或某些環境遺失 onStateChange
+    // 全域監聽 YouTube iframe 的 postMessage，防止 GitHub Pages 或不同環境遺失 onStateChange
     window.addEventListener('message', function(event) {
       if (!event.origin.includes('youtube.com') && !event.origin.includes('youtube-nocookie.com')) return;
       try {
@@ -707,27 +744,36 @@
     function createYTPlayer(videoId, autoPlay = false) {
       if (!videoId) return;
 
+      currentLoadedVideoId = videoId;
+      const container = document.getElementById('youtubePlayerContainer');
+      if (!container) return;
+
+      // 若 API 尚未完全準備好，先直接建立標準 iframe 播放器，保證絕對不出現純黑畫面！
       if (!isYTReady || typeof YT === 'undefined' || !YT.Player) {
         pendingVideoId = videoId;
         pendingAutoPlay = autoPlay;
+        fallbackIframeEmbed(videoId, autoPlay);
         return;
       }
 
-      // 若播放器已存在且功能正常，直接呼叫切換影片
+      // 若播放器已成功實例化且具備切換方法，直接平順換曲
       if (ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
-        if (autoPlay) {
-          ytPlayer.loadVideoById(videoId);
-          updatePlayerStateBadge(true);
-          startProgressTracker();
-        } else {
-          ytPlayer.cueVideoById(videoId);
-          updatePlayerStateBadge(false);
+        try {
+          if (autoPlay) {
+            ytPlayer.loadVideoById(videoId);
+            updatePlayerStateBadge(true);
+            startProgressTracker();
+          } else {
+            ytPlayer.cueVideoById(videoId);
+            updatePlayerStateBadge(false);
+          }
+          return;
+        } catch (e) {
+          console.warn('呼叫 loadVideoById 異常，改由重新掛載播放器：', e);
         }
-        return;
       }
 
-      const container = document.getElementById('youtubePlayerContainer');
-      if (!container) return;
+      // 重建播放器容器節點
       container.innerHTML = '<div id="youtubePlayer" class="w-full h-full"></div>';
 
       try {
@@ -737,10 +783,6 @@
           playsinline: 1,
           enablejsapi: 1
         };
-
-        if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
-          playerVars.origin = window.location.origin;
-        }
 
         ytPlayer = new YT.Player('youtubePlayer', {
           height: '100%',
@@ -754,7 +796,7 @@
           }
         });
       } catch (e) {
-        console.warn('YouTube Player API 建立異常，啟用降級 iframe 模式：', e);
+        console.warn('YouTube Player API 建立失敗，改用相容 iframe 模式：', e);
         fallbackIframeEmbed(videoId, autoPlay);
       }
     }
@@ -811,10 +853,11 @@
       }
     }
 
-    // 降級純 iframe 模式 (仍受全域 postMessage 與輪詢守護)
+    // 即時相容 iframe 模式：保證任何網路狀況均能即時看到影片封面與播放按鈕
     function fallbackIframeEmbed(videoId, autoPlay) {
       const container = document.getElementById('youtubePlayerContainer');
       if (!container) return;
+      
       container.innerHTML = `
         <iframe 
           id="youtubeFrame" 
@@ -826,10 +869,23 @@
           allowfullscreen
         ></iframe>
       `;
+
       const iframe = document.getElementById('youtubeFrame');
       if (iframe) {
         iframe.onload = () => {
           pokeYouTubeIframe();
+          // 若 API 在此時已載入完畢，嘗試將其包裝為 YT.Player 以便監聽結束事件
+          if (isYTReady && typeof YT !== 'undefined' && YT.Player && (!ytPlayer || typeof ytPlayer.loadVideoById !== 'function')) {
+            try {
+              ytPlayer = new YT.Player('youtubeFrame', {
+                events: {
+                  'onReady': onPlayerReady,
+                  'onStateChange': onPlayerStateChange,
+                  'onError': onPlayerError
+                }
+              });
+            } catch (err) {}
+          }
         };
       }
     }
