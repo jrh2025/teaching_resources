@@ -335,6 +335,16 @@ window.APP_DATA = {
       "icon": "Logs",
       "color": "sky",
       "grade": "校務"
+    },
+    {
+      "id": "item_1789615016872",
+      "title": "JRH 音樂作品集",
+      "category": "音樂",
+      "description": "個人結合 AI 創作的音樂、歌曲收藏",
+      "link": "music_link.html",
+      "icon": "Disc3",
+      "color": "purple",
+      "grade": "音樂"
     }
   ]
 };
