@@ -149,15 +149,8 @@
         <div class="lg:col-span-7 bg-black p-3 sm:p-5 flex flex-col justify-center items-center">
           <div class="w-full relative rounded-xl overflow-hidden shadow-2xl aspect-video bg-slate-950 border border-slate-800/80">
             <div id="youtubePlayerContainer" class="w-full h-full">
-              <iframe 
-                id="youtubeFrame" 
-                class="w-full h-full" 
-                src="" 
-                title="YouTube 播放器" 
-                frameborder="0" 
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                allowfullscreen
-              ></iframe>
+              <!-- 動態掛載 YouTube 播放器節點 -->
+              <div id="youtubePlayer" class="w-full h-full"></div>
             </div>
           </div>
           
@@ -659,56 +652,217 @@
     let designatedSongIds = new Set();
     // 是否僅篩選指定曲目
     let filterOnlyDesignated = false;
-    // YouTube Player API 實例
+
+    // YouTube 播放器核心狀態與雙軌防呆控制
     let ytPlayer = null;
     let isYTReady = false;
+    let pendingVideoId = null;
+    let pendingAutoPlay = false;
+    let isHandlingSongEnd = false;
+    let playbackPollTimer = null;
 
-    // YouTube Iframe API 回呼初始化
+    // YouTube Iframe API 準備完成回呼
     window.onYouTubeIframeAPIReady = function() {
       isYTReady = true;
-      initYTPlayer();
+      if (pendingVideoId) {
+        createYTPlayer(pendingVideoId, pendingAutoPlay);
+        pendingVideoId = null;
+      }
     };
 
-    function initYTPlayer() {
-      if (!isYTReady || ytPlayer) return;
+    // 全域監聽 YouTube iframe 的 postMessage，防止 file:// 或某些環境遺失 onStateChange
+    window.addEventListener('message', function(event) {
+      if (!event.origin.includes('youtube.com') && !event.origin.includes('youtube-nocookie.com')) return;
+      try {
+        let data = event.data;
+        if (typeof data === 'string') {
+          data = JSON.parse(data);
+        }
+        if (!data) return;
 
-      const firstSong = playlist.length > 0 ? playlist[0] : null;
-      const initialVideoId = firstSong ? (firstSong.youtubeId || extractYoutubeId(firstSong.url)) : '';
+        let state = null;
+        if (data.event === 'onStateChange') {
+          state = data.info;
+        } else if (data.event === 'infoDelivery' && data.info && data.info.playerState !== undefined) {
+          state = data.info.playerState;
+        }
+
+        if (state === 0 || state === '0') {
+          // 0: ENDED (播放結束)
+          handleSongEnded();
+        } else if (state === 1 || state === '1') {
+          // 1: PLAYING
+          updatePlayerStateBadge(true);
+          startProgressTracker();
+        } else if (state === 2 || state === '2') {
+          // 2: PAUSED
+          updatePlayerStateBadge(false);
+          stopProgressTracker();
+        }
+      } catch (e) {
+        // 忽略非 YouTube 結構之 message
+      }
+    });
+
+    function createYTPlayer(videoId, autoPlay = false) {
+      if (!videoId) return;
+
+      if (!isYTReady || typeof YT === 'undefined' || !YT.Player) {
+        pendingVideoId = videoId;
+        pendingAutoPlay = autoPlay;
+        return;
+      }
+
+      // 若播放器已存在且功能正常，直接呼叫切換影片
+      if (ytPlayer && typeof ytPlayer.loadVideoById === 'function') {
+        if (autoPlay) {
+          ytPlayer.loadVideoById(videoId);
+          updatePlayerStateBadge(true);
+          startProgressTracker();
+        } else {
+          ytPlayer.cueVideoById(videoId);
+          updatePlayerStateBadge(false);
+        }
+        return;
+      }
+
+      const container = document.getElementById('youtubePlayerContainer');
+      if (!container) return;
+      container.innerHTML = '<div id="youtubePlayer" class="w-full h-full"></div>';
 
       try {
-        ytPlayer = new YT.Player('youtubeFrame', {
-          videoId: initialVideoId,
-          playerVars: {
-            autoplay: 0,
-            rel: 0,
-            enablejsapi: 1
-          },
+        const playerVars = {
+          autoplay: autoPlay ? 1 : 0,
+          rel: 0,
+          playsinline: 1,
+          enablejsapi: 1
+        };
+
+        if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+          playerVars.origin = window.location.origin;
+        }
+
+        ytPlayer = new YT.Player('youtubePlayer', {
+          height: '100%',
+          width: '100%',
+          videoId: videoId,
+          playerVars: playerVars,
           events: {
             'onReady': onPlayerReady,
-            'onStateChange': onPlayerStateChange
+            'onStateChange': onPlayerStateChange,
+            'onError': onPlayerError
           }
         });
       } catch (e) {
-        console.warn('YouTube Player API 初始化延遲，將使用標準嵌入模式：', e);
+        console.warn('YouTube Player API 建立異常，啟用降級 iframe 模式：', e);
+        fallbackIframeEmbed(videoId, autoPlay);
       }
     }
 
     function onPlayerReady(event) {
-      // 播放器準備就緒
       updatePlayerStateBadge(false);
+      pokeYouTubeIframe();
+      if (pendingAutoPlay && ytPlayer && typeof ytPlayer.playVideo === 'function') {
+        ytPlayer.playVideo();
+        pendingAutoPlay = false;
+      }
     }
 
-    // 當前影片播放狀態變化監聽 (自動接曲與循環判定)
     function onPlayerStateChange(event) {
       if (typeof YT === 'undefined') return;
 
       if (event.data === YT.PlayerState.PLAYING) {
         updatePlayerStateBadge(true);
+        startProgressTracker();
       } else if (event.data === YT.PlayerState.PAUSED) {
         updatePlayerStateBadge(false);
+        stopProgressTracker();
       } else if (event.data === YT.PlayerState.ENDED) {
-        // 核心邏輯：影片播畢後的自動接關機制
+        updatePlayerStateBadge(false);
+        stopProgressTracker();
         handleSongEnded();
+      }
+    }
+
+    function onPlayerError(event) {
+      console.warn('YouTube 播放器狀態錯誤 (代碼 ' + event.data + ')，為您自動跳轉下一首');
+      showToast('此影片暫時無法在此播放器中播映，即將自動播放下一首...', 'error');
+      setTimeout(() => {
+        handleSongEnded();
+      }, 2000);
+    }
+
+    // 發送交握信號讓 YouTube 內部發送 infoDelivery 狀態
+    function pokeYouTubeIframe() {
+      const iframe = document.querySelector('#youtubePlayerContainer iframe');
+      if (iframe && iframe.contentWindow) {
+        try {
+          iframe.contentWindow.postMessage(JSON.stringify({
+            event: 'listening',
+            id: 1,
+            channel: 'widget'
+          }), '*');
+          iframe.contentWindow.postMessage(JSON.stringify({
+            event: 'command',
+            func: 'addEventListener',
+            args: ['onStateChange']
+          }), '*');
+        } catch (e) {}
+      }
+    }
+
+    // 降級純 iframe 模式 (仍受全域 postMessage 與輪詢守護)
+    function fallbackIframeEmbed(videoId, autoPlay) {
+      const container = document.getElementById('youtubePlayerContainer');
+      if (!container) return;
+      container.innerHTML = `
+        <iframe 
+          id="youtubeFrame" 
+          class="w-full h-full" 
+          src="https://www.youtube.com/embed/${videoId}?autoplay=${autoPlay ? 1 : 0}&rel=0&enablejsapi=1&playsinline=1" 
+          title="YouTube 播放器" 
+          frameborder="0" 
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+          allowfullscreen
+        ></iframe>
+      `;
+      const iframe = document.getElementById('youtubeFrame');
+      if (iframe) {
+        iframe.onload = () => {
+          pokeYouTubeIframe();
+        };
+      }
+    }
+
+    // 進度監聽輪詢：即時偵測播放結尾 (即使原生 ENDED 事件延遲亦能平順觸發)
+    function startProgressTracker() {
+      if (playbackPollTimer) clearInterval(playbackPollTimer);
+      playbackPollTimer = setInterval(() => {
+        if (!ytPlayer) return;
+        try {
+          if (typeof ytPlayer.getPlayerState === 'function') {
+            const state = ytPlayer.getPlayerState();
+            if (state === 0) {
+              handleSongEnded();
+              return;
+            }
+          }
+          if (typeof ytPlayer.getCurrentTime === 'function' && typeof ytPlayer.getDuration === 'function') {
+            const cur = ytPlayer.getCurrentTime();
+            const dur = ytPlayer.getDuration();
+            // 當歌曲已播放超過 2 秒且距離結尾不足 0.6 秒時，平滑觸發接關
+            if (dur > 2 && cur > 1 && (dur - cur) <= 0.6) {
+              handleSongEnded();
+            }
+          }
+        } catch (e) {}
+      }, 500);
+    }
+
+    function stopProgressTracker() {
+      if (playbackPollTimer) {
+        clearInterval(playbackPollTimer);
+        playbackPollTimer = null;
       }
     }
 
@@ -724,20 +878,20 @@
       }
     }
 
-    // 依據四大播放模式自動換曲
+    // 依據四大播放模式自動換曲 (設有 1.8 秒防重複鎖)
     function handleSongEnded() {
-      if (playlist.length === 0) return;
+      if (playlist.length === 0 || isHandlingSongEnd) return;
+      isHandlingSongEnd = true;
+      stopProgressTracker();
+
+      setTimeout(() => {
+        isHandlingSongEnd = false;
+      }, 1800);
 
       switch (currentPlayMode) {
         case 'single':
           // 1. 單曲循環播放
-          if (ytPlayer && typeof ytPlayer.seekTo === 'function') {
-            ytPlayer.seekTo(0);
-            ytPlayer.playVideo();
-          } else {
-            setPlayingSong(currentPlayingId, false, true);
-          }
-          showToast('【單曲循環】正在重複播放此曲', 'info');
+          repeatCurrentSong();
           break;
 
         case 'custom':
@@ -756,6 +910,39 @@
           playNextSong();
           break;
       }
+    }
+
+    // 單曲循環重播機制
+    function repeatCurrentSong() {
+      showToast('【單曲循環】正在重複播放此曲', 'info');
+      const song = playlist.find(s => s.id === currentPlayingId);
+      const yId = song ? (song.youtubeId || extractYoutubeId(song.url)) : '';
+      if (ytPlayer && typeof ytPlayer.loadVideoById === 'function' && yId) {
+        ytPlayer.loadVideoById(yId);
+        updatePlayerStateBadge(true);
+        startProgressTracker();
+      } else {
+        setPlayingSong(currentPlayingId, false, true);
+      }
+    }
+
+    // 指定曲目循環播放的下一首
+    function playNextDesignatedSong() {
+      if (designatedSongIds.size === 0) {
+        playNextSong();
+        return;
+      }
+
+      const designatedList = playlist.filter(s => designatedSongIds.has(s.id));
+      if (designatedList.length === 0) {
+        playNextSong();
+        return;
+      }
+
+      const currentIndexInDesignated = designatedList.findIndex(s => s.id === currentPlayingId);
+      const nextIndex = (currentIndexInDesignated + 1) % designatedList.length;
+      showToast(`【指定循環】播放第 ${nextIndex + 1} / ${designatedList.length} 首指定曲目`, 'info');
+      setPlayingSong(designatedList[nextIndex].id, false, true);
     }
 
     // 切換播放循環模式
@@ -838,24 +1025,6 @@
         }
       }
       renderDisplayList();
-    }
-
-    // 指定曲目循環播放的下一首
-    function playNextDesignatedSong() {
-      if (designatedSongIds.size === 0) {
-        playNextSong();
-        return;
-      }
-
-      const designatedList = playlist.filter(s => designatedSongIds.has(s.id));
-      if (designatedList.length === 0) {
-        playNextSong();
-        return;
-      }
-
-      const currentIndexInDesignated = designatedList.findIndex(s => s.id === currentPlayingId);
-      const nextIndex = (currentIndexInDesignated + 1) % designatedList.length;
-      setPlayingSong(designatedList[nextIndex].id, false, true);
     }
 
     // 切換「卡片檢視」與「精簡列表」
@@ -967,6 +1136,7 @@
         renderCategoryChips();
         renderDisplayList();
         renderAdminTable();
+        // 初始首曲載入 (不自動出聲，靜待使用者點選)
         setPlayingSong(playlist[0].id, false, false);
       } else {
         playlist = [];
@@ -986,6 +1156,75 @@
       }
       const match = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
       return match ? match[1] : trimmed;
+    }
+
+    // 設定目前正在播放的歌曲
+    function setPlayingSong(songId, shouldScroll = false, autoPlay = true) {
+      const song = playlist.find(s => s.id === songId);
+      if (!song) return;
+
+      currentPlayingId = songId;
+
+      const yId = song.youtubeId || extractYoutubeId(song.url);
+      const titleEl = document.getElementById('currentSongTitle');
+      const descEl = document.getElementById('currentSongDesc');
+      const catBadge = document.getElementById('currentCategoryBadge');
+      const videoIdText = document.getElementById('playingVideoIdText');
+      const linkEl = document.getElementById('openYoutubeLink');
+      const indexText = document.getElementById('currentSongIndexText');
+
+      // 呼叫統一的播放器工廠方法載入或切換影片
+      createYTPlayer(yId, autoPlay);
+
+      if (titleEl) titleEl.textContent = song.title;
+      if (descEl) descEl.textContent = song.desc || '此曲目暫未填寫導聆簡介。';
+      if (catBadge) catBadge.textContent = song.category || '原創作品';
+      if (videoIdText) videoIdText.textContent = `ID: ${yId}`;
+      if (linkEl) linkEl.href = song.url || `https://www.youtube.com/watch?v=${yId}`;
+
+      const currentIndex = playlist.findIndex(s => s.id === songId);
+      if (indexText) {
+        indexText.textContent = `曲目序號：第 ${currentIndex + 1} 首 / 共 ${playlist.length} 首`;
+      }
+
+      // 重新渲染卡片或精簡列表高亮狀態
+      renderDisplayList();
+      renderAdminTable();
+
+      if (shouldScroll) {
+        document.getElementById('playerSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function playNextSong() {
+      if (playlist.length === 0) return;
+      const idx = playlist.findIndex(s => s.id === currentPlayingId);
+      const nextIdx = (idx + 1) % playlist.length;
+      showToast('【全部循環】自動切換下一首', 'info');
+      setPlayingSong(playlist[nextIdx].id, false, true);
+    }
+
+    function playPrevSong() {
+      if (playlist.length === 0) return;
+      const idx = playlist.findIndex(s => s.id === currentPlayingId);
+      const prevIdx = (idx - 1 + playlist.length) % playlist.length;
+      setPlayingSong(playlist[prevIdx].id, false, true);
+    }
+
+    function playRandomSong() {
+      if (playlist.length <= 1) {
+        repeatCurrentSong();
+        return;
+      }
+      let randIdx;
+      const currentIdx = playlist.findIndex(s => s.id === currentPlayingId);
+      let attempts = 0;
+      do {
+        randIdx = Math.floor(Math.random() * playlist.length);
+        attempts++;
+      } while (randIdx === currentIdx && attempts < 10);
+      showToast('【全部隨機】隨機切換曲目', 'info');
+      setPlayingSong(playlist[randIdx].id, false, true);
     }
 
     // 渲染風格分類標籤列
