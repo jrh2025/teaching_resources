@@ -741,24 +741,40 @@
       } catch (e) {}
     });
 
-    // 載入或平順切換 YouTube 影片 (保證絕對不黑畫面)
+    // 載入或平順切換 YouTube 影片 (保證絕對不黑畫面且支援同曲重播)
     function loadVideo(videoId, autoPlay = false) {
       if (!videoId) return;
+      const isSameVideo = (currentLoadedVideoId === videoId);
       currentLoadedVideoId = videoId;
       const iframe = document.getElementById('youtubeFrame');
 
       // 若 API 播放器已具備平順換曲能力
-      if (ytPlayer && isPlayerReady && typeof ytPlayer.loadVideoById === 'function') {
+      if (ytPlayer && isPlayerReady) {
         try {
-          if (autoPlay) {
-            ytPlayer.loadVideoById(videoId);
-            updatePlayerStateBadge(true);
-            startProgressTracker();
-          } else {
-            ytPlayer.cueVideoById(videoId);
-            updatePlayerStateBadge(false);
+          // 若為同一首歌曲（例如單曲循環或手動重播），直接 seekTo(0) + playVideo()
+          if (isSameVideo) {
+            if (typeof ytPlayer.seekTo === 'function') {
+              ytPlayer.seekTo(0, true);
+            }
+            if (autoPlay && typeof ytPlayer.playVideo === 'function') {
+              ytPlayer.playVideo();
+            }
+            updatePlayerStateBadge(autoPlay);
+            if (autoPlay) startProgressTracker();
+            return;
           }
-          return;
+
+          if (typeof ytPlayer.loadVideoById === 'function') {
+            if (autoPlay) {
+              ytPlayer.loadVideoById({ videoId: videoId, startSeconds: 0 });
+              updatePlayerStateBadge(true);
+              startProgressTracker();
+            } else {
+              ytPlayer.cueVideoById({ videoId: videoId, startSeconds: 0 });
+              updatePlayerStateBadge(false);
+            }
+            return;
+          }
         } catch (e) {
           console.warn('API 切換影片例外，改用 iframe 直接更新：', e);
         }
@@ -770,6 +786,9 @@
         const targetSrc = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=${autoPlayVal}&playsinline=1&rel=0`;
         if (iframe.src !== targetSrc) {
           iframe.src = targetSrc;
+        } else if (isSameVideo && autoPlay) {
+          // 同曲重播且 API 尚未就緒時，更新 src 觸發重新自 0 秒播放
+          iframe.src = `https://www.youtube.com/embed/${videoId}?enablejsapi=1&autoplay=1&playsinline=1&rel=0&start=0&_t=${Date.now()}`;
         }
         updatePlayerStateBadge(autoPlay);
         if (autoPlay) {
@@ -903,12 +922,62 @@
       }
     }
 
-    // 單曲循環重播機制
+    // 單曲循環重播機制：重置當前曲目播放進度至 0 秒並立即啟動重播
     function repeatCurrentSong() {
       showToast('【單曲循環】正在重複播放此曲', 'info');
       const song = playlist.find(s => s.id === currentPlayingId);
       const yId = song ? (song.youtubeId || extractYoutubeId(song.url)) : '';
-      loadVideo(yId, true);
+      if (!yId) return;
+
+      updatePlayerStateBadge(true);
+      let replayedViaApi = false;
+
+      // 1. 優先透過 YouTube Player API 精準倒帶至 0 秒並播放
+      if (ytPlayer && isPlayerReady) {
+        try {
+          if (typeof ytPlayer.seekTo === 'function') {
+            ytPlayer.seekTo(0, true);
+          }
+          if (typeof ytPlayer.playVideo === 'function') {
+            ytPlayer.playVideo();
+          }
+          // 延遲 80ms 補充觸發，防止 YouTube 緩衝卡在結尾畫面
+          setTimeout(() => {
+            try {
+              if (ytPlayer && typeof ytPlayer.playVideo === 'function') {
+                ytPlayer.playVideo();
+              }
+            } catch (err) {}
+          }, 80);
+          replayedViaApi = true;
+          startProgressTracker();
+        } catch (e) {
+          console.warn('單曲循環 API 重播例外，改用跨域指令與 iframe 重新載入：', e);
+        }
+      }
+
+      // 2. 透過 postMessage 發送跨域指令雙重保險
+      const iframe = document.getElementById('youtubeFrame');
+      if (iframe && iframe.contentWindow) {
+        try {
+          iframe.contentWindow.postMessage(JSON.stringify({
+            event: 'command',
+            func: 'seekTo',
+            args: [0, true]
+          }), '*');
+          iframe.contentWindow.postMessage(JSON.stringify({
+            event: 'command',
+            func: 'playVideo',
+            args: []
+          }), '*');
+        } catch (e) {}
+      }
+
+      // 3. 若 API 尚未就緒或異常，透過更新 iframe src 帶入時間戳參數強制重新播放
+      if (!replayedViaApi && iframe) {
+        iframe.src = `https://www.youtube.com/embed/${yId}?enablejsapi=1&autoplay=1&playsinline=1&rel=0&start=0&_t=${Date.now()}`;
+        startProgressTracker();
+      }
     }
 
     // 指定曲目循環播放
