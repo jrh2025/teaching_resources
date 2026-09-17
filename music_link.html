@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JRH 音樂作品集 · 歌曲導聆與播放清單管理系統</title>
+  
+  <!-- Critical Fallback CSS 防止樣式未載入時的版面錯亂 -->
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      background-color: #090d16;
+      color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+    .modal-hidden { display: none !important; }
+    /* 自訂平滑滾動與捲動軸 */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0b1120; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+  </style>
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- 外部獨立載入 music_link.js 播放清單檔案 (每次開啟皆以此外部檔案為主) -->
+  <script src="music_link.js"></script>
+
+  <!-- Google Fonts & Font Awesome 圖示庫 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-['Noto_Sans_TC','Inter',sans-serif]">
+
+  <!-- 管理模式提示橫幅 (僅在 ?edit=1 時顯示) -->
+  <header id="adminBanner" class="hidden bg-gradient-to-r from-amber-600 via-amber-700 to-orange-600 text-white text-xs px-4 py-2 shadow-md">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
+      <div class="flex items-center gap-2 font-medium">
+        <span class="flex h-2 w-2 relative">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+        </span>
+        <i class="fa-solid fa-wrench"></i>
+        <span>管理員編輯模式已啟用 (?edit=1) — 您可進行單曲新增、修改、刪除與匯出 music_link.js</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <a href="?" class="px-2.5 py-1 rounded bg-black/25 hover:bg-black/40 text-amber-100 transition font-medium">
+          <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> 切換為訪客模式
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主導航列 -->
+  <nav class="sticky top-0 z-40 bg-slate-900/90 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-8 py-3.5 transition-all">
+    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <!-- 品牌識別 -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25 text-white text-lg">
+          <i class="fa-solid fa-compact-disc fa-spin" style="animation-duration: 9s;"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-bold tracking-wide text-white">JRH 音樂作品集</h1>
+            <span id="headerModeBadge" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              原創導聆
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 hidden sm:block">深度意境導讀 · 影音同步播映 · 歌曲管理庫</p>
+        </div>
+      </div>
+
+      <!-- 頂部搜尋與功能操作區 -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- 搜尋列 -->
+        <div class="relative w-36 sm:w-60 md:w-72">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="搜尋曲名、分類或意境關鍵字..." 
+            class="w-full pl-8 pr-7 py-1.5 rounded-xl bg-slate-800/90 border border-slate-700/80 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+          >
+          <button id="clearSearchBtn" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-xs">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- 管理專屬按鈕區 (訪客介面自動隱藏) -->
+        <button id="adminAddSongBtn" onclick="openAddSongModal()" class="admin-control hidden items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium shadow-md shadow-indigo-600/30 transition">
+          <i class="fa-solid fa-plus"></i>
+          <span class="hidden md:inline">新增歌曲</span>
+        </button>
+
+        <button id="adminExportBtn" onclick="exportMusicLinkJs()" class="admin-control hidden items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium shadow-md shadow-emerald-600/30 transition" title="將目前播放清單匯出為 music_link.js 檔案">
+          <i class="fa-solid fa-download"></i>
+          <span class="hidden md:inline">匯出 JS</span>
+        </button>
+
+        <button id="adminImportBtn" onclick="openModal('importModal')" class="admin-control hidden items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition" title="手動匯入外部 music_link.js 或備份檔案">
+          <i class="fa-solid fa-file-import"></i>
+          <span class="hidden lg:inline">匯入 JS</span>
+        </button>
+
+        <!-- 管理後台表格切換鍵 (僅在 edit 模式出現) -->
+        <button id="toggleAdminPanelBtn" onclick="toggleAdminPanel()" class="admin-control hidden items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 border border-amber-500/40 text-xs font-medium transition">
+          <i class="fa-solid fa-table-list"></i>
+          <span class="hidden sm:inline">清單管理總表</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 主內容區塊 -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 lg:px-8 py-6 space-y-8">
+    
+    <!-- 播放器與歌曲深度意境導聆區 -->
+    <section id="playerSection" class="bg-gradient-to-b from-slate-900 to-slate-900/60 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-0">
+        
+        <!-- 左側：YouTube 影音播放器 (7 欄寬) -->
+        <div class="lg:col-span-7 bg-black p-3 sm:p-5 flex flex-col justify-center items-center">
+          <div class="w-full relative rounded-xl overflow-hidden shadow-2xl aspect-video bg-slate-950 border border-slate-800/80">
+            <iframe 
+              id="youtubeFrame" 
+              class="w-full h-full" 
+              src="" 
+              title="YouTube 播放器" 
+              frameborder="0" 
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+              allowfullscreen
+            ></iframe>
+          </div>
+          
+          <!-- 播放器下方控制列 -->
+          <div class="w-full flex items-center justify-between pt-4 px-1">
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-800/80 border border-slate-700/60">
+                <i class="fa-brands fa-youtube text-red-500"></i>
+                <span id="playingVideoIdText">YouTube ID</span>
+              </span>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button onclick="playPrevSong()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition" title="上一首">
+                <i class="fa-solid fa-backward-step"></i>
+              </button>
+              <button onclick="playRandomSong()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition" title="隨機播放">
+                <i class="fa-solid fa-shuffle"></i>
+              </button>
+              <button onclick="playNextSong()" class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition" title="下一首">
+                <i class="fa-solid fa-forward-step"></i>
+              </button>
+              <a id="openYoutubeLink" href="#" target="_blank" rel="noopener noreferrer" class="p-2 rounded-lg bg-slate-800 hover:bg-red-600/30 text-slate-300 hover:text-red-300 border border-slate-700/60 transition" title="前往 YouTube 原頁面觀看">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右側：歌曲深度簡介與創作意境導讀 (5 欄寬) -->
+        <div class="lg:col-span-5 p-5 sm:p-6 lg:p-7 flex flex-col justify-between border-t lg:border-t-0 lg:border-l border-slate-800 bg-slate-900/40">
+          <div>
+            <div class="flex items-center justify-between gap-2 mb-3">
+              <span id="currentCategoryBadge" class="text-xs font-semibold px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                分類載入中
+              </span>
+              <!-- 管理模式下的即時編輯按鈕 -->
+              <button id="adminEditCurrentBtn" onclick="editCurrentSong()" class="admin-control hidden items-center gap-1 text-xs text-amber-400 hover:text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 px-2.5 py-1 rounded-lg border border-amber-500/30 transition">
+                <i class="fa-solid fa-pen-to-square"></i> 編輯此曲簡介
+              </button>
+            </div>
+
+            <h2 id="currentSongTitle" class="text-xl sm:text-2xl font-bold text-white tracking-wide leading-snug">
+              請由清單中選擇曲目
+            </h2>
+
+            <div class="h-0.5 w-12 bg-indigo-500 my-4 rounded-full"></div>
+
+            <!-- 深度歌曲導聆卡片 -->
+            <div class="relative bg-slate-950/70 p-4 sm:p-5 rounded-xl border border-slate-800 shadow-inner">
+              <div class="flex items-center gap-2 text-indigo-400 font-semibold text-xs tracking-wider uppercase mb-2">
+                <i class="fa-solid fa-quote-left"></i>
+                <span>創作意境與導聆賞析</span>
+              </div>
+              <p id="currentSongDesc" class="text-slate-300 text-sm sm:text-base leading-relaxed whitespace-pre-line">
+                正在自外部 music_link.js 讀取播放清單與歌曲深度意境導讀...
+              </p>
+            </div>
+          </div>
+
+          <div class="pt-5 mt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+            <span id="currentSongIndexText">曲目序號：-- / --</span>
+            <span class="flex items-center gap-1 text-indigo-300">
+              <i class="fa-solid fa-music"></i> JRH 原創曲風導覽
+            </span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 管理者專屬：music_link.js 播放清單管理後台面版 (僅在 ?edit=1 時開放展開) -->
+    <section id="adminManagementPanel" class="hidden bg-slate-900/90 rounded-2xl border border-amber-500/40 p-5 sm:p-6 shadow-2xl">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="text-lg font-bold text-amber-300 flex items-center gap-2">
+              <i class="fa-solid fa-sliders"></i> music_link.js 播放清單管理中心
+            </h3>
+            <span id="adminTableCount" class="text-xs px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-200 border border-amber-500/30">
+              0 首曲目
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1">
+            在此對歌曲進行單一新增、編輯、刪除或微調順序，完成後點選「匯出 JS」即可覆蓋下載最新版 <code class="text-amber-300">music_link.js</code>。
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="openAddSongModal()" class="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow transition flex items-center gap-1.5">
+            <i class="fa-solid fa-plus"></i> 新增單曲
+          </button>
+          <button onclick="exportMusicLinkJs()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow transition flex items-center gap-1.5">
+            <i class="fa-solid fa-download"></i> 匯出 music_link.js
+          </button>
+          <button onclick="confirmResetPlaylist()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition flex items-center gap-1.5">
+            <i class="fa-solid fa-rotate"></i> 重新載入檔案
+          </button>
+        </div>
+      </div>
+
+      <!-- 後台清單快速篩選列 -->
+      <div class="py-3 flex items-center justify-between gap-3">
+        <div class="relative w-full sm:w-72">
+          <i class="fa-solid fa-filter absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+          <input 
+            type="text" 
+            id="adminTableFilterInput" 
+            oninput="filterAdminTable()" 
+            placeholder="過濾後台管理曲目..." 
+            class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-amber-500"
+          >
+        </div>
+        <span class="text-xs text-slate-400 hidden sm:inline">支援依歌曲名稱、分類與 YouTube 代碼快速查找</span>
+      </div>
+
+      <!-- 管理表格容器 -->
+      <div class="overflow-x-auto rounded-xl border border-slate-800 max-h-96 overflow-y-auto">
+        <table class="w-full text-left text-xs text-slate-300">
+          <thead class="bg-slate-950 text-slate-400 uppercase tracking-wider sticky top-0 border-b border-slate-800 z-10">
+            <tr>
+              <th class="py-3 px-3 w-12 text-center">序號</th>
+              <th class="py-3 px-3 w-20">預覽封面</th>
+              <th class="py-3 px-4">歌曲名稱</th>
+              <th class="py-3 px-3">分類</th>
+              <th class="py-3 px-3">YouTube ID</th>
+              <th class="py-3 px-4">意境導讀簡介</th>
+              <th class="py-3 px-3 text-center w-36">操作功能</th>
+            </tr>
+          </thead>
+          <tbody id="adminTableBody" class="divide-y divide-slate-800 bg-slate-900/50">
+            <!-- 動態注入表格內容 -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 分類標籤篩選列與曲目總數 -->
+    <section class="space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <h3 class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-list-ul text-indigo-400"></i> 全部曲目導聆列表
+          </h3>
+          <span id="resultCountBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+            共 0 首
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs text-slate-400">
+          <span>排序方式：</span>
+          <button onclick="sortPlaylistOrder('default')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition">預設順序</button>
+          <button onclick="sortPlaylistOrder('title')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition">依曲名</button>
+          <button onclick="sortPlaylistOrder('category')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition">依分類</button>
+        </div>
+      </div>
+
+      <!-- 分類標籤滑動膠囊 -->
+      <div id="categoryChips" class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
+        <!-- 動態渲染分類膠囊 -->
+      </div>
+    </section>
+
+    <!-- 歌曲卡片網格展示區 -->
+    <section>
+      <div id="songGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+        <!-- 動態注入歌曲卡片 -->
+      </div>
+
+      <!-- 無曲目或未讀取到 music_link.js 提示區 -->
+      <div id="emptyState" class="hidden text-center py-16 px-4 bg-slate-900/40 rounded-2xl border border-dashed border-slate-800">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-slate-800/80 flex items-center justify-center text-indigo-400 text-2xl mb-3">
+          <i class="fa-solid fa-music-slash"></i>
+        </div>
+        <h4 class="text-base font-semibold text-slate-300">查無任何曲目</h4>
+        <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+          請檢查關鍵字搜尋條件，或確認同目錄下的 <code class="text-indigo-400 bg-slate-900 px-1 py-0.5 rounded">music_link.js</code> 檔案是否存在。
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 頁腳版權與訪客/管理模式切換入口 -->
+  <footer class="bg-slate-950 border-t border-slate-900 mt-12 py-8 px-4 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <p>© 2026 JRH 音樂作品集 · 版權所有 · 歌曲導聆與意境導覽</p>
+      
+      <div class="flex items-center gap-4">
+        <a id="footerModeSwitchLink" href="?edit=1" class="hover:text-indigo-400 transition flex items-center gap-1">
+          <i class="fa-solid fa-lock"></i> <span>管理員登入 (?edit=1)</span>
+        </a>
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="hover:text-slate-300 transition flex items-center gap-1">
+          <i class="fa-solid fa-arrow-up"></i> <span>回到頂端</span>
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==================== 彈跳視窗：新增 / 編輯歌曲 Modal ==================== -->
+  <div id="songModal" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" style="display: none;">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl p-6 relative max-h-[90vh] overflow-y-auto">
+      <button onclick="closeModal('songModal')" class="absolute right-4 top-4 text-slate-400 hover:text-white p-1 rounded-lg">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <h3 id="songModalTitle" class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-music text-indigo-400"></i> 新增歌曲曲目
+      </h3>
+
+      <form id="songForm" onsubmit="handleSongFormSubmit(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="formSongId">
+
+        <div>
+          <label class="block font-medium text-slate-300 mb-1">歌曲名稱 <span class="text-rose-400">*</span></label>
+          <input 
+            type="text" 
+            id="formTitle" 
+            required 
+            placeholder="例如：歲月不聲不響" 
+            class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 text-xs focus:outline-none focus:border-indigo-500"
+          >
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-300 mb-1">YouTube 連結或 11 碼影片代碼 <span class="text-rose-400">*</span></label>
+          <input 
+            type="text" 
+            id="formUrl" 
+            required 
+            oninput="handleFormUrlChange()"
+            placeholder="例如：https://www.youtube.com/watch?v=u2R18r84f6Q" 
+            class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 text-xs focus:outline-none focus:border-indigo-500"
+          >
+          <p class="text-[11px] text-slate-400 mt-1">系統將自動提取 11 碼 YouTube ID（亦支援直接貼上代碼）</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-300 mb-1">YouTube 11 碼代碼</label>
+            <input 
+              type="text" 
+              id="formYoutubeId" 
+              readonly 
+              class="w-full px-3 py-2 rounded-xl bg-slate-950/70 border border-slate-800 text-slate-400 text-xs cursor-not-allowed"
+            >
+          </div>
+          <div>
+            <label class="block font-medium text-slate-300 mb-1">風格與主題分類 <span class="text-rose-400">*</span></label>
+            <input 
+              type="text" 
+              id="formCategory" 
+              required 
+              placeholder="例如：古典風雅、抒情感懷" 
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 text-xs focus:outline-none focus:border-indigo-500"
+            >
+          </div>
+        </div>
+
+        <!-- 封面即時預覽 -->
+        <div>
+          <label class="block font-medium text-slate-300 mb-1">封面縮圖即時預覽</label>
+          <div class="w-full h-32 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center overflow-hidden">
+            <img id="formThumbnailPreview" src="" alt="縮圖預覽" class="w-full h-full object-cover hidden">
+            <span id="formThumbnailPlaceholder" class="text-slate-500 text-xs">尚未輸入有效 YouTube ID</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-300 mb-1">歌曲深度導聆與創作意境簡介 <span class="text-rose-400">*</span></label>
+          <textarea 
+            id="formDesc" 
+            rows="4" 
+            required 
+            placeholder="請輸入此歌曲的風格特色、歌詞意象、故事背景或哲理意境導讀..." 
+            class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-100 text-xs focus:outline-none focus:border-indigo-500 leading-relaxed"
+          ></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+          <button type="button" onclick="closeModal('songModal')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+            取消
+          </button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition shadow-md shadow-indigo-600/30">
+            儲存歌曲
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== 彈跳視窗：匯入 music_link.js Modal ==================== -->
+  <div id="importModal" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" style="display: none;">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-lg rounded-2xl shadow-2xl p-6 relative">
+      <button onclick="closeModal('importModal')" class="absolute right-4 top-4 text-slate-400 hover:text-white p-1 rounded-lg">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <h3 class="text-lg font-bold text-white mb-2 flex items-center gap-2">
+        <i class="fa-solid fa-file-import text-emerald-400"></i> 匯入外部 music_link.js
+      </h3>
+      <p class="text-xs text-slate-400 mb-4">
+        您可以直接上傳電腦中的 <code class="text-emerald-300">music_link.js</code> 檔案，或貼上包含曲目陣列的 JavaScript 代碼。
+      </p>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-medium text-slate-300 mb-1.5">方式一：直接選取檔案</label>
+          <input 
+            type="file" 
+            id="importFileInput" 
+            accept=".js,.json,.txt" 
+            class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 cursor-pointer"
+            onchange="handleImportFile(event)"
+          >
+        </div>
+
+        <div class="relative flex py-1 items-center">
+          <div class="flex-grow border-t border-slate-800"></div>
+          <span class="flex-shrink mx-3 text-slate-500 text-[11px]">或者</span>
+          <div class="flex-grow border-t border-slate-800"></div>
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-300 mb-1.5">方式二：貼上 JavaScript 內容代碼</label>
+          <textarea 
+            id="importPasteText" 
+            rows="6" 
+            placeholder="請貼上 const music_link = [ ... ]; 內容" 
+            class="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 font-mono text-[11px] focus:outline-none focus:border-emerald-500"
+          ></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button type="button" onclick="closeModal('importModal')" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+            取消
+          </button>
+          <button type="button" onclick="handleImportTextSubmit()" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition shadow-md shadow-emerald-600/30">
+            確認匯入更新
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 自訂安全確認對話框 Confirm Modal (取代 alert/confirm) ==================== -->
+  <div id="customConfirmModal" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" style="display: none;">
+    <div class="bg-slate-900 border border-slate-800 w-full max-w-sm rounded-2xl shadow-2xl p-6 text-center space-y-4">
+      <div id="confirmIconWrap" class="w-12 h-12 mx-auto rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-xl border border-rose-500/30">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <div>
+        <h4 id="confirmModalTitle" class="text-base font-bold text-white mb-1">確認執行操作</h4>
+        <p id="confirmModalMessage" class="text-xs text-slate-400 leading-relaxed">確定要繼續嗎？</p>
+      </div>
+      <div class="flex items-center justify-center gap-3 pt-2">
+        <button id="confirmCancelBtn" type="button" class="px-4 py-2 rounded-xl text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 transition">
+          取消
+        </button>
+        <button id="confirmOkBtn" type="button" class="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 transition shadow-lg shadow-rose-600/30">
+          確定
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast 訊息通知元件 -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <script>
+    /* ==========================================================================
+       JRH 音樂播放系統核心腳本
+       資料來源：純檔案導向，載入同目錄下之 music_link.js
+       ========================================================================== */
+    let playlist = [];
+    let currentPlayingId = null;
+    let currentCategoryFilter = '全部';
+    let currentSearchTerm = '';
+    let isEditMode = false;
+    let adminTableSearchTerm = '';
+    let confirmCallback = null;
+
+    // 檢查網址參數是否含有 ?edit=1
+    function checkEditMode() {
+      const urlParams = new URLSearchParams(window.location.search);
+      isEditMode = urlParams.get('edit') === '1';
+    }
+
+    // 依據 editMode 切換所有操作介面與按鈕可見度
+    function applyEditModeUI() {
+      const adminElements = document.querySelectorAll('.admin-control');
+      const adminBanner = document.getElementById('adminBanner');
+      const adminPanel = document.getElementById('adminManagementPanel');
+      const headerBadge = document.getElementById('headerModeBadge');
+      const footerLink = document.getElementById('footerModeSwitchLink');
+
+      if (isEditMode) {
+        adminElements.forEach(el => {
+          el.classList.remove('hidden');
+          if (el.tagName === 'BUTTON' || el.tagName === 'A') {
+            el.classList.add('inline-flex');
+          }
+        });
+        if (adminBanner) adminBanner.classList.remove('hidden');
+        if (adminPanel) adminPanel.classList.remove('hidden');
+        if (headerBadge) {
+          headerBadge.textContent = "管理員模式 (?edit=1)";
+          headerBadge.className = "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30";
+        }
+        if (footerLink) {
+          footerLink.href = "?";
+          footerLink.innerHTML = `<i class="fa-solid fa-eye text-emerald-400"></i> <span class="text-slate-300">目前為管理狀態 (點此返回訪客模式)</span>`;
+        }
+      } else {
+        adminElements.forEach(el => {
+          el.classList.add('hidden');
+          el.classList.remove('inline-flex', 'flex');
+        });
+        if (adminBanner) adminBanner.classList.add('hidden');
+        if (adminPanel) adminPanel.classList.add('hidden');
+        if (headerBadge) {
+          headerBadge.textContent = "原創曲目導聆";
+          headerBadge.className = "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30";
+        }
+        if (footerLink) {
+          footerLink.href = "?edit=1";
+          footerLink.innerHTML = `<i class="fa-solid fa-lock"></i> <span>管理員登入 (?edit=1)</span>`;
+        }
+      }
+    }
+
+    // 優先讀取外部引入的 music_link.js，每次網頁開啟皆重新載入
+    async function initData() {
+      checkEditMode();
+
+      let loadedSuccessfully = false;
+
+      // 檢查外部 script 是否成功將全域變數 music_link 載入記憶體
+      if (typeof music_link !== 'undefined' && Array.isArray(music_link) && music_link.length > 0) {
+        playlist = JSON.parse(JSON.stringify(music_link));
+        loadedSuccessfully = true;
+      } else {
+        // 若在特定 Localhost 或伺服器環境下，以 fetch 補充讀取防呆
+        try {
+          const response = await fetch('music_link.js?t=' + Date.now());
+          if (response.ok) {
+            const jsText = await response.text();
+            const arrayMatch = jsText.match(/\[[\s\S]*\]/);
+            if (arrayMatch) {
+              const parsed = JSON.parse(arrayMatch[0]);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                playlist = parsed;
+                loadedSuccessfully = true;
+              }
+            }
+          }
+        } catch (err) {
+          console.warn('以 fetch 讀取 music_link.js (本機 file:// 模式屬正常限制):', err);
+        }
+      }
+
+      applyEditModeUI();
+
+      if (loadedSuccessfully && playlist.length > 0) {
+        currentPlayingId = playlist[0].id;
+        renderCategoryChips();
+        renderSongCards();
+        renderAdminTable();
+        setPlayingSong(playlist[0].id, false);
+      } else {
+        playlist = [];
+        renderCategoryChips();
+        renderSongCards();
+        renderAdminTable();
+        showToast('尚未讀取到同目錄下的 music_link.js 檔案，請確認檔案位置', 'error');
+      }
+    }
+
+    // 輔助函式：從 YouTube URL 抽取 11 碼代碼
+    function extractYoutubeId(inputUrl) {
+      if (!inputUrl) return '';
+      const trimmed = inputUrl.trim();
+      if (trimmed.length === 11 && !trimmed.includes('/') && !trimmed.includes('?')) {
+        return trimmed;
+      }
+      const match = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+      return match ? match[1] : trimmed;
+    }
+
+    // 渲染風格分類標籤列
+    function renderCategoryChips() {
+      const container = document.getElementById('categoryChips');
+      if (!container) return;
+
+      const categories = ['全部', ...new Set(playlist.map(item => item.category || '原創曲目'))];
+
+      container.innerHTML = categories.map(cat => {
+        const isActive = cat === currentCategoryFilter;
+        return `
+          <button 
+            onclick="setCategoryFilter('${escapeHtml(cat)}')" 
+            class="whitespace-nowrap px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
+              isActive 
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
+                : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700/60'
+            }"
+          >
+            ${escapeHtml(cat)}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function setCategoryFilter(category) {
+      currentCategoryFilter = category;
+      renderCategoryChips();
+      renderSongCards();
+    }
+
+    // 取得當前過濾後的歌曲清單
+    function getFilteredSongs() {
+      return playlist.filter(song => {
+        const matchesCategory = currentCategoryFilter === '全部' || song.category === currentCategoryFilter;
+        const matchesSearch = !currentSearchTerm || 
+          song.title.toLowerCase().includes(currentSearchTerm.toLowerCase()) ||
+          (song.desc && song.desc.toLowerCase().includes(currentSearchTerm.toLowerCase())) ||
+          (song.category && song.category.toLowerCase().includes(currentSearchTerm.toLowerCase()));
+        return matchesCategory && matchesSearch;
+      });
+    }
+
+    // 渲染首頁卡片網格
+    function renderSongCards() {
+      const grid = document.getElementById('songGrid');
+      const empty = document.getElementById('emptyState');
+      const countBadge = document.getElementById('resultCountBadge');
+      const filtered = getFilteredSongs();
+
+      countBadge.textContent = `共 ${filtered.length} / ${playlist.length} 首曲目`;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = '';
+        empty.classList.remove('hidden');
+        return;
+      }
+      empty.classList.add('hidden');
+
+      grid.innerHTML = filtered.map((song, index) => {
+        const isPlaying = song.id === currentPlayingId;
+        const yId = song.youtubeId || extractYoutubeId(song.url);
+        const thumbUrl = yId ? `https://img.youtube.com/vi/${yId}/hqdefault.jpg` : '';
+
+        return `
+          <div 
+            class="group relative bg-slate-900/70 hover:bg-slate-900 border ${
+              isPlaying ? 'border-indigo-500 shadow-lg shadow-indigo-500/20 ring-1 ring-indigo-500' : 'border-slate-800 hover:border-slate-700'
+            } rounded-2xl p-3 flex flex-col justify-between transition-all duration-300"
+          >
+            <div>
+              <!-- 封面縮圖 -->
+              <div 
+                onclick="setPlayingSong('${song.id}', true)" 
+                class="relative aspect-video rounded-xl overflow-hidden bg-slate-950 cursor-pointer mb-3"
+              >
+                ${thumbUrl ? `
+                  <img 
+                    src="${thumbUrl}" 
+                    alt="${escapeHtml(song.title)}" 
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                    onerror="this.src='https://placehold.co/480x270/1e293b/94a3b8?text=JRH+Music'"
+                  >
+                ` : `
+                  <div class="w-full h-full flex items-center justify-center text-slate-600 bg-slate-950">
+                    <i class="fa-solid fa-music text-3xl"></i>
+                  </div>
+                `}
+
+                <div class="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <span class="w-11 h-11 rounded-full bg-indigo-600 text-white flex items-center justify-center shadow-lg shadow-indigo-600/40 transform scale-90 group-hover:scale-100 transition">
+                    <i class="fa-solid fa-play ml-0.5"></i>
+                  </span>
+                </div>
+
+                ${isPlaying ? `
+                  <div class="absolute top-2 left-2 px-2 py-0.5 rounded-md bg-indigo-600 text-white text-[10px] font-bold tracking-wide flex items-center gap-1 shadow">
+                    <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span> 播映中
+                  </div>
+                ` : ''}
+
+                <div class="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-sm text-slate-300 text-[10px] font-medium">
+                  ${escapeHtml(song.category || '未分類')}
+                </div>
+              </div>
+
+              <!-- 曲名與意境簡介預覽 -->
+              <h4 
+                onclick="setPlayingSong('${song.id}', true)" 
+                class="font-semibold text-sm text-white hover:text-indigo-400 cursor-pointer line-clamp-1 transition"
+                title="${escapeHtml(song.title)}"
+              >
+                ${escapeHtml(song.title)}
+              </h4>
+
+              <p class="text-xs text-slate-400 line-clamp-2 mt-1.5 leading-relaxed font-light">
+                ${escapeHtml(song.desc || '暫無歌曲導聆簡介')}
+              </p>
+            </div>
+
+            <!-- 卡片底端工具列 -->
+            <div class="pt-3 mt-3 border-t border-slate-800/80 flex items-center justify-between">
+              <button 
+                onclick="setPlayingSong('${song.id}', true)" 
+                class="text-xs font-medium ${isPlaying ? 'text-indigo-400 font-semibold' : 'text-slate-400 hover:text-white'} flex items-center gap-1 transition"
+              >
+                <i class="fa-solid ${isPlaying ? 'fa-volume-high' : 'fa-circle-play'}"></i>
+                <span>${isPlaying ? '正在導聆' : '點擊聆聽'}</span>
+              </button>
+
+              <!-- 管理專屬：編輯與刪除按鈕 (訪客模式下不呈現) -->
+              <div class="admin-control ${isEditMode ? 'flex' : 'hidden'} items-center gap-1">
+                <button 
+                  onclick="openEditSongModal('${song.id}')" 
+                  class="p-1.5 rounded-lg bg-slate-800 hover:bg-indigo-600/30 text-slate-400 hover:text-indigo-300 text-xs transition" 
+                  title="編輯歌曲簡介與連結"
+                >
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button 
+                  onclick="confirmDeleteSong('${song.id}')" 
+                  class="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-600/30 text-slate-400 hover:text-rose-400 text-xs transition" 
+                  title="從清單刪除此曲"
+                >
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 設定目前正在播放的歌曲
+    function setPlayingSong(songId, shouldScroll = false) {
+      const song = playlist.find(s => s.id === songId);
+      if (!song) return;
+
+      currentPlayingId = songId;
+
+      const yId = song.youtubeId || extractYoutubeId(song.url);
+      const iframe = document.getElementById('youtubeFrame');
+      const titleEl = document.getElementById('currentSongTitle');
+      const descEl = document.getElementById('currentSongDesc');
+      const catBadge = document.getElementById('currentCategoryBadge');
+      const videoIdText = document.getElementById('playingVideoIdText');
+      const linkEl = document.getElementById('openYoutubeLink');
+      const indexText = document.getElementById('currentSongIndexText');
+
+      if (iframe && yId) {
+        iframe.src = `https://www.youtube.com/embed/${yId}?autoplay=1&rel=0`;
+      }
+
+      if (titleEl) titleEl.textContent = song.title;
+      if (descEl) descEl.textContent = song.desc || '此曲目暫未填寫導聆簡介。';
+      if (catBadge) catBadge.textContent = song.category || '原創作品';
+      if (videoIdText) videoIdText.textContent = `ID: ${yId}`;
+      if (linkEl) linkEl.href = song.url || `https://www.youtube.com/watch?v=${yId}`;
+
+      const currentIndex = playlist.findIndex(s => s.id === songId);
+      if (indexText) {
+        indexText.textContent = `曲目序號：第 ${currentIndex + 1} 首 / 共 ${playlist.length} 首`;
+      }
+
+      // 重新渲染卡片高亮狀態
+      renderSongCards();
+      renderAdminTable();
+
+      if (shouldScroll) {
+        document.getElementById('playerSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    function playNextSong() {
+      if (playlist.length === 0) return;
+      const idx = playlist.findIndex(s => s.id === currentPlayingId);
+      const nextIdx = (idx + 1) % playlist.length;
+      setPlayingSong(playlist[nextIdx].id, false);
+    }
+
+    function playPrevSong() {
+      if (playlist.length === 0) return;
+      const idx = playlist.findIndex(s => s.id === currentPlayingId);
+      const prevIdx = (idx - 1 + playlist.length) % playlist.length;
+      setPlayingSong(playlist[prevIdx].id, false);
+    }
+
+    function playRandomSong() {
+      if (playlist.length <= 1) return;
+      let randIdx;
+      const currentIdx = playlist.findIndex(s => s.id === currentPlayingId);
+      do {
+        randIdx = Math.floor(Math.random() * playlist.length);
+      } while (randIdx === currentIdx);
+      setPlayingSong(playlist[randIdx].id, false);
+    }
+
+    // 渲染後台管理總表
+    function renderAdminTable() {
+      const tbody = document.getElementById('adminTableBody');
+      const countEl = document.getElementById('adminTableCount');
+      if (!tbody) return;
+
+      countEl.textContent = `共 ${playlist.length} 首曲目`;
+
+      const filterTerm = (adminTableSearchTerm || '').trim().toLowerCase();
+      const filtered = playlist.filter(song => {
+        if (!filterTerm) return true;
+        return (
+          song.title.toLowerCase().includes(filterTerm) ||
+          (song.category && song.category.toLowerCase().includes(filterTerm)) ||
+          (song.youtubeId && song.youtubeId.toLowerCase().includes(filterTerm))
+        );
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="py-8 text-center text-slate-500">
+              沒有符合條件的曲目資料
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((song, idx) => {
+        const isPlaying = song.id === currentPlayingId;
+        const originalIndex = playlist.findIndex(s => s.id === song.id);
+        const yId = song.youtubeId || extractYoutubeId(song.url);
+        const thumbUrl = yId ? `https://img.youtube.com/vi/${yId}/default.jpg` : '';
+
+        return `
+          <tr class="hover:bg-slate-800/50 ${isPlaying ? 'bg-indigo-950/20' : ''} transition">
+            <td class="py-2.5 px-3 text-center text-slate-500 font-mono">${originalIndex + 1}</td>
+            <td class="py-2.5 px-3">
+              <img 
+                src="${thumbUrl}" 
+                alt="" 
+                class="w-12 h-8 rounded object-cover bg-slate-950" 
+                onerror="this.src='https://placehold.co/80x50/1e293b/94a3b8?text=JRH'"
+              >
+            </td>
+            <td class="py-2.5 px-4 font-medium text-white max-w-xs truncate" title="${escapeHtml(song.title)}">
+              ${escapeHtml(song.title)}
+            </td>
+            <td class="py-2.5 px-3">
+              <span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-800 text-slate-300 border border-slate-700">
+                ${escapeHtml(song.category || '組曲')}
+              </span>
+            </td>
+            <td class="py-2.5 px-3 font-mono text-[11px] text-slate-400">
+              <a href="https://youtu.be/${yId}" target="_blank" class="hover:text-indigo-400 hover:underline">
+                ${escapeHtml(yId)}
+              </a>
+            </td>
+            <td class="py-2.5 px-4 text-slate-400 max-w-sm truncate" title="${escapeHtml(song.desc || '')}">
+              ${escapeHtml(song.desc || '--')}
+            </td>
+            <td class="py-2.5 px-3 text-center whitespace-nowrap">
+              <div class="inline-flex items-center gap-1">
+                <button 
+                  onclick="moveSongOrder(${originalIndex}, -1)" 
+                  class="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30" 
+                  title="往上移" 
+                  ${originalIndex === 0 ? 'disabled' : ''}
+                >
+                  <i class="fa-solid fa-arrow-up"></i>
+                </button>
+                <button 
+                  onclick="moveSongOrder(${originalIndex}, 1)" 
+                  class="p-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 disabled:opacity-30" 
+                  title="往下移" 
+                  ${originalIndex === playlist.length - 1 ? 'disabled' : ''}
+                >
+                  <i class="fa-solid fa-arrow-down"></i>
+                </button>
+                <button 
+                  onclick="openEditSongModal('${song.id}')" 
+                  class="p-1 px-1.5 rounded bg-indigo-600/30 hover:bg-indigo-600 text-indigo-300 hover:text-white" 
+                  title="編輯"
+                >
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button 
+                  onclick="confirmDeleteSong('${song.id}')" 
+                  class="p-1 px-1.5 rounded bg-rose-600/30 hover:bg-rose-600 text-rose-300 hover:text-white" 
+                  title="刪除"
+                >
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function filterAdminTable() {
+      adminTableSearchTerm = document.getElementById('adminTableFilterInput').value;
+      renderAdminTable();
+    }
+
+    function toggleAdminPanel() {
+      const panel = document.getElementById('adminManagementPanel');
+      if (panel) {
+        panel.classList.toggle('hidden');
+        if (!panel.classList.contains('hidden')) {
+          panel.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    }
+
+    function moveSongOrder(index, direction) {
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= playlist.length) return;
+      const temp = playlist[index];
+      playlist[index] = playlist[targetIndex];
+      playlist[targetIndex] = temp;
+
+      renderCategoryChips();
+      renderSongCards();
+      renderAdminTable();
+      showToast('已調整曲目順序，請記得點擊「匯出 JS」保存！', 'info');
+    }
+
+    // 開啟新增歌曲對話框
+    function openAddSongModal() {
+      document.getElementById('songModalTitle').innerHTML = '<i class="fa-solid fa-plus text-indigo-400"></i> 新增歌曲曲目';
+      document.getElementById('formSongId').value = '';
+      document.getElementById('formTitle').value = '';
+      document.getElementById('formUrl').value = '';
+      document.getElementById('formYoutubeId').value = '';
+      document.getElementById('formCategory').value = '抒情感懷';
+      document.getElementById('formDesc').value = '';
+      updateThumbnailPreview('');
+      openModal('songModal');
+    }
+
+    // 開啟編輯歌曲對話框
+    function openEditSongModal(songId) {
+      const song = playlist.find(s => s.id === songId);
+      if (!song) return;
+
+      document.getElementById('songModalTitle').innerHTML = '<i class="fa-solid fa-pen-to-square text-amber-400"></i> 編輯歌曲資訊與導聆';
+      document.getElementById('formSongId').value = song.id;
+      document.getElementById('formTitle').value = song.title || '';
+      document.getElementById('formUrl').value = song.url || '';
+      document.getElementById('formYoutubeId').value = song.youtubeId || extractYoutubeId(song.url);
+      document.getElementById('formCategory').value = song.category || '未分類';
+      document.getElementById('formDesc').value = song.desc || '';
+      updateThumbnailPreview(song.youtubeId || extractYoutubeId(song.url));
+      openModal('songModal');
+    }
+
+    function editCurrentSong() {
+      if (currentPlayingId) {
+        openEditSongModal(currentPlayingId);
+      }
+    }
+
+    function handleFormUrlChange() {
+      const val = document.getElementById('formUrl').value;
+      const yId = extractYoutubeId(val);
+      document.getElementById('formYoutubeId').value = yId;
+      updateThumbnailPreview(yId);
+    }
+
+    function updateThumbnailPreview(yId) {
+      const img = document.getElementById('formThumbnailPreview');
+      const placeholder = document.getElementById('formThumbnailPlaceholder');
+      if (yId && yId.length === 11) {
+        img.src = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
+        img.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+      } else {
+        img.src = '';
+        img.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+      }
+    }
+
+    function handleSongFormSubmit(event) {
+      event.preventDefault();
+      const songId = document.getElementById('formSongId').value;
+      const title = document.getElementById('formTitle').value.trim();
+      const url = document.getElementById('formUrl').value.trim();
+      const youtubeId = document.getElementById('formYoutubeId').value.trim() || extractYoutubeId(url);
+      const category = document.getElementById('formCategory').value.trim();
+      const desc = document.getElementById('formDesc').value.trim();
+
+      if (!title || !youtubeId) {
+        showToast('請完整填寫歌曲名稱與有效的 YouTube 網址！', 'error');
+        return;
+      }
+
+      if (songId) {
+        // 更新現有歌曲
+        const idx = playlist.findIndex(s => s.id === songId);
+        if (idx !== -1) {
+          playlist[idx] = {
+            ...playlist[idx],
+            title,
+            url,
+            youtubeId,
+            category,
+            desc
+          };
+          showToast(`已成功修改《${title}》`, 'success');
+        }
+      } else {
+        // 新增曲目
+        const newSong = {
+          id: 'jrh-' + Date.now().toString(36),
+          title,
+          url,
+          youtubeId,
+          category,
+          desc
+        };
+        playlist.unshift(newSong);
+        currentPlayingId = newSong.id;
+        showToast(`已成功新增《${title}》至清單首位`, 'success');
+      }
+
+      closeModal('songModal');
+      renderCategoryChips();
+      renderSongCards();
+      renderAdminTable();
+
+      if (currentPlayingId === songId || !songId) {
+        setPlayingSong(currentPlayingId || playlist[0].id, false);
+      }
+    }
+
+    // 刪除歌曲確認
+    function confirmDeleteSong(songId) {
+      const song = playlist.find(s => s.id === songId);
+      if (!song) return;
+
+      openCustomConfirm(
+        '確認刪除歌曲',
+        `確定要將《${song.title}》自播放清單中移除嗎？此異動可透過「匯出 JS」覆蓋保存至檔案。`,
+        () => {
+          playlist = playlist.filter(s => s.id !== songId);
+          if (currentPlayingId === songId) {
+            currentPlayingId = playlist.length ? playlist[0].id : null;
+            if (currentPlayingId) setPlayingSong(currentPlayingId, false);
+          }
+          renderCategoryChips();
+          renderSongCards();
+          renderAdminTable();
+          showToast(`已刪除曲目《${song.title}》`, 'info');
+        }
+      );
+    }
+
+    function confirmResetPlaylist() {
+      openCustomConfirm(
+        '重新載入原始檔案',
+        '確定要放棄目前尚未匯出的修改，並重新自 music_link.js 讀取曲目嗎？',
+        () => {
+          if (typeof music_link !== 'undefined' && Array.isArray(music_link)) {
+            playlist = JSON.parse(JSON.stringify(music_link));
+            if (playlist.length > 0) {
+              currentPlayingId = playlist[0].id;
+              setPlayingSong(currentPlayingId, false);
+            }
+            renderCategoryChips();
+            renderSongCards();
+            renderAdminTable();
+            showToast('已重新自 music_link.js 讀取原始歌單', 'success');
+          } else {
+            initData();
+          }
+        }
+      );
+    }
+
+    // 匯出生成標準 music_link.js 檔案
+    function exportMusicLinkJs() {
+      if (playlist.length === 0) {
+        showToast('目前清單內無任何歌曲可供匯出', 'error');
+        return;
+      }
+
+      const now = new Date();
+      const timeStr = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()} ${now.toLocaleTimeString()}`;
+
+      const jsContent = `/**
+ * JRH 播放清單連結資料庫 - music_link.js
+ * 匯出時間: ${timeStr}
+ * 總曲目數: ${playlist.length}
+ * 
+ * 您可以在此檔案中自行新增、刪除或修改曲目陣列。
+ * 格式規範：
+ * - id: 唯一識別字串
+ * - title: 歌曲名稱
+ * - url: YouTube 影片連結
+ * - youtubeId: YouTube 11 碼代碼
+ * - category: 分類標籤
+ * - desc: 歌曲深度簡介與創作意境
+ */
+
+const music_link = ${JSON.stringify(playlist, null, 2)};
+
+// 支援 Node.js 與瀏覽器環境載入
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = music_link;
+}
+`;
+
+      const blob = new Blob([jsContent], { type: 'application/javascript;charset=utf-8' });
+      const downloadLink = document.createElement('a');
+      downloadLink.href = URL.createObjectURL(blob);
+      downloadLink.download = 'music_link.js';
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(downloadLink.href);
+
+      showToast(`成功匯出 music_link.js！包含 ${playlist.length} 首曲目`, 'success');
+    }
+
+    // 匯入檔案讀取
+    function handleImportFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const content = e.target.result;
+        document.getElementById('importPasteText').value = content;
+      };
+      reader.readAsText(file);
+    }
+
+    function handleImportTextSubmit() {
+      const text = document.getElementById('importPasteText').value.trim();
+      if (!text) {
+        showToast('請先選取檔案或貼上代碼內容', 'error');
+        return;
+      }
+
+      try {
+        let parsed = null;
+        if (text.startsWith('[') && text.endsWith(']')) {
+          parsed = JSON.parse(text);
+        } else {
+          const arrayMatch = text.match(/\[[\s\S]*\]/);
+          if (arrayMatch) {
+            parsed = JSON.parse(arrayMatch[0]);
+          }
+        }
+
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          playlist = parsed;
+          currentPlayingId = playlist[0].id;
+          closeModal('importModal');
+          renderCategoryChips();
+          renderSongCards();
+          renderAdminTable();
+          setPlayingSong(playlist[0].id, false);
+          showToast(`成功匯入 ${playlist.length} 首曲目！`, 'success');
+        } else {
+          showToast('無法辨識曲目陣列格式，請確認格式正確', 'error');
+        }
+      } catch (err) {
+        showToast('代碼解析失敗，請確認是否為標準 JSON/JS 陣列', 'error');
+        console.error(err);
+      }
+    }
+
+    // 排序功能
+    function sortPlaylistOrder(type) {
+      if (type === 'title') {
+        playlist.sort((a, b) => a.title.localeCompare(b.title, 'zh-TW'));
+      } else if (type === 'category') {
+        playlist.sort((a, b) => (a.category || '').localeCompare(b.category || '', 'zh-TW'));
+      } else if (type === 'default') {
+        if (typeof music_link !== 'undefined' && Array.isArray(music_link)) {
+          playlist = JSON.parse(JSON.stringify(music_link));
+        }
+      }
+      renderSongCards();
+      renderAdminTable();
+      showToast('已更新清單排序', 'info');
+    }
+
+    // Modal 顯隱工具函式
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.remove('modal-hidden');
+      }
+    }
+
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      if (modal) {
+        modal.style.display = 'none';
+        modal.classList.add('modal-hidden');
+      }
+    }
+
+    // 自訂替代 confirm() 的對話視窗
+    function openCustomConfirm(title, message, onOk) {
+      const modal = document.getElementById('customConfirmModal');
+      document.getElementById('confirmModalTitle').textContent = title;
+      document.getElementById('confirmModalMessage').textContent = message;
+      confirmCallback = onOk;
+
+      modal.style.display = 'flex';
+      modal.classList.remove('modal-hidden');
+    }
+
+    document.getElementById('confirmCancelBtn').onclick = function() {
+      closeModal('customConfirmModal');
+      confirmCallback = null;
+    };
+
+    document.getElementById('confirmOkBtn').onclick = function() {
+      closeModal('customConfirmModal');
+      if (confirmCallback) confirmCallback();
+      confirmCallback = null;
+    };
+
+    // Toast 訊息提示元件
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      const icons = {
+        success: 'fa-circle-check text-emerald-400',
+        error: 'fa-circle-xmark text-rose-400',
+        info: 'fa-circle-info text-indigo-400'
+      };
+
+      toast.className = 'flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-900/95 border border-slate-700/80 shadow-2xl text-xs text-white transform transition-all duration-300 translate-y-2 opacity-0';
+      toast.innerHTML = `
+        <i class="fa-solid ${icons[type] || icons.info} text-sm"></i>
+        <span>${escapeHtml(message)}</span>
+      `;
+
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // XSS 跳脫保護
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // 搜尋即時監聽
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+      currentSearchTerm = e.target.value.trim();
+      const clearBtn = document.getElementById('clearSearchBtn');
+      if (currentSearchTerm) {
+        clearBtn.classList.remove('hidden');
+      } else {
+        clearBtn.classList.add('hidden');
+      }
+      renderSongCards();
+    });
+
+    document.getElementById('clearSearchBtn').addEventListener('click', function() {
+      document.getElementById('searchInput').value = '';
+      currentSearchTerm = '';
+      this.classList.add('hidden');
+      renderSongCards();
+    });
+
+    // 頁面初始化
+    window.onload = function() {
+      initData();
+    };
+  </script>
+</body>
+</html>
