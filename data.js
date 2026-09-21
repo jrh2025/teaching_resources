@@ -355,6 +355,16 @@ window.APP_DATA = {
       "icon": "ReceiptText",
       "color": "indigo",
       "grade": "校務"
+    },
+    {
+      "id": "item_1789955970128",
+      "title": "中小學教師 AI 工作術： 教學、行政與備課自動化實戰講義",
+      "category": "備課",
+      "description": "本[實戰講義]專為中小學導師、科任與行政人員設計，聚焦 Gemini 與 Google Workspace 整合應用。內容涵蓋企劃轉簡報、畢旅行程與經費試算表自動化、傷病 SOP 知識庫 Gem，以及研習日曆排程，並提供防範個資洩漏與公式截斷的驗收指南，全方位提升校務行政與備課效率。",
+      "link": "Teachers_AI_Work_Techniques_Lecture_Notes.html",
+      "icon": "BookOpen",
+      "color": "green",
+      "grade": "備課"
     }
   ]
 };
