@@ -345,6 +345,16 @@ window.APP_DATA = {
       "icon": "Disc3",
       "color": "purple",
       "grade": "音樂"
+    },
+    {
+      "id": "item_1789952013269",
+      "title": "校園傳染病請假建議系統(GAS)-完整建置與維護手冊",
+      "category": "校務",
+      "description": "**校園傳染病請假建議系統**專為導師與健康中心設計。系統依學生確診日自動計算標準隔離天數（含確診日共 7 天）並推算返校日，一鍵生成通知文字。透過 Google 伺服器端自動綁定通報者帳號，防止冒名，並支援試算表紀錄、分頁搜尋及匯出 Excel 報表。",
+      "link": "CIDLRS_Manual.html",
+      "icon": "ReceiptText",
+      "color": "indigo",
+      "grade": "校務"
     }
   ]
 };
