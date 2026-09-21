@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini × Google Workspace 中小學教師教學・行政・備課自動化實戰自學講義</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        edu: {
+                            blue: '#1a73e8',
+                            navy: '#1e3a8a',
+                            emerald: '#059669',
+                            amber: '#d97706',
+                            rose: '#e11d48',
+                            purple: '#7c3aed',
+                            slate: '#0f172a'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans TC', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans TC', system-ui, sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .code-block {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .glass-header {
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(12px);
+        }
+        html.text-scale-sm { font-size: 14px; }
+        html.text-scale-base { font-size: 16px; }
+        html.text-scale-lg { font-size: 18px; }
+        html.text-scale-xl { font-size: 20px; }
+
+        .font-btn.active {
+            background-color: #1e3a8a;
+            color: #ffffff;
+            font-weight: 700;
+        }
+        .step-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 9999px;
+            font-weight: 800;
+            font-size: 0.75rem;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800 antialiased flex flex-col custom-scrollbar">
+
+    <!-- Top Bar Navigation -->
+    <header class="sticky top-0 z-40 glass-header border-b border-slate-200 shadow-xs">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-700 via-indigo-700 to-purple-700 flex items-center justify-center text-white font-black shadow-md shadow-blue-500/20">
+                    🎓
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-900 leading-tight text-base sm:text-lg flex items-center gap-2">
+                        教師 AI 辦公室
+                        <span class="text-xs bg-blue-100 text-blue-900 font-semibold px-2.5 py-0.5 rounded-full border border-blue-200">教學・行政・備課實戰版</span>
+                    </h1>
+                </div>
+            </div>
+            
+            <nav class="hidden lg:flex items-center space-x-1 text-sm font-medium text-slate-600">
+                <a href="#module-1" class="px-2.5 py-1.5 rounded-lg hover:bg-slate-100 hover:text-blue-700 transition">01 教育版權限</a>
+                <a href="#module-2" class="px-2.5 py-1.5 rounded-lg hover:bg-slate-100 hover:text-blue-700 transition">02 簡報與公開授課</a>
+                <a href="#module-3" class="px-2.5 py-1.5 rounded-lg hover:bg-slate-100 hover:text-blue-700 transition">03 畢旅與處室核銷</a>
+                <a href="#module-4" class="px-2.5 py-1.5 rounded-lg hover:bg-slate-100 hover:text-blue-700 transition">04 校園SOP動態Gem</a>
+                <a href="#module-5" class="px-2.5 py-1.5 rounded-lg hover:bg-slate-100 hover:text-blue-700 transition">05 研習排程課表</a>
+                <a href="#module-6" class="px-2.5 py-1.5 rounded-lg hover:bg-slate-100 hover:text-rose-600 transition text-rose-600 font-semibold">06 成績與個資防護</a>
+            </nav>
+
+            <!-- Font Scaler and Action Controls -->
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
+                    <span class="text-[11px] font-bold text-slate-500 px-1.5 hidden sm:inline">字級:</span>
+                    <button type="button" onclick="setFontScale('sm')" id="font-sm" class="font-btn px-2 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition">A-</button>
+                    <button type="button" onclick="setFontScale('base')" id="font-base" class="font-btn active px-2 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition">標準</button>
+                    <button type="button" onclick="setFontScale('lg')" id="font-lg" class="font-btn px-2 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition">A+</button>
+                    <button type="button" onclick="setFontScale('xl')" id="font-xl" class="font-btn px-2 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition">A++</button>
+                </div>
+
+                <button onclick="scrollToSection('generator')" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg text-white bg-blue-700 hover:bg-blue-800 shadow-sm transition">
+                    <span>⚡ 研習排程組裝器</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Banner -->
+    <section class="relative overflow-hidden bg-gradient-to-b from-blue-50/80 via-white to-slate-50 py-12 sm:py-16 border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="max-w-3xl">
+                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 border border-blue-200 mb-4">
+                    <span>🍎 專為中小學導師、科任、兼任行政主任組長量身打造</span>
+                </div>
+                <h2 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                    中小學教師 AI 工作術：<br class="hidden sm:block">
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-800 to-purple-800">
+                        教學、行政與備課自動化實戰講義
+                    </span>
+                </h2>
+                <p class="mt-4 text-base sm:text-lg text-slate-600 leading-relaxed">
+                    擺脫繁重的校務行政公文與重複性打字！以<strong>真實校內企劃、畢旅三天兩夜行程表、處室經費核銷清冊、傷病通報 SOP 及教師在職增能研習</strong>為案例，帶你學會如何活用側邊欄「✦」與「@」指令，兼顧親師溝通、課堂素養教學與資安個資保護。
+                </p>
+
+                <!-- Core Highlights Matrix -->
+                <div class="mt-6 flex flex-wrap gap-2 text-xs font-medium text-slate-600">
+                    <div class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-xs">
+                        <span class="text-blue-600 font-bold">✓</span> 1,500字科技探索營企劃轉10頁評鑑簡報
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-xs">
+                        <span class="text-emerald-600 font-bold">✓</span> 畢旅草案純文字秒變4欄標準行程追蹤表
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-xs">
+                        <span class="text-purple-600 font-bold">✓</span> 處室資本/經常門核銷月報排序小計克隆
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-xs">
+                        <span class="text-amber-600 font-bold">✓</span> 校園學生偶發傷病處理 SOP 即時連動 Gem
+                    </div>
+                    <div class="flex items-center gap-1.5 bg-white border border-slate-200 rounded-lg px-3 py-1.5 shadow-xs">
+                        <span class="text-rose-600 font-bold">✓</span> 學生段考成績與特教個資（PII）防護指南
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="absolute -right-24 -top-24 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+        <div class="absolute right-1/3 -bottom-24 w-80 h-80 bg-purple-100 rounded-full blur-3xl opacity-40 pointer-events-none"></div>
+    </section>
+
+    <!-- Main Content Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-16 flex-1">
+
+        <!-- Module 1: Education Accounts & Permissions -->
+        <section id="module-1" class="scroll-mt-20">
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="px-2.5 py-1 bg-blue-700 text-white font-bold text-sm rounded-lg">01</div>
+                <div>
+                    <h3 class="text-2xl font-bold text-slate-900">學校教育版帳號前置與權限矩陣</h3>
+                    <p class="text-sm text-slate-500">釐清「教育部/縣市教育雲端帳號 (@go.edu.tw)」與各種 Workspace 方案整合度，少走冤枉路</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Left: Account & Permission Matrix -->
+                <div class="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-5">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                            <span>🔑 學校教育環境支援方案與功能對照</span>
+                        </h4>
+                        <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-mono">校園環境基準</span>
+                    </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs sm:text-sm border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold">
+                                    <th class="py-3 px-3">帳號類別</th>
+                                    <th class="py-3 px-3">所需授權</th>
+                                    <th class="py-3 px-3">側邊欄「✦」原生整合</th>
+                                    <th class="py-3 px-3">@ 雲端硬碟互通</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-slate-700">
+                                <tr>
+                                    <td class="py-3 px-3 font-medium">教育部教育雲 / 縣市 Google 帳號 (含 Education Plus / 教學升級授權)</td>
+                                    <td class="py-3 px-3 text-xs">Teaching and Learning Upgrade 或 Education Plus 附加 Gemini 授權</td>
+                                    <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">全面開放</span></td>
+                                    <td class="py-3 px-3"><span class="text-emerald-600 font-semibold">可直接叫出學校共用雲端</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="py-3 px-3 font-medium">教師個人付費帳號 (@gmail.com)</td>
+                                    <td class="py-3 px-3 text-xs">Google One AI Premium / Pro</td>
+                                    <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-100 text-emerald-800">完整個人支援</span></td>
+                                    <td class="py-3 px-3"><span class="text-emerald-600 font-semibold">支援個人雲端檔案</span></td>
+                                </tr>
+                                <tr class="bg-slate-50/60">
+                                    <td class="py-3 px-3 text-slate-500 font-medium">學校標準免費版 (Education Fundamentals)</td>
+                                    <td class="py-3 px-3 text-slate-500 text-xs">學校未採購 AI 增益包</td>
+                                    <td class="py-3 px-3"><span class="px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800">無原生側邊欄</span></td>
+                                    <td class="py-3 px-3"><span class="text-slate-400">僅限網頁 Canvas 匯出</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-4 text-xs sm:text-sm text-amber-900 leading-relaxed space-y-1">
+                        <strong class="font-semibold flex items-center gap-1.5">
+                            <span>⚠️ 教師必做設定（否則無法連動學校日曆與雲端教材）：</span>
+                        </strong>
+                        <p>登入 Gemini 網頁（gemini.google.com）➔ 點選左下角「設定」➔「連結的應用程式」➔ 請務必確認 <strong>Google Workspace 擴充功能</strong> 為開啟狀態！若使用校園帳號無法開啟，請洽詢學校資訊組長確認管理員權限政策。</p>
+                    </div>
+
+                    <!-- 10 Direct Export Formats for Schools -->
+                    <div>
+                        <div class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">教師備課與行政直出之 10 大檔案格式</div>
+                        <div class="flex flex-wrap gap-1.5">
+                            <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-medium rounded-md border border-slate-200">Google 文件 (教案/考卷)</span>
+                            <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-medium rounded-md border border-slate-200">Google 試算表 (成績冊/經費)</span>
+                            <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-medium rounded-md border border-slate-200">Google 簡報 (課堂教材)</span>
+                            <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-medium rounded-md border border-slate-200">Word (.docx)</span>
+                            <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-medium rounded-md border border-slate-200">Excel (.xlsx)</span>
+                            <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-medium rounded-md border border-slate-200">PDF (列印學習單)</span>
+                            <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-medium rounded-md border border-slate-200">LaTeX (數學物理考卷公式)</span>
+                            <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-medium rounded-md border border-slate-200">Markdown (.md)</span>
+                            <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-medium rounded-md border border-slate-200">RTF</span>
+                            <span class="px-2 py-1 bg-slate-100 text-slate-700 text-xs font-medium rounded-md border border-slate-200">CSV (學生名冊匯入)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Interactive Eligibility Test for Teachers -->
+                <div class="lg:col-span-5 bg-gradient-to-br from-indigo-50/60 to-white rounded-2xl p-6 border border-indigo-100 shadow-xs flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="font-bold text-slate-800 text-base flex items-center gap-1.5">
+                                <span>🧭 教師帳號即時自我診斷</span>
+                            </h4>
+                            <span class="text-xs font-mono bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded">工作流判斷</span>
+                        </div>
+                        <p class="text-xs text-slate-600 mb-4">點選你目前所登入的學校或個人帳號，立即取得推薦的備課與行政操作路徑：</p>
+
+                        <div class="space-y-2.5 mb-5">
+                            <label class="flex items-center p-3 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 cursor-pointer transition">
+                                <input type="radio" name="plan" value="free" checked onchange="updatePlanStatus(this.value)" class="text-indigo-600 focus:ring-indigo-500">
+                                <span class="ml-3 text-sm text-slate-700 font-medium">學校標準教育帳號 (未加購 AI 方案)</span>
+                            </label>
+                            <label class="flex items-center p-3 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 cursor-pointer transition">
+                                <input type="radio" name="plan" value="one-ai" onchange="updatePlanStatus(this.value)" class="text-indigo-600 focus:ring-indigo-500">
+                                <span class="ml-3 text-sm text-slate-700 font-medium">教師個人訂閱 (Google One AI Premium)</span>
+                            </label>
+                            <label class="flex items-center p-3 rounded-xl border border-slate-200 bg-white hover:border-indigo-300 cursor-pointer transition">
+                                <input type="radio" name="plan" value="workspace-ai" onchange="updatePlanStatus(this.value)" class="text-indigo-600 focus:ring-indigo-500">
+                                <span class="ml-3 text-sm text-slate-700 font-medium">教育版進階授權 (Education Plus / AI 升級)</span>
+                            </label>
+                        </div>
+
+                        <!-- Result Box -->
+                        <div id="plan-result-box" class="p-4 rounded-xl border border-slate-200 bg-white shadow-xs text-xs sm:text-sm space-y-2">
+                            <!-- Dynamic Content Inserted by JS -->
+                        </div>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-slate-100 text-xs text-slate-400">
+                        提示：若學校尚未採購 AI 模組，教師可善用免費網頁版 Canvas 生成投影片後，點右上角「匯出成 Google 簡報」接續備課！
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 2: Google Slides for Teachers & Comprehensive Educational Case -->
+        <section id="module-2" class="scroll-mt-20">
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="px-2.5 py-1 bg-blue-700 text-white font-bold text-sm rounded-lg">02</div>
+                <div>
+                    <h3 class="text-2xl font-bold text-slate-900">Google 簡報（Slides）課堂與校務實戰教學</h3>
+                    <p class="text-sm text-slate-500">跳脫死板靜態截圖！圖文可分離自由修改、套用學校專屬母片，備齊公開授課、校務會議與訪視評鑑簡報</p>
+                </div>
+            </div>
+
+            <!-- Dual Workflow Comparison Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Path A -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs relative">
+                    <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 mb-3 border border-blue-100">
+                        路徑 A：Gemini 網頁端啟動
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-lg mb-2">Canvas 模式生成完整 10~15 頁教案/企劃簡報</h4>
+                    <p class="text-xs text-slate-600 mb-4 leading-relaxed">
+                        適用於：手邊只有教育局實施要點、長篇素養教案草稿或課程綱要，想一次性產出結構完整的整套授課簡報草稿。
+                    </p>
+                    <ol class="space-y-3 text-xs sm:text-sm text-slate-700">
+                        <li class="flex items-start gap-2">
+                            <span class="w-5 h-5 rounded-full bg-slate-100 font-bold text-xs flex items-center justify-center text-blue-700 mt-0.5 shrink-0">1</span>
+                            <span>至 Gemini 網頁點選輸入框「＋」選單，啟用 <strong>Canvas</strong> 畫布模式。</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="w-5 h-5 rounded-full bg-slate-100 font-bold text-xs flex items-center justify-center text-blue-700 mt-0.5 shrink-0">2</span>
+                            <span>貼入教案或輸入結構化 Prompt，指定年級、授課節數、學習目標與評量規準。</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="w-5 h-5 rounded-full bg-slate-100 font-bold text-xs flex items-center justify-center text-blue-700 mt-0.5 shrink-0">3</span>
+                            <span>即時預覽互動投影片，點選右上角<strong>「匯出成簡報」</strong>，自動存入學校雲端硬碟。</span>
+                        </li>
+                    </ol>
+                </div>
+
+                <!-- Path B -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs relative">
+                    <div class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 mb-3 border border-indigo-100">
+                        路徑 B：Google 簡報原生端啟動
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-lg mb-2">側邊欄「✦」單頁微調與套用校園母片風格</h4>
+                    <p class="text-xs text-slate-600 mb-4 leading-relaxed">
+                        適用於：已有學校校徽版型、科展發表專用範本，需要增補特定活動流程、段考複習頁或引用雲端文件。
+                    </p>
+                    <ol class="space-y-3 text-xs sm:text-sm text-slate-700">
+                        <li class="flex items-start gap-2">
+                            <span class="w-5 h-5 rounded-full bg-slate-100 font-bold text-xs flex items-center justify-center text-indigo-700 mt-0.5 shrink-0">1</span>
+                            <span>在 Google 簡報右上角點擊<strong>「星星 (✦)」</strong>圖示叫出 Ask Gemini。</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="w-5 h-5 rounded-full bg-slate-100 font-bold text-xs flex items-center justify-center text-indigo-700 mt-0.5 shrink-0">2</span>
+                            <span>輸入「@」掛載教務處文件（例如：<code>@115學年度戶外教育課程綱要.docx</code>）指派具體分析頁。</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="w-5 h-5 rounded-full bg-slate-100 font-bold text-xs flex items-center justify-center text-indigo-700 mt-0.5 shrink-0">3</span>
+                            <span>檢視縮圖後點擊<strong>「插入」</strong>，標題、內文均為獨立向量文字框，可隨意替換字體大小與對齊。</span>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Practical Case Study: Presentation Transformation for Educators -->
+            <div class="bg-white rounded-2xl border border-blue-200 p-6 sm:p-7 shadow-xs mb-8">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-5">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-100 px-2.5 py-0.5 rounded-full">實例講解 2-1（教學行政專用）</span>
+                        <h4 class="text-lg font-bold text-slate-900 mt-1.5">從 1,500 字教育企劃案，一鍵催生 10 頁校務會議與評鑑簡報全流程</h4>
+                    </div>
+                    <span class="text-xs text-slate-500 font-mono">情境：全校推動「跨領域科技與自主學習探索營」成果審查提案</span>
+                </div>
+
+                <!-- 隨堂實戰素材：完整 1,500 字校園企劃案全文（供教師直接複製演練） -->
+                <div class="mb-6 bg-gradient-to-r from-blue-900 to-indigo-950 rounded-xl p-5 text-white shadow-sm border border-blue-800">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3 pb-3 border-b border-blue-800/80">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-400 text-slate-950">📦 隨堂演練原文資料</span>
+                            <h5 class="font-bold text-sm sm:text-base text-white">《115學年度跨領域科技與自主學習探索營實施推動企劃案》完整 1,500 字示範全文</h5>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-blue-200 font-mono">字數：約 1,530 字</span>
+                            <button onclick="copyElementText('proposal-1500-fulltext', '已成功複製 1,500 字完整教育企劃案全文！')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg shadow-xs flex items-center gap-1.5 transition">
+                                <span>📋 一鍵複製 1,500 字全文</span>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-blue-200 leading-relaxed mb-3">
+                        您可以直接點選上方按鈕複製整篇企劃，貼入 Gemini 輸入框，或存入 Google Docs 於簡報側邊欄以 <code>@115學年度跨領域科技與自主學習探索營實施推動企劃案</code> 進行索引演練：
+                    </p>
+                    <div class="relative bg-slate-900/90 rounded-lg p-4 border border-blue-700/50 max-h-72 overflow-y-auto custom-scrollbar font-mono text-xs text-slate-200 leading-relaxed select-all">
+                        <pre id="proposal-1500-fulltext" class="whitespace-pre-wrap font-sans"># 《115學年度國民中學推動「跨領域科技與自主學習探索營」實施企劃案》
+
+## 一、 計畫緣起與總體教育目標（Project Background & Objectives）
+為因應教育部「生生用平板」數位學習精進方案與十二年國民基本教育核心素養導向教學，本校規劃於 115 學年度寒假及學期週末，針對全校七至八年級學生辦理「跨領域科技與自主學習探索營」。本計畫打破傳統學科單向講授限制，橫跨自然科學、資訊科技、數學邏輯及語文領域，透過主題式探究與專案導向學習（Project-Based Learning, PBL），引導學生運用數位工具主動蒐集資料、進行實證建模並解決生活實務難題。總體目標在於厚植學子數位素養批判思考力、團隊協同探究力，並培育其自主規劃學習進程之終身學習素養。
+
+## 二、 學區現況診斷與學生學習痛點分析
+1. 學生端現況與數位落差：
+   - 載具使用偏於被動：生生用平板普及後，多數學生僅將平板作為電子書翻閱或接收作業通知，缺乏主動運用數位工具進行數據分析、探究實驗與知識重組之習慣。
+   - 自主學習鷹架不足：面對開放式主題研究時，學生普遍缺乏動機設定、時間管理與多來源資訊真偽辨識能力，容易產生挫折感。
+2. 教師端與跨領域共備瓶頸：
+   - 學科本位主義：各學科教學進度繁重，缺乏跨科共備時段與結構化評量規準（Rubrics），導致跨領域專案常流於形式。
+3. 解決對策：
+   - 透過本探索營導入教育部認證「數位自主學習四步驟（自學、組學、共學、導學）」，並建立標準化教師跨科共備社群，由資訊教師與學科教師雙講師協同授課，建構穩固的學習鷹架。
+
+## 三、 目標受眾與分眾教學畫像（Target Audience Personas）
+- 核心學員 A（學術探究型學生，國八）：學科基礎紮實，但缺乏實作經驗。期待在營隊中挑戰程式感測器聯網、微氣象站數據採集與進階視覺化圖表產出。
+- 核心學員 B（學習待加強型學生，國七）：對課堂文字閱讀動機較弱，但對影音創作、遊戲化闖關及實體模型組裝具備高熱忱，需透過小組共學激發動機。
+- 協同教師團隊（跨領域社群）：包含自然科 3 位、資訊科 2 位、社會科 2 位教師，藉由本案建立共備教案資料庫與評量規準。
+
+## 四、 課程架構與三階段模組化進程
+1. 模組一：生成式 AI 輔助提問與科學探究（第一天，6 小時）
+   - 單元 1：資訊識讀與辨識 AI 幻覺——建立「AI 查證員」思維。
+   - 單元 2：以校園微氣候與節能減碳為主題，引導學生撰寫優質 Prompt 進行研究假設擬定。
+2. 模組二：物聯網感測與環境永續實作（第二天，6 小時）
+   - 單元 3：利用 Micro:bit / 感測器模組於校園操場、花圃採集溫濕度與光照數值。
+   - 單元 4：匯入 Google Sheets 進行數據清洗、製作折線圖與異常值分析。
+3. 模組三：數位人文專題敘事與發表（第三天，6 小時）
+   - 單元 5：專題成果整合：運用 Google Sites / Slides 設計互動式專案報告。
+   - 單元 6：跨校線上成果同儕互評會，邀請家長代表與專家學者線上提問。
+
+## 五、 行政各處室跨組協同工作分工（Administrative Matrix）
+1. 教務處教學組與設備組：統籌計畫申請、跨領域共備研習辦理、教育部鐘點費核銷、平板與感測器載具調度檢核。
+2. 學務處訓育組與衛生組：負責營隊學員安全保險、午餐團膳採購、場地環境清潔與校園安全通報備援機制。
+3. 輔導室：落實特教與弱勢家庭學生參與保障名額（保障至少 25% 弱勢生免收報名費），並提供同儕人際輔導支持。
+4. 總務處事務組：提供營隊冷氣電力支援、假日校門保全開關門門禁管制與大樓無障礙設施檢驗。
+
+## 六、 經費預算編列與資源配置（Budget Plan）
+本計畫總經費共計新台幣 185,000 元整，申請教育部數位精進方案補助款支應 80%，學校家長會發展基金支援 20%：
+1. 經常門經費（135,000 元）：
+   - 外聘專家鐘點費：每小時 2,000 元 × 12 小時 = 24,000 元。
+   - 校內教師協同鐘點費：每小時 1,000 元 × 24 小時 = 24,000 元。
+   - 學生膳費與平安保險費：120 人 × 3 天 = 48,000 元。
+   - 實作消耗性材料費（感測線材、實作紙材）：39,000 元。
+2. 資本門經費（50,000 元）：
+   - 採購校園微環境感測器套件 10 組，由教務處財產列管，後續循環用於自然科教學。
+
+## 七、 學習成效多元評量規準（Rubrics）
+- 過程評量（40%）：自主學習進度紀錄檢核表、Google Classroom 每日自我省思反饋。
+- 實作產出（30%）：校園環境數據可視化儀表板及科學推論報告。
+- 專題發表與互評（30%）：成果發表簡報口語表達、團隊合作分工指標與同儕互評量規。
+
+## 八、 推進期程與重要檢核里程碑（Timeline & Milestones）
+- 115 年 10 月：完成校內跨領域教案共備會議，發放學生營隊報名簡章。
+- 115 年 11 月：完成外聘講師邀請、採購感測材料與全校 Chromebook 預載環境部署。
+- 115 年 12 月：辦理營前家長線上說明會，公告入選學員分組名單。
+- 116 年 01 月：辦理為期三日之探索營實體課程，完成成果發表。
+- 116 年 02 月：召開檢討策進會議，彙編教案成果冊提報教育局成果評鑑。</pre>
+                    </div>
+                </div>
+
+                <!-- Step-by-Step Explicit Breakdown -->
+                <div class="space-y-6">
+
+                    <!-- Step 1 Card -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50 hover:bg-white transition space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="step-badge bg-blue-700 text-white">1</span>
+                                <h5 class="font-bold text-slate-900 text-sm sm:text-base">開啟 Gemini Canvas 畫布模式並下達結構化指令</h5>
+                            </div>
+                            <span class="text-xs bg-blue-50 text-blue-700 font-mono px-2 py-0.5 rounded border border-blue-100">路徑：gemini.google.com</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            至 Gemini 網頁介面，點擊輸入框左側「<strong>＋</strong>」選單，勾選「<strong>Canvas（畫布）</strong>」模式。將上方企劃案全文貼入或作為上下文，並輸入專為教育行政與評鑑設計的提示詞：
+                        </p>
+                        
+                        <!-- Copyable Prompt Box -->
+                        <div class="relative bg-slate-900 text-slate-100 p-4 rounded-xl text-xs sm:text-sm font-mono leading-relaxed overflow-x-auto">
+                            <button onclick="copyElementText('slides-full-prompt', '校園評鑑簡報指令已複製！')" class="absolute top-2.5 right-2.5 px-3 py-1 bg-blue-700 hover:bg-blue-600 text-white text-xs rounded-md shadow-xs flex items-center gap-1 transition">
+                                <span>📋 一鍵複製指令</span>
+                            </button>
+                            <pre id="slides-full-prompt" class="pt-6 sm:pt-4">我有一份《115學年度國民中學推動「跨領域科技與自主學習探索營」實施企劃案》，請使用 Canvas 模式幫我製作一份 10 頁的行政評鑑與校務會議簡報，規格要求如下：
+1. 目標對象：校務會議全體同仁、家長會代表與教育局督學，語氣需具備教育專業度、嚴謹且條理分明。
+2. 架構包含：計畫背景與自主學習痛點、三階段核心課程模組、行政處室協同矩陣、18.5萬經費效益分析、以及多元評量規準（Rubrics）。
+3. 視覺風格：文教科技感，主色調為校園深藍色（Navy）搭配亮橘色（Accent Amber），每頁內文以 3~4 點條列重點呈現，禁止整段長文直接貼上。
+4. 每張投影片底部請提供 60 秒教師口頭報告講稿（Speaker Notes）。
+完成後請準備匯出至 Google Slides。</pre>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 Card -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50 hover:bg-white transition space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="step-badge bg-blue-700 text-white">2</span>
+                                <h5 class="font-bold text-slate-900 text-sm sm:text-base">預覽互動投影片並「一鍵匯出至 Google 簡報」</h5>
+                            </div>
+                            <span class="text-xs bg-slate-200 text-slate-700 font-mono px-2 py-0.5 rounded">審查教學架構</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            Gemini 將在右側視窗生成 10 頁教案簡報預覽。確認無誤後，點擊右上角的「<strong>匯出（Export）➔ 匯出成簡報（Google Slides）</strong>」，檔案將存入你的教育雲 Google Drive。
+                        </p>
+                        
+                        <div class="bg-white p-3.5 rounded-lg border border-slate-200 text-xs text-slate-700 space-y-1 font-mono">
+                            <span class="text-blue-700 font-bold block mb-1">【生成的 10 頁教育簡報架構清單】：</span>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-slate-600">
+                                <div>• P1：計畫封面（主題、學年度、教務處主辦）</div>
+                                <div>• P2：生生用平板後之教學痛點與學生數位落差</div>
+                                <div>• P3：探索營三大核心目標與素養導向指標</div>
+                                <div>• P4：模組一：AI 輔助提問與資訊識讀思辨</div>
+                                <div>• P5：模組二：校園環境感測聯網與數據分析</div>
+                                <div>• P6：模組三：跨域數位敘事與成果發表平台</div>
+                                <div>• P7：行政處室協同責任矩陣（教務/學務/輔導/總務）</div>
+                                <div>• P8：18.5萬經常門與資本門經費配置明細</div>
+                                <div>• P9：過程/實作/發表多元評量量規（Rubrics）</div>
+                                <div>• P10：時程甘特圖里程碑與親師溝通 Q&A</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 Card -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50 hover:bg-white transition space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="step-badge bg-blue-700 text-white">3</span>
+                                <h5 class="font-bold text-slate-900 text-sm sm:text-base">課堂文字一鍵美化：運用「Enhance this slide」重組資訊卡</h5>
+                            </div>
+                            <span class="text-xs bg-emerald-100 text-emerald-800 font-mono px-2 py-0.5 rounded">教案救星</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            在 Google 簡報開啟檔案後，若第 5 頁（模組二實作流程）文字太多、學生或評審不易閱讀，選取該頁並點選投影片下方的「<strong>Enhance this slide（美化這張投影片）</strong>」，AI 將自動排版為 3 欄素養學習資訊卡：
+                        </p>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                            <div class="p-3 rounded-lg border border-rose-200 bg-rose-50/50 text-rose-900 font-mono">
+                                <span class="font-bold block mb-1">❌ 美化前（大段落條列）：</span>
+                                密密麻麻 12 行文字，包含硬體設定、操場量測、試算表繪圖，字級縮小到 14pt，台下主任評委難以聚焦。
+                            </div>
+                            <div class="p-3 rounded-lg border border-emerald-200 bg-emerald-50/50 text-emerald-900 font-mono">
+                                <span class="font-bold block mb-1">✅ 美化後（3 欄向量卡片）：</span>
+                                轉化為「採集感測數據 ➔ Sheets 繪製折線圖 ➔ 提出改善策略」，每一欄配備專屬 Icon 與清晰數據。
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 Card -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50 hover:bg-white transition space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="step-badge bg-blue-700 text-white">4</span>
+                                <h5 class="font-bold text-slate-900 text-sm sm:text-base">提取校務會議與督學訪視之 60 秒口白講稿</h5>
+                            </div>
+                            <span class="text-xs bg-purple-100 text-purple-800 font-mono px-2 py-0.5 rounded">教師發表防忘詞</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            點選右上角「<strong>星星（✦）</strong>」開啟 Ask Gemini 側邊欄，鍵入下方指令，AI 立即生成得體的教師口頭報告逐字稿：
+                        </p>
+                        
+                        <div class="relative bg-slate-100 p-3.5 rounded-lg border border-slate-300 text-xs font-mono text-slate-800 leading-relaxed">
+                            <button onclick="copyElementText('speaker-note-prompt', '教師口白指令已複製！')" class="absolute top-2.5 right-2.5 px-2.5 py-0.5 bg-purple-700 hover:bg-purple-600 text-white text-xs rounded shadow-xs transition">
+                                <span>📋 複製指令</span>
+                            </button>
+                            <span id="speaker-note-prompt" class="block pr-20">根據目前這張投影片（行政處室協同矩陣），幫我寫一段大約 60 秒在校務會議上的發言講稿，語氣真誠感謝各處室同仁，並清楚說明各組配合事項。</span>
+                        </div>
+
+                        <div class="p-3 bg-white rounded-lg border border-slate-200 text-xs text-slate-600 italic leading-relaxed">
+                            <strong>產出口白示範：</strong>「各位校長、主任及同仁午安。請大家看螢幕上的四處室協同矩陣。本計畫不僅是教務處的教案推動，更需要學務處在營隊期間的午餐防疫與安全照護、總務處在假日的校舍冷氣電力支援，以及輔導室為弱勢學生爭取的 25% 保障名額。感謝各處室組長的鼎力協助，讓孩子們能擁有一場兼具安全、專業與素養的科技探索旅程。」
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 6 Practical Presentation Superpowers for Teachers -->
+            <div class="bg-slate-100/80 rounded-2xl p-6 border border-slate-200">
+                <h4 class="font-bold text-slate-800 text-base mb-4 flex items-center gap-2">
+                    <span>⚡ 教師必學 Google 簡報 6 大調校技（教案課堂加分項）</span>
+                </h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-sm text-slate-900">1. 套用學校專屬母片</span>
+                                <span class="text-xs bg-slate-100 px-2 py-0.5 rounded text-slate-600">調色盤工具</span>
+                            </div>
+                            <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                                點選側邊欄「調色盤圖示 ➔ 加入雲端硬碟檔案」，選取學校制式校徽與簡報範本，AI 自動套用學校標準字型與標準色。
+                            </p>
+                        </div>
+                        <div class="text-[11px] text-blue-700 font-mono bg-blue-50/70 p-2 rounded">防止對外評鑑格式跑版</div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-sm text-slate-900">2. Enhance this slide</span>
+                                <span class="text-xs bg-emerald-100 px-2 py-0.5 rounded text-emerald-800">一鍵美化</span>
+                            </div>
+                            <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                                舊有教案滿滿都是文字草稿？點擊底部的「美化這張投影片」，自動切分成圖卡式重點，學生上課一目了然。
+                            </p>
+                        </div>
+                        <div class="text-[11px] text-emerald-700 font-mono bg-emerald-50/70 p-2 rounded">拯救黑板字密恐學生</div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-sm text-slate-900">3. 逐單元精準增補</span>
+                                <span class="text-xs bg-purple-100 px-2 py-0.5 rounded text-purple-800">單頁追加</span>
+                            </div>
+                            <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                                段考前想加一頁「歷屆常見易錯題型」？在側邊欄輸入「製作投影片，介紹...」，逐頁增補最不容易產生格式錯誤。
+                            </p>
+                        </div>
+                        <div class="text-[11px] text-purple-700 font-mono bg-purple-50/70 p-2 rounded">考前彈性補充教材</div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-sm text-slate-900">4. 教學插圖替換 (Nano)</span>
+                                <span class="text-xs bg-amber-100 px-2 py-0.5 rounded text-amber-800">教學配圖</span>
+                            </div>
+                            <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                                生成的實驗器材或細胞圖不夠精確？點選香蕉圖示下達「請改為國中理化標準酒精燈加熱三腳架示範圖」即可局部重繪。
+                            </p>
+                        </div>
+                        <div class="text-[11px] text-amber-700 font-mono bg-amber-50/70 p-2 rounded">免上網大海撈圖侵權</div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-sm text-slate-900">5. 觀課備課口白草稿</span>
+                                <span class="text-xs bg-blue-100 px-2 py-0.5 rounded text-blue-800">備忘逐字稿</span>
+                            </div>
+                            <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                                公開授課（觀議課）評委在後方記錄？讓側邊欄讀取教材產生「引導學生探究提問的教師教學引導口白」，從容應對。
+                            </p>
+                        </div>
+                        <div class="text-[11px] text-blue-700 font-mono bg-blue-50/70 p-2 rounded">公開授課不卡詞</div>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-sm text-slate-900">6. 簡報直轉複習影片</span>
+                                <span class="text-xs bg-rose-100 px-2 py-0.5 rounded text-rose-800">Google Vids</span>
+                            </div>
+                            <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                                點選「檔案 ➔ 轉為投影片 ➔ 製作影片草稿」，一鍵轉移至 Google Vids，自動加上 AI 語音旁白，製成課後自主複習短片！
+                            </p>
+                        </div>
+                        <div class="text-[11px] text-rose-700 font-mono bg-rose-50/70 p-2 rounded">翻轉課堂與停課補課利器</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 3: Google Sheets for School Trips & Office Budgets -->
+        <section id="module-3" class="scroll-mt-20">
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="px-2.5 py-1 bg-emerald-600 text-white font-bold text-sm rounded-lg">03</div>
+                <div>
+                    <h3 class="text-2xl font-bold text-slate-900">Google 試算表（Sheets）校園行政資料結構化實測</h3>
+                    <p class="text-sm text-slate-500">透過「@」呼叫雲端硬碟文字，自動轉為畢業旅行追蹤表、處室經費小計與加總公式</p>
+                </div>
+            </div>
+
+            <!-- Practical Example 1: Field Trip / Graduation Trip Schedule -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-xs mb-8">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-5">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">實例講解 3-1（學務處與導師專用）</span>
+                        <h4 class="text-lg font-bold text-slate-900 mt-1.5">純文字草案 ➔ 標準 4 欄畢旅三天兩夜行程追蹤表</h4>
+                    </div>
+                    <span class="text-xs text-slate-500 font-mono">情境：訓育組發給各班導師的《115學年度國中部三年級校外教學（畢業旅行）行程草案》</span>
+                </div>
+
+                <div class="space-y-6">
+                    
+                    <!-- Step 1 -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="step-badge bg-emerald-600 text-white">1</span>
+                                <h5 class="font-bold text-slate-900 text-sm sm:text-base">準備草案 Docs 文件或複製原始純文字</h5>
+                            </div>
+                            <span class="text-xs text-slate-500 font-mono">前置準備</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            請在 Google 雲端硬碟建立檔案 <code>115學年度國中部三年級校外教學行程規劃草案</code>，或直接點選按鈕複製這段未經排版的導師群組訊息：
+                        </p>
+
+                        <div class="relative bg-slate-900 text-slate-200 p-4 rounded-xl text-xs font-mono leading-relaxed max-h-48 overflow-y-auto custom-scrollbar">
+                            <button onclick="copyElementText('raw-itinerary-text', '已複製畢旅草案全文！')" class="absolute top-2.5 right-2.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs rounded shadow-xs transition">
+                                <span>📋 一鍵複製畢旅行程原文</span>
+                            </button>
+                            <pre id="raw-itinerary-text" class="pt-4">《115學年度國中部三年級校外教學（畢業旅行）行程規劃草案》
+預計 10 月 14 日第一天早上 07:30 在校門口操場集合，各班清點人數並由領隊教官宣導安全，08:15 準時發車前往國立自然科學博物館。預計中午 12:00 在館內餐廳用餐並進行跨領域素養學習單闖關。下午 2 點半集合搭車前往日月潭，15:45 抵達碼頭搭乘包船進行生態導覽。傍晚 18:00 前往埔里溫泉大飯店辦理入住，19:00 享用合菜晚餐並召開第一次各班導師查房會議。
+第二天 10 月 15 日上午 08:30 退房出發前往九族文化村，09:30 抵達進行原住民族部落文化體驗與機動遊樂設施，中午發放餐券自理。下午 15:30 在文化村正門集合點名，搭專車前往台中麗寶福容大飯店，晚上 18:30 於飯店宴會廳舉辦「畢業晚會聯歡活動」，21:30 晚會結束並由學務組長進行點名查房。
+最後一天 10 月 16 日早上 09:00 退房前往麗寶探索世界，中午 12:30 集合用餐，下午 14:00 集合北返，預計傍晚 17:30 返抵學校解散。</pre>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="step-badge bg-emerald-600 text-white">2</span>
+                                <h5 class="font-bold text-slate-900 text-sm sm:text-base">開啟 Google 試算表側邊欄並以「@」引用草案</h5>
+                            </div>
+                            <span class="text-xs bg-emerald-50 text-emerald-700 font-mono px-2 py-0.5 rounded">結構化轉換</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            開一份新的 Google 試算表，點選右上角「<strong>✦</strong>」開啟 Ask Gemini 側邊欄，點選「<strong>建立（Build）</strong>」圖示，輸入「<code>@</code>」選擇雲端檔案並執行指令：
+                        </p>
+
+                        <div class="relative bg-emerald-50 border border-emerald-200 p-3.5 rounded-xl text-xs sm:text-sm font-mono text-emerald-950 leading-relaxed">
+                            <button onclick="copyElementText('sheets-case1-prompt', '畢旅結構化指令已複製！')" class="absolute top-2.5 right-2.5 px-3 py-1 bg-emerald-700 hover:bg-emerald-600 text-white text-xs rounded shadow-xs transition">
+                                <span>📋 一鍵複製指令</span>
+                            </button>
+                            <span id="sheets-case1-prompt" class="block pr-28">請閱讀 @115學年度國中部三年級校外教學行程規劃草案，整理出三天的畢旅行程表，欄位包含：日期、時間、行程活動內容、集合/活動地點。</span>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="step-badge bg-emerald-600 text-white">3</span>
+                                <h5 class="font-bold text-slate-900 text-sm sm:text-base">校對初稿並下達「鐘點時間格式 24 小時制正規化」</h5>
+                            </div>
+                            <span class="text-xs bg-amber-100 text-amber-800 font-mono px-2 py-0.5 rounded">校園行政抓錯</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            實測生成後，AI 偶爾會產出「中午 12:00」與「下午 2 點半」等口語，<strong>請勿手動逐格修改</strong>！在側邊欄直接發送微調咒語：
+                        </p>
+
+                        <div class="relative bg-slate-100 p-3.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-mono text-slate-800 leading-relaxed">
+                            <button onclick="copyElementText('sheets-fix-prompt', '時間正規化指令已複製！')" class="absolute top-2.5 right-2.5 px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white text-xs rounded shadow-xs transition">
+                                <span>📋 一鍵複製微調指令</span>
+                            </button>
+                            <span id="sheets-fix-prompt" class="block pr-28">請將第二欄的【時間】全部統一轉換為標準 24 小時制的 HH:mm 格式（例如 14:30、18:00），去除所有「早上、中午、下午、傍晚」等文字。</span>
+                        </div>
+
+                        <!-- Result Table Preview for Teachers -->
+                        <div class="overflow-x-auto rounded-xl border border-slate-200 mt-3">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-100 text-slate-700 font-semibold">
+                                    <tr>
+                                        <th class="p-2.5 border-b border-slate-200">日期</th>
+                                        <th class="p-2.5 border-b border-slate-200">時間 (統一後)</th>
+                                        <th class="p-2.5 border-b border-slate-200">行程活動內容</th>
+                                        <th class="p-2.5 border-b border-slate-200">集合/活動地點</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-200 bg-white font-mono text-slate-800">
+                                    <tr>
+                                        <td class="p-2.5">2026/10/14</td>
+                                        <td class="p-2.5 text-emerald-600 font-bold">07:30</td>
+                                        <td class="p-2.5 font-sans">操場集合點名、安全宣導</td>
+                                        <td class="p-2.5 font-sans">學校操場</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2.5">2026/10/14</td>
+                                        <td class="p-2.5 text-emerald-600 font-bold">12:00</td>
+                                        <td class="p-2.5 font-sans">館內用餐與跨領域學習單闖關</td>
+                                        <td class="p-2.5 font-sans">國立自然科學博物館</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2.5">2026/10/14</td>
+                                        <td class="p-2.5 text-emerald-600 font-bold">14:30</td>
+                                        <td class="p-2.5 font-sans">集合搭車前往日月潭搭船導覽</td>
+                                        <td class="p-2.5 font-sans">日月潭水社碼頭</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2.5">2026/10/15</td>
+                                        <td class="p-2.5 text-emerald-600 font-bold">18:30</td>
+                                        <td class="p-2.5 font-sans">畢業晚會聯歡活動</td>
+                                        <td class="p-2.5 font-sans">台中麗寶福容大飯店宴會廳</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Practical Example 2: School Office Budget & Reimbursement Report Clone -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-xs mb-8">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-5">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-purple-700 bg-purple-100 px-2.5 py-0.5 rounded-full">實例講解 3-2（處室主任組長專用）</span>
+                        <h4 class="text-lg font-bold text-slate-900 mt-1.5">處室經費月報格式克隆術：排序、處室小計與 SUM 公式自動注入</h4>
+                    </div>
+                    <span class="text-xs text-slate-500 font-mono">情境：後台或出納匯出雜亂支出 ➔ 一秒轉為教育局會計審計標準月報</span>
+                </div>
+
+                <!-- 隨堂實戰素材 1：114學年度各處室經費核銷月報_定稿版（克隆範本錨點） -->
+                <div class="mb-5 bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 rounded-xl p-4 text-white shadow-sm border border-indigo-700/70">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 pb-2 border-b border-indigo-700/60">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-400 text-slate-950">📌 格式克隆錨點檔案</span>
+                            <h5 class="font-bold text-xs sm:text-sm text-white">《114學年度各處室經費核銷月報_定稿版》（已審核通過之標準範本）</h5>
+                        </div>
+                        <button onclick="copyElementText('raw-template-sheets-data', '已成功複製【114學年度各處室經費核銷月報_定稿版】！請在 Google 試算表 A1 貼上作為參考錨點檔。')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded shadow-xs flex items-center gap-1 transition">
+                            <span>📋 一鍵複製【定稿版範本資料】（TSV 格式）</span>
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-indigo-200 mb-2">
+                        使用說明：請於 Google 雲端硬碟建立一份 Google 試算表，命名為 <code class="bg-indigo-900/90 text-amber-300 px-1.5 py-0.5 rounded border border-indigo-700">114學年度各處室經費核銷月報_定稿版</code>，點選複製後在 <kbd class="px-1 bg-slate-800 rounded text-slate-300">A1</kbd> 貼上。此檔案即為下達「@」指令時讓 AI 自動參照的標準結構（包含處室分組、SUM 小計與全校總計）：
+                    </p>
+                    <div class="relative bg-slate-950 rounded-lg p-3 border border-indigo-800/60 max-h-48 overflow-y-auto custom-scrollbar font-mono text-[11px] text-slate-200 select-all">
+                        <pre id="raw-template-sheets-data">處室名稱	經費核銷日期	經費支出科目	金額	經辦教師	備註說明
+教務處	2025/09/08	素養導向教學共備工作坊專家講座鐘點費	12000	張麗卿老師	教育部教學精進計畫支應
+教務處	2025/09/16	全校科學展覽競賽耗材與器材維護	28500	林志銘組長	教務設備常態維護款
+教務處	2025/09/24	本土語沉浸式補充教材講義印刷裝訂	9400	陳美華老師	本土語言專案經費
+教務處小計			=SUM(D2:D4)		共 3 筆核銷
+學務處	2025/09/03	全校防災避難演練防煙面罩與醫藥箱耗材	15200	陳威廷組長	學務安全教育業務費
+學務處	2025/09/19	敬師奉茶感恩活動會場佈置與茶點代金	8800	黃雅惠老師	訓育組學生活動費
+學務處	2025/09/27	校運會班級大隊接力號碼布與計時耗材	6400	郭勝安組長	體育活動項下支應
+學務處小計			=SUM(D6:D8)		共 3 筆核銷
+總務處	2025/09/12	校舍連通穿堂地磚破損與防滑條整建工程	45000	黃國華主任	年度校舍修繕準備金
+總務處	2025/09/21	教學大樓RO逆滲透飲水機濾芯定期更換檢驗	16800	蔡明勳組長	總務事務設備維護款
+總務處小計			=SUM(D10:D11)		共 2 筆核銷
+輔導室	2025/09/14	特教個別化教育計畫(IEP)專業諮詢鐘點費	10000	李雅玲主任	特教巡迴輔導專案
+輔導室	2025/09/28	高關懷學生園藝心理治療生命教育種苗材料	5600	周芳儀老師	高關懷輔導專款
+輔導室小計			=SUM(D13:D14)		共 2 筆核銷
+全校經費總計			=SUMIF(A2:A15,"*小計*",D2:D15)		全校共 10 筆支出加總</pre>
+                    </div>
+
+                    <!-- Visual preview table for template -->
+                    <div class="mt-3 overflow-x-auto rounded-lg border border-indigo-900/80 bg-slate-900/60 p-2">
+                        <span class="text-[11px] font-bold text-indigo-300 block mb-1.5">【範本結構外觀預覽】：</span>
+                        <table class="w-full text-left text-[11px] font-mono text-slate-300">
+                            <thead>
+                                <tr class="bg-indigo-950/80 text-indigo-200 border-b border-indigo-800">
+                                    <th class="p-1.5">處室名稱</th>
+                                    <th class="p-1.5">經費核銷日期</th>
+                                    <th class="p-1.5">經費支出科目</th>
+                                    <th class="p-1.5 text-right">金額 (NT$)</th>
+                                    <th class="p-1.5">經辦教師</th>
+                                    <th class="p-1.5">備註說明</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-indigo-950/60">
+                                <tr>
+                                    <td class="p-1.5 text-blue-300">教務處</td>
+                                    <td class="p-1.5">2025/09/08</td>
+                                    <td class="p-1.5 font-sans">素養導向教學共備工作坊專家講座鐘點費</td>
+                                    <td class="p-1.5 text-right font-bold text-amber-300">12,000</td>
+                                    <td class="p-1.5 font-sans">張麗卿老師</td>
+                                    <td class="p-1.5 text-slate-400 font-sans">教學精進計畫</td>
+                                </tr>
+                                <tr class="bg-blue-950/40 text-blue-200 font-bold">
+                                    <td class="p-1.5">教務處小計</td>
+                                    <td class="p-1.5" colspan="2"></td>
+                                    <td class="p-1.5 text-right text-emerald-400">=SUM(D2:D4)</td>
+                                    <td class="p-1.5" colspan="2">共 3 筆核銷</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-1.5 text-purple-300">學務處</td>
+                                    <td class="p-1.5">2025/09/03</td>
+                                    <td class="p-1.5 font-sans">全校防災避難演練防煙面罩與醫藥箱耗材</td>
+                                    <td class="p-1.5 text-right font-bold text-amber-300">15,200</td>
+                                    <td class="p-1.5 font-sans">陳威廷組長</td>
+                                    <td class="p-1.5 text-slate-400 font-sans">安全教育費</td>
+                                </tr>
+                                <tr class="bg-purple-950/40 text-purple-200 font-bold">
+                                    <td class="p-1.5">學務處小計</td>
+                                    <td class="p-1.5" colspan="2"></td>
+                                    <td class="p-1.5 text-right text-emerald-400">=SUM(D6:D8)</td>
+                                    <td class="p-1.5" colspan="2">共 3 筆核銷</td>
+                                </tr>
+                                <tr class="bg-emerald-950/70 text-emerald-200 font-extrabold border-t-2 border-emerald-500">
+                                    <td class="p-1.5">全校經費總計</td>
+                                    <td class="p-1.5" colspan="2"></td>
+                                    <td class="p-1.5 text-right text-emerald-300 text-xs">=SUMIF(...)</td>
+                                    <td class="p-1.5" colspan="2">全校總預算核銷</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 隨堂實戰素材 2：學校各處室未排版原始經費數據 -->
+                <div class="mb-5 bg-gradient-to-r from-purple-900 to-slate-900 rounded-xl p-4 text-white shadow-sm border border-purple-800">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 pb-2 border-b border-purple-700/60">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-purple-300 text-purple-950">📦 隨堂演練原文資料</span>
+                            <h5 class="font-bold text-xs sm:text-sm text-white">115 學年度第一學期各處室經費核銷原始數據（待整理工作表）</h5>
+                        </div>
+                        <button onclick="copyElementText('raw-sheets-monthly-data', '已成功複製處室經費數據！請直接至 Google Sheets A1 貼上。')" class="px-2.5 py-1 bg-purple-500 hover:bg-purple-400 text-white text-xs font-semibold rounded shadow-xs flex items-center gap-1 transition">
+                            <span>📋 一鍵複製處室數據（可直貼試算表）</span>
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-purple-200 mb-2">
+                        說明：此為出納系統匯出之 Tab 分隔原始資料，在另一份全新工作表 <kbd class="px-1 bg-purple-950 rounded border border-purple-700">A1</kbd> 貼上後，將呈現未依處室歸類且包含多餘傳票編號的雜亂狀態：
+                    </p>
+                    <div class="relative bg-slate-950 rounded-lg p-3 border border-purple-700/40 max-h-44 overflow-y-auto custom-scrollbar font-mono text-[11px] text-slate-300 select-all">
+                        <pre id="raw-sheets-monthly-data">處室名稱	經費核銷日期	經費支出科目	會計傳票編號	金額	經辦教師
+教務處教學組	2026/09/05	本土語言客語沉浸式教材印製	SCH-202609-01	18500	張麗卿老師
+學務處訓育組	2026/09/02	敬師感恩奉茶活動茶點租賃	SCH-202609-02	8200	陳威廷組長
+總務處事務組	2026/09/11	教學大樓無障礙坡道防滑條修繕	SCH-202609-03	36000	黃國華主任
+教務處設備組	2026/09/18	生生用平板充電車散熱風扇更換	SCH-202609-04	24000	張麗卿老師
+輔導室輔導組	2026/09/05	高關懷學生園藝治療種苗採購	SCH-202609-05	4500	李雅玲主任
+總務處出納組	2026/09/15	全校教職員薪資媒體發放手續費	SCH-202609-06	2100	黃國華主任
+學務處體育組	2026/09/20	校慶運動會跳高防撞軟墊換新	SCH-202609-07	42000	陳威廷組長
+輔導室特教組	2026/09/25	特教班個別化教育計畫(IEP)諮詢費	SCH-202609-08	12000	李雅玲主任
+教務處研發組	2026/09/28	跨領域共備社群專家諮詢鐘點費	SCH-202609-09	16000	張麗卿老師
+學務處生教組	2026/09/22	導護志工反光背心與指揮旗補充	SCH-202609-10	7800	陳威廷組長</pre>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    
+                    <!-- Step 1 -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="step-badge bg-purple-600 text-white">1</span>
+                                <h5 class="font-bold text-slate-900 text-sm sm:text-base">建立參考錨點：掛載上學年已審核通過的核銷範本</h5>
+                            </div>
+                            <span class="text-xs bg-slate-200 text-slate-700 font-mono px-2 py-0.5 rounded">會計格式對齊</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            請在 Google 雲端硬碟建立檔案 <code>114學年度各處室經費核銷月報_定稿版</code>，並貼入上方<strong>【格式克隆錨點檔案】</strong>的 TSV 示範數據儲存。接著在另一份工作表貼入當月原始支出數據，打開側邊欄 Gemini 輸入「<code>@</code>」即可直接掛載該範本檔案。
+                        </p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="step-badge bg-purple-600 text-white">2</span>
+                                <h5 class="font-bold text-slate-900 text-sm sm:text-base">下達處室克隆指令（指定排序、處室小計列與公式）</h5>
+                            </div>
+                            <span class="text-xs bg-purple-50 text-purple-700 font-mono px-2 py-0.5 rounded">核銷 Prompt</span>
+                        </div>
+                        
+                        <div class="relative bg-slate-900 text-slate-100 p-4 rounded-xl text-xs sm:text-sm font-mono leading-relaxed overflow-x-auto">
+                            <button onclick="copyElementText('clone-report-prompt', '處室核銷克隆指令已複製！')" class="absolute top-2.5 right-2.5 px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded shadow-xs transition">
+                                <span>📋 一鍵複製克隆指令</span>
+                            </button>
+                            <pre id="clone-report-prompt" class="pt-4">請將目前工作表中的各處室支出數據，完全參照指定檔案 @114學年度各處室經費核銷月報_定稿版 的結構進行整理：
+1. 依「處室名稱」進行分組排序（教務處 ➔ 學務處 ➔ 總務處 ➔ 輔導室），同處室內依「經費核銷日期」排序。
+2. 刪除「會計傳票編號」等不需對外公開的內部流水號。
+3. 在每個處室的最後一列自動插入【處室小計】列，並寫入 SUM 公式加總該處室的「金額」欄。
+4. 在表格最底端加入【全校總計】列，使用加總各處室小計的公式。
+請先條列執行計畫（Action Plan）供我審核，待我確認後再寫入工作表。</pre>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="step-badge bg-purple-600 text-white">3</span>
+                                <h5 class="font-bold text-slate-900 text-sm sm:text-base">審核 Action Plan 並點選「Approve」自動注入公式</h5>
+                            </div>
+                            <span class="text-xs bg-emerald-100 text-emerald-800 font-mono px-2 py-0.5 rounded">審計防錯</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            Gemini in Sheets 不會覆蓋資料，側邊欄會先展示分步執行清單：
+                        </p>
+                        <div class="bg-white p-3.5 rounded-lg border border-slate-200 text-xs text-slate-700 space-y-1 font-mono">
+                            <div class="text-slate-500">• 步驟 1: 對 A2:E11 範圍依照處室名稱與日期分組排序</div>
+                            <div class="text-slate-500">• 步驟 2: 識別教務處（第 2~4 列），於第 5 列插入小計行</div>
+                            <div class="text-slate-500">• 步驟 3: 寫入公式 =SUM(D2:D4)</div>
+                            <div class="text-emerald-700 font-bold">• 步驟 4: 底部寫入總計公式 =SUMIF(A2:A15, "*小計*", D2:D15)</div>
+                        </div>
+                        <p class="text-xs text-slate-600">檢視無誤後點擊「<strong>Approve（核准）</strong>」，原本雜亂的處室帳目瞬間排版完成，直接送交會計室！</p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 4: Google Docs Dynamic Sync & Gems for School Regulations -->
+        <section id="module-4" class="scroll-mt-20">
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="px-2.5 py-1 bg-purple-600 text-white font-bold text-sm rounded-lg">04</div>
+                <div>
+                    <h3 class="text-2xl font-bold text-slate-900">Google 文件（Docs）× 校園規章動態 Gem 實時知識庫</h3>
+                    <p class="text-sm text-slate-500">免反覆修改龐大提示詞！在 Google Docs 修訂校規或傷病 SOP，Gem 即時學會最新法定程序</p>
+                </div>
+            </div>
+
+            <!-- Deep Practical Case: School Injury Emergency SOP Gem -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-xs mb-8">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-5">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-purple-700 bg-purple-100 px-2.5 py-0.5 rounded-full">實例講解 4-1（導師與學務行政專用）</span>
+                        <h4 class="text-lg font-bold text-slate-900 mt-1.5">實戰打造《校園學生偶發傷病處理與緊急送醫諮詢 Gem》</h4>
+                    </div>
+                    <span class="text-xs text-slate-500 font-mono">情境：班級導師或體育教師面臨突發傷害時，快速判定送醫責任與法定通報時限</span>
+                </div>
+
+                <!-- Step by Step Gem Setup -->
+                <div class="space-y-6">
+
+                    <!-- Step 1 -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="step-badge bg-purple-600 text-white">1</span>
+                                <h5 class="font-bold text-slate-900 text-sm sm:text-base">在學校雲端建立 Google Docs 規章《校園學生偶發傷病處理SOP_v4.docx》</h5>
+                            </div>
+                            <span class="text-xs bg-purple-50 text-purple-700 font-mono px-2 py-0.5 rounded">校規文件</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            在 Google 雲端硬碟建立一份文件，載入學校現行規範。點選下方按鈕直接複製測試 SOP：
+                        </p>
+
+                        <div class="relative bg-slate-900 text-slate-100 p-4 rounded-xl text-xs font-mono leading-relaxed overflow-x-auto">
+                            <button onclick="copyElementText('sop-doc-text', '已複製校園傷病 SOP 全文！')" class="absolute top-2.5 right-2.5 px-3 py-1 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded shadow-xs transition">
+                                <span>📋 一鍵複製規章文本</span>
+                            </button>
+                            <pre id="sop-doc-text" class="pt-4"># 國民中小學校園學生偶發傷病處理與緊急送醫處理規章（115年9月修訂版）
+1. 輕度外傷處置程序：學生一般擦傷、輕微挫傷，由任課教師或導師開立護理單送至健康中心，由校護進行清潔包紮，並於健康資訊系統登錄。
+2. 重大傷病與疑似骨折緊急處置：若學生出現頭部撞擊昏迷、呼吸困難、嚴重出血或疑似骨折，現場人員切勿任意移動傷患。應立即通報健康中心校護到場急救，並由生教組撥打 119 叫救護車。
+3. 家長聯繫與護送陪同規範：
+   - 導師應於第一時間（事發 15 分鐘內）電話聯繫家長說明情況與就醫醫院。
+   - 救護車抵達後，家長尚未抵達前，應由【導師或生教組長】全程隨車陪同就醫，不得由一般學生或實習教師單獨陪同。
+4. 校安通報法定期限限制（最新法規）：
+   - 涉及重大意外傷害或死亡威脅者屬【甲級通報】，生教組須於【2 小時內】完成教育部校安通報網填報。
+   - 一般骨折住院或衝突傷害屬【乙級通報】，須於【24 小時內】完成通報。
+5. 就醫費用墊付機制：由學務處仁愛基金或總務處零用金先行墊付急診掛號費，導師切勿直接要求未成年學生墊付。</pre>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="step-badge bg-purple-600 text-white">2</span>
+                                <h5 class="font-bold text-slate-900 text-sm sm:text-base">建立 Gem 並填入專屬教育 System Prompt</h5>
+                            </div>
+                            <span class="text-xs bg-indigo-50 text-indigo-700 font-mono px-2 py-0.5 rounded">教育助理人設</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            前往 Gemini 網頁 ➔ 點擊左側「<strong>我的 Gem（Gems）➔ 建立新 Gem</strong>」。在指示（Instructions）中填入：
+                        </p>
+
+                        <div class="relative bg-slate-100 p-3.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-mono text-slate-800 leading-relaxed">
+                            <button onclick="copyElementText('gem-system-prompt', 'Gem 教學人設指令已複製！')" class="absolute top-2.5 right-2.5 px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs rounded shadow-xs transition">
+                                <span>📋 一鍵複製指示</span>
+                            </button>
+                            <span id="gem-system-prompt" class="block pr-28">你是學校學務處的「校安與緊急應變軍師」。你的職責是協助現場第一線班級導師與科任教師，在發生學生傷病事件時迅速判定合規 SOP。請嚴格根據「相關資訊」掛載的 Google Docs 規章進行判斷，主動提醒法定通報時限（2小時/24小時）、陪同就醫規範及親師溝通安慰話術。</span>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="step-badge bg-purple-600 text-white">3</span>
+                                <h5 class="font-bold text-slate-900 text-sm sm:text-base">掛載雲端檔案並實測「改 Docs 即時同步生效」</h5>
+                            </div>
+                            <span class="text-xs bg-emerald-100 text-emerald-800 font-mono px-2 py-0.5 rounded">動態同步</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            在 Gem 編輯頁面底部的「<strong>相關資訊（Knowledge）</strong>」➔ 點選「<strong>＋ 雲端硬碟檔案</strong>」➔ 選擇《校園學生偶發傷病處理SOP_v4.docx》➔ 點擊「<strong>儲存</strong>」。
+                        </p>
+                        
+                        <div class="bg-indigo-50/60 p-4 rounded-xl border border-indigo-200 space-y-2 text-xs">
+                            <div class="font-bold text-indigo-950">實測親師情境提問（點擊複製去測試你的 Gem）：</div>
+                            <div class="relative bg-white p-2.5 rounded-lg border border-indigo-100 font-mono text-slate-800">
+                                <button onclick="copyElementText('gem-test-q', '測試問題已複製！')" class="absolute top-2 right-2 px-2 py-0.5 bg-indigo-600 text-white text-[11px] rounded transition">複製提問</button>
+                                <span id="gem-test-q" class="block pr-20">導師問：「體育課跳箱時學生摔倒疑似手腕骨折，痛得大哭但意識清醒，家長在上班電話一直沒接，我現在可以叫計程車送他去診所嗎？」</span>
+                            </div>
+                            <div class="bg-slate-900 text-emerald-300 p-2.5 rounded-lg font-mono text-[11px]">
+                                <strong>Gem 判定回答：</strong>「絕對不行搭計程車去一般診所！根據規章第 2 條，疑似骨折切勿隨意搬動，應由校護現場固定並由生教組叫 119 救護車。第 3 條規定家長未到達前由【導師或生教組長隨車陪同】；第 4 條特別提醒：骨折住院屬於乙級通報，生教組必須在【24 小時內】完成校安通報！」
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 5: Google Calendar Scheduling for Teachers -->
+        <section id="module-5" class="scroll-mt-20">
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="px-2.5 py-1 bg-amber-500 text-white font-bold text-sm rounded-lg">05</div>
+                <div>
+                    <h3 class="text-2xl font-bold text-slate-900">Google 日曆：教師研習與備課進度排程管理</h3>
+                    <p class="text-sm text-slate-500">將教育部數位精進研習、跨領域共備進度，自動拆解為 Google 日曆具體行程，支援一鍵順延</p>
+                </div>
+            </div>
+
+            <!-- Deep Practical Case: Teacher Professional Development Plan -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 shadow-xs mb-8">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4 mb-5">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-amber-700 bg-amber-100 px-2.5 py-0.5 rounded-full">實例講解 5-1（教師增能專用）</span>
+                        <h4 class="text-lg font-bold text-slate-900 mt-1.5">教師在職專業增能：教育部數位學習精進方案雙模組 8 週排程實例</h4>
+                    </div>
+                    <span class="text-xs text-slate-500 font-mono">情境：每位教師必須完成的「A1 數位學習工作坊基礎」+「A2 數位教學軟體平台進階」共 30 小時</span>
+                </div>
+
+                <!-- 隨堂實戰素材：教育部研習 20 堂課完整時數清單 -->
+                <div class="mb-5 bg-gradient-to-r from-amber-950 via-slate-900 to-slate-900 rounded-xl p-4 text-white shadow-sm border border-amber-800/80">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2 pb-2 border-b border-amber-800/60">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-amber-400 text-slate-950">📦 隨堂演練原文資料</span>
+                            <h5 class="font-bold text-xs sm:text-sm text-white">教育部 A1+A2 數位研習共 20 堂課完整章節與時數清單</h5>
+                        </div>
+                        <button onclick="copyElementText('raw-calendar-curriculum-data', '已成功複製研習章節清單！')" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold rounded shadow-xs flex items-center gap-1 transition">
+                            <span>📋 一鍵複製研習清單</span>
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-amber-200 mb-2">
+                        可直接複製下方教育部課綱，貼入下方的排程組裝器或發送給 Gemini 進行日程推算：
+                    </p>
+                    <div class="relative bg-slate-950 rounded-lg p-3 border border-amber-700/40 max-h-36 overflow-y-auto custom-scrollbar font-mono text-[11px] text-amber-100 select-all">
+                        <pre id="raw-calendar-curriculum-data">【模組 1：A1 數位學習工作坊基礎實務（共 18 小時）】
+- 第 1 堂：科技輔助自主學習理念與四學架構（自學、組學、共學、導學）（1.5h）
+- 第 2 堂：因材網學習路徑診斷與個別化任務指派（2h）
+- 第 3 堂：因材網節點式測驗結果報表解讀與補救教學策略（2h）
+- 第 4 堂：Google Classroom 班級架設、評量表設定與親師連結（1.5h）
+- 第 5 堂：數位載具課堂常規管理與 MDM 遠端派送技巧（1.5h）
+- 第 6 堂：教育部教育雲數位資源整合與單一簽入（SSO）實務（1.5h）
+- 第 7 堂：資訊素養、智慧財產權與創用 CC 授權教材規範（1.5h）
+- 第 8 堂：數位學習歷程檔案（Portfolio）建置與雲端評量（2h）
+- 第 9 堂：A1 結訓測驗與素養教案設計審查（2h）
+
+【模組 2：A2 數位教學軟體與平台進階應用（共 12 小時）】
+- 第 1 堂：互動式形成性評量工具（Kahoot / Quizizz / Blooket）實務（1.5h）
+- 第 2 堂：Padlet / Miro 數位白板協同思考與專題發表（1.5h）
+- 第 3 堂：Canva for Education 師生跨領域圖文共創與排版（1.5h）
+- 第 4 堂：生成式 AI 輔助備課：提問設計、差異化閱讀文字降階（2h）
+- 第 5 堂：跨領域 STEM 感測模組與試算表資料可視化教學（2h）
+- 第 6 堂：跨校數位公開授課（觀課、議課）線上平台操作（1.5h）
+- 第 7 堂：A2 數位教學推動成果分享與社群認證（2h）</pre>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+
+                    <!-- Step 1 -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="step-badge bg-amber-500 text-white">1</span>
+                                <h5 class="font-bold text-slate-900 text-sm sm:text-base">前置確認：Google Workspace 日曆擴充連動已開啟</h5>
+                            </div>
+                            <span class="text-xs bg-slate-200 text-slate-700 font-mono px-2 py-0.5 rounded">擴充權限</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            至 <strong>gemini.google.com</strong> ➔ 點選「設定」➔「連結的應用程式」➔ 確保「Google Workspace（日曆、雲端、文件）」處於綠色開啟狀態。
+                        </p>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="step-badge bg-amber-500 text-white">2</span>
+                                <h5 class="font-bold text-slate-900 text-sm sm:text-base">下達研習課表分配指令（指定空堂與週三進修日）</h5>
+                            </div>
+                            <span class="text-xs bg-amber-50 text-amber-700 font-mono px-2 py-0.5 rounded">排程 Prompt</span>
+                        </div>
+                        
+                        <div class="relative bg-slate-900 text-slate-100 p-4 rounded-xl text-xs sm:text-sm font-mono leading-relaxed overflow-x-auto">
+                            <button onclick="copyElementText('calendar-full-prompt', '研習排程指令已複製！')" class="absolute top-2.5 right-2.5 px-3 py-1 bg-amber-500 hover:bg-amber-400 text-white text-xs rounded shadow-xs transition">
+                                <span>📋 一鍵複製排程指令</span>
+                            </button>
+                            <pre id="calendar-full-prompt" class="pt-4">我目前必須在 8 週內完成教育部數位學習精進方案兩項研習：
+1. A1 數位學習工作坊基礎（剩餘 9 堂，需 18 小時）。
+2. A2 數位教學軟體進階實務（剩餘 7 堂，需 12 小時）。
+我每週能固定進修的時段為：【每週三下午教師進修日 13:30-15:30】以及【每週五上午第三節空堂 10:10-11:50】。
+請依照『單日不混合兩模組、隔週交替進修』的原則，平均分配進度。
+請先產出 8 週的課表文字預覽讓我核對，待我輸入『確認無誤』後，再直接批次寫入我的 Google 日曆，並在每次行程標題加上【教師研習】前綴。</pre>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="border border-slate-200 rounded-xl p-5 bg-slate-50/50 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <span class="step-badge bg-amber-500 text-white">3</span>
+                                <h5 class="font-bold text-slate-900 text-sm sm:text-base">學校段考週或校慶忙翻？下達「整週行程順延」咒語</h5>
+                            </div>
+                            <span class="text-xs bg-rose-100 text-rose-800 font-mono px-2 py-0.5 rounded">行政彈性救星</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                            遇上段考命題審題或校運會忙不過來，不用到 Google 日曆手動一筆筆拖曳！只要回到當時的對話框輸入：
+                        </p>
+
+                        <div class="relative bg-amber-50 border border-amber-200 p-3.5 rounded-xl text-xs sm:text-sm font-mono text-amber-950 leading-relaxed">
+                            <button onclick="copyElementText('cal-delay-prompt', '日曆順延指令已複製！')" class="absolute top-2.5 right-2.5 px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white text-xs rounded shadow-xs transition">
+                                <span>📋 一鍵複製順延指令</span>
+                            </button>
+                            <span id="cal-delay-prompt" class="block pr-28">這週適逢學校第一次定期評量段考週，請幫我把先前建立的所有【教師研習】日曆排程，全部往後順延一週。</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Interactive Generator Widget for Educators -->
+            <div id="generator" class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-200 shadow-xs space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                            <span>✨ 教師備課與進修日曆 Prompt 動態組裝器</span>
+                        </h4>
+                        <span class="text-xs bg-amber-100 text-amber-800 font-semibold px-2 py-0.5 rounded">教師免手寫</span>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        自訂你的學期備課或研習參數，自動合成標準排程語法，貼給已開啟 Workspace 擴充的 Gemini 即可一鍵排程：
+                    </p>
+
+                    <div class="space-y-3 text-xs sm:text-sm">
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">研習主題 / 領域共備計畫名稱</label>
+                            <input type="text" id="gen-course-name" value="國中跨領域探究教案設計與素養命題工作坊" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none font-mono">
+                        </div>
+
+                        <div>
+                            <label class="block font-medium text-slate-700 mb-1">研習章節或共備任務細項（含時數）</label>
+                            <input type="text" id="gen-chapters" value="單元1素養導向命題原則(2h)、單元2評量規準Rubric設計(2h)、單元3公開觀課教案編撰(3h)" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none font-mono">
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block font-medium text-slate-700 mb-1">每週固定進修/空堂時段</label>
+                                <input type="text" id="gen-schedule" value="每週三下午 13:30-15:30 教師進修時段" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none font-mono">
+                            </div>
+                            <div>
+                                <label class="block font-medium text-slate-700 mb-1">預計完成期限</label>
+                                <input type="text" id="gen-deadline" value="本學期期末教學檢討會前" class="w-full px-3 py-2 rounded-lg border border-slate-300 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Generated Output Box -->
+                    <div class="mt-4 pt-4 border-t border-slate-100">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-slate-600">產出提示詞（點選右側按鈕複製）：</span>
+                            <button onclick="copyGeneratedPrompt()" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-md text-xs font-semibold shadow-xs transition">
+                                複製指令
+                            </button>
+                        </div>
+                        <div id="generated-prompt-box" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-800 leading-relaxed break-all select-all">
+                            <!-- Injected by JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Pre-built Ready-to-use Educational Cards -->
+                <div class="lg:col-span-5 space-y-4">
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <h5 class="font-bold text-sm text-slate-900">單一領域共備/觀議課排程</h5>
+                                <button onclick="copySpecificPrompt('cal-single')" class="text-xs text-blue-700 hover:underline">複製</button>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-3">最常使用的教研會排程語法：</p>
+                            <div class="p-2.5 bg-slate-50 rounded-lg text-xs font-mono text-slate-700 leading-relaxed">
+                                「我們領域正在進行 [共備研習名稱]，包含進度：[章節清單]。目標在 [預計日期] 內完成。每週於 [填空堂時段] 共備。請幫我產出課表，待我確認後排入 Google 日曆。」
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <h5 class="font-bold text-sm text-slate-900">學期處務/導師會議固定排程</h5>
+                                <button onclick="copySpecificPrompt('cal-meeting')" class="text-xs text-blue-700 hover:underline">複製</button>
+                            </div>
+                            <p class="text-xs text-slate-500 mb-3">行政處室雙週例會排程：</p>
+                            <div class="p-2.5 bg-slate-50 rounded-lg text-xs font-mono text-slate-700 leading-relaxed">
+                                「請幫我從下週二開始，每隔兩週的星期二上午 08:10-09:00 排入【教務學務跨處室行政協調會】，設定重複 8 次，並在說明欄附帶會議 Docs 紀錄範本連結。」
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Module 6: Pitfalls & Quality Checklist for Educators -->
+        <section id="module-6" class="scroll-mt-20">
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="px-2.5 py-1 bg-rose-600 text-white font-bold text-sm rounded-lg">06</div>
+                <div>
+                    <h3 class="text-2xl font-bold text-slate-900">校園 AI 四大翻車現場（抓錯教學）與驗收防護</h3>
+                    <p class="text-sm text-slate-500">AI 是兼任行政的好幫手，非最終簽核者！成績加總截斷、特教個資暴露與鐘點節次混淆的防範之道</p>
+                </div>
+            </div>
+
+            <!-- 4 Realistic Pitfall Case Cards for Schools -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Pitfall 1 -->
+                <div class="bg-white rounded-2xl p-5 border border-rose-100 shadow-xs flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded">校園翻車 1</span>
+                            <span class="text-xs text-slate-400 font-mono">學期成績計算截斷 (Range Miss)</span>
+                        </div>
+                        <h5 class="font-bold text-sm text-slate-900 mb-1">插班轉學生補入名冊，平均分公式漏算最後一號</h5>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                            在班級成績冊中，AI 自動產生的全班平均為 <code>=AVERAGE(E2:E31)</code>。但學期中插入了 32 號轉學生，固定公式未延伸至 E32，導致期末該生段考成績完全被遺漏，引發家長陳情。
+                        </p>
+                    </div>
+                    <div class="bg-emerald-50 p-2.5 rounded-lg border border-emerald-100 text-[11px] text-emerald-800">
+                        <strong>解法：</strong>指令要求：「請使用動態範圍公式，或核算總人數確認包含至最新座號」。
+                    </div>
+                </div>
+
+                <!-- Pitfall 2 -->
+                <div class="bg-white rounded-2xl p-5 border border-rose-100 shadow-xs flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded">校園翻車 2</span>
+                            <span class="text-xs text-slate-400 font-mono">資源班/假別空白列截斷</span>
+                        </div>
+                        <h5 class="font-bold text-sm text-slate-900 mb-1">班級抽離式名單有空白行，AI 以為全校資料結束</h5>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                            全校 800 位學生名冊中，第 45 列因特教抽離或轉學而留白，Gemini in Sheets 的讀取游標在此誤判為結尾，導致後續七百多筆資料全數遺失。
+                        </p>
+                    </div>
+                    <div class="bg-emerald-50 p-2.5 rounded-lg border border-emerald-100 text-[11px] text-emerald-800">
+                        <strong>解法：</strong>在下達 @ 讀取前先在試算表篩選刪除空白列，或明確指定「請讀取 A1:F800 完整範圍」。
+                    </div>
+                </div>
+
+                <!-- Pitfall 3 -->
+                <div class="bg-white rounded-2xl p-5 border border-rose-100 shadow-xs flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded">校園翻車 3</span>
+                            <span class="text-xs text-slate-400 font-mono">學校節次與跨午夜混亂</span>
+                        </div>
+                        <h5 class="font-bold text-sm text-slate-900 mb-1">把「第一節 08:20」排成凌晨，「午休 12:30」轉成半夜</h5>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                            將行事曆文字轉日曆時，若寫「中午 12:30 召開導師會議」，AI 偶爾誤讀為半夜 00:30，讓同仁半夜收到日曆提醒大鬧烏龍。
+                        </p>
+                    </div>
+                    <div class="bg-emerald-50 p-2.5 rounded-lg border border-emerald-100 text-[11px] text-emerald-800">
+                        <strong>解法：</strong>在核准排程前，務必一眼掃描時段是否皆落在 08:00~17:00 正常作息區間。
+                    </div>
+                </div>
+
+                <!-- Pitfall 4 -->
+                <div class="bg-white rounded-2xl p-5 border border-rose-100 shadow-xs flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded">校園翻車 4</span>
+                            <span class="text-xs text-slate-400 font-mono">學生個資（PII）與個資法違規</span>
+                        </div>
+                        <h5 class="font-bold text-sm text-slate-900 mb-1">將含有身分證字號、弱勢補助的清冊未去識別化餵給 AI</h5>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                            請 Gemini 整理清寒獎助金或特教 IEP 學生名單時，直接丟入含有身分證字號、家長電話與病歷資料的檔案，嚴重違反個人資料保護法與校園資安規範。
+                        </p>
+                    </div>
+                    <div class="bg-emerald-50 p-2.5 rounded-lg border border-emerald-100 text-[11px] text-emerald-800">
+                        <strong>解法：</strong>務必先將敏感欄位刪除，以座號或代碼（學生 A、學生 B）替代，絕不可上傳機敏隱私。
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checklist Interactive Section for Teachers -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-8 bg-white rounded-2xl p-6 border border-slate-200 shadow-xs">
+                    <div class="flex items-center justify-between mb-5">
+                        <h4 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                            <span>✅ 學校報表/教材正式對外交付前五步檢驗清單</span>
+                        </h4>
+                        <span class="text-xs text-slate-500 font-medium">勾選以計算校園安全指數</span>
+                    </div>
+
+                    <div class="space-y-3" id="checklist-container">
+                        <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition">
+                            <input type="checkbox" onchange="calculateScore()" class="mt-1 w-4 h-4 rounded text-blue-700 focus:ring-blue-500">
+                            <div>
+                                <span class="text-sm font-semibold text-slate-800">1. 全班/全校總人數一致性（Row Count Audit）</span>
+                                <p class="text-xs text-slate-500 mt-0.5">比對來源學生座號與 AI 生成列數是否相同，確認中間沒有因為轉學生或休學空白列發生截斷。</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition">
+                            <input type="checkbox" onchange="calculateScore()" class="mt-1 w-4 h-4 rounded text-blue-700 focus:ring-blue-500">
+                            <div>
+                                <span class="text-sm font-semibold text-slate-800">2. 成績與處室經費計算範圍（Formula Range Check）</span>
+                                <p class="text-xs text-slate-500 mt-0.5">點擊各項 SUM / AVERAGE 公式，確認框選範圍確實涵蓋最後一位學生或最後一筆核銷單據。</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition">
+                            <input type="checkbox" onchange="calculateScore()" class="mt-1 w-4 h-4 rounded text-blue-700 focus:ring-blue-500">
+                            <div>
+                                <span class="text-sm font-semibold text-slate-800">3. 處室小計與總計二次驗算（Subtotal Alignment）</span>
+                                <p class="text-xs text-slate-500 mt-0.5">隨機挑選 1 個處室手動快速加總，確認 AI 沒有產生幻覺數值或將處室小計重複累加至全校總計。</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition">
+                            <input type="checkbox" onchange="calculateScore()" class="mt-1 w-4 h-4 rounded text-blue-700 focus:ring-blue-500">
+                            <div>
+                                <span class="text-sm font-semibold text-slate-800">4. 學生評量規準與等第分類 MECE 原則</span>
+                                <p class="text-xs text-slate-500 mt-0.5">確認所有的學生評量規準（優、良、待加強）分數區間互不重疊且完整包覆 0~100 分，無模糊灰色地帶。</p>
+                            </div>
+                        </label>
+
+                        <label class="flex items-start gap-3 p-3.5 rounded-xl border border-slate-100 hover:bg-slate-50 cursor-pointer transition">
+                            <input type="checkbox" onchange="calculateScore()" class="mt-1 w-4 h-4 rounded text-blue-700 focus:ring-blue-500">
+                            <div>
+                                <span class="text-sm font-semibold text-slate-800">5. 學生個人隱私資訊（PII）去識別化脫敏</span>
+                                <p class="text-xs text-slate-500 mt-0.5">涉及未成年學生身分證、特教身分、家長電話或住址時，已確認全部隱藏或轉為匿名座號。</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Score Meter Card -->
+                <div class="lg:col-span-4 bg-gradient-to-b from-slate-900 to-slate-800 rounded-2xl p-6 text-white flex flex-col justify-between shadow-md">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">校園品質保證儀表板</span>
+                        <h4 class="text-xl font-bold mt-1">教學行政安全指數</h4>
+                        
+                        <div class="my-6 text-center">
+                            <div id="score-text" class="text-5xl font-extrabold text-blue-400">0%</div>
+                            <div id="status-badge" class="mt-2 inline-block px-3 py-1 rounded-full text-xs font-semibold bg-rose-900/60 text-rose-200 border border-rose-700/50">
+                                尚未完成基礎校對
+                            </div>
+                        </div>
+
+                        <p id="score-desc" class="text-xs text-slate-300 leading-relaxed">
+                            請在完成成績冊、畢旅名冊或公文前，依據左側清單逐項核對。達到 100% 才能確保零幻覺、零公式斷層與學生隱私合規。
+                        </p>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-700 text-[11px] text-slate-400">
+                        「當 AI 撰寫公文教案變得極為容易時，教師最不可替代的價值是你的教育溫度與教學把關智慧。」
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Custom Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center gap-3 px-4 py-3 bg-slate-900 text-white rounded-xl shadow-xl border border-slate-700">
+        <span class="text-emerald-400 text-lg">✓</span>
+        <span id="toast-message" class="text-xs sm:text-sm font-medium">指令已成功複製到剪貼簿！</span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-8 mt-12 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4 space-y-2">
+            <p class="font-medium text-slate-700">Gemini × Google Workspace 中小學教師教學・行政・備課自動化實戰講義</p>
+            <p class="text-slate-400">專門針對教育部校園數位環境、教育雲帳號及 Google for Education 規劃</p>
+        </div>
+    </footer>
+
+    <script>
+        function scrollToSection(id) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function setFontScale(scale) {
+            const html = document.documentElement;
+            html.classList.remove('text-scale-sm', 'text-scale-base', 'text-scale-lg', 'text-scale-xl');
+            html.classList.add(`text-scale-${scale}`);
+
+            document.querySelectorAll('.font-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById(`font-${scale}`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            showToast(`字體已切換為：${scale === 'sm' ? '小 (85%)' : scale === 'base' ? '標準 (100%)' : scale === 'lg' ? '大 (115%)' : '特大 (130%)'}`);
+        }
+
+        function copyToClipboard(text, successMsg = '指令已成功複製到剪貼簿！') {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast(successMsg);
+                } else {
+                    showToast('複製失敗，請手動選取文字複製。');
+                }
+            } catch (err) {
+                showToast('複製失敗，請手動選取文字複製。');
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+
+        function copyElementText(elementId, successMsg) {
+            const el = document.getElementById(elementId);
+            if (el) {
+                const text = el.innerText || el.textContent;
+                copyToClipboard(text.trim(), successMsg);
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.innerText = message;
+            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 2500);
+        }
+
+        const planDetails = {
+            'free': {
+                title: '學校標準教育帳號 (未加購 AI)',
+                statusColor: 'text-amber-600',
+                slides: '可至 Gemini 網頁用 Canvas 模式產出教案簡報並匯出',
+                sheets: '不支援側邊欄「✦」及「@」直接呼叫校園共用雲端檔案',
+                docs: '不支援 Gem 動態即時同步 Google 文件校規',
+                tip: '建議路徑：在 Gemini 網頁中輸入教案需求，打包輸出為 .xlsx 或 Slides 格式匯入教學使用。'
+            },
+            'one-ai': {
+                title: '教師個人訂閱 (Google One AI Premium)',
+                statusColor: 'text-emerald-600',
+                slides: '全面支援側邊欄「✦」、Enhance this slide、教學插圖替換',
+                sheets: '支援側邊欄建行程表、成績公式加總與參照月報排版',
+                docs: '完整支援校園 SOP 規章 Gem 動態連動 Docs',
+                tip: '適合經常自行備課、產出特色教案並進行公開觀課之專任教師。'
+            },
+            'workspace-ai': {
+                title: '教育版進階授權 (Education Plus / AI 升級)',
+                statusColor: 'text-blue-600',
+                slides: '原生側邊欄完整整合，可指定學校校徽母片範本自動吸取風格',
+                sheets: '完整跨處室文件聯動，支援讀取 Drive/Classroom 結構化資料',
+                docs: '支援全校教師共用 Gem 動態讀取最新校安與教務規章',
+                tip: '最強校園行政工作流，可透過學校內部網域權限確保未成年學生個資安全。'
+            }
+        };
+
+        function updatePlanStatus(planKey) {
+            const data = planDetails[planKey];
+            const box = document.getElementById('plan-result-box');
+            box.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span class="font-bold ${data.statusColor}">${data.title}</span>
+                    <span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded">診斷結果</span>
+                </div>
+                <div class="space-y-1 text-slate-700 text-xs">
+                    <p>• <strong>課堂簡報：</strong>${data.slides}</p>
+                    <p>• <strong>行政試算表：</strong>${data.sheets}</p>
+                    <p>• <strong>動態 Gem / 校規：</strong>${data.docs}</p>
+                </div>
+                <div class="pt-2 mt-2 border-t border-slate-100 text-xs text-slate-500 font-medium">
+                    ${data.tip}
+                </div>
+            `;
+        }
+
+        function updateGeneratedPrompt() {
+            const course = document.getElementById('gen-course-name').value.trim();
+            const chapters = document.getElementById('gen-chapters').value.trim();
+            const schedule = document.getElementById('gen-schedule').value.trim();
+            const deadline = document.getElementById('gen-deadline').value.trim();
+
+            const prompt = `我們領域教師社群正在推進「${course || '[主題/共備名稱]'}」，接下來要執行的研習與備課進度包含：${chapters || '[章節細項]'}。目標在「${deadline || '[完成期限]'}」前完成。每週固定於「${schedule || '[時段]'}」研習。請幫我把內容平均分配到上述時段，制定成結構化排程課表給我檢查，待我確認無誤後，幫我批次排進 Google 日曆。`;
+            
+            document.getElementById('generated-prompt-box').innerText = prompt;
+        }
+
+        ['gen-course-name', 'gen-chapters', 'gen-schedule', 'gen-deadline'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateGeneratedPrompt);
+        });
+
+        function copyGeneratedPrompt() {
+            const text = document.getElementById('generated-prompt-box').innerText;
+            copyToClipboard(text, '已複製教師專用研習排程指令！');
+        }
+
+        const preStoredPrompts = {
+            'cal-single': '我們領域正在進行 [共備研習名稱]，包含進度：[章節清單]。目標在 [預計日期] 內完成。每週於 [填空堂時段] 共備。請幫我產出課表，待我確認後排入 Google 日曆。',
+            'cal-meeting': '請幫我從下週二開始，每隔兩週的星期二上午 08:10-09:00 排入【教務學務跨處室行政協調會】，設定重複 8 次，並在說明欄附帶會議 Docs 紀錄範本連結。'
+        };
+
+        function copySpecificPrompt(key) {
+            let text = preStoredPrompts[key];
+            if (text) {
+                copyToClipboard(text, '指令已複製到剪貼簿！');
+            }
+        }
+
+        function calculateScore() {
+            const checkboxes = document.querySelectorAll('#checklist-container input[type="checkbox"]');
+            let checkedCount = 0;
+            checkboxes.forEach(cb => {
+                if (cb.checked) checkedCount++;
+            });
+
+            const percent = Math.round((checkedCount / checkboxes.length) * 100);
+            const scoreText = document.getElementById('score-text');
+            const badge = document.getElementById('status-badge');
+            const desc = document.getElementById('score-desc');
+
+            scoreText.innerText = `${percent}%`;
+
+            if (percent === 100) {
+                scoreText.className = "text-5xl font-extrabold text-emerald-400";
+                badge.className = "mt-2 inline-block px-3 py-1 rounded-full text-xs font-semibold bg-emerald-900/70 text-emerald-200 border border-emerald-700/50";
+                badge.innerText = "品質合格：可安全發送";
+                desc.innerText = "太棒了！所有成績計算公式、學生總人數、等第量規與未成年學生隱私保護均已核驗無誤。";
+            } else if (percent >= 60) {
+                scoreText.className = "text-5xl font-extrabold text-amber-400";
+                badge.className = "mt-2 inline-block px-3 py-1 rounded-full text-xs font-semibold bg-amber-900/70 text-amber-200 border border-amber-700/50";
+                badge.innerText = "部分完成：尚有風險";
+                desc.innerText = "已完成主要架構檢查，請務必確認是否有轉學生未列入公式或學生個資未脫敏。";
+            } else {
+                scoreText.className = "text-5xl font-extrabold text-blue-400";
+                badge.className = "mt-2 inline-block px-3 py-1 rounded-full text-xs font-semibold bg-rose-900/60 text-rose-200 border border-rose-700/50";
+                badge.innerText = "尚未完成基礎校對";
+                desc.innerText = "請在送交處室或列印學習單前，依據左側清單逐項打勾，達到 100% 才能確保安全。";
+            }
+        }
+
+        window.onload = function() {
+            updatePlanStatus('free');
+            updateGeneratedPrompt();
+        };
+    </script>
+</body>
+</html>
