@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 試卷審查系統</title>
+    <title>AI 試卷審查系統 (Interactions API 版)</title>
     <!-- 引入 Tailwind CSS (CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 引入 Babel 進行即時 JSX 編譯 -->
@@ -49,7 +49,6 @@
         @media print {
             @page {
                 margin: 1.2cm;
-                /* 設定 PDF 的頁面邊距 */
             }
 
             body {
@@ -58,16 +57,12 @@
                 print-color-adjust: exact;
             }
 
-            /* 極度重要：強制移除所有可能導致瀏覽器將畫面「圖片化(點陣化)」的特效
-               確保輸出為純文字向量 PDF，讓滑鼠可以選取與複製文字。
-            */
+            /* 確保輸出為純文字向量 PDF，讓滑鼠可以選取與複製文字 */
             * {
                 box-shadow: none !important;
                 text-shadow: none !important;
                 border-radius: 0 !important;
-                /* 移除圓角避免遮罩繪圖錯誤 */
                 overflow: visible !important;
-                /* 解除隱藏溢出，確保文字流暢 */
                 transform: none !important;
                 filter: none !important;
                 backdrop-filter: none !important;
@@ -76,19 +71,16 @@
                 user-select: auto !important;
             }
 
-            /* 隱藏非必要元素 */
             .print\:hidden {
                 display: none !important;
             }
 
-            /* 強制切換為區塊排列，避免 flex/grid 導致的版面壓縮 */
             .print\:block {
                 display: block !important;
                 width: 100% !important;
                 max-width: 100% !important;
             }
 
-            /* 避免卡片在換頁時被從中切斷 */
             .print\:break-inside-avoid {
                 page-break-inside: avoid !important;
                 break-inside: avoid !important;
@@ -96,7 +88,6 @@
                 border: 1px solid #e2e8f0 !important;
             }
 
-            /* 針對試題原文區塊強制移除絕對定位的背景圖標 */
             .print\:remove-bg-icon svg.absolute {
                 display: none !important;
             }
@@ -112,7 +103,7 @@
         import { createRoot } from 'react-dom/client';
         import {
             UploadCloud, FileText, CheckCircle, AlertTriangle, Info,
-            Loader2, Play, FileUp, Tag, Quote, X, Settings, Key, Zap, Trash2, Save, Download
+            Loader2, Play, FileUp, Tag, Quote, X, Settings, Key, Zap, Trash2, Save, Download, ExternalLink, Sparkles
         } from 'lucide-react';
 
         const PRESET_FOCUS_OPTIONS = [
@@ -136,12 +127,14 @@
             "科技 (生科/資科)", "綜合活動", "藝術與人文", "健康與體育"
         ];
 
-        const GEMINI_MODELS = [
-            { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash (預設推薦 / 效能價格比最佳)" },
-            { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro (深度推論與複雜工作解析)" },
-            { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash-Lite (極致輕量與低延遲)" },
-            { id: "gemini-3.1-pro-preview", name: "Gemini 3.1 Pro 預覽版 (新世代進階智慧能力)" },
-            { id: "gemini-3-flash-preview", name: "Gemini 3 Flash 預覽版 (新世代快速模型)" }
+        // 支援 Interactions API 的主流模型清單與自訂選項
+        const PRESET_GEMINI_MODELS = [
+            { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash (預設推薦 / 效能速度最佳)" },
+            { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro (深度邏輯推論與複雜分析)" },
+            { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash (新一代多模態極速模型)" },
+            { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash (經典穩定高流通模型)" },
+            { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro (經典大文本深度推理模型)" },
+            { id: "custom", name: "⚙️ 自訂模型 ID (自行輸入，防過時)" }
         ];
 
         function App() {
@@ -149,11 +142,13 @@
             const [apiKey, setApiKey] = useState('');
             const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash');
 
+            // 彈跳視窗內部暫存狀態
             const [tempApiKey, setTempApiKey] = useState('');
-            const [tempModel, setTempModel] = useState('');
+            const [tempModelChoice, setTempModelChoice] = useState('gemini-2.5-flash');
+            const [tempCustomModelInput, setTempCustomModelInput] = useState('');
 
             const [file, setFile] = useState(null);
-            const [isDragging, setIsDragging] = useState(false); // 新增拖曳狀態
+            const [isDragging, setIsDragging] = useState(false);
             const [formData, setFormData] = useState({
                 audience: '', subject: '', scope: '', focusText: '', focusTags: []
             });
@@ -161,11 +156,12 @@
             const [results, setResults] = useState(null);
             const [errorMsg, setErrorMsg] = useState(null);
 
+            // 初始化時讀取 LocalStorage
             useEffect(() => {
                 const storedKey = localStorage.getItem('gemini_api_key');
                 const storedModel = localStorage.getItem('gemini_model');
                 if (storedKey) setApiKey(storedKey);
-                if (storedModel && GEMINI_MODELS.find(m => m.id === storedModel)) {
+                if (storedModel) {
                     setSelectedModel(storedModel);
                 } else {
                     setSelectedModel('gemini-2.5-flash');
@@ -175,25 +171,42 @@
 
             const openSettings = () => {
                 setTempApiKey(apiKey);
-                setTempModel(selectedModel);
+                const isPreset = PRESET_GEMINI_MODELS.some(m => m.id === selectedModel && m.id !== 'custom');
+                if (isPreset) {
+                    setTempModelChoice(selectedModel);
+                    setTempCustomModelInput('');
+                } else {
+                    setTempModelChoice('custom');
+                    setTempCustomModelInput(selectedModel);
+                }
                 setIsSettingsOpen(true);
             };
 
             const saveSettings = () => {
-                setApiKey(tempApiKey);
-                setSelectedModel(tempModel);
-                localStorage.setItem('gemini_api_key', tempApiKey);
-                localStorage.setItem('gemini_model', tempModel);
+                const trimmedKey = tempApiKey.trim();
+                let effectiveModel = tempModelChoice;
+                if (tempModelChoice === 'custom') {
+                    const cleanCustom = tempCustomModelInput.trim().replace(/^models\//, '');
+                    effectiveModel = cleanCustom || 'gemini-2.5-flash';
+                }
+
+                setApiKey(trimmedKey);
+                setSelectedModel(effectiveModel);
+                localStorage.setItem('gemini_api_key', trimmedKey);
+                localStorage.setItem('gemini_model', effectiveModel);
                 setIsSettingsOpen(false);
             };
 
             const clearSettings = () => {
                 setTempApiKey('');
+                setTempModelChoice('gemini-2.5-flash');
+                setTempCustomModelInput('');
                 setApiKey('');
+                setSelectedModel('gemini-2.5-flash');
                 localStorage.removeItem('gemini_api_key');
+                localStorage.removeItem('gemini_model');
             };
 
-            // 處理點擊上傳
             const handleFileChange = (e) => {
                 if (e.target.files && e.target.files[0]) {
                     setFile(e.target.files[0]);
@@ -201,9 +214,8 @@
                 }
             };
 
-            // --- 新增：處理拖曳相關事件 ---
             const handleDragOver = (e) => {
-                e.preventDefault(); // 必須阻止預設行為才能允許放置
+                e.preventDefault();
                 setIsDragging(true);
             };
 
@@ -213,7 +225,7 @@
             };
 
             const handleDrop = (e) => {
-                e.preventDefault(); // 阻止瀏覽器直接開啟檔案
+                e.preventDefault();
                 setIsDragging(false);
                 if (e.dataTransfer.files && e.dataTransfer.files[0]) {
                     setFile(e.dataTransfer.files[0]);
@@ -272,7 +284,11 @@
                 for (let i = 0; i < retries; i++) {
                     try {
                         const res = await fetch(url, options);
-                        if (!res.ok) throw new Error(`HTTP 錯誤! 狀態碼: ${res.status}`);
+                        if (!res.ok) {
+                            const errData = await res.json().catch(() => ({}));
+                            const errDetail = errData.error?.message || `HTTP 錯誤碼: ${res.status}`;
+                            throw new Error(errDetail);
+                        }
                         return await res.json();
                     } catch (err) {
                         if (i === retries - 1) throw err;
@@ -281,15 +297,25 @@
                 }
             };
 
+            // 核心分析流程（全面升級為 Interactions API 規格）
             const startAnalysis = async () => {
                 if (!apiKey) {
-                    alert("⚠️ 請先點擊右上角「系統設定」輸入您的 Gemini API Key。");
+                    setErrorMsg("請先設定 Gemini API Key。您可點擊右上角「系統設定」填入。");
                     openSettings();
                     return;
                 }
-                if (!file) return alert("請先上傳試卷檔案 (強烈建議使用 PDF 格式)");
-                if (!formData.audience || formData.audience === "請選擇測驗對象") return alert("請選擇測驗對象");
-                if (!formData.subject || formData.subject === "請選擇測驗科目") return alert("請選擇測驗科目");
+                if (!file) {
+                    setErrorMsg("請先上傳試卷檔案 (強烈建議使用 PDF 格式)");
+                    return;
+                }
+                if (!formData.audience || formData.audience === "請選擇測驗對象") {
+                    setErrorMsg("請選擇測驗對象");
+                    return;
+                }
+                if (!formData.subject || formData.subject === "請選擇測驗科目") {
+                    setErrorMsg("請選擇測驗科目");
+                    return;
+                }
 
                 setIsAnalyzing(true);
                 setResults(null);
@@ -301,6 +327,9 @@
                     if (!mimeType) {
                         mimeType = file.name.endsWith('.pdf') ? 'application/pdf' : 'text/plain';
                     }
+
+                    // 判斷多模態型別：圖片為 image，PDF 與其他文件為 document
+                    const fileCategory = mimeType.startsWith('image/') ? 'image' : 'document';
 
                     const userPrompt = `您是一位專業的台灣中小學教師與試卷審查專家。
 請閱讀附檔的試卷（這是一份真實檔案），並嚴格根據以下條件進行「逐題審查」：
@@ -314,67 +343,119 @@
 2. 針對每一題，提供專業的審查回饋。檢查是否有：雙重否定、誘答選項鑑別度、是否超綱、閱讀認知負荷、語意不清等問題。
 3. 如果該題設計良好無瑕疵，請標示 status 為 'success'；如果有瑕疵，請標示為 'warning' 或 'error'，並具體說明原因與修改建議。`;
 
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${selectedModel}:generateContent?key=${apiKey}`;
+                    const cleanModel = selectedModel.trim().replace(/^models\//, '');
+                    
+                    // Interactions API 標準端點（支援 URL key 或 Header 認證）
+                    const url = `https://generativelanguage.googleapis.com/v1beta/interactions?key=${apiKey}`;
 
-                    const payload = {
-                        contents: [{
-                            parts: [
-                                { text: userPrompt },
-                                { inlineData: { mimeType: mimeType, data: base64Data } }
-                            ]
-                        }],
-                        generationConfig: {
-                            responseMimeType: "application/json",
-                            responseSchema: {
-                                type: "OBJECT",
-                                properties: {
-                                    summary: { type: "STRING", description: "整份試卷的總結報告，包含基本統計與整體評價。" },
-                                    questions: {
-                                        type: "ARRAY",
-                                        items: {
-                                            type: "OBJECT",
-                                            properties: {
-                                                id: { type: "INTEGER", description: "題號或流水號" },
-                                                title: { type: "STRING", description: "題目標題，例如 '第 1 題'" },
-                                                originalText: { type: "STRING", description: "擷取出的題目原文" },
-                                                status: { type: "STRING", description: "狀態，只能是 'success', 'warning', 或 'error'" },
-                                                feedbacks: {
-                                                    type: "ARRAY",
-                                                    items: {
-                                                        type: "OBJECT",
-                                                        properties: {
-                                                            type: { type: "STRING", description: "回饋類型，只能是 'success', 'warning', 'error', 或 'info'" },
-                                                            text: { type: "STRING", description: "具體審查建議" }
-                                                        }
-                                                    }
-                                                }
+                    // Interactions API 標準結構化輸出 Schema
+                    const reviewResponseSchema = {
+                        type: "OBJECT",
+                        properties: {
+                            summary: { type: "STRING", description: "整份試卷的總結報告，包含基本統計與整體評價。" },
+                            questions: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        id: { type: "INTEGER", description: "題號或流水號" },
+                                        title: { type: "STRING", description: "題目標題，例如 '第 1 題'" },
+                                        originalText: { type: "STRING", description: "擷取出的題目原文" },
+                                        status: { type: "STRING", description: "狀態，只能是 'success', 'warning', 或 'error'" },
+                                        feedbacks: {
+                                            type: "ARRAY",
+                                            items: {
+                                                type: "OBJECT",
+                                                properties: {
+                                                    type: { type: "STRING", description: "回饋類型，只能是 'success', 'warning', 'error', 或 'info'" },
+                                                    text: { type: "STRING", description: "具體審查建議" }
+                                                },
+                                                required: ["type", "text"]
                                             }
                                         }
-                                    }
+                                    },
+                                    required: ["id", "title", "originalText", "status", "feedbacks"]
                                 }
                             }
+                        },
+                        required: ["summary", "questions"]
+                    };
+
+                    // Interactions API 規格 Payload
+                    const payload = {
+                        model: cleanModel,
+                        input: [
+                            {
+                                type: "text",
+                                text: userPrompt
+                            },
+                            {
+                                type: fileCategory,
+                                data: base64Data,
+                                mime_type: mimeType
+                            }
+                        ],
+                        response_format: {
+                            type: "text",
+                            mime_type: "application/json",
+                            schema: reviewResponseSchema
                         }
                     };
 
                     const data = await fetchWithRetry(url, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-goog-api-key': apiKey
+                        },
                         body: JSON.stringify(payload)
                     });
 
-                    const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-                    if (!resultText) throw new Error("API 未回傳有效的分析內容，請確認 API Key 與模型權限。");
+                    // Interactions API 多層級相容解析邏輯：
+                    // 1. output_text 直接存取（最優先）
+                    // 2. steps 結構化時間線（新架構）
+                    // 3. outputs 陣列（相容層）
+                    let resultText = "";
+                    if (data.output_text) {
+                        resultText = data.output_text;
+                    } else if (Array.isArray(data.steps)) {
+                        for (const step of data.steps) {
+                            if (step.type === "model_output" && Array.isArray(step.content)) {
+                                for (const item of step.content) {
+                                    if (item.text) resultText += item.text;
+                                }
+                            }
+                        }
+                    } else if (Array.isArray(data.outputs)) {
+                        for (const out of data.outputs) {
+                            if (out.text) resultText += out.text;
+                        }
+                    } else if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                        resultText = data.candidates[0].content.parts[0].text;
+                    }
 
-                    const resultJson = JSON.parse(resultText);
+                    if (!resultText) {
+                        throw new Error("Interactions API 未回傳有效的分析內容，請確認 API Key 與模型權限。");
+                    }
+
+                    // 去除可能夾帶的 Markdown 標記，確保 JSON 成功解析
+                    let cleanJson = resultText.trim();
+                    if (cleanJson.startsWith("```json")) {
+                        cleanJson = cleanJson.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+                    } else if (cleanJson.startsWith("```")) {
+                        cleanJson = cleanJson.replace(/^```\s*/, '').replace(/\s*```$/, '');
+                    }
+
+                    const resultJson = JSON.parse(cleanJson);
                     setResults(resultJson);
 
                 } catch (error) {
                     console.error("Analysis Error:", error);
-                    let displayError = "分析過程中發生錯誤。請確認：1. API Key 是否正確。2. 檔案格式是否支援。3. 網路連線狀態。";
-                    if (error.message.includes("403") || error.message.includes("400")) {
-                        displayError = `API 認證失敗或請求格式錯誤，請檢查您的金鑰是否有效，或確認所選模型 (${selectedModel}) 是否具備該權限與多模態支援。`;
-                    } else if (error.message.includes("404")) {
-                        displayError = `所選的模型端點 (${selectedModel}) 目前無法存取，這可能是由於預覽版模型端點變動，請至設定切換為穩定版本。`;
+                    let displayError = error.message || "分析過程中發生錯誤。";
+                    if (displayError.includes("403") || displayError.includes("API key not valid")) {
+                        displayError = `API 認證失敗，請檢查您的 Gemini API Key 是否正確且具備存取權限。`;
+                    } else if (displayError.includes("404") || displayError.includes("not found")) {
+                        displayError = `找不到模型 (${selectedModel}) 或該端點不支援 Interactions API。請至設定切換為其他可用模型，或自訂正確的 Model ID。`;
                     }
                     setErrorMsg(displayError);
                 } finally {
@@ -390,7 +471,7 @@
 
                 mdContent += `- **測驗對象：** ${formData.audience}\n`;
                 mdContent += `- **測驗科目：** ${formData.subject}\n`;
-                mdContent += `- **分析模型：** ${selectedModel}\n`;
+                mdContent += `- **分析模型：** ${selectedModel} (via Interactions API)\n`;
                 mdContent += `- **生成日期：** ${dateStr}\n\n`;
                 mdContent += `---\n\n`;
 
@@ -457,21 +538,33 @@
                     {/* -- 設定彈跳視窗 (Modal) -- */}
                     {isSettingsOpen && (
                         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 print:hidden">
-                            <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+                            <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
                                 <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
                                     <h3 className="font-bold text-lg text-slate-800 flex items-center">
                                         <Settings className="w-5 h-5 mr-2 text-indigo-600" />
-                                        系統核心設定
+                                        系統核心設定 (Interactions API)
                                     </h3>
                                     <button onClick={() => setIsSettingsOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
                                         <X className="w-5 h-5" />
                                     </button>
                                 </div>
                                 <div className="p-6 space-y-5">
+                                    {/* API 金鑰設定與取得連結 */}
                                     <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center">
-                                            <Key className="w-4 h-4 mr-1.5 text-slate-500" /> Gemini API Key
-                                        </label>
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <label className="text-sm font-semibold text-slate-700 flex items-center">
+                                                <Key className="w-4 h-4 mr-1.5 text-slate-500" /> Gemini API Key
+                                            </label>
+                                            <a
+                                                href="https://aistudio.google.com/api-keys"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-xs text-indigo-600 hover:text-indigo-800 underline font-medium inline-flex items-center transition-colors"
+                                                title="開啟 Google AI Studio 申請或檢視 API 金鑰"
+                                            >
+                                                取得 API KEY <ExternalLink className="w-3 h-3 ml-1" />
+                                            </a>
+                                        </div>
                                         <input
                                             type="password"
                                             value={tempApiKey}
@@ -479,23 +572,55 @@
                                             placeholder="請輸入以 AIza 開頭的金鑰"
                                             className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all font-mono text-sm"
                                         />
-                                        <p className="text-xs text-slate-500 mt-2 leading-relaxed">
-                                            金鑰將安全地儲存於您當前瀏覽器的 LocalStorage 中，不會回傳至任何第三方伺服器。
+                                        <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                                            金鑰將安全儲存於瀏覽器的 LocalStorage 中，不會經過任何第三方中繼伺服器。
                                         </p>
                                     </div>
+
+                                    {/* 核心模型選擇與自訂模型輸入 */}
                                     <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2 flex items-center">
-                                            <Zap className="w-4 h-4 mr-1.5 text-slate-500" /> 運算核心模型 (Model)
-                                        </label>
+                                        <div className="flex items-center justify-between mb-1.5">
+                                            <label className="text-sm font-semibold text-slate-700 flex items-center">
+                                                <Zap className="w-4 h-4 mr-1.5 text-slate-500" /> 運算核心模型 (Model)
+                                            </label>
+                                            <a
+                                                href="https://aistudio.google.com/docs/models"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-xs text-indigo-600 hover:text-indigo-800 underline font-medium inline-flex items-center transition-colors"
+                                                title="查看 Google 官方現有支援的模型清單"
+                                            >
+                                                官方模型位置與清單 <ExternalLink className="w-3 h-3 ml-1" />
+                                            </a>
+                                        </div>
                                         <select
-                                            value={tempModel}
-                                            onChange={(e) => setTempModel(e.target.value)}
-                                            className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-white"
+                                            value={tempModelChoice}
+                                            onChange={(e) => setTempModelChoice(e.target.value)}
+                                            className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all bg-white text-sm"
                                         >
-                                            {GEMINI_MODELS.map(m => (
+                                            {PRESET_GEMINI_MODELS.map(m => (
                                                 <option key={m.id} value={m.id}>{m.name}</option>
                                             ))}
                                         </select>
+
+                                        {/* 當選擇「自訂模型」時顯示輸入框 */}
+                                        {tempModelChoice === 'custom' && (
+                                            <div className="mt-3 p-3.5 bg-indigo-50/50 border border-indigo-100 rounded-xl space-y-2 animate-in fade-in duration-200">
+                                                <label className="block text-xs font-bold text-indigo-900">
+                                                    自行輸入模型 ID (防止將來模型過時無法使用)：
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={tempCustomModelInput}
+                                                    onChange={(e) => setTempCustomModelInput(e.target.value)}
+                                                    placeholder="例如：gemini-2.5-flash 或日後新發布之模型 ID"
+                                                    className="w-full px-3.5 py-2 border border-indigo-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-mono bg-white"
+                                                />
+                                                <p className="text-[11px] text-indigo-700/80 leading-normal">
+                                                    可參考官方模型清單，輸入支援 Interactions API 的模型名稱。
+                                                </p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
@@ -520,8 +645,13 @@
 
                         <header className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 print:hidden">
                             <div>
-                                <h1 className="text-2xl font-bold text-slate-800 tracking-tight">AI 試卷審查系統</h1>
-                                <p className="text-sm text-slate-500 mt-1">單機無伺服器架構・直接由瀏覽器驅動 LLM 引擎</p>
+                                <div className="flex items-center space-x-2">
+                                    <h1 className="text-2xl font-bold text-slate-800 tracking-tight">AI 試卷審查系統</h1>
+                                    <span className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-700 border border-indigo-200 flex items-center">
+                                        <Sparkles className="w-3 h-3 mr-1" /> Interactions API
+                                    </span>
+                                </div>
+                                <p className="text-sm text-slate-500 mt-1">單機無伺服器架構・直接由瀏覽器驅動 Google Interactions API 引擎</p>
                             </div>
                             <div className="flex items-center space-x-3">
                                 <div className={`flex items-center space-x-2 text-sm font-medium px-4 py-2 rounded-full border ${apiKey ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-amber-700 bg-amber-50 border-amber-200'}`}>
@@ -531,7 +661,7 @@
                                 <button
                                     onClick={openSettings}
                                     className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-full transition-colors border border-transparent hover:border-indigo-100"
-                                    title="系統設定 (API Key / 模型)"
+                                    title="系統設定 (API Key / 模型設定)"
                                 >
                                     <Settings className="w-5 h-5" />
                                 </button>
@@ -547,7 +677,6 @@
                                         <FileUp className="w-5 h-5 mr-2 text-indigo-500" />
                                         1. 匯入真實試卷檔案
                                     </h2>
-                                    {/* --- 修正：加入了拖曳事件監聽 (onDragOver, onDragLeave, onDrop) 與動態樣式 --- */}
                                     <label
                                         onDragOver={handleDragOver}
                                         onDragLeave={handleDragLeave}
@@ -565,11 +694,11 @@
                                                 <>
                                                     <UploadCloud className={`w-10 h-10 mb-3 transition-colors ${isDragging ? 'text-indigo-500' : 'text-slate-300'}`} />
                                                     <p className="mb-1 text-sm text-slate-600 font-bold">點擊或<span className="text-indigo-500 mx-1">拖曳檔案</span>至此處</p>
-                                                    <p className="text-xs text-slate-400 font-medium">支援 PDF 格式 (推薦) 或 DOCX</p>
+                                                    <p className="text-xs text-slate-400 font-medium">支援 PDF 格式 (推薦) 或 DOCX / 圖片</p>
                                                 </>
                                             )}
                                         </div>
-                                        <input type="file" className="hidden" accept=".pdf,.doc,.docx,.txt" onChange={handleFileChange} />
+                                        <input type="file" className="hidden" accept=".pdf,.doc,.docx,.txt,image/*" onChange={handleFileChange} />
                                     </label>
                                 </div>
 
@@ -616,10 +745,12 @@
                                         </div>
                                     </div>
                                     <button onClick={startAnalysis} disabled={isAnalyzing || !file} className={`w-full mt-8 py-3.5 rounded-xl font-bold text-white flex items-center justify-center transition-all ${isAnalyzing || !file ? 'bg-slate-300 cursor-not-allowed shadow-none' : 'bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 active:scale-[0.98]'}`}>
-                                        {isAnalyzing ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> LLM 深度解析中...</> : <><Play className="w-5 h-5 mr-2" /> 開始分析真實檔案</>}
+                                        {isAnalyzing ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Interactions 引擎深度審查中...</> : <><Play className="w-5 h-5 mr-2" /> 開始分析真實檔案</>}
                                     </button>
                                     <div className="mt-3 text-center text-xs text-slate-400 font-medium flex justify-center items-center">
-                                        當前使用引擎: <span className="text-indigo-500 ml-1 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">{selectedModel}</span>
+                                        運作端點: <span className="text-indigo-600 font-mono ml-1 font-semibold">Interactions API</span>
+                                        <span className="mx-1.5 text-slate-300">|</span>
+                                        模型: <span className="text-indigo-500 ml-1 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 font-mono">{selectedModel}</span>
                                     </div>
                                 </div>
                             </div>
@@ -634,7 +765,7 @@
                                             </div>
                                             <p className="text-xl font-bold text-slate-700 mb-2">等待啟動審查</p>
                                             <p className="text-sm mt-2 text-center max-w-sm leading-relaxed text-slate-500">
-                                                請確保您已於設定中填寫 API 金鑰。上傳試卷後，系統將呼叫 <span className="font-semibold text-slate-600">Google Gemini</span> 進行逐題特徵萃取與邏輯推演。
+                                                請確保您已於設定中填寫 API 金鑰。上傳試卷後，系統將透過 <span className="font-semibold text-slate-600">Interactions API</span> 進行逐題特徵萃取與邏輯推演。
                                             </p>
                                         </div>
                                     )}
@@ -646,7 +777,7 @@
                                             </div>
                                             <p className="text-lg font-bold text-rose-700">處理失敗</p>
                                             <p className="text-sm mt-3 text-center max-w-md text-rose-600/80 leading-relaxed">{errorMsg}</p>
-                                            <button onClick={() => openSettings()} className="mt-6 px-4 py-2 bg-rose-100 text-rose-700 rounded-lg text-sm font-bold hover:bg-rose-200 transition-colors">檢查 API 設定</button>
+                                            <button onClick={() => openSettings()} className="mt-6 px-4 py-2 bg-rose-100 text-rose-700 rounded-lg text-sm font-bold hover:bg-rose-200 transition-colors">檢查 API 與模型設定</button>
                                         </div>
                                     )}
 
@@ -656,12 +787,12 @@
                                                 <Loader2 className="w-14 h-14 animate-spin text-indigo-200" />
                                                 <Loader2 className="w-14 h-14 animate-spin absolute top-0 left-0 text-indigo-600" style={{ animationDirection: 'reverse', animationDuration: '3s' }} />
                                             </div>
-                                            <p className="text-lg font-bold text-indigo-800 animate-pulse">正在解析真實檔案，請稍候...</p>
+                                            <p className="text-lg font-bold text-indigo-800 animate-pulse">正在透過 Interactions API 進行多模態解析...</p>
                                             <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 w-full max-w-xs">
                                                 <div className="text-sm text-indigo-700/80 space-y-2.5 font-medium">
                                                     <p className="flex items-center"><CheckCircle className="w-3.5 h-3.5 mr-2 text-indigo-500" /> 檔案編碼與傳輸</p>
                                                     <p className="flex items-center"><CheckCircle className="w-3.5 h-3.5 mr-2 text-indigo-500" /> 多模態視覺與文字萃取</p>
-                                                    <p className="flex items-center"><Loader2 className="w-3.5 h-3.5 mr-2 text-indigo-500 animate-spin" /> 跨題邏輯推理與課綱比對</p>
+                                                    <p className="flex items-center"><Loader2 className="w-3.5 h-3.5 mr-2 text-indigo-500 animate-spin" /> 跨題邏輯推理與結構化生成</p>
                                                 </div>
                                             </div>
                                             <p className="text-xs text-slate-400 mt-2 font-medium">(根據試卷頁數與模型運算力，可能需要 15~40 秒)</p>
@@ -673,15 +804,15 @@
                                             <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
                                                 <h2 className="text-2xl font-bold text-slate-800 tracking-tight">試卷逐題審查報告</h2>
                                                 <span className="px-3.5 py-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-lg border border-emerald-200 flex items-center">
-                                                    <CheckCircle className="w-3.5 h-3.5 mr-1" /> AI 分析完成
+                                                    <CheckCircle className="w-3.5 h-3.5 mr-1" /> Interactions API 分析完成
                                                 </span>
                                             </div>
 
                                             <div className="text-slate-700 mb-6 bg-gradient-to-r from-slate-50 to-white p-5 rounded-xl border border-slate-200 text-sm leading-relaxed shadow-sm print:shadow-none print:border-slate-300">
                                                 <span className="font-bold block mb-2 text-slate-800">總結報告：</span>
                                                 {results.summary}
-                                                <div className="mt-3 text-xs text-slate-500 flex items-center">
-                                                    <Info className="w-4 h-4 mr-1.5" /> 本報告由 {selectedModel} 分析生成
+                                                <div className="mt-3 text-xs text-slate-500 flex items-center font-mono">
+                                                    <Info className="w-4 h-4 mr-1.5" /> 核心模型：{selectedModel}（經由 Interactions API 產生）
                                                 </div>
                                             </div>
 
