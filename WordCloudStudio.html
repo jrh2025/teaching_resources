@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>專業文字雲產生器 (Word Cloud Studio)</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --panel-bg: #ffffff;
+      --border: #e2e8f0;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --text: #1e293b;
+      --text-muted: #64748b;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    header {
+      background: var(--panel-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 2px 8px;
+      border-radius: 9999px;
+    }
+
+    .main-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* 側邊控制面板 */
+    .sidebar {
+      width: 380px;
+      background: var(--panel-bg);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .section-title {
+      font-size: 0.875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      letter-spacing: 0.05em;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    textarea,
+    select,
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    textarea:focus,
+    select:focus,
+    input:focus {
+      border-color: var(--primary);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 110px;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #334155;
+      cursor: pointer;
+    }
+
+    .color-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .color-row input[type="color"] {
+      width: 44px;
+      height: 32px;
+      padding: 2px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    button:hover {
+      background: var(--primary-hover);
+    }
+
+    button.secondary {
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    button.secondary:hover {
+      background: #e2e8f0;
+    }
+
+    /* 畫布區域 */
+    .canvas-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      background: #f1f5f9;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .canvas-wrapper {
+      background: #ffffff;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      overflow: hidden;
+      position: relative;
+      max-width: 96%;
+      max-height: 85vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* 透明棋盤格背景 */
+      background-image: linear-gradient(45deg, #e2e8f0 25%, transparent 25%),
+        linear-gradient(-45deg, #e2e8f0 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #e2e8f0 75%),
+        linear-gradient(-45deg, transparent 75%, #e2e8f0 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+    }
+
+    canvas {
+      display: block;
+      max-width: 100%;
+      max-height: 80vh;
+      object-fit: contain;
+    }
+
+    .toolbar {
+      position: absolute;
+      top: 30px;
+      right: 30px;
+      display: flex;
+      gap: 8px;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.92);
+      padding: 6px;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(4px);
+    }
+
+    .status-bar {
+      position: absolute;
+      bottom: 20px;
+      left: 30px;
+      background: rgba(15, 23, 42, 0.85);
+      color: #fff;
+      font-size: 0.8rem;
+      padding: 6px 12px;
+      border-radius: 6px;
+      backdrop-filter: blur(4px);
+    }
+
+    /* 詞頻面板抽屜 */
+    .word-drawer {
+      width: 280px;
+      background: var(--panel-bg);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .drawer-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .word-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+
+    .word-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 8px;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .word-item:hover {
+      background: #f8fafc;
+    }
+
+    .word-count {
+      font-size: 0.75rem;
+      background: #e2e8f0;
+      color: #475569;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>文字雲產生器 <span class="badge">WordCloud Studio</span></h1>
+    <div style="font-size: 0.85rem; color: var(--text-muted);">
+      一種將文本資料轉化為視覺圖像的技術，將詞彙的「統計權重」映射為視覺元素。
+    </div>
+  </header>
+
+  <div class="main-container">
+    <!-- 側邊控制台 -->
+    <div class="sidebar">
+      <div>
+        <div class="section-title">1. 文本輸入</div>
+        <div class="control-group">
+          <textarea id="textInput"
+            placeholder="請貼上長篇中文文章或文字內容...">數位轉型與開放資料驅動智慧城市治理。透過視覺化文字雲與自然語言處理技術，分析大眾關注的公共政策、生活安全、交通運輸、環境品質、醫療照護、數位平權與文化教育。資料科學讓海量文本轉化為直觀圖表，協助研究人員與決策者掌握輿情焦點與核心脈絡。政府開放資料與民間創新應用共同推動公民參與、科技普及與永續發展。跨機關平台整合氣象水文觀測、都市防災減災、綠色能源轉型、智慧電網、地理資訊系統與無人載具監測，建立彈性敏捷的現代化治理架構。資訊安全、個人隱私保護、演算法透明度與負責任人工智慧原則，更是在科技發展過程中不容忽視的重要基石。產官學研密切攜手合作，激發更多資料驅動的創新作法與加值服務，打造宜居韌性的未來城市。</textarea>
+          <div class="btn-row">
+            <button class="secondary" onclick="loadSample('governance')">範例：智慧治理</button>
+            <button class="secondary" onclick="loadSample('ai')">範例：AI 科技</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">2. 文本前處理與過濾</div>
+        <div class="control-group" style="gap: 10px;">
+          <label class="checkbox-row">
+            <input type="checkbox" id="removeEnglish" onchange="generateWordCloud()"> 繪製時移除所有英文詞語
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" id="removeNumbers" onchange="generateWordCloud()"> 移除所有數字
+          </label>
+          <label class="checkbox-row">
+            <input type="checkbox" id="filterSingleChar" checked onchange="generateWordCloud()"> 忽略單一中文字 (僅保留二字以上詞彙)
+          </label>
+          <div>
+            <label for="stopWordsInput">自訂排除停用詞（半形逗點分隔）</label>
+            <input type="text" id="stopWordsInput"
+              value="的,了,在,是,有,和,與,及,或,一個,可以,這個,那,被,我的,他的,自己,我們,他們,你們,這,到,說,看,走,去,要,很,便,又,但,只,因,為,將,把,自,由,向,從,這裏,那裏,什麼,怎麼,如何,不是,沒有,甚麼"
+              onchange="generateWordCloud()">
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-title">3. 視覺樣式與版面</div>
+        <div class="control-group">
+          <label>形狀遮罩</label>
+          <select id="shapeSelect" onchange="generateWordCloud()">
+            <option value="rect" selected>經典矩形 (Rectangle - 緊密同心矩形排版)</option>
+            <option value="circle">圓形 (Circle)</option>
+            <option value="heart">愛心形狀 (Heart)</option>
+            <option value="cloud">雲朵形狀 (Cloud)</option>
+          </select>
+        </div>
+
+        <div class="control-group" style="margin-top: 8px;">
+          <label>配色主題（含背景色搭配）</label>
+          <select id="colorPaletteSelect" onchange="onPaletteChange()">
+            <optgroup label="經典淺色系">
+              <option value="classicWhite" selected>經典皓白 (純白背景 + 寶藍天青)</option>
+              <option value="vintageParchment">典雅羊皮紙 (米黃背景 + 焦糖古木)</option>
+              <option value="zenBamboo">晨霧竹林 (淡竹綠背景 + 翡翠青綠)</option>
+              <option value="sunsetGlow">落日餘暉 (晚霞米橘背景 + 楓葉赤陽)</option>
+              <option value="lavenderDream">浪漫紫藤 (香檳粉紫背景 + 皇家幽紫)</option>
+              <option value="sakuraBlossom">粉櫻花見 (櫻花淡粉背景 + 胭脂深緋)</option>
+              <option value="latteWarm">暖調拿鐵 (奶茶杏底背景 + 濃郁焦糖)</option>
+            </optgroup>
+            <optgroup label="科技與深色系">
+              <option value="midnightTech">沉穩夜藍 (暗夜藍背景 + 霓虹亮彩)</option>
+              <option value="luxuryObsidian">極致黑金 (曜石黑背景 + 璀璨金黃)</option>
+              <option value="deepOcean">深海幽藍 (深海青黑背景 + 極光海藍)</option>
+              <option value="cyberpunkDark">墨韻玄黑 (純黑背景 + 電競極客彩)</option>
+              <option value="nordicSlate">北歐板岩 (藍灰板岩背景 + 冰川銀白)</option>
+              <option value="imperialCrimson">深宮絳紅 (朱紅深底背景 + 宮廷金玉)</option>
+            </optgroup>
+          </select>
+        </div>
+
+        <div class="control-group" style="margin-top: 6px;">
+          <div class="color-row">
+            <label for="customBgColor">自訂背景顏色：</label>
+            <input type="color" id="customBgColor" value="#ffffff" onchange="redrawCanvasWithNewBg()">
+          </div>
+          <label class="checkbox-row" style="margin-top: 4px;">
+            <input type="checkbox" id="transparentBg" onchange="redrawCanvasWithNewBg()"> 使用透明背景 (可匯出透明 PNG)
+          </label>
+        </div>
+
+        <div class="control-group" style="margin-top: 8px;">
+          <label>字體風格</label>
+          <select id="fontFamilySelect" onchange="generateWordCloud()">
+            <option value="'Noto Serif TC', serif" selected>宋體 / 明體 (Serif)</option>
+            <option value="'Noto Sans TC', sans-serif">黑體 / 無襯線 (Sans-Serif)</option>
+            <option value="cursive">手寫圓潤風格</option>
+          </select>
+        </div>
+
+        <div class="control-group" style="margin-top: 8px;">
+          <label>文字方向</label>
+          <select id="rotateRatioSelect" onchange="generateWordCloud()">
+            <option value="0" selected>全部水平 (0°)</option>
+            <option value="0.25">隨機 25% 垂直 (90°)</option>
+            <option value="0.5">水平 / 垂直 各半</option>
+          </select>
+        </div>
+
+        <!-- 關鍵字數量滑桿：擴大範圍至 10~250，並在滑動時即時更新與重新繪製 -->
+        <div class="control-group" style="margin-top: 8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <label>最大關鍵字數量</label>
+            <div>
+              <span id="maxWordsVal" style="font-weight:700; color:var(--primary);">100</span>
+              <span id="textTotalHint" style="font-size:0.75rem; color:var(--text-muted); margin-left:4px;"></span>
+            </div>
+          </div>
+          <input type="range" id="maxWordsRange" min="10" max="250" step="5" value="100"
+            oninput="onMaxWordsInput(this.value)" onchange="generateWordCloud()">
+        </div>
+
+        <!-- 最大字號大小滑桿：滑動結束自動即時重新計算與縮放 -->
+        <div class="control-group" style="margin-top: 4px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <label>最大字號大小 (px)</label>
+            <span id="maxFontSizeVal" style="font-weight:700; color:var(--primary);">64</span>
+          </div>
+          <input type="range" id="maxFontSizeRange" min="36" max="95" value="64"
+            oninput="document.getElementById('maxFontSizeVal').textContent=this.value" onchange="generateWordCloud()">
+        </div>
+      </div>
+
+      <button onclick="generateWordCloud()">⚡ 立即產生文字雲</button>
+    </div>
+
+    <!-- 中間主要畫布 -->
+    <div class="canvas-container">
+      <div class="toolbar">
+        <button class="secondary" onclick="exportPNG(1)">匯出 PNG</button>
+        <button class="secondary" onclick="exportPNG(2)">超高畫質 (2X)</button>
+        <button class="secondary" onclick="exportSVG()">匯出 SVG 向量檔</button>
+      </div>
+
+      <div class="canvas-wrapper" id="canvasWrapper">
+        <canvas id="cloudCanvas"></canvas>
+      </div>
+
+      <div class="status-bar" id="statusBar">準備就緒</div>
+    </div>
+
+    <!-- 右側詞頻抽屜 -->
+    <div class="word-drawer">
+      <div class="drawer-header" id="drawerHeader">詞頻統計清單</div>
+      <div class="word-list" id="wordListContainer"></div>
+    </div>
+  </div>
+
+  <script>
+    const SAMPLES = {
+      governance: "數位轉型與開放資料驅動智慧城市治理。透過視覺化文字雲與自然語言處理技術，分析大眾關注的公共政策、生活安全、交通運輸、環境品質、醫療照護、數位平權與文化教育。資料科學讓海量文本轉化為直觀圖表，協助研究人員與決策者掌握輿情焦點與核心脈絡。政府開放資料與民間創新應用共同推動公民參與、科技普及與永續發展。跨機關平台整合氣象水文觀測、都市防災減災、綠色能源轉型、智慧電網、地理資訊系統與無人載具監測，建立彈性敏捷的現代化治理架構。資訊安全、個人隱私保護、演算法透明度與負責任人工智慧原則，更是在科技發展過程中不容忽視的重要基石。產官學研密切攜手合作，激發更多資料驅動的創新作法與加值服務，打造宜居韌性的未來城市。",
+      ai: "人工智慧、深度學習、機器學習、自然語言處理與大型語言模型正在重塑全球科技生態。從智慧製造、精準醫療到金融風控、教育科技與自動駕駛，演算法的進步顯著提升產業生產力。然而在推動人工智慧應用時，資料隱私保護、智慧財產權、演算法透明度、安全性測試與倫理治理規範同樣至關重要。跨學科的合作與開源社群的共同投入，將引領負責任且可信任的智慧科技未來。多模態模型結合影像辨識、語音生成與程式碼合成，開啟全新的人機協同工作模式，賦能更多領域的工作者突破創意與效率極限。"
+    };
+
+    function loadSample(key) {
+      document.getElementById('textInput').value = SAMPLES[key];
+      generateWordCloud();
+    }
+
+    const THEMES = {
+      classicWhite: {
+        bg: '#ffffff',
+        words: ['#1e40af', '#0284c7', '#0f766e', '#2563eb', '#38bdf8', '#0369a1', '#d97706']
+      },
+      vintageParchment: {
+        bg: '#fef3c7',
+        words: ['#78350f', '#92400e', '#b45309', '#854d0e', '#451a03', '#a16207', '#57534e']
+      },
+      zenBamboo: {
+        bg: '#f0fdf4',
+        words: ['#15803d', '#047857', '#16a34a', '#65a30d', '#0f766e', '#059669', '#3f6212']
+      },
+      sunsetGlow: {
+        bg: '#fff7ed',
+        words: ['#c2410c', '#b91c1c', '#7c2d12', '#ea580c', '#d97706', '#991b1b', '#f97316']
+      },
+      lavenderDream: {
+        bg: '#faf5ff',
+        words: ['#6b21a8', '#9333ea', '#c026d3', '#7c3aed', '#a855f7', '#4c1d95', '#db2777']
+      },
+      sakuraBlossom: {
+        bg: '#fff1f2',
+        words: ['#be123c', '#e11d48', '#9f1239', '#fb7185', '#881337', '#f43f5e', '#d946ef']
+      },
+      latteWarm: {
+        bg: '#f5ebe0',
+        words: ['#4a3525', '#6b4f3a', '#8d5b4c', '#a06a52', '#5c4033', '#7a5230']
+      },
+      midnightTech: {
+        bg: '#0f172a',
+        words: ['#38bdf8', '#818cf8', '#34d399', '#f472b6', '#fbbf24', '#a78bfa', '#67e8f9']
+      },
+      luxuryObsidian: {
+        bg: '#18181b',
+        words: ['#fde047', '#fbbf24', '#f59e0b', '#fef08a', '#e4e4e7', '#d97706', '#fafaf9']
+      },
+      deepOcean: {
+        bg: '#082f49',
+        words: ['#7dd3fc', '#38bdf8', '#a5f3fc', '#bae6fd', '#67e8f9', '#34d399', '#f0f9ff']
+      },
+      cyberpunkDark: {
+        bg: '#000000',
+        words: ['#22c55e', '#06b6d4', '#f43f5e', '#eab308', '#a855f7', '#f97316', '#38bdf8']
+      },
+      nordicSlate: {
+        bg: '#334155',
+        words: ['#f8fafc', '#cbd5e1', '#94a3b8', '#38bdf8', '#67e8f9', '#e2e8f0', '#f1f5f9']
+      },
+      imperialCrimson: {
+        bg: '#450a0a',
+        words: ['#fef08a', '#fde047', '#fca5a5', '#fed7aa', '#ffffff', '#fbbf24', '#e2e8f0']
+      }
+    };
+
+    let placedWordsData = [];
+
+    function onPaletteChange() {
+      const selected = document.getElementById('colorPaletteSelect').value;
+      const theme = THEMES[selected];
+      if (theme) {
+        document.getElementById('customBgColor').value = theme.bg;
+        redrawCanvasWithNewBg();
+      }
+    }
+
+    function onMaxWordsInput(val) {
+      document.getElementById('maxWordsVal').textContent = val;
+    }
+
+    function redrawCanvasWithNewBg() {
+      const canvas = document.getElementById('cloudCanvas');
+      if (!canvas.width || !canvas.height) return;
+      const ctx = canvas.getContext('2d');
+      const isTransparent = document.getElementById('transparentBg').checked;
+      const bgColor = document.getElementById('customBgColor').value;
+      const wrapper = document.getElementById('canvasWrapper');
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!isTransparent) {
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        wrapper.style.backgroundColor = bgColor;
+      } else {
+        wrapper.style.backgroundColor = 'transparent';
+      }
+
+      if (placedWordsData.length > 0) {
+        placedWordsData.forEach(w => {
+          ctx.save();
+          ctx.fillStyle = w.color;
+          ctx.font = `bold ${w.fontSize}px ${w.fontFamily}`;
+          if (w.rotate) {
+            ctx.translate(w.cx, w.cy);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText(w.text, -w.textW / 2, w.fontSize / 3);
+          } else {
+            ctx.fillText(w.text, w.x, w.y);
+          }
+          ctx.restore();
+        });
+      }
+    }
+
+    function tokenizeText(text) {
+      const segmenter = new Intl.Segmenter('zh-TW', { granularity: 'word' });
+      return Array.from(segmenter.segment(text)).map(s => s.segment.trim()).filter(Boolean);
+    }
+
+    function getSpiralOffset(angle, radius, shape, aspect) {
+      if (shape === 'rect') {
+        const cosA = Math.abs(Math.cos(angle)) + 1e-6;
+        const sinA = Math.abs(Math.sin(angle)) + 1e-6;
+        const scale = Math.min(aspect / cosA, 1.0 / sinA);
+        return {
+          x: radius * scale * Math.cos(angle),
+          y: radius * scale * Math.sin(angle)
+        };
+      } else if (shape === 'circle') {
+        return {
+          x: radius * Math.cos(angle),
+          y: radius * Math.sin(angle)
+        };
+      } else {
+        return {
+          x: radius * Math.cos(angle) * (aspect * 0.85),
+          y: radius * Math.sin(angle)
+        };
+      }
+    }
+
+    function isInsideShape(shape, nx, ny) {
+      if (shape === 'rect') {
+        return Math.abs(nx) <= 0.98 && Math.abs(ny) <= 0.98;
+      }
+      if (shape === 'circle') {
+        return (nx * nx + ny * ny) <= 0.94;
+      }
+      if (shape === 'heart') {
+        let x = nx * 1.3;
+        let y = -ny * 1.3 + 0.35;
+        return Math.pow(x * x + y * y - 1, 3) - x * x * y * y * y <= 0;
+      }
+      if (shape === 'cloud') {
+        const inC1 = (nx * nx + (ny + 0.1) * (ny + 0.1)) <= 0.45;
+        const inC2 = ((nx - 0.42) * (nx - 0.42) + (ny - 0.05) * (ny - 0.05)) <= 0.35;
+        const inC3 = ((nx + 0.42) * (nx + 0.42) + (ny - 0.05) * (ny - 0.05)) <= 0.35;
+        const inBase = Math.abs(nx) <= 0.75 && ny >= -0.2 && ny <= 0.36;
+        return inC1 || inC2 || inC3 || inBase;
+      }
+      return true;
+    }
+
+    // 核心修正：確實依據 maxWords 進行切片，並即時反應文本實際可用詞數上限
+    function generateWordCloud() {
+      const text = document.getElementById('textInput').value;
+      if (!text.trim()) {
+        alert('請先輸入文字內容！');
+        return;
+      }
+
+      document.getElementById('statusBar').textContent = '斷詞與詞頻過濾中...';
+
+      const removeEnglish = document.getElementById('removeEnglish').checked;
+      const removeNumbers = document.getElementById('removeNumbers').checked;
+      const filterSingleChar = document.getElementById('filterSingleChar').checked;
+      const stopWords = new Set(document.getElementById('stopWordsInput').value.split(',').map(s => s.trim()).filter(Boolean));
+      const maxWords = parseInt(document.getElementById('maxWordsRange').value, 10);
+      const userMaxFontSize = parseInt(document.getElementById('maxFontSizeRange').value, 10);
+
+      const tokens = tokenizeText(text);
+      const freqMap = {};
+
+      for (let word of tokens) {
+        if (/^[\p{P}\p{S}\s]+$/u.test(word)) continue;
+        if (stopWords.has(word)) continue;
+        if (removeEnglish && /^[a-zA-Z]+$/.test(word)) continue;
+        if (removeNumbers && /^[\d０-９]+$/.test(word)) continue;
+        if (filterSingleChar && word.length <= 1) continue;
+
+        freqMap[word] = (freqMap[word] || 0) + 1;
+      }
+
+      // 取得過濾後的完整詞彙表
+      const allSortedWords = Object.entries(freqMap)
+        .map(([text, count]) => ({ text, count }))
+        .sort((a, b) => b.count - a.count);
+
+      const totalUniqueWords = allSortedWords.length;
+
+      if (totalUniqueWords === 0) {
+        alert('過濾後無可用詞彙，請調整過濾條件！');
+        document.getElementById('statusBar').textContent = '無可用詞彙';
+        return;
+      }
+
+      // 確實依照最大關鍵字數量限制進行取樣
+      const targetWords = allSortedWords.slice(0, maxWords);
+
+      // 更新介面上的詞數提示 (清楚告知使用者：當前取用詞數 vs 文本實際總詞數)
+      const hintElem = document.getElementById('textTotalHint');
+      hintElem.textContent = `(文本有效總詞數: ${totalUniqueWords})`;
+
+      renderWordList(targetWords, totalUniqueWords);
+      renderCanvasCloud(targetWords, userMaxFontSize, totalUniqueWords, maxWords);
+    }
+
+    function renderWordList(words, totalUnique) {
+      const container = document.getElementById('wordListContainer');
+      const header = document.getElementById('drawerHeader');
+      header.textContent = `詞頻清單 (顯示 ${words.length} / 共 ${totalUnique} 詞)`;
+      container.innerHTML = '';
+      words.forEach(({ text, count }) => {
+        const item = document.createElement('div');
+        item.className = 'word-item';
+        item.innerHTML = `<span>${text}</span><span class="word-count">${count}</span>`;
+        container.appendChild(item);
+      });
+    }
+
+    function renderCanvasCloud(words, userMaxFontSize, totalUnique, userMaxWordsLimit) {
+      const canvas = document.getElementById('cloudCanvas');
+      const baseW = 800;
+      const baseH = 550;
+      const aspect = baseW / baseH;
+
+      const shape = document.getElementById('shapeSelect').value;
+      const selectedThemeKey = document.getElementById('colorPaletteSelect').value;
+      const theme = THEMES[selectedThemeKey] || THEMES.classicWhite;
+      const isTransparent = document.getElementById('transparentBg').checked;
+      const bgColor = document.getElementById('customBgColor').value;
+      const fontFamily = document.getElementById('fontFamilySelect').value;
+      const rotateRatio = parseFloat(document.getElementById('rotateRatioSelect').value);
+
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = baseW;
+      tempCanvas.height = baseH;
+      const tCtx = tempCanvas.getContext('2d');
+
+      const tempPlaced = [];
+      const placedBoxes = [];
+
+      const maxCount = words[0].count;
+      const minCount = words[words.length - 1].count;
+      const maxFontSize = userMaxFontSize || 64;
+      const minFontSize = 13;
+
+      document.getElementById('statusBar').textContent = '排版配置運算中...';
+
+      const centerX = baseW / 2;
+      const centerY = baseH / 2;
+
+      // 1. 執行螺旋搜尋與碰撞配置
+      words.forEach((item, idx) => {
+        const scale = maxCount === minCount ? 1 : Math.log(item.count - minCount + 1) / Math.log(maxCount - minCount + 1);
+        const fontSize = Math.floor(minFontSize + scale * (maxFontSize - minFontSize));
+        const rotate = Math.random() < rotateRatio;
+        const color = theme.words[idx % theme.words.length];
+
+        tCtx.font = `bold ${fontSize}px ${fontFamily}`;
+        const metrics = tCtx.measureText(item.text);
+        const textW = metrics.width + 4;
+        const textH = fontSize * 1.1;
+
+        const boxW = rotate ? textH : textW;
+        const boxH = rotate ? textW : textH;
+
+        let angle = (Math.PI * 2 * (idx * 0.6180339887)) % (Math.PI * 2);
+        let radius = 0;
+        const stepAngle = 0.22;
+        const stepRadius = shape === 'rect' ? 0.9 : 1.2;
+
+        for (let step = 0; step < 2600; step++) {
+          const offset = getSpiralOffset(angle, radius, shape, aspect);
+          const testX = centerX + offset.x - boxW / 2;
+          const testY = centerY + offset.y - boxH / 2;
+
+          if (testX < 4 || testY < 4 || testX + boxW > baseW - 4 || testY + boxH > baseH - 4) {
+            angle += stepAngle;
+            radius += stepRadius * 0.12;
+            continue;
+          }
+
+          const normX = ((testX + boxW / 2) - centerX) / (baseW / 2);
+          const normY = ((testY + boxH / 2) - centerY) / (baseH / 2);
+          if (!isInsideShape(shape, normX, normY)) {
+            angle += stepAngle;
+            radius += stepRadius * 0.12;
+            continue;
+          }
+
+          let collision = false;
+          for (let b of placedBoxes) {
+            if (testX < b.x + b.w && testX + boxW > b.x &&
+              testY < b.y + b.h && testY + boxH > b.y) {
+              collision = true;
+              break;
+            }
+          }
+
+          if (!collision) {
+            placedBoxes.push({ x: testX, y: testY, w: boxW, h: boxH });
+            tempPlaced.push({
+              text: item.text,
+              fontSize,
+              fontFamily,
+              color,
+              rotate,
+              textW,
+              boxW,
+              boxH,
+              cx: testX + boxW / 2,
+              cy: testY + boxH / 2,
+              left: testX,
+              right: testX + boxW,
+              top: testY,
+              bottom: testY + boxH
+            });
+            break;
+          }
+
+          angle += stepAngle;
+          radius += stepRadius * 0.12;
+        }
+      });
+
+      if (tempPlaced.length === 0) {
+        document.getElementById('statusBar').textContent = '未能成功放置詞彙';
+        return;
+      }
+
+      // 2. 計算極小外接邊界，縮減四邊多餘空間
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      tempPlaced.forEach(w => {
+        if (w.left < minX) minX = w.left;
+        if (w.right > maxX) maxX = w.right;
+        if (w.top < minY) minY = w.top;
+        if (w.bottom > maxY) maxY = w.bottom;
+      });
+
+      const contentW = maxX - minX;
+      const contentH = maxY - minY;
+      const padding = 16;
+
+      const zoom = Math.min(820 / contentW, 580 / contentH, 1.8);
+      const scaledContentW = contentW * zoom;
+      const scaledContentH = contentH * zoom;
+
+      canvas.width = Math.round(scaledContentW + padding * 2);
+      canvas.height = Math.round(scaledContentH + padding * 2);
+
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const wrapper = document.getElementById('canvasWrapper');
+      if (!isTransparent) {
+        ctx.fillStyle = bgColor;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        wrapper.style.backgroundColor = bgColor;
+      } else {
+        wrapper.style.backgroundColor = 'transparent';
+      }
+
+      // 3. 座標平移與重映射
+      placedWordsData = tempPlaced.map(w => {
+        const scaledFont = w.fontSize * zoom;
+        const scaledTextW = w.textW * zoom;
+        const scaledBoxW = w.boxW * zoom;
+        const scaledBoxH = w.boxH * zoom;
+
+        const newCx = padding + (w.cx - minX) * zoom;
+        const newCy = padding + (w.cy - minY) * zoom;
+        const newX = newCx - scaledBoxW / 2 + 2 * zoom;
+        const newY = newCy - scaledBoxH / 2 + scaledFont;
+
+        return {
+          text: w.text,
+          fontSize: scaledFont,
+          fontFamily: w.fontFamily,
+          color: w.color,
+          rotate: w.rotate,
+          textW: scaledTextW,
+          boxW: scaledBoxW,
+          boxH: scaledBoxH,
+          cx: newCx,
+          cy: newCy,
+          x: newX,
+          y: newY
+        };
+      });
+
+      // 4. 繪製緊湊主體
+      placedWordsData.forEach(w => {
+        ctx.save();
+        ctx.fillStyle = w.color;
+        ctx.font = `bold ${w.fontSize}px ${w.fontFamily}`;
+        if (w.rotate) {
+          ctx.translate(w.cx, w.cy);
+          ctx.rotate(-Math.PI / 2);
+          ctx.fillText(w.text, -w.textW / 2, w.fontSize / 3);
+        } else {
+          ctx.fillText(w.text, w.x, w.y);
+        }
+        ctx.restore();
+      });
+
+      const limitNote = totalUnique <= userMaxWordsLimit ? `已達文本全部上限 ${totalUnique} 詞` : `選取前 ${words.length} 詞（上限 ${userMaxWordsLimit}）`;
+      document.getElementById('statusBar').textContent = `繪製完成！成功排入 ${placedWordsData.length} 個關鍵詞彙 (${limitNote})`;
+    }
+
+    // 匯出 PNG (1X / 2X 超高畫質)
+    function exportPNG(scaleFactor = 1) {
+      if (placedWordsData.length === 0) return alert('請先產生文字雲！');
+
+      const srcCanvas = document.getElementById('cloudCanvas');
+      const isTransparent = document.getElementById('transparentBg').checked;
+      const bgColor = document.getElementById('customBgColor').value;
+
+      const outCanvas = document.createElement('canvas');
+      outCanvas.width = srcCanvas.width * scaleFactor;
+      outCanvas.height = srcCanvas.height * scaleFactor;
+      const outCtx = outCanvas.getContext('2d');
+
+      if (!isTransparent) {
+        outCtx.fillStyle = bgColor;
+        outCtx.fillRect(0, 0, outCanvas.width, outCanvas.height);
+      }
+      outCtx.scale(scaleFactor, scaleFactor);
+      outCtx.drawImage(srcCanvas, 0, 0);
+
+      const link = document.createElement('a');
+      link.download = `wordcloud-${scaleFactor}x.png`;
+      link.href = outCanvas.toDataURL('image/png');
+      link.click();
+    }
+
+    // 匯出 SVG 向量圖
+    function exportSVG() {
+      if (placedWordsData.length === 0) return alert('請先產生文字雲！');
+
+      const canvas = document.getElementById('cloudCanvas');
+      const width = canvas.width;
+      const height = canvas.height;
+      const isTransparent = document.getElementById('transparentBg').checked;
+      const bgColor = document.getElementById('customBgColor').value;
+
+      let svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">\n`;
+      if (!isTransparent) {
+        svg += `  <rect width="100%" height="100%" fill="${bgColor}"/>\n`;
+      }
+
+      placedWordsData.forEach(w => {
+        if (w.rotate) {
+          svg += `  <text x="${w.cx.toFixed(1)}" y="${w.cy.toFixed(1)}" font-family="${w.fontFamily}" font-size="${w.fontSize.toFixed(1)}" font-weight="bold" fill="${w.color}" text-anchor="middle" dominant-baseline="central" transform="rotate(-90 ${w.cx.toFixed(1)} ${w.cy.toFixed(1)})">${w.text}</text>\n`;
+        } else {
+          svg += `  <text x="${w.x.toFixed(1)}" y="${w.y.toFixed(1)}" font-family="${w.fontFamily}" font-size="${w.fontSize.toFixed(1)}" font-weight="bold" fill="${w.color}">${w.text}</text>\n`;
+        }
+      });
+      svg += `</svg>`;
+
+      const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+      const link = document.createElement('a');
+      link.download = 'wordcloud.svg';
+      link.href = URL.createObjectURL(blob);
+      link.click();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      onPaletteChange();
+      generateWordCloud();
+    });
+  </script>
+</body>
+
+</html>

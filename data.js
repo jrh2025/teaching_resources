@@ -365,6 +365,16 @@ window.APP_DATA = {
       "icon": "BookOpen",
       "color": "green",
       "grade": "備課"
+    },
+    {
+      "id": "item_1790828490855",
+      "title": "文字雲產生器 WordCloud Studio",
+      "category": "小程式",
+      "description": "WordCloud Studio 提供直覺且完整的客製化功能，適合使用於進行文本分析或視覺化簡報時，快速提煉關鍵資訊。提供彈性的文本前處理、豐富的視覺樣式、多元的匯出格式",
+      "link": "WordCloudStudio.html",
+      "icon": "Cloud",
+      "color": "orange",
+      "grade": "小程式"
     }
   ]
 };
