@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Google Apps Script (GAS) 完整部署指引手冊 - 臺南市合理管教全攻略線上系統</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome 圖示庫 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap');
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- 頂部導航列 -->
+  <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50 border-b border-slate-800">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="p-2 bg-amber-500 rounded-xl text-white shadow-md">
+          <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+        </span>
+        <div>
+          <h1 class="text-base sm:text-lg font-bold tracking-tight">GAS 完整部署指南手冊</h1>
+          <p class="text-[11px] text-slate-400">臺南市國民中小學教師支持暨合理管教全攻略手冊 線上系統</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2 text-xs">
+        <a 
+          href="https://script.google.com/macros/s/AKfycbyZxrUHpnpcvCrnfRnJnhKZnSEWAHiZaKdr-YqlxuJ1YzWGNofutr0AhvmwD5Ulk_zo0w/exec" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="inline-flex items-center px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-lg shadow transition"
+        >
+          <i class="fa-solid fa-arrow-up-right-from-square mr-1.5"></i>
+          線上測試系統
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 頂部 Hero 橫幅 -->
+  <section class="bg-gradient-to-br from-slate-900 via-slate-800 to-amber-950 text-white py-12 px-4 sm:px-6 lg:px-8 border-b border-amber-900/30">
+    <div class="max-w-4xl mx-auto text-center space-y-4">
+      <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-semibold">
+        <i class="fa-solid fa-code"></i>
+        <span>圖文級逐步引導 ｜ 零基礎輕鬆上手 ｜ 100% 部署成功</span>
+      </div>
+      <h2 class="text-2xl sm:text-4xl font-extrabold tracking-tight">
+        Google Apps Script (GAS) 網頁應用程式<br>
+        <span class="text-amber-400">完整逐步部署與發布教學手冊</span>
+      </h2>
+      <p class="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto leading-relaxed">
+        本手冊帶領您將本專案的程式碼完整部署至 Google 雲端平台，生成專屬於學校與教師的專用線上諮詢網頁，完全無需自備伺服器與資料庫。
+      </p>
+
+      <!-- 快速連結按鈕 -->
+      <div class="pt-4 flex flex-wrap justify-center gap-3 text-xs sm:text-sm">
+        <a 
+          href="https://script.google.com/" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition inline-flex items-center"
+        >
+          <i class="fa-brands fa-google mr-2"></i> 前往 Google Apps Script 首頁 ➔
+        </a>
+        <a 
+          href="https://script.google.com/macros/s/AKfycbyZxrUHpnpcvCrnfRnJnhKZnSEWAHiZaKdr-YqlxuJ1YzWGNofutr0AhvmwD5Ulk_zo0w/exec" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold rounded-xl shadow-md transition inline-flex items-center"
+        >
+          <i class="fa-solid fa-rocket mr-2"></i> 查看已發布之實體測試範例 ➔
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 主內容區塊 -->
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow space-y-10">
+
+    <!-- 0. 專案所需檔案清單檢查 -->
+    <section class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+      <div class="flex items-center space-x-3 text-slate-900 font-bold text-lg border-b border-slate-100 pb-3">
+        <span class="p-2 bg-slate-100 text-slate-700 rounded-xl"><i class="fa-solid fa-folder-tree"></i></span>
+        <h3>前置準備：專案核心檔案清單</h3>
+      </div>
+      <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+        在開始部署前，請確認本專案目錄下已具備以下四大關鍵程式檔案：
+      </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+        <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 space-y-1">
+          <div class="font-bold text-slate-900 flex items-center">
+            <i class="fa-solid fa-gear text-amber-500 mr-2"></i> 1. appsscript.json
+          </div>
+          <p class="text-slate-600">專案設定檔，負責定義台北時區 (Asia/Taipei) 與 Google Drive / DocumentApp 的合法存取權限範圍。</p>
+        </div>
+
+        <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 space-y-1">
+          <div class="font-bold text-slate-900 flex items-center">
+            <i class="fa-solid fa-database text-blue-500 mr-2"></i> 2. HandbookData.gs
+          </div>
+          <p class="text-slate-600">手冊官方出廠資料庫，收錄 8 大類 20 個完整案例 SOP、話術金句、陳情調和與三大支持系統。</p>
+        </div>
+
+        <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 space-y-1">
+          <div class="font-bold text-slate-900 flex items-center">
+            <i class="fa-solid fa-code text-emerald-500 mr-2"></i> 3. Code.gs
+          </div>
+          <p class="text-slate-600">後端主程式，處理 Web App 網頁派送、精準檢索引擎、Gemini 模型整合、管理員修訂存檔與 Google 文件生成。</p>
+        </div>
+
+        <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 space-y-1">
+          <div class="font-bold text-slate-900 flex items-center">
+            <i class="fa-solid fa-window-maximize text-indigo-500 mr-2"></i> 4. Index.html
+          </div>
+          <p class="text-slate-600">前端 RWD 響應式網頁介面，支援手機與電腦查閱、管理員中心 Modal、自訂模型與 API Key 記憶。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 步驟 1：建立專案 -->
+    <section class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+      <div class="flex items-center space-x-3 text-slate-900 font-bold text-lg border-b border-slate-100 pb-3">
+        <span class="w-8 h-8 rounded-xl bg-amber-500 text-slate-900 font-extrabold flex items-center justify-center text-sm">1</span>
+        <h3>步驟一：登入 Google 並建立全新 Apps Script 專案</h3>
+      </div>
+      <div class="space-y-3 text-xs sm:text-sm text-slate-700 leading-relaxed">
+        <p>1. 開啟瀏覽器，前往 <a href="https://script.google.com/" target="_blank" class="text-blue-600 underline font-semibold">Google Apps Script 官方首頁 (script.google.com)</a>。</p>
+        <p>2. 登入您的 Google 帳戶（個人 Gmail 帳號或學校 Google Workspace 教育版帳號皆可）。</p>
+        <p>3. 點選畫面左上角的 <strong>「＋ 新專案」</strong>（New project）藍色按鈕。</p>
+        <p>4. 進入編輯器後，點擊左上角的「未命名專案」，修改專案名稱為：<code class="bg-slate-100 px-2 py-0.5 rounded text-amber-700 font-bold">臺南市合理管教全攻略手冊查詢系統</code>，然後按下「重新命名」。</p>
+      </div>
+    </section>
+
+    <!-- 步驟 2：設定 appsscript.json -->
+    <section class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+      <div class="flex items-center space-x-3 text-slate-900 font-bold text-lg border-b border-slate-100 pb-3">
+        <span class="w-8 h-8 rounded-xl bg-amber-500 text-slate-900 font-extrabold flex items-center justify-center text-sm">2</span>
+        <h3>步驟二：設定專案資訊清單 (appsscript.json)</h3>
+      </div>
+      <div class="space-y-3 text-xs sm:text-sm text-slate-700 leading-relaxed">
+        <p>此設定檔用以授權建立 Google 文件及讀寫雲端硬碟自訂資料庫：</p>
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+          <p><strong>操作流程：</strong></p>
+          <ol class="list-decimal list-inside space-y-1.5 text-xs text-slate-600">
+            <li>點擊左側導航欄最下方的 <strong>「專案設定」</strong>（齒輪圖示 ⚙️）。</li>
+            <li>在「一般設定」區塊中，勾選 <strong>「在編輯器中顯示『appsscript.json』資訊清單檔案」</strong>。</li>
+            <li>點選左側最上方的 <strong>「編輯器」</strong>（<code>&lt;&gt;</code> 圖示）返回檔案列表。</li>
+            <li>此時左側檔案清單中會出現 <code class="text-blue-600 font-mono font-bold">appsscript.json</code>，點擊開啟它。</li>
+            <li>將原本內容完全刪除，覆蓋貼上以下 JSON 內容並按 <code>Ctrl + S</code> 儲存：</li>
+          </ol>
+        </div>
+
+        <!-- 代碼區塊 -->
+        <div class="relative">
+          <pre class="bg-slate-900 text-slate-100 p-4 rounded-xl text-xs font-mono overflow-x-auto leading-relaxed"><code>{
+  "timeZone": "Asia/Taipei",
+  "dependencies": {},
+  "exceptionLogging": "STACKDRIVER",
+  "runtimeVersion": "V8",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/documents",
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/script.external_request"
+  ]
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 步驟 3：建立並貼上程式檔案 -->
+    <section class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+      <div class="flex items-center space-x-3 text-slate-900 font-bold text-lg border-b border-slate-100 pb-3">
+        <span class="w-8 h-8 rounded-xl bg-amber-500 text-slate-900 font-extrabold flex items-center justify-center text-sm">3</span>
+        <h3>步驟三：建立並依序貼上三大核心程式檔案</h3>
+      </div>
+
+      <!-- 提示重要注意點 -->
+      <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl text-xs text-amber-900 space-y-1">
+        <p class="font-bold flex items-center">
+          <i class="fa-solid fa-triangle-exclamation mr-1.5 text-amber-600"></i> 【複製代碼防呆提醒】
+        </p>
+        <p class="leading-relaxed">
+          複製各檔案內容時，請直接點擊代碼檔案右上角複製，或在檔案內使用 <code>Ctrl + A</code> 全選後 <code>Ctrl + C</code> 複製，避免滑鼠手動框選時漏掉結尾的大括號 <code>}</code>，以防出現 <code>SyntaxError: Unexpected end of input</code> 錯誤。
+        </p>
+      </div>
+
+      <!-- 檔案 1: HandbookData.gs -->
+      <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-2">
+        <h4 class="font-bold text-sm text-slate-900 flex items-center">
+          <span class="px-2 py-0.5 rounded bg-blue-100 text-blue-800 text-xs mr-2 font-mono">1</span>
+          建立 <code>HandbookData.gs</code> (資料庫模組)
+        </h4>
+        <ol class="list-decimal list-inside text-xs text-slate-600 space-y-1">
+          <li>點選左側「檔案」旁邊的 <strong>「＋」</strong> 按鈕，選擇 <strong>「指令碼」</strong> (Script)。</li>
+          <li>將檔案名稱命名為：<code class="font-bold text-slate-800">HandbookData</code>（系統會自動加上 <code>.gs</code>）。</li>
+          <li>將您本機資料夾中的 <code>HandbookData.gs</code> 全部內容複製貼入編輯器中，按 <code>Ctrl + S</code> 儲存。</li>
+        </ol>
+      </div>
+
+      <!-- 檔案 2: Code.gs -->
+      <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-2">
+        <h4 class="font-bold text-sm text-slate-900 flex items-center">
+          <span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-xs mr-2 font-mono">2</span>
+          貼上 <code>Code.gs</code> (後端服務邏輯)
+        </h4>
+        <ol class="list-decimal list-inside text-xs text-slate-600 space-y-1">
+          <li>點選左側原本預設的 <strong>「程式碼.gs」</strong>（亦可右鍵重新命名為 <code>Code</code>）。</li>
+          <li>將編輯器內的預設程式碼全部刪除清空。</li>
+          <li>將您本機資料夾中的 <code>Code.gs</code> 全部內容複製貼入，按 <code>Ctrl + S</code> 儲存。</li>
+        </ol>
+      </div>
+
+      <!-- 檔案 3: Index.html -->
+      <div class="p-4 rounded-2xl border border-slate-200 bg-slate-50 space-y-2">
+        <h4 class="font-bold text-sm text-slate-900 flex items-center">
+          <span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 text-xs mr-2 font-mono">3</span>
+          建立 <code>Index.html</code> (前端網頁介面)
+        </h4>
+        <ol class="list-decimal list-inside text-xs text-slate-600 space-y-1">
+          <li>點選左側「檔案」旁邊的 <strong>「＋」</strong> 按鈕，選擇 <strong>「HTML」</strong>。</li>
+          <li>將檔案名稱命名為：<code class="font-bold text-slate-800">Index</code>（系統會自動加上 <code>.html</code>）。</li>
+          <li>將編輯器內的預設內容全部清空。</li>
+          <li>將您本機資料夾中的 <code>Index.html</code> 全部內容複製貼入，按 <code>Ctrl + S</code> 儲存。</li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 步驟 4：進行初次部署 -->
+    <section class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+      <div class="flex items-center space-x-3 text-slate-900 font-bold text-lg border-b border-slate-100 pb-3">
+        <span class="w-8 h-8 rounded-xl bg-amber-500 text-slate-900 font-extrabold flex items-center justify-center text-sm">4</span>
+        <h3>步驟四：新增網頁應用程式 (Web App) 部署作業</h3>
+      </div>
+      <div class="space-y-3 text-xs sm:text-sm text-slate-700 leading-relaxed">
+        <p>1. 點擊編輯器右上角大大的藍色按鈕 <strong>「部署」</strong> ➔ 點選 <strong>「新增部署作業」</strong>。</p>
+        <p>2. 在彈出的部署面板中，點選左上角的 <strong>「選取類型」</strong>（齒輪圖示 ⚙️）➔ 選擇 <strong>「網頁應用程式」</strong> (Web App)。</p>
+        
+        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+          <p class="font-bold text-slate-900">3. 部署參數設定（非常關鍵，請務必依下方填寫）：</p>
+          <ul class="space-y-2 text-xs text-slate-700 list-disc list-inside">
+            <li>
+              <strong>說明</strong>：輸入 <code class="bg-white px-2 py-0.5 rounded border border-slate-200 font-mono">教師合理管教全攻略查詢系統 v1.0</code>
+            </li>
+            <li>
+              <strong>執行身分</strong>：請選擇 <strong class="text-blue-700">「我 (您的電子郵件)」</strong><br>
+              <span class="text-slate-500 text-[11px] pl-4">（這樣系統存取自訂資料庫與產生 Google 文件時，均由您的後端代理執行，老師不需各別設定資料夾權限）。</span>
+            </li>
+            <li>
+              <strong>誰可以存取</strong>：務必選擇 <strong class="text-red-700">「所有人」 (Anyone)</strong><br>
+              <span class="text-slate-500 text-[11px] pl-4">（若未選所有人，其他老師打開網址會跳出「需要存取權」或 403 錯誤而無法使用）。</span>
+            </li>
+          </ul>
+        </div>
+
+        <p>4. 點擊面板右下角的 <strong>「部署」</strong> 按鈕。</p>
+      </div>
+    </section>
+
+    <!-- 步驟 5：Google 權限授權警示排除 -->
+    <section class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+      <div class="flex items-center space-x-3 text-slate-900 font-bold text-lg border-b border-slate-100 pb-3">
+        <span class="w-8 h-8 rounded-xl bg-amber-500 text-slate-900 font-extrabold flex items-center justify-center text-sm">5</span>
+        <h3>步驟五：完成 Google 帳號授權（通關「不安全」警示畫面）</h3>
+      </div>
+      <div class="space-y-3 text-xs sm:text-sm text-slate-700 leading-relaxed">
+        <p>初次部署時，Google 會要求授權應用程式存取您的 Google 雲端硬碟以儲存資料庫及生成文件：</p>
+
+        <div class="space-y-3 text-xs text-slate-700">
+          <div class="flex items-start space-x-2">
+            <span class="font-bold text-amber-600">①</span>
+            <div>彈出「需要授權」視窗，點選 <strong>「審查權限」</strong> (Review permissions)。</div>
+          </div>
+          <div class="flex items-start space-x-2">
+            <span class="font-bold text-amber-600">②</span>
+            <div>選擇您的 Google 帳戶登入。</div>
+          </div>
+          <div class="flex items-start space-x-2">
+            <span class="font-bold text-amber-600">③</span>
+            <div>
+              <strong>出現「Google 尚未驗證這個應用程式」警示畫面（正常現象）：</strong><br>
+              點選左下方不起眼的淡灰色小字 <strong>「進階」 (Advanced)</strong> 展開說明。
+            </div>
+          </div>
+          <div class="flex items-start space-x-2">
+            <span class="font-bold text-amber-600">④</span>
+            <div>
+              點選最下方出現的連結：<br>
+              <code class="text-red-700 font-bold underline">前往『臺南市合理管教全攻略手冊查詢系統』(不安全)</code>。
+            </div>
+          </div>
+          <div class="flex items-start space-x-2">
+            <span class="font-bold text-amber-600">⑤</span>
+            <div>
+              檢視所要求的權限（查看、編輯 Google 文件與雲端硬碟檔案），點選右下方藍色的 <strong>「允許」</strong> (Allow)。
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 步驟 6：取得正式網址 -->
+    <section class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+      <div class="flex items-center space-x-3 text-slate-900 font-bold text-lg border-b border-slate-100 pb-3">
+        <span class="w-8 h-8 rounded-xl bg-amber-500 text-slate-900 font-extrabold flex items-center justify-center text-sm">6</span>
+        <h3>步驟六：取得正式網頁應用程式網址並發布</h3>
+      </div>
+      <div class="space-y-3 text-xs sm:text-sm text-slate-700 leading-relaxed">
+        <p>1. 完成授權後，畫面會顯示「部署作業已成功更新」。</p>
+        <p>2. 找到 <strong>「網頁應用程式」</strong> 底下的 <strong>「網址」</strong>，點擊右邊的「複製」按鈕。</p>
+        
+        <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl space-y-2 text-xs text-emerald-950">
+          <p class="font-bold flex items-center">
+            <i class="fa-solid fa-link mr-1.5 text-emerald-600"></i> 正式網址格式範例：
+          </p>
+          <code class="block p-2 bg-white rounded border border-emerald-300 font-mono text-[11px] break-all">https://script.google.com/macros/s/AKfycby.../exec</code>
+          <p class="text-[11px] text-emerald-800">
+            請將這段網址加入瀏覽器書籤、發布至學校校園首頁、群組公告，或轉成 QR Code 張貼於各學年辦公室，供全校教師隨時利用手機或電腦掃描查閱！
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 步驟 7：未來更新程式碼時的關鍵步驟 -->
+    <section class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+      <div class="flex items-center space-x-3 text-slate-900 font-bold text-lg border-b border-slate-100 pb-3">
+        <span class="w-8 h-8 rounded-xl bg-blue-600 text-white font-extrabold flex items-center justify-center text-sm">7</span>
+        <h3>重要須知：未來修改程式碼後的「版本更新」發布流程</h3>
+      </div>
+      <div class="space-y-3 text-xs sm:text-sm text-slate-700 leading-relaxed">
+        <div class="bg-rose-50 border border-rose-200 p-4 rounded-xl text-xs text-rose-900 space-y-1">
+          <strong class="font-bold flex items-center">
+            <i class="fa-solid fa-bell mr-1.5 text-rose-600"></i> 【90% 使用者常犯錯誤】：
+          </strong>
+          <p>
+            在 GAS 編輯器中修改完程式碼並存檔後，外部網頁<strong>不會自動更新</strong>！若直接重新整理網頁應用程式，仍然會讀取舊版代碼。您必須執行以下 4 個小動作發布「新版本」：
+          </p>
+        </div>
+
+        <ol class="list-decimal list-inside space-y-2 text-xs text-slate-700 p-4 bg-slate-50 rounded-xl border border-slate-200">
+          <li>點擊編輯器右上角的 <strong>「部署」</strong> 按鈕 ➔ 選擇 <strong>「管理部署作業」</strong>。</li>
+          <li>在左側選中目前生效的網頁應用程式，點擊右上角的 <strong>「鉛筆圖示」</strong>（編輯）。</li>
+          <li>在「版本」下拉選單中，點選 <strong>「建立新版本」</strong> (New version)。</li>
+          <li>點擊右下角藍色的 <strong>「部署」</strong> 按鈕完成更新。</li>
+        </ol>
+        <p class="text-xs text-slate-500">
+          * 採用此標準方式更新時，<strong>網頁的 URL 連結網址完全不會改變</strong>，老師使用的書籤與 QR Code 依然持續有效！
+        </p>
+      </div>
+    </section>
+
+    <!-- 步驟 8：常見錯誤排解 -->
+    <section class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+      <div class="flex items-center space-x-3 text-slate-900 font-bold text-lg border-b border-slate-100 pb-3">
+        <span class="w-8 h-8 rounded-xl bg-purple-600 text-white font-extrabold flex items-center justify-center text-sm">8</span>
+        <h3>常見問題與疑難故障排解 (Troubleshooting)</h3>
+      </div>
+      
+      <div class="space-y-3 text-xs sm:text-sm">
+        <div class="p-4 border border-slate-200 rounded-2xl bg-white space-y-1">
+          <h5 class="font-bold text-slate-900 text-xs sm:text-sm">
+            Q1：其他人點開網址出現「抱歉，目前無法開啟這個檔案」或要求登入？
+          </h5>
+          <p class="text-slate-600 text-xs leading-relaxed">
+            <strong>原因：</strong>部署時「誰可以存取」未設定為「所有人」。<br>
+            <strong>解法：</strong>點選「部署」➔「管理部署作業」➔ 編輯 ➔ 將「誰可以存取」改為「所有人」➔ 建立新版本 ➔ 重新部署。
+          </p>
+        </div>
+
+        <div class="p-4 border border-slate-200 rounded-2xl bg-white space-y-1">
+          <h5 class="font-bold text-slate-900 text-xs sm:text-sm">
+            Q2：儲存 Code.gs 時出現「SyntaxError: Unexpected end of input」？
+          </h5>
+          <p class="text-slate-600 text-xs leading-relaxed">
+            <strong>原因：</strong>複製代碼時中斷，漏掉了最後面的大括號 <code>}</code>。<br>
+            <strong>解法：</strong>請直接在本機以文字編輯器打開 <code>Code.gs</code>，按下 <code>Ctrl + A</code> 全選後複製貼上覆蓋。
+          </p>
+        </div>
+
+        <div class="p-4 border border-slate-200 rounded-2xl bg-white space-y-1">
+          <h5 class="font-bold text-slate-900 text-xs sm:text-sm">
+            Q3：點擊「在雲端建立 .gdoc」按鈕時提示錯誤或權限不足？
+          </h5>
+          <p class="text-slate-600 text-xs leading-relaxed">
+            <strong>原因：</strong>未正確更新 <code>appsscript.json</code> 或未給予 Google Docs / Drive 權限。<br>
+            <strong>解法：</strong>請回到「步驟二」確認 <code>appsscript.json</code> 內容完全貼妥，並在編輯器中執行一次 <code>doGet</code> 觸發重新授權。
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 頁尾 -->
+  <footer class="bg-slate-900 text-slate-400 py-8 px-4 sm:px-6 lg:px-8 text-xs border-t border-slate-800 mt-12">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+      <div>
+        <p class="font-semibold text-slate-200">臺南市國民中小學教師支持暨合理管教全攻略手冊 線上系統</p>
+        <p class="mt-1">發行機關：臺南市政府教育局 ｜ 部署技術：Google Apps Script (GAS) Web App</p>
+      </div>
+      <div class="text-center md:text-right">
+        <p>Copyright © 2026 臺南市政府教育局 版權所有（非賣品）</p>
+        <p class="mt-1 text-slate-500">本系統與部署手冊專供教育行政與教師支持服務使用。</p>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
