@@ -1,0 +1,2650 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>方塊字鐵窗花工坊 - CJK Typographic Wrought Iron Studio</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Broad CJK Fonts (TC, JP, KR) & Classical Display -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Dela+Gothic+One&family=Noto+Sans+KR:wght@700;900&family=Noto+Sans+TC:wght@700;900&family=Noto+Serif+TC:wght@700;900&family=Zen+Antique+Soft&family=Zen+Maru+Gothic:wght@700;900&family=Song+Myung&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      font-family: 'Noto Sans TC', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+    }
+    /* Custom subtle scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.3);
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(148, 163, 184, 0.6);
+    }
+    input[type=range] {
+      accent-color: #f59e0b;
+    }
+    .checker-bg {
+      background-image: linear-gradient(45deg, #182234 25%, transparent 25%),
+                        linear-gradient(-45deg, #182234 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, #182234 75%),
+                        linear-gradient(-45deg, transparent 75%, #182234 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    }
+    /* Clean color picker swatch styling */
+    input[type="color"] {
+      -webkit-appearance: none;
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      cursor: pointer;
+      padding: 0;
+      background: transparent;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+    input[type="color"]::-webkit-color-swatch {
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col overflow-x-hidden">
+
+  <header class="h-16 border-b border-slate-800 bg-slate-900/90 backdrop-blur px-4 lg:px-6 flex items-center justify-between z-20 sticky top-0">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 flex items-center justify-center shadow-lg shadow-amber-500/20 border border-amber-400/30">
+        <span class="text-xl font-black text-slate-950 font-serif">窓</span>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="font-bold text-lg text-slate-100 tracking-wide">方塊字鐵窗花工坊</h1>
+          <span class="text-[10px] tracking-wider font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">CJK WROUGHT IRON</span>
+        </div>
+        <p class="text-xs text-slate-400 hidden sm:block">繁簡中／日文漢字／韓文字母通用・自動補強連接無縫結構</p>
+      </div>
+    </div>
+
+    <!-- Quick action controls -->
+    <div class="flex items-center gap-2">
+      <!-- Quick Clean-View Toggle Button -->
+      <button id="btn-toggle-clean" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 transition" title="切換極簡清爽無干擾視圖">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-cyan-400"></i>
+        <span id="label-clean-btn">極簡清爽圖</span>
+      </button>
+      <button id="btn-randomize" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 transition" title="隨機產生靈感組合">
+        <i data-lucide="dices" class="w-3.5 h-3.5 text-amber-400"></i>
+        <span class="hidden md:inline">隨機靈感</span>
+      </button>
+      <button id="btn-export-svg" class="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium rounded-lg border border-slate-700 transition" title="下載向量檔案（雷雕專用）">
+        <i data-lucide="code" class="w-3.5 h-3.5 text-blue-400"></i>
+        <span>SVG 向量</span>
+      </button>
+      <button id="btn-export-png" class="flex items-center gap-1.5 px-3.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-slate-950 text-xs font-bold rounded-lg transition shadow-md shadow-amber-600/30">
+        <i data-lucide="download" class="w-3.5 h-3.5"></i>
+        <span>匯出高清圖</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="flex-1 flex flex-col lg:flex-row h-[calc(100vh-4rem)] overflow-hidden">
+    
+    <!-- LEFT: Interactive Canvas Viewport -->
+    <main class="flex-1 bg-slate-950 relative flex items-center justify-center p-4 lg:p-8 overflow-hidden checker-bg select-none">
+      
+      <!-- Canvas container with realistic depth shadow -->
+      <div id="canvas-wrapper" class="relative max-h-full max-w-full flex items-center justify-center transition-all duration-300">
+        <canvas id="grille-canvas" class="rounded-2xl max-w-full max-h-[82vh] object-contain shadow-2xl shadow-black/80 cursor-grab active:cursor-grabbing border border-slate-700/50"></canvas>
+      </div>
+
+      <!-- Floating viewport overlay buttons -->
+      <div class="absolute bottom-6 left-6 flex items-center gap-2 bg-slate-900/90 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-800 text-xs text-slate-300 shadow-xl">
+        <button id="btn-zoom-out" class="p-1 hover:text-amber-400"><i data-lucide="minus" class="w-4 h-4"></i></button>
+        <span id="zoom-indicator" class="font-mono text-[11px] w-12 text-center">100%</span>
+        <button id="btn-zoom-in" class="p-1 hover:text-amber-400"><i data-lucide="plus" class="w-4 h-4"></i></button>
+        <div class="w-px h-3 bg-slate-700 mx-1"></div>
+        <button id="btn-zoom-fit" class="p-1 hover:text-amber-400" title="適應視窗"><i data-lucide="maximize" class="w-4 h-4"></i></button>
+      </div>
+
+      <!-- Information chip on bottom right -->
+      <div class="absolute bottom-6 right-6 hidden md:flex items-center gap-2 bg-slate-900/80 backdrop-blur px-3 py-1.5 rounded-xl border border-slate-800 text-[11px] text-slate-400">
+        <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+        <span>自動連結構件已啟動・所有字元上下左右搭接牢固</span>
+      </div>
+    </main>
+
+    <!-- RIGHT: Control Panels & Customization Tabs -->
+    <aside class="w-full lg:w-96 lg:min-w-[24rem] bg-slate-900 border-l border-slate-800 flex flex-col h-full z-10">
+      
+      <!-- Tab Navigation -->
+      <div class="grid grid-cols-4 border-b border-slate-800 text-xs font-medium text-slate-400">
+        <button class="tab-btn py-3 px-1 text-center border-b-2 border-amber-500 text-amber-400 flex flex-col items-center gap-1 transition" data-tab="tab-text">
+          <i data-lucide="type" class="w-4 h-4"></i>
+          <span>文字方塊</span>
+        </button>
+        <button class="tab-btn py-3 px-1 text-center border-b-2 border-transparent hover:text-slate-200 flex flex-col items-center gap-1 transition" data-tab="tab-pattern">
+          <i data-lucide="git-fork" class="w-4 h-4"></i>
+          <span>排列與連接</span>
+        </button>
+        <button class="tab-btn py-3 px-1 text-center border-b-2 border-transparent hover:text-slate-200 flex flex-col items-center gap-1 transition" data-tab="tab-frame">
+          <i data-lucide="box" class="w-4 h-4"></i>
+          <span>外框幾何</span>
+        </button>
+        <button class="tab-btn py-3 px-1 text-center border-b-2 border-transparent hover:text-slate-200 flex flex-col items-center gap-1 transition" data-tab="tab-wall">
+          <i data-lucide="palette" class="w-4 h-4"></i>
+          <span>自訂色彩</span>
+        </button>
+      </div>
+
+      <!-- Tab Contents (Scrollable Area) -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-5 text-xs">
+
+        <!-- TAB 1: TEXT & MEANING (ANY BLOCK CJK CHARACTERS) -->
+        <div id="tab-text" class="tab-content space-y-4">
+          <!-- Text Input -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-slate-300 font-semibold flex items-center gap-1.5">
+                <i data-lucide="edit-3" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>輸入文字（中／日／韓／符號均可）</span>
+              </label>
+              <span id="label-char-count" class="text-[11px] text-amber-400 font-mono font-semibold bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">8 字</span>
+            </div>
+            <textarea id="input-hangul-text" rows="2" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-sm text-slate-100 focus:outline-none focus:border-amber-500 font-mono transition" placeholder="輸入方塊字，如：平安喜樂、花鳥風月、꽃봄빛결">平安 喜樂 富貴 吉祥</textarea>
+            <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+              💡 本工具<strong class="text-amber-300">完全免用 API Key</strong>。可直接鍵入或貼上任意繁簡中文、日文假名/漢字、韓文字母或幾何線條符號。
+            </p>
+          </div>
+
+          <!-- Quick Curated Multilingual Presets -->
+          <div>
+            <label class="block text-slate-400 font-medium mb-1.5">推薦字庫速選（點擊直接套用）：</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button class="preset-text-btn p-2 bg-slate-950/70 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 rounded-lg text-left transition" data-text="平安 喜樂 萬事 勝意">
+                <div class="font-bold text-slate-200">🏮 吉祥如意 (中文 8字)</div>
+                <div class="text-[10px] text-slate-400 font-mono">平安 喜樂 萬事 勝意</div>
+              </button>
+              <button class="preset-text-btn p-2 bg-slate-950/70 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 rounded-lg text-left transition" data-text="春暖 花開 歲月 靜好">
+                <div class="font-bold text-slate-200">🌸 歲月花木 (中文 8字)</div>
+                <div class="text-[10px] text-slate-400 font-mono">春暖 花開 歲月 靜好</div>
+              </button>
+              <button class="preset-text-btn p-2 bg-slate-950/70 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 rounded-lg text-left transition" data-text="花鳥 風月 日日 是好">
+                <div class="font-bold text-slate-200">🍵 雅致和風 (日文 8字)</div>
+                <div class="text-[10px] text-slate-400 font-mono">花鳥 風月 日日 是好</div>
+              </button>
+              <button class="preset-text-btn p-2 bg-slate-950/70 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 rounded-lg text-left transition" data-text="평안 희락 만사 승의">
+                <div class="font-bold text-slate-200">🌿 晨光安寧 (韓文 8字)</div>
+                <div class="text-[10px] text-slate-400 font-mono">평안 희락 만사 승의</div>
+              </button>
+              <button class="preset-text-btn p-2 bg-slate-950/70 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 rounded-lg text-left transition" data-text="十 井 田 回 山 川 日 月">
+                <div class="font-bold text-slate-200">📐 純幾何字符 (8字)</div>
+                <div class="text-[10px] text-slate-400 font-mono">十 井 田 回 山 川 日 月</div>
+              </button>
+              <button class="preset-text-btn p-2 bg-slate-950/70 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 rounded-lg text-left transition" data-text="福 祿 壽 喜 財 丁 貴 順">
+                <div class="font-bold text-slate-200">🧧 傳統堂號古語 (8字)</div>
+                <div class="text-[10px] text-slate-400 font-mono">福 祿 壽 喜 財 丁 貴 順</div>
+              </button>
+              <button class="preset-text-btn p-2 bg-slate-950/70 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 rounded-lg text-left transition" data-text="天 地 人">
+                <div class="font-bold text-slate-200">🔺 三才頂真 (三字，三角形最適)</div>
+                <div class="text-[10px] text-slate-400 font-mono">天 地 人</div>
+              </button>
+              <button class="preset-text-btn p-2 bg-slate-950/70 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/50 rounded-lg text-left transition" data-text="花 鳥 風 月 靜 心">
+                <div class="font-bold text-slate-200">六 禪意六境 (六字，六邊形最適)</div>
+                <div class="text-[10px] text-slate-400 font-mono">花 鳥 風 月 靜 心</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Font Choice (Extended for CJK) -->
+          <div>
+            <label class="block text-slate-300 font-semibold mb-1">字體雕刻風格 (CJK 通用字型)</label>
+            <select id="select-font-family" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
+              <option value="'Noto Sans TC', 'Noto Sans KR', sans-serif" selected>厚重幾何黑體 (粗曠扁鐵・無襯線現代風)</option>
+              <option value="'Noto Serif TC', 'Noto Serif KR', serif">典雅金石宋體 (文人雅居・有襯線骨架感)</option>
+              <option value="'Dela Gothic One', sans-serif">極粗重型鑄鐵 (Dela Gothic・極度緊湊強壯)</option>
+              <option value="'Zen Antique Soft', serif">昭和復古古印體 (Zen Antique・斑駁厚潤鑄件)</option>
+              <option value="'Zen Maru Gothic', sans-serif">東亞圓潤折鐵 (圓體線條・彎折金屬感)</option>
+              <option value="'Black Han Sans', sans-serif">黑體重方碑 (Black Han Sans・方正滿版)</option>
+            </select>
+          </div>
+
+          <!-- Hangul Consonant Decomposition Mode -->
+          <div class="p-3 bg-slate-950/60 border border-slate-800 rounded-xl space-y-2">
+            <div class="flex items-center justify-between">
+              <label for="check-consonant-extract" class="font-medium text-slate-300 cursor-pointer flex items-center gap-2">
+                <input id="check-consonant-extract" type="checkbox" class="w-4 h-4 rounded text-amber-500 bg-slate-900 border-slate-700 focus:ring-0">
+                <span>韓文字符自動拆解為幾何初聲 (Jamo)</span>
+              </label>
+            </div>
+            <p class="text-[10px] text-slate-500 leading-normal">
+              輸入韓文時，可一鍵轉為純初聲幾何符號（如 ㄱ, ㄴ, ㄷ, ㄹ, ㅁ, ㅇ）。中文與日文請保持關閉。
+            </p>
+          </div>
+        </div>
+
+        <!-- TAB 2: PATTERN & AUTO CONNECTING STRUTS -->
+        <div id="tab-pattern" class="tab-content hidden space-y-4">
+          <!-- Automatic Connecting Line Settings (CORE FEATURE) -->
+          <div class="p-3 bg-gradient-to-br from-amber-500/10 via-slate-900 to-slate-950 border border-amber-500/40 rounded-xl space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-amber-400 flex items-center gap-1.5">
+                <i data-lucide="git-commit" class="w-4 h-4 text-amber-400"></i>
+                上下左右自動結構連接線 (Auto Struts)
+              </span>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input id="check-auto-bridge" type="checkbox" checked class="sr-only peer">
+                <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-500"></div>
+              </label>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed">
+              當個別文字筆畫在上下左右未觸及邊緣時，程式會<strong class="text-amber-300">智慧延伸鍛造連接條</strong>與四周相鄰文字及邊框熔接，確保所有字體完全咬合無孤立懸空！
+            </p>
+
+            <div class="space-y-2.5 pt-1">
+              <div>
+                <label class="block text-slate-300 text-[11px] font-medium mb-1">連接條造型樣式：</label>
+                <div class="grid grid-cols-3 gap-1.5" id="bridge-style-selector">
+                  <button class="bridge-opt active py-1.5 px-1 bg-amber-500/20 border border-amber-500 rounded text-center text-[10px] text-amber-300 font-bold" data-style="cross">
+                    十字直向鍛條
+                  </button>
+                  <button class="bridge-opt py-1.5 px-1 bg-slate-950 border border-slate-800 rounded text-center text-[10px] text-slate-300" data-style="rings">
+                    雙環扣合結
+                  </button>
+                  <button class="bridge-opt py-1.5 px-1 bg-slate-950 border border-slate-800 rounded text-center text-[10px] text-slate-300" data-style="diamond">
+                    菱形角飾筋
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <div class="flex justify-between text-slate-300 text-[11px] mb-1">
+                  <span>連接條鋼筋粗細</span>
+                  <span id="label-bridge-thickness" class="font-mono text-amber-400">100%</span>
+                </div>
+                <input id="slider-bridge-thickness" type="range" min="0.5" max="2.0" step="0.1" value="1.0" class="w-full h-1.5 bg-slate-800 rounded cursor-pointer">
+              </div>
+            </div>
+          </div>
+
+          <!-- Zero-gap Flush Alignment Layout Selector -->
+          <div>
+            <label class="block text-slate-300 font-semibold mb-2">鐵窗花排列格律 (標齊對正・緊密無間距)</label>
+            <div class="grid grid-cols-2 gap-2" id="pattern-type-selector">
+              <button class="pattern-opt active p-2.5 rounded-xl border border-amber-500 bg-amber-500/10 text-left transition flex flex-col gap-1" data-pattern="flush-matrix">
+                <span class="font-bold text-slate-200 flex items-center gap-1.5">
+                  <i data-lucide="grid" class="w-3.5 h-3.5 text-amber-400"></i>
+                  無縫矩陣 (標齊對正)
+                </span>
+                <span class="text-[10px] text-slate-400">上下左右零間隙，字體筆畫直接緊密接合</span>
+              </button>
+
+              <button class="pattern-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition flex flex-col gap-1" data-pattern="mirror-quad">
+                <span class="font-bold text-slate-200 flex items-center gap-1.5">
+                  <i data-lucide="flip-horizontal-2" class="w-3.5 h-3.5 text-amber-400"></i>
+                  正反鏡向翻轉互扣
+                </span>
+                <span class="text-[10px] text-slate-400">字元相鄰鏡射翻轉，首尾相扣成連續花紋</span>
+              </button>
+
+              <button class="pattern-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition flex flex-col gap-1" data-pattern="brick-stagger">
+                <span class="font-bold text-slate-200 flex items-center gap-1.5">
+                  <i data-lucide="columns-3" class="w-3.5 h-3.5 text-amber-400"></i>
+                  工字砌磚錯位對正
+                </span>
+                <span class="text-[10px] text-slate-400">交錯半格排布，如同磚砌結構般穩固密接</span>
+              </button>
+
+              <button class="pattern-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition flex flex-col gap-1" data-pattern="rotate-checker">
+                <span class="font-bold text-slate-200 flex items-center gap-1.5">
+                  <i data-lucide="rotate-cw" class="w-3.5 h-3.5 text-amber-400"></i>
+                  90° 棋盤交替咬合
+                </span>
+                <span class="text-[10px] text-slate-400">橫向與縱向漢字相間旋轉，縱橫緊鎖</span>
+              </button>
+
+              <button class="pattern-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition flex flex-col gap-1" data-pattern="diamond-flush">
+                <span class="font-bold text-slate-200 flex items-center gap-1.5">
+                  <i data-lucide="gem" class="w-3.5 h-3.5 text-amber-400"></i>
+                  45° 菱性格網標齊
+                </span>
+                <span class="text-[10px] text-slate-400">菱形傾斜排列，單元對角密排無隙</span>
+              </button>
+
+              <button class="pattern-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition flex flex-col gap-1" data-pattern="fourfold">
+                <span class="font-bold text-slate-200 flex items-center gap-1.5">
+                  <i data-lucide="flower-2" class="w-3.5 h-3.5 text-amber-400"></i>
+                  海棠四方單元格
+                </span>
+                <span class="text-[10px] text-slate-400">單元內四向翻轉成花，各單元標齊無縫</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Density & Auto-Fit Grid Controls -->
+          <div class="space-y-3.5 pt-1">
+            <!-- Full Character Guarantee Feature -->
+            <div class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl space-y-1.5">
+              <label class="flex items-center justify-between cursor-pointer">
+                <span class="font-bold text-amber-300 flex items-center gap-1.5 text-xs">
+                  <i data-lucide="layout-grid" class="w-4 h-4 text-amber-400"></i>
+                  外框輪廓形狀適配排版 (100% 完整保留不削邊)
+                </span>
+                <input id="check-auto-density" type="checkbox" checked class="w-4 h-4 rounded text-amber-500 bg-slate-900 border-slate-700">
+              </label>
+              <p class="text-[10px] text-slate-400 leading-normal">
+                針對三角形、六邊形、圓形等特殊外框，系統會<strong class="text-amber-300">依各高度的真實可用寬度智慧重排文字矩陣</strong>（如三角形 1-3-4、六角形 2-4-2），確保輸入的 <span id="label-tokens-summary" class="text-amber-300 font-bold">8 個文字</span> 絕不被外框切削！
+              </p>
+            </div>
+
+            <div id="container-density-slider" class="space-y-1 opacity-60 pointer-events-none transition">
+              <div class="flex justify-between text-slate-300 mb-1">
+                <span>手動網格大小 (行列數)</span>
+                <span id="label-density" class="font-mono text-amber-400">4 x 4</span>
+              </div>
+              <input id="slider-density" type="range" min="2" max="8" value="4" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-slate-300 mb-1">
+                <span>筆畫填滿度與邊緣重疊 (Fit & Overlap)</span>
+                <span id="label-fit" class="font-mono text-amber-400">105% (無縫搭接)</span>
+              </div>
+              <input id="slider-fit" type="range" min="0.85" max="1.25" step="0.01" value="1.05" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+              <p class="text-[10px] text-slate-500 mt-0.5">大於 100% 時筆畫會互相搭焊，確保無縫焊接成牢固鐵窗網。</p>
+            </div>
+
+            <div class="p-2.5 bg-slate-950/80 border border-amber-500/30 rounded-xl space-y-1">
+              <label class="flex items-center justify-between cursor-pointer text-slate-200 font-semibold text-[11px]">
+                <span class="flex items-center gap-1.5">
+                  <i data-lucide="maximize" class="w-3.5 h-3.5 text-amber-400"></i>
+                  滿版微形變延展（字元極致緊密・零留白）
+                </span>
+                <input id="check-stretch-fill" type="checkbox" checked class="w-4 h-4 rounded text-amber-500 bg-slate-900 border-slate-700">
+              </label>
+              <p class="text-[10px] text-slate-400 leading-normal">
+                允許文字隨單元格比例適度非等比延展，字元將佔據整個窗花 98% 以上面積，使相鄰筆畫與四周外框零間隙緊密搭接。
+              </p>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-slate-300 mb-1">
+                <span>單元旋轉角度 (Grid Rotation)</span>
+                <span id="label-rotation" class="font-mono text-amber-400">0°</span>
+              </div>
+              <input id="slider-rotation" type="range" min="0" max="360" step="15" value="0" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            </div>
+
+            <!-- Modular cell dividing bars -->
+            <div class="pt-1">
+              <label class="flex items-center gap-2 cursor-pointer text-slate-300">
+                <input id="check-cell-dividers" type="checkbox" checked class="w-4 h-4 rounded text-amber-500 bg-slate-900 border-slate-700">
+                <span>顯示單元間隔骨架鐵條 (Sub-frame Dividing Bars)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 3: FRAME & WROUGHT IRON MATERIAL -->
+        <div id="tab-frame" class="tab-content hidden space-y-4">
+          <!-- Aspect Ratio Slider & Quick Presets -->
+          <div class="p-3 bg-slate-950/70 border border-slate-800 rounded-xl space-y-2">
+            <div class="flex items-center justify-between text-slate-300">
+              <label class="font-semibold flex items-center gap-1.5 text-xs">
+                <i data-lucide="proportions" class="w-3.5 h-3.5 text-amber-400"></i>
+                <span>外框長寬比例 (寬 : 高)</span>
+              </label>
+              <span id="label-frame-ratio" class="font-mono text-amber-400 font-bold text-xs">1 : 1.00 (正方)</span>
+            </div>
+            <input id="slider-frame-ratio" type="range" min="0.4" max="2.5" step="0.05" value="1.0" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            <div class="grid grid-cols-5 gap-1 pt-1">
+              <button class="ratio-preset-btn py-1 text-[10px] rounded bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition" data-ratio="0.56">9:16 (立)</button>
+              <button class="ratio-preset-btn py-1 text-[10px] rounded bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition" data-ratio="0.75">3:4 (直)</button>
+              <button class="ratio-preset-btn active py-1 text-[10px] rounded bg-amber-500/20 text-amber-300 border border-amber-500 font-bold transition" data-ratio="1.0">1:1 (方)</button>
+              <button class="ratio-preset-btn py-1 text-[10px] rounded bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition" data-ratio="1.33">4:3 (橫)</button>
+              <button class="ratio-preset-btn py-1 text-[10px] rounded bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 transition" data-ratio="1.78">16:9 (寬)</button>
+            </div>
+          </div>
+
+          <!-- Window Frame Geometric Shapes -->
+          <div>
+            <label class="block text-slate-300 font-semibold mb-2">幾何外框造型 (Geometric Outer Frames)</label>
+            <div class="grid grid-cols-2 gap-2" id="frame-type-selector">
+              <button class="frame-opt active p-2.5 rounded-xl border border-amber-500 bg-amber-500/10 text-left transition" data-frame="square">
+                <span class="font-bold text-slate-200 block flex items-center gap-1.5">
+                  <i data-lucide="square" class="w-3.5 h-3.5 text-amber-400"></i>
+                  正方形 (Square)
+                </span>
+                <span class="text-[10px] text-slate-400">1:1 標準四方大器外框</span>
+              </button>
+
+              <button class="frame-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition" data-frame="rect-v">
+                <span class="font-bold text-slate-200 block flex items-center gap-1.5">
+                  <i data-lucide="rectangle-vertical" class="w-3.5 h-3.5 text-amber-400"></i>
+                  直立長方形 (Vertical)
+                </span>
+                <span class="text-[10px] text-slate-400">3:4 傳統修長立式窗欞</span>
+              </button>
+
+              <button class="frame-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition" data-frame="rect-h">
+                <span class="font-bold text-slate-200 block flex items-center gap-1.5">
+                  <i data-lucide="rectangle-horizontal" class="w-3.5 h-3.5 text-amber-400"></i>
+                  橫式長方形 (Horizontal)
+                </span>
+                <span class="text-[10px] text-slate-400">4:3 寬幅採光防盜鐵窗</span>
+              </button>
+
+              <button class="frame-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition" data-frame="hexagon">
+                <span class="font-bold text-slate-200 block flex items-center gap-1.5">
+                  <i data-lucide="hexagon" class="w-3.5 h-3.5 text-amber-400"></i>
+                  正六邊形 (Hexagon)
+                </span>
+                <span class="text-[10px] text-slate-400">東亞古典蜂巢幾何造窗</span>
+              </button>
+
+              <button class="frame-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition" data-frame="octagon">
+                <span class="font-bold text-slate-200 block flex items-center gap-1.5">
+                  <i data-lucide="octagon" class="w-3.5 h-3.5 text-amber-400"></i>
+                  正八邊形 (Octagon)
+                </span>
+                <span class="text-[10px] text-slate-400">八卦折角中式古風窗</span>
+              </button>
+
+              <button class="frame-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition" data-frame="circle">
+                <span class="font-bold text-slate-200 block flex items-center gap-1.5">
+                  <i data-lucide="circle" class="w-3.5 h-3.5 text-amber-400"></i>
+                  圓形月門 (Circle)
+                </span>
+                <span class="text-[10px] text-slate-400">圓融飽滿，文字均勻裁切對齊</span>
+              </button>
+
+              <button class="frame-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition" data-frame="diamond">
+                <span class="font-bold text-slate-200 block flex items-center gap-1.5">
+                  <i data-lucide="diamond" class="w-3.5 h-3.5 text-amber-400"></i>
+                  菱形幾何 (Diamond)
+                </span>
+                <span class="text-[10px] text-slate-400">45° 傾斜菱性格框</span>
+              </button>
+
+              <button class="frame-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition" data-frame="arch">
+                <span class="font-bold text-slate-200 block flex items-center gap-1.5">
+                  <i data-lucide="arch" class="w-3.5 h-3.5 text-amber-400"></i>
+                  巴洛克圓拱形 (Arch)
+                </span>
+                <span class="text-[10px] text-slate-400">下方矩形上方半圓拱</span>
+              </button>
+
+              <button class="frame-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition" data-frame="triangle">
+                <span class="font-bold text-slate-200 block flex items-center gap-1.5">
+                  <i data-lucide="triangle" class="w-3.5 h-3.5 text-amber-400"></i>
+                  等邊三角形 (Triangle)
+                </span>
+                <span class="text-[10px] text-slate-400">現代幾何銳利山形山牆窗</span>
+              </button>
+
+              <button class="frame-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition" data-frame="none">
+                <span class="font-bold text-slate-200 block flex items-center gap-1.5">
+                  <i data-lucide="maximize-2" class="w-3.5 h-3.5 text-amber-400"></i>
+                  無外框 (純花磚)
+                </span>
+                <span class="text-[10px] text-slate-400">自由延伸無拘束花網</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Iron Bar Thickness & Details -->
+          <div class="space-y-3 pt-2">
+            <div>
+              <div class="flex justify-between text-slate-300 mb-1">
+                <span>鐵條鍛造粗細 (Iron Bar Width)</span>
+                <span id="label-iron-stroke" class="font-mono text-amber-400">4 px</span>
+              </div>
+              <input id="slider-iron-stroke" type="range" min="1.5" max="10" step="0.5" value="4" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            </div>
+
+            <!-- Welded Joints & Rivets -->
+            <div class="space-y-2">
+              <label class="flex items-center gap-2 cursor-pointer text-slate-300">
+                <input id="check-welding-beads" type="checkbox" checked class="w-4 h-4 rounded text-amber-500 bg-slate-900 border-slate-700">
+                <span>十字交接點熔焊微球 (Weld Beads)</span>
+              </label>
+              <label class="flex items-center gap-2 cursor-pointer text-slate-300">
+                <input id="check-corner-brackets" type="checkbox" checked class="w-4 h-4 rounded text-amber-500 bg-slate-900 border-slate-700">
+                <span>四角加固防護鉚釘五金 (Corner Rivets)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: CUSTOM COLORS & CLEAN MODERN PALETTES (CORE FEATURE) -->
+        <div id="tab-wall" class="tab-content hidden space-y-4">
+          <!-- Clean & Custom Color Panel -->
+          <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-slate-200 flex items-center gap-1.5">
+                <i data-lucide="sliders" class="w-4 h-4 text-amber-400"></i>
+                自訂調色盤 (Custom Colors)
+              </span>
+              <span class="text-[10px] text-slate-500">自選任意色</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2.5">
+              <div class="flex items-center gap-2 bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+                <input type="color" id="picker-iron" value="#18181b">
+                <div class="flex-1 min-w-0">
+                  <div class="text-[10px] text-slate-400">鐵條主色</div>
+                  <input type="text" id="hex-iron" value="#18181b" class="w-full bg-transparent text-[11px] font-mono text-slate-200 focus:outline-none uppercase">
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+                <input type="color" id="picker-highlight" value="#52525b">
+                <div class="flex-1 min-w-0">
+                  <div class="text-[10px] text-slate-400">金屬反光色</div>
+                  <input type="text" id="hex-highlight" value="#52525b" class="w-full bg-transparent text-[11px] font-mono text-slate-200 focus:outline-none uppercase">
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+                <input type="color" id="picker-bg" value="#f4f4f5">
+                <div class="flex-1 min-w-0">
+                  <div class="text-[10px] text-slate-400">牆面底色</div>
+                  <input type="text" id="hex-bg" value="#f4f4f5" class="w-full bg-transparent text-[11px] font-mono text-slate-200 focus:outline-none uppercase">
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+                <input type="color" id="picker-shadow" value="#71717a">
+                <div class="flex-1 min-w-0">
+                  <div class="text-[10px] text-slate-400">立體陰影色</div>
+                  <input type="text" id="hex-shadow" value="#71717a" class="w-full bg-transparent text-[11px] font-mono text-slate-200 focus:outline-none uppercase">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Curated Classic & Minimalist Themes -->
+          <div>
+            <label class="block text-slate-300 font-semibold mb-2">精選清爽經典配色盤 (點擊切換)：</label>
+            <div class="grid grid-cols-2 gap-2" id="palette-presets-container">
+              <button class="palette-preset-btn active p-2 rounded-xl border border-amber-500 bg-amber-500/10 text-left transition flex items-center gap-2.5" data-iron="#18181b" data-highlight="#52525b" data-bg="#f4f4f5" data-shadow="#71717a" data-wall="clean">
+                <div class="w-6 h-6 rounded-lg border border-slate-400 flex overflow-hidden shadow-inner shrink-0">
+                  <span class="w-1/2 h-full bg-[#18181b]"></span>
+                  <span class="w-1/2 h-full bg-[#f4f4f5]"></span>
+                </div>
+                <div>
+                  <div class="font-bold text-slate-200 text-[11px]">極簡極白 (素白紙)</div>
+                  <div class="text-[9px] text-slate-400">純粹線條・清爽通透</div>
+                </div>
+              </button>
+
+              <button class="palette-preset-btn p-2 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-amber-500/50 text-left transition flex items-center gap-2.5" data-iron="#1c1b1d" data-highlight="#4a4950" data-bg="#2b3036" data-shadow="#000000" data-wall="clean">
+                <div class="w-6 h-6 rounded-lg border border-slate-700 flex overflow-hidden shadow-inner shrink-0">
+                  <span class="w-1/2 h-full bg-[#1c1b1d]"></span>
+                  <span class="w-1/2 h-full bg-[#2b3036]"></span>
+                </div>
+                <div>
+                  <div class="font-bold text-slate-200 text-[11px]">沉穩鑄黑 (清爽純灰底)</div>
+                  <div class="text-[9px] text-slate-400">純淨平光・沉穩無雜質</div>
+                </div>
+              </button>
+
+              <button class="palette-preset-btn p-2 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-amber-500/50 text-left transition flex items-center gap-2.5" data-iron="#991b1b" data-highlight="#f87171" data-bg="#fef2f2" data-shadow="#7f1d1d" data-wall="clean">
+                <div class="w-6 h-6 rounded-lg border border-slate-700 flex overflow-hidden shadow-inner shrink-0">
+                  <span class="w-1/2 h-full bg-[#991b1b]"></span>
+                  <span class="w-1/2 h-full bg-[#fef2f2]"></span>
+                </div>
+                <div>
+                  <div class="font-bold text-slate-200 text-[11px]">京都朱紅 (和風雅欞)</div>
+                  <div class="text-[9px] text-slate-400">清爽紅白・醒目雅致</div>
+                </div>
+              </button>
+
+              <button class="palette-preset-btn p-2 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-amber-500/50 text-left transition flex items-center gap-2.5" data-iron="#0f766e" data-highlight="#5eead4" data-bg="#134e4a" data-shadow="#042f2e" data-wall="concrete">
+                <div class="w-6 h-6 rounded-lg border border-slate-700 flex overflow-hidden shadow-inner shrink-0">
+                  <span class="w-1/2 h-full bg-[#0f766e]"></span>
+                  <span class="w-1/2 h-full bg-[#134e4a]"></span>
+                </div>
+                <div>
+                  <div class="font-bold text-slate-200 text-[11px]">竹青古銅 (青綠雅韻)</div>
+                  <div class="text-[9px] text-slate-400">歲月銅銹・文人古色</div>
+                </div>
+              </button>
+
+              <button class="palette-preset-btn p-2 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-amber-500/50 text-left transition flex items-center gap-2.5" data-iron="#d97706" data-highlight="#fef08a" data-bg="#18181b" data-shadow="#000000" data-wall="clean">
+                <div class="w-6 h-6 rounded-lg border border-slate-700 flex overflow-hidden shadow-inner shrink-0">
+                  <span class="w-1/2 h-full bg-[#d97706]"></span>
+                  <span class="w-1/2 h-full bg-[#18181b]"></span>
+                </div>
+                <div>
+                  <div class="font-bold text-slate-200 text-[11px]">黑夜鍛金 (香檳金屬)</div>
+                  <div class="text-[9px] text-slate-400">奢華黃銅・俐落清爽</div>
+                </div>
+              </button>
+
+              <button class="palette-preset-btn p-2 rounded-xl border border-slate-800 bg-slate-950/70 hover:border-amber-500/50 text-left transition flex items-center gap-2.5" data-iron="#0284c7" data-highlight="#bae6fd" data-bg="#082f49" data-shadow="#0369a1" data-wall="clean">
+                <div class="w-6 h-6 rounded-lg border border-slate-700 flex overflow-hidden shadow-inner shrink-0">
+                  <span class="w-1/2 h-full bg-[#0284c7]"></span>
+                  <span class="w-1/2 h-full bg-[#082f49]"></span>
+                </div>
+                <div>
+                  <div class="font-bold text-slate-200 text-[11px]">建築藍曬 (極簡藍白)</div>
+                  <div class="text-[9px] text-slate-400">工程圖稿・清爽純粹</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Wall Texture Selection -->
+          <div>
+            <label class="block text-slate-300 font-semibold mb-2">背景底質模式</label>
+            <div class="grid grid-cols-2 gap-2" id="wall-type-selector">
+              <button class="wall-opt active p-2.5 rounded-xl border border-amber-500 bg-amber-500/10 text-left transition" data-wall="clean">
+                <span class="font-bold text-slate-200 block">清爽純色底 (Clean Flat)</span>
+                <span class="text-[10px] text-slate-400">無任何雜訊粒子，俐落純淨</span>
+              </button>
+
+              <button class="wall-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition" data-wall="terrazzo">
+                <span class="font-bold text-slate-200 block">磨石子洗石牆 (Terrazzo)</span>
+                <span class="text-[10px] text-slate-400">點綴細微石英與礦粒</span>
+              </button>
+
+              <button class="wall-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition" data-wall="concrete">
+                <span class="font-bold text-slate-200 block">清水泥粉光灰 (Concrete)</span>
+                <span class="text-[10px] text-slate-400">工業現代沈穩灰階</span>
+              </button>
+
+              <button class="wall-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition" data-wall="brick">
+                <span class="font-bold text-slate-200 block">老紅磚牆 (Red Brick)</span>
+                <span class="text-[10px] text-slate-400">溫潤赤陶與勾縫</span>
+              </button>
+
+              <button class="wall-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition" data-wall="glass">
+                <span class="font-bold text-slate-200 block">海棠壓花毛玻璃 (Glass)</span>
+                <span class="text-[10px] text-slate-400">半透明復古微光</span>
+              </button>
+
+              <button class="wall-opt p-2.5 rounded-xl border border-slate-800 bg-slate-950/60 hover:bg-slate-800 text-left transition" data-wall="transparent">
+                <span class="font-bold text-slate-200 block">透明背景 (Transparent)</span>
+                <span class="text-[10px] text-slate-400">僅保留鐵花，方便修圖去背</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sunlight & Depth Shadows -->
+          <div class="space-y-3.5 pt-1">
+            <div>
+              <div class="flex justify-between text-slate-300 mb-1">
+                <span>鐵窗懸空立體投影 (3D Shadow Depth)</span>
+                <span id="label-shadow-depth" class="font-mono text-amber-400">18 px</span>
+              </div>
+              <input id="slider-shadow-depth" type="range" min="0" max="45" value="18" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            </div>
+
+            <div>
+              <div class="flex justify-between text-slate-300 mb-1">
+                <span>斜射光角度 (Light Angle)</span>
+                <span id="label-sun-angle" class="font-mono text-amber-400">45° (午後斜陽)</span>
+              </div>
+              <input id="slider-sun-angle" type="range" min="0" max="360" step="15" value="45" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+            </div>
+
+            <div>
+              <label class="flex items-center gap-2 cursor-pointer text-slate-300">
+                <input id="check-sun-beam" type="checkbox" class="w-4 h-4 rounded text-amber-500 bg-slate-900 border-slate-700">
+                <span>疊加斜射午後暖陽漸層 (Sunlight Vignette)</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Info and Preset Theme Bar -->
+      <div class="p-3 border-t border-slate-800 bg-slate-950/80 flex items-center justify-between text-[11px] text-slate-400">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>全語系方塊字結構解析中</span>
+        </div>
+        <button id="btn-reset-default" class="text-slate-400 hover:text-amber-400 transition underline underline-offset-2">恢復預設</button>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Custom Notification Toast Container -->
+  <div id="toast" class="fixed top-20 right-6 z-50 transform translate-y-[-20px] opacity-0 pointer-events-none transition-all duration-300 bg-slate-900/95 border border-amber-500/50 text-slate-100 text-xs px-4 py-2.5 rounded-xl shadow-2xl flex items-center gap-2 backdrop-blur">
+    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+    <span id="toast-message">操作完成</span>
+  </div>
+
+  <!-- Hidden Anchor for Downloads -->
+  <a id="download-anchor" class="hidden"></a>
+
+  <script>
+    // Comprehensive Hangul Choseong (Initial Consonants) table for decomposing syllables
+    const HANGUL_CHOSEONG = [
+      'ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ',
+      'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'
+    ];
+
+    // Main Studio State Configuration
+    const state = {
+      // Text parameters (Support Chinese, Japanese, Korean, symbols)
+      text: '平安 喜樂 富貴 吉祥',
+      fontFamily: "'Noto Sans TC', 'Noto Sans KR', sans-serif",
+      extractConsonants: false,
+      
+      // Auto Grid: Ensure all characters are completely produced
+      autoDensity: true,
+      gridCols: 4,
+      gridRows: 4,
+
+      // Pattern geometry - zero gap flush matrix by default
+      patternType: 'flush-matrix',
+      density: 4,                  // Grid dimensions: 2 to 8
+      charFit: 1.05,               // 1.0 = exact edge touch, >1.0 = overlap & weld
+      stretchFill: true,           // Ultra-tight full bleed cell stretch
+      rotation: 0,                 // Extra rotation
+      showDividers: true,          // Modular cell sub-frame iron rails
+      
+      // Automatic Connecting Lines (Auto-Struts)
+      autoBridge: true,            // Automatically connect strokes to edges
+      bridgeStyle: 'cross',        // 'cross', 'rings', 'diamond'
+      bridgeThickness: 1.0,        // Multiplier for connecting struts
+      
+      // Geometric outer frame shapes & Aspect Ratio
+      frameType: 'square',         // 'square', 'rect-v', 'rect-h', 'hexagon', 'octagon', 'circle', 'diamond', 'arch', 'triangle', 'none'
+      frameRatio: 1.0,             // Aspect ratio: Width / Height
+      ironStroke: 4,               // Iron bar thickness in pixels
+      weldingBeads: true,          // Weld beads at junctions
+      cornerBrackets: true,        // Ornamental corner hardware
+      
+      // Fully Customizable Colors & Clean Mode - Default: 極簡極白 (素白紙)
+      ironColor: '#18181b',
+      highlightColor: '#52525b',
+      bgColor: '#f4f4f5',
+      shadowColor: '#71717a',
+      cleanMode: false,            // Clean minimalist mode (no heavy shadows/warm beam)
+      
+      // Environment and shadows: Clean Flat solid background as default
+      wallType: 'clean',           // 'clean', 'terrazzo', 'concrete', 'brick', 'glass', 'transparent'
+      shadowDepth: 18,             // Offset of drop shadow
+      sunAngle: 45,                // Angle of sunlight in degrees
+      warmSunBeam: false,          // Ambient sunlight gradient overlay (disabled by default for clean flat style)
+      
+      // Canvas Pan & Zoom
+      zoom: 1.0,
+      panX: 0,
+      panY: 0,
+      isPanning: false,
+      lastMouseX: 0,
+      lastMouseY: 0
+    };
+
+    const canvas = document.getElementById('grille-canvas');
+    const ctx = canvas.getContext('2d');
+    const zoomIndicator = document.getElementById('zoom-indicator');
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toast-message');
+
+    function showToast(message) {
+      toastMsg.textContent = message;
+      toast.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-[-20px]');
+      toast.classList.add('opacity-100', 'translate-y-0');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none', 'translate-y-[-20px]');
+        toast.classList.remove('opacity-100', 'translate-y-0');
+      }, 2600);
+    }
+
+    // Universal multi-lingual character tokenizer (Chinese, Japanese Kanji/Kana, Korean, Symbols)
+    function getParsedTokens(text, extractConsonants) {
+      const clean = text.trim();
+      if (!clean) return ['安', '康', '吉', '祥'];
+      
+      // Split all non-space characters into individual block units
+      const chars = clean.split(/\s+/).join('').split('');
+      if (!chars.length) return ['福'];
+      if (!extractConsonants) return chars;
+
+      // Decompose Hangul unicode syllables into choseong consonants if enabled
+      const result = [];
+      for (const char of chars) {
+        const code = char.charCodeAt(0);
+        if (code >= 0xac00 && code <= 0xd7a3) {
+          const choseongIndex = Math.floor((code - 0xac00) / (21 * 28));
+          result.push(HANGUL_CHOSEONG[choseongIndex] || char);
+        } else {
+          result.push(char);
+        }
+      }
+      return result.length > 0 ? result : ['ㅁ', 'ㅇ', 'ㅂ', 'ㅅ'];
+    }
+
+    // =========================================================================
+    // GEOMETRIC SHAPE BOUNDARY & ADAPTIVE LAYOUT ENGINE (CORE FEATURE)
+    // =========================================================================
+
+    // Calculates the safe half-width available inside any shape at vertical offset y from center
+    function getShapeHalfWidth(shape, y, maxHalfW, maxHalfH) {
+      if (Math.abs(y) > maxHalfH) return 0;
+      const normY = Math.abs(y) / maxHalfH;
+
+      if (shape === 'square' || shape === 'rect-v' || shape === 'rect-h') {
+        return maxHalfW;
+
+      } else if (shape === 'circle') {
+        const t = 1 - normY * normY;
+        return t > 0 ? maxHalfW * Math.sqrt(t) : 0;
+
+      } else if (shape === 'diamond') {
+        return maxHalfW * (1 - normY);
+
+      } else if (shape === 'hexagon') {
+        if (normY <= 0.5) {
+          return maxHalfW;
+        } else {
+          return maxHalfW * (1 - (normY - 0.5) / 0.5);
+        }
+
+      } else if (shape === 'octagon') {
+        if (normY <= 0.414) {
+          return maxHalfW;
+        } else {
+          return maxHalfW * (1 - (normY - 0.414) / 0.586);
+        }
+
+      } else if (shape === 'triangle') {
+        const t = (y + maxHalfH) / (2 * maxHalfH);
+        return Math.max(0, t * maxHalfW);
+
+      } else if (shape === 'arch') {
+        if (y >= 0) return maxHalfW;
+        const t = 1 - normY * normY;
+        return t > 0 ? maxHalfW * Math.sqrt(t) : 0;
+
+      } else {
+        return maxHalfW;
+      }
+    }
+
+    // Computes the optimal row count and character distribution per row for any shape & token count
+    function computeAdaptiveRowCounts(shape, count) {
+      const N = Math.max(1, count);
+
+      if (shape === 'triangle') {
+        // Triangle: characters naturally increase from top apex down to broad base
+        if (N === 1) return [1];
+        if (N === 2) return [1, 1];
+        if (N === 3) return [1, 2];
+        if (N === 4) return [1, 3];
+        if (N === 5) return [1, 2, 2];
+        if (N === 6) return [1, 2, 3];
+        if (N === 7) return [1, 2, 4];
+        if (N === 8) return [1, 3, 4];
+        if (N === 9) return [1, 3, 5];
+        if (N === 10) return [1, 2, 3, 4];
+        if (N <= 12) return [1, 3, 4, 4];
+        if (N <= 15) return [1, 2, 3, 4, 5];
+        if (N === 16) return [1, 3, 5, 7];
+        // Algorithmic fall-back for large N
+        const rows = Math.min(6, Math.max(3, Math.round(Math.sqrt(N * 1.5))));
+        return partitionTokensWeighted(N, rows, (i, R) => i + 1);
+
+      } else if (shape === 'hexagon' || shape === 'circle') {
+        // Hexagon / Circle: symmetric, narrow top/bottom and wide middle
+        if (N === 1) return [1];
+        if (N === 2) return [1, 1];
+        if (N === 3) return [1, 1, 1];
+        if (N === 4) return [1, 2, 1];
+        if (N === 5) return [1, 3, 1];
+        if (N === 6) return [1, 4, 1];
+        if (N === 7) return [2, 3, 2];
+        if (N === 8) return [2, 4, 2];
+        if (N === 9) return [2, 5, 2];
+        if (N === 10) return [2, 3, 3, 2];
+        if (N === 12) return [2, 4, 4, 2];
+        if (N === 16) return [3, 5, 5, 3];
+        const rows = Math.min(6, Math.max(3, Math.round(Math.sqrt(N))));
+        return partitionTokensWeighted(N, rows, (i, R) => Math.sin(((i + 0.5) / R) * Math.PI));
+
+      } else if (shape === 'diamond') {
+        // Diamond: pointed top & bottom, wide center
+        if (N === 1) return [1];
+        if (N === 2) return [1, 1];
+        if (N === 3) return [1, 1, 1];
+        if (N === 4) return [1, 2, 1];
+        if (N === 5) return [1, 3, 1];
+        if (N === 6) return [1, 2, 2, 1];
+        if (N === 7) return [1, 2, 3, 1];
+        if (N === 8) return [1, 3, 3, 1];
+        if (N === 9) return [1, 2, 3, 2, 1];
+        if (N === 10) return [1, 3, 4, 2];
+        if (N === 12) return [1, 3, 4, 3, 1];
+        if (N === 16) return [1, 3, 4, 4, 3, 1];
+        const rows = Math.min(6, Math.max(3, Math.round(Math.sqrt(N * 1.2))));
+        return partitionTokensWeighted(N, rows, (i, R) => 1 - Math.abs((i + 0.5 - R / 2) / (R / 2)));
+
+      } else if (shape === 'arch') {
+        // Baroque Arch: crown at top, full width at base
+        if (N <= 3) return [1, N - 1];
+        if (N === 4) return [1, 3];
+        if (N === 6) return [2, 2, 2];
+        if (N === 8) return [2, 3, 3];
+        if (N === 9) return [2, 3, 4];
+        if (N === 10) return [2, 4, 4];
+        if (N === 12) return [2, 3, 3, 4];
+        if (N === 16) return [2, 4, 5, 5];
+        const rows = Math.min(5, Math.max(3, Math.round(Math.sqrt(N))));
+        return partitionTokensWeighted(N, rows, (i, R) => (i === 0 ? 0.6 : 1.0));
+
+      } else if (shape === 'rect-v') {
+        if (N <= 4) return [2, 2];
+        if (N <= 6) return [2, 2, 2];
+        if (N <= 8) return [2, 2, 2, 2];
+        if (N <= 9) return [3, 3, 3];
+        if (N <= 12) return [3, 3, 3, 3];
+        if (N <= 16) return [4, 4, 4, 4];
+        const rows = Math.ceil(N / 2);
+        return partitionTokensWeighted(N, Math.min(7, rows), () => 1);
+
+      } else if (shape === 'rect-h') {
+        if (N <= 4) return [2, 2];
+        if (N <= 6) return [3, 3];
+        if (N <= 8) return [4, 4];
+        if (N <= 9) return [3, 3, 3];
+        if (N <= 12) return [4, 4, 4];
+        if (N <= 16) return [4, 4, 4, 4];
+        const cols = Math.ceil(N / 2);
+        return partitionTokensWeighted(N, 2, () => 1);
+
+      } else {
+        // Square or Octagon or None: balanced grid
+        if (N <= 4) return [2, 2];
+        if (N <= 6) return [3, 3];
+        if (N <= 8) return [4, 4];
+        if (N === 9) return [3, 3, 3];
+        if (N <= 12) return [4, 4, 4];
+        if (N <= 16) return [4, 4, 4, 4];
+        const side = Math.ceil(Math.sqrt(N));
+        return partitionTokensWeighted(N, side, () => 1);
+      }
+    }
+
+    // Helper: distributes N items into R rows according to a shape weight function
+    function partitionTokensWeighted(N, R, weightFn) {
+      const rows = Math.min(N, Math.max(1, R));
+      const weights = [];
+      let totalW = 0;
+      for (let i = 0; i < rows; i++) {
+        const w = Math.max(0.2, weightFn(i, rows));
+        weights.push(w);
+        totalW += w;
+      }
+      // Allocate integer counts guaranteed to sum to N
+      const counts = [];
+      let allocated = 0;
+      for (let i = 0; i < rows; i++) {
+        let c = Math.max(1, Math.round((weights[i] / totalW) * N));
+        counts.push(c);
+        allocated += c;
+      }
+      // Adjust difference
+      let diff = N - allocated;
+      while (diff !== 0) {
+        if (diff > 0) {
+          // add to row with max weight
+          let maxIdx = 0;
+          for (let i = 1; i < rows; i++) {
+            if (weights[i] > weights[maxIdx]) maxIdx = i;
+          }
+          counts[maxIdx]++;
+          diff--;
+        } else {
+          // subtract from row with min weight that is > 1
+          let target = -1;
+          for (let i = rows - 1; i >= 0; i--) {
+            if (counts[i] > 1) { target = i; break; }
+          }
+          if (target >= 0) { counts[target]--; diff++; }
+          else break;
+        }
+      }
+      return counts;
+    }
+
+    function updateTokensAndGridUI() {
+      const tokens = getParsedTokens(state.text, state.extractConsonants);
+      const charCountLabel = document.getElementById('label-char-count');
+      const summaryLabel = document.getElementById('label-tokens-summary');
+
+      if (charCountLabel) charCountLabel.textContent = `${tokens.length} 字`;
+      if (summaryLabel) summaryLabel.textContent = `${tokens.length} 個文字`;
+
+      if (state.autoDensity) {
+        const rowCounts = computeAdaptiveRowCounts(state.frameType, tokens.length);
+        state.gridRows = rowCounts.length;
+        state.gridCols = Math.max(...rowCounts);
+        state.density = Math.max(state.gridRows, state.gridCols);
+        const densLabel = document.getElementById('label-density');
+        if (densLabel) densLabel.textContent = `${rowCounts.join('-')} 階梯陣列`;
+      } else {
+        state.gridRows = state.density;
+        state.gridCols = state.density;
+        const densLabel = document.getElementById('label-density');
+        if (densLabel) densLabel.textContent = `${state.density} × ${state.density}`;
+      }
+    }
+
+    function renderWallBackground(ctx, width, height, type) {
+      if (type === 'transparent') {
+        ctx.clearRect(0, 0, width, height);
+        return;
+      }
+
+      // If clean mode is enabled or clean flat selected, render pure crisp solid background
+      if (state.cleanMode || type === 'clean') {
+        ctx.fillStyle = state.bgColor;
+        ctx.fillRect(0, 0, width, height);
+        return;
+      }
+
+      if (type === 'terrazzo') {
+        // Classic Taiwan/East Asian washed Terrazzo / 洗石子
+        const grad = ctx.createLinearGradient(0, 0, width, height);
+        grad.addColorStop(0, state.bgColor);
+        grad.addColorStop(1, '#1e2328');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, height);
+
+        // Procedural terrazzo quartz chips and specks
+        const speckCount = 1400;
+        const colors = ['#f8fafc', '#cbd5e1', '#b45309', '#0284c7', '#15803d', '#991b1b', '#1e293b'];
+        
+        let seed = 12345;
+        const pseudoRand = () => {
+          seed = (seed * 9301 + 49297) % 233280;
+          return seed / 233280;
+        };
+
+        for (let i = 0; i < speckCount; i++) {
+          const x = pseudoRand() * width;
+          const y = pseudoRand() * height;
+          const r = pseudoRand() * 2.2 + 0.6;
+          const color = colors[Math.floor(pseudoRand() * colors.length)];
+          const alpha = pseudoRand() * 0.45 + 0.2;
+
+          ctx.fillStyle = color;
+          ctx.globalAlpha = alpha;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1.0;
+
+      } else if (type === 'concrete') {
+        const grad = ctx.createLinearGradient(0, 0, 0, height);
+        grad.addColorStop(0, state.bgColor);
+        grad.addColorStop(1, '#1e293b');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.fillStyle = '#0f172a';
+        const holeOffsets = [
+          [width * 0.15, height * 0.15],
+          [width * 0.85, height * 0.15],
+          [width * 0.15, height * 0.85],
+          [width * 0.85, height * 0.85]
+        ];
+        holeOffsets.forEach(([hx, hy]) => {
+          ctx.beginPath();
+          ctx.arc(hx, hy, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = state.highlightColor;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        });
+
+      } else if (type === 'brick') {
+        ctx.fillStyle = '#65231c';
+        ctx.fillRect(0, 0, width, height);
+        
+        const rowHeight = 36;
+        const colWidth = 84;
+        ctx.fillStyle = '#2f1512';
+
+        let rowIdx = 0;
+        for (let y = 0; y < height; y += rowHeight) {
+          ctx.fillRect(0, y, width, 4);
+          const offsetX = (rowIdx % 2) * (colWidth / 2);
+          for (let x = -colWidth; x < width + colWidth; x += colWidth) {
+            ctx.fillRect(x + offsetX, y, 4, rowHeight);
+          }
+          rowIdx++;
+        }
+
+      } else if (type === 'glass') {
+        const grad = ctx.createLinearGradient(0, 0, width, height);
+        grad.addColorStop(0, '#1e293b');
+        grad.addColorStop(1, '#0f172a');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.06)';
+        ctx.lineWidth = 1;
+        const step = 20;
+        for (let x = 0; x < width; x += step) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x, height);
+          ctx.stroke();
+        }
+        for (let y = 0; y < height; y += step) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(width, y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    function applyShadowSettings(ctx, depth, sunAngleDeg) {
+      if (state.cleanMode || depth <= 0) {
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        return;
+      }
+      const angleRad = (sunAngleDeg * Math.PI) / 180;
+      const offsetX = Math.cos(angleRad) * depth;
+      const offsetY = Math.sin(angleRad) * depth;
+
+      ctx.shadowColor = state.shadowColor;
+      ctx.shadowBlur = depth * 0.85;
+      ctx.shadowOffsetX = offsetX;
+      ctx.shadowOffsetY = offsetY;
+    }
+
+    function renderWarmSunlightOverlay(ctx, width, height) {
+      if (state.cleanMode || state.wallType === 'clean' || state.wallType === 'transparent') return;
+      const sunGrad = ctx.createRadialGradient(width * 0.2, height * 0.1, 40, width * 0.5, height * 0.5, width * 0.95);
+      sunGrad.addColorStop(0, 'rgba(251, 191, 36, 0.22)');
+      sunGrad.addColorStop(0.5, 'rgba(245, 158, 11, 0.05)');
+      sunGrad.addColorStop(1, 'rgba(0, 0, 0, 0.35)');
+      ctx.fillStyle = sunGrad;
+      ctx.fillRect(0, 0, width, height);
+    }
+
+    function traceGeometryShape(ctx, shape, cx, cy, w, h, inset = 0) {
+      const halfW = Math.max(10, (w / 2) - inset);
+      const halfH = Math.max(10, (h / 2) - inset);
+
+      ctx.beginPath();
+      if (shape === 'square' || shape === 'rect-v' || shape === 'rect-h') {
+        ctx.rect(cx - halfW, cy - halfH, halfW * 2, halfH * 2);
+
+      } else if (shape === 'hexagon') {
+        for (let i = 0; i < 6; i++) {
+          const angle = (i * Math.PI / 3) - Math.PI / 6;
+          const x = cx + halfW * Math.cos(angle);
+          const y = cy + halfH * Math.sin(angle);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+
+      } else if (shape === 'octagon') {
+        for (let i = 0; i < 8; i++) {
+          const angle = (i * Math.PI / 4) - Math.PI / 8;
+          const x = cx + halfW * Math.cos(angle);
+          const y = cy + halfH * Math.sin(angle);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+
+      } else if (shape === 'circle') {
+        ctx.ellipse(cx, cy, halfW, halfH, 0, 0, Math.PI * 2);
+
+      } else if (shape === 'diamond') {
+        ctx.moveTo(cx, cy - halfH);
+        ctx.lineTo(cx + halfW, cy);
+        ctx.lineTo(cx, cy + halfH);
+        ctx.lineTo(cx - halfW, cy);
+        ctx.closePath();
+
+      } else if (shape === 'arch') {
+        const left = cx - halfW;
+        const right = cx + halfW;
+        const bottom = cy + halfH;
+        ctx.moveTo(left, bottom);
+        ctx.lineTo(right, bottom);
+        ctx.lineTo(right, cy);
+        ctx.ellipse(cx, cy, halfW, halfH, 0, 0, Math.PI, true);
+        ctx.closePath();
+
+      } else if (shape === 'triangle') {
+        ctx.moveTo(cx, cy - halfH);
+        ctx.lineTo(cx + halfW, cy + halfH);
+        ctx.lineTo(cx - halfW, cy + halfH);
+        ctx.closePath();
+
+      } else {
+        ctx.rect(cx - halfW, cy - halfH, halfW * 2, halfH * 2);
+      }
+    }
+
+    // Generates exact SVG path definition (d attribute) matching Canvas geometry
+    function getShapeSvgPath(shape, cx, cy, w, h, inset = 0) {
+      const halfW = Math.max(10, (w / 2) - inset);
+      const halfH = Math.max(10, (h / 2) - inset);
+
+      if (shape === 'square' || shape === 'rect-v' || shape === 'rect-h') {
+        return `M ${(cx - halfW).toFixed(1)} ${(cy - halfH).toFixed(1)} h ${(halfW * 2).toFixed(1)} v ${(halfH * 2).toFixed(1)} h ${(-halfW * 2).toFixed(1)} Z`;
+
+      } else if (shape === 'circle') {
+        return `M ${(cx - halfW).toFixed(1)} ${cy.toFixed(1)} a ${halfW.toFixed(1)} ${halfH.toFixed(1)} 0 1 0 ${(halfW * 2).toFixed(1)} 0 a ${halfW.toFixed(1)} ${halfH.toFixed(1)} 0 1 0 ${(-halfW * 2).toFixed(1)} 0 Z`;
+
+      } else if (shape === 'diamond') {
+        return `M ${cx.toFixed(1)} ${(cy - halfH).toFixed(1)} L ${(cx + halfW).toFixed(1)} ${cy.toFixed(1)} L ${cx.toFixed(1)} ${(cy + halfH).toFixed(1)} L ${(cx - halfW).toFixed(1)} ${cy.toFixed(1)} Z`;
+
+      } else if (shape === 'hexagon') {
+        let pts = [];
+        for (let i = 0; i < 6; i++) {
+          const angle = (i * Math.PI / 3) - Math.PI / 6;
+          pts.push(`${(cx + halfW * Math.cos(angle)).toFixed(1)} ${(cy + halfH * Math.sin(angle)).toFixed(1)}`);
+        }
+        return `M ${pts[0]} L ${pts.slice(1).join(' L ')} Z`;
+
+      } else if (shape === 'octagon') {
+        let pts = [];
+        for (let i = 0; i < 8; i++) {
+          const angle = (i * Math.PI / 4) - Math.PI / 8;
+          pts.push(`${(cx + halfW * Math.cos(angle)).toFixed(1)} ${(cy + halfH * Math.sin(angle)).toFixed(1)}`);
+        }
+        return `M ${pts[0]} L ${pts.slice(1).join(' L ')} Z`;
+
+      } else if (shape === 'triangle') {
+        return `M ${cx.toFixed(1)} ${(cy - halfH).toFixed(1)} L ${(cx + halfW).toFixed(1)} ${(cy + halfH).toFixed(1)} L ${(cx - halfW).toFixed(1)} ${(cy + halfH).toFixed(1)} Z`;
+
+      } else if (shape === 'arch') {
+        const left = cx - halfW;
+        const right = cx + halfW;
+        const bottom = cy + halfH;
+        return `M ${left.toFixed(1)} ${bottom.toFixed(1)} L ${right.toFixed(1)} ${bottom.toFixed(1)} L ${right.toFixed(1)} ${cy.toFixed(1)} A ${halfW.toFixed(1)} ${halfH.toFixed(1)} 0 0 0 ${left.toFixed(1)} ${cy.toFixed(1)} Z`;
+
+      } else {
+        return `M ${(cx - halfW).toFixed(1)} ${(cy - halfH).toFixed(1)} h ${(halfW * 2).toFixed(1)} v ${(halfH * 2).toFixed(1)} h ${(-halfW * 2).toFixed(1)} Z`;
+      }
+    }
+
+    // Helper: Renders an authentic 3D domed rivet stud with bevel highlight
+    function drawRivet(ctx, x, y, r) {
+      ctx.save();
+      // Outer base metal ring
+      ctx.fillStyle = state.ironColor;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Top-left metallic specular highlight
+      ctx.shadowColor = 'transparent';
+      ctx.fillStyle = state.highlightColor;
+      ctx.beginPath();
+      ctx.arc(x - r * 0.25, y - r * 0.25, r * 0.52, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Beveled metallic outer rim
+      ctx.strokeStyle = state.highlightColor;
+      ctx.lineWidth = Math.max(1, r * 0.22);
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Helper: Renders realistic molten weld bead at intersecting iron joints
+    function drawWeldBead(ctx, x, y, r) {
+      ctx.save();
+      ctx.fillStyle = state.ironColor;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Molten metal droplet sheen
+      ctx.shadowColor = 'transparent';
+      ctx.fillStyle = state.highlightColor;
+      ctx.beginPath();
+      ctx.arc(x - r * 0.25, y - r * 0.25, r * 0.48, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = state.highlightColor;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Helper: Renders traditional corner hardware L-brackets and corner rivets
+    function drawCornerBracketsAndRivets(ctx, cx, cy, maxW, maxH, frameType, strokeWidth) {
+      if (!state.cornerBrackets || frameType === 'none') return;
+
+      const halfW = maxW / 2;
+      const halfH = maxH / 2;
+      const rivetR = Math.max(5.5, strokeWidth * 1.5);
+      const armLen = Math.min(halfW, halfH) * 0.16;
+      const armThick = Math.max(14, strokeWidth * 3.4);
+
+      ctx.save();
+      ctx.fillStyle = state.ironColor;
+      ctx.strokeStyle = state.highlightColor;
+      ctx.lineWidth = 1.4;
+
+      if (frameType === 'square' || frameType === 'rect-v' || frameType === 'rect-h') {
+        const corners = [
+          { x: cx - halfW, y: cy - halfH, dx: 1, dy: 1 },
+          { x: cx + halfW, y: cy - halfH, dx: -1, dy: 1 },
+          { x: cx - halfW, y: cy + halfH, dx: 1, dy: -1 },
+          { x: cx + halfW, y: cy + halfH, dx: -1, dy: -1 }
+        ];
+
+        corners.forEach(c => {
+          // L-shaped corner iron bracket
+          ctx.beginPath();
+          ctx.moveTo(c.x, c.y);
+          ctx.lineTo(c.x + c.dx * armLen, c.y);
+          ctx.lineTo(c.x + c.dx * armLen, c.y + c.dy * armThick);
+          ctx.lineTo(c.x + c.dx * armThick, c.y + c.dy * armThick);
+          ctx.lineTo(c.x + c.dx * armThick, c.y + c.dy * armLen);
+          ctx.lineTo(c.x, c.y + c.dy * armLen);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // 3 Prominent 3D rivets per corner bracket
+          drawRivet(ctx, c.x + c.dx * (armThick * 0.5), c.y + c.dy * (armThick * 0.5), rivetR);
+          drawRivet(ctx, c.x + c.dx * (armLen * 0.72), c.y + c.dy * (armThick * 0.5), rivetR * 0.85);
+          drawRivet(ctx, c.x + c.dx * (armThick * 0.5), c.y + c.dy * (armLen * 0.72), rivetR * 0.85);
+        });
+
+      } else if (frameType === 'circle') {
+        const count = 8;
+        for (let i = 0; i < count; i++) {
+          const ang = (i / count) * Math.PI * 2;
+          const px = cx + Math.cos(ang) * (halfW - 7);
+          const py = cy + Math.sin(ang) * (halfH - 7);
+          ctx.beginPath();
+          ctx.arc(px, py, rivetR * 1.5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          drawRivet(ctx, px, py, rivetR);
+        }
+
+      } else if (frameType === 'hexagon' || frameType === 'octagon') {
+        const sides = frameType === 'hexagon' ? 6 : 8;
+        const offsetAng = frameType === 'hexagon' ? -Math.PI / 6 : -Math.PI / 8;
+        for (let i = 0; i < sides; i++) {
+          const ang = (i * 2 * Math.PI / sides) + offsetAng;
+          const px = cx + Math.cos(ang) * (halfW - 8);
+          const py = cy + Math.sin(ang) * (halfH - 8);
+          ctx.beginPath();
+          ctx.arc(px, py, rivetR * 1.6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          drawRivet(ctx, px, py, rivetR);
+        }
+
+      } else if (frameType === 'diamond') {
+        const diamondCorners = [
+          { x: cx, y: cy - halfH + 14 },
+          { x: cx + halfW - 14, y: cy },
+          { x: cx, y: cy + halfH - 14 },
+          { x: cx - halfW + 14, y: cy }
+        ];
+        diamondCorners.forEach(c => {
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, rivetR * 1.6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          drawRivet(ctx, c.x, c.y, rivetR);
+        });
+
+      } else if (frameType === 'triangle') {
+        const triCorners = [
+          { x: cx, y: cy - halfH + 18 },
+          { x: cx + halfW - 16, y: cy + halfH - 14 },
+          { x: cx - halfW + 16, y: cy + halfH - 14 }
+        ];
+        triCorners.forEach(c => {
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, rivetR * 1.7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          drawRivet(ctx, c.x, c.y, rivetR);
+        });
+
+      } else if (frameType === 'arch') {
+        const archCorners = [
+          { x: cx - halfW + 14, y: cy + halfH - 14 },
+          { x: cx + halfW - 14, y: cy + halfH - 14 },
+          { x: cx - halfW + 14, y: cy },
+          { x: cx + halfW - 14, y: cy },
+          { x: cx, y: cy - halfH + 14 }
+        ];
+        archCorners.forEach(c => {
+          ctx.beginPath();
+          ctx.arc(c.x, c.y, rivetR * 1.6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          drawRivet(ctx, c.x, c.y, rivetR);
+        });
+      }
+
+      ctx.restore();
+    }
+
+    function drawWroughtIronChar(ctx, char, x, y, scaleX, scaleY, strokeWidth, showWelds) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(scaleX, scaleY);
+
+      const baseNominalSize = 100;
+      ctx.font = `900 ${baseNominalSize}px ${state.fontFamily}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      // Counter-scale stroke width with absolute magnitudes to prevent cancellation on negative mirror scales
+      const avgScale = Math.max(0.001, (Math.abs(scaleX) + Math.abs(scaleY)) / 2);
+      const effectiveStroke = strokeWidth / avgScale;
+
+      // 1. Draw outer forged metal body
+      ctx.strokeStyle = state.ironColor;
+      ctx.lineWidth = effectiveStroke * 2.2;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+      ctx.strokeText(char, 0, 0);
+
+      // 2. Draw interior metal fill
+      ctx.fillStyle = state.ironColor;
+      ctx.fillText(char, 0, 0);
+
+      // 3. Central metallic reflection ridge
+      ctx.save();
+      ctx.shadowColor = 'transparent';
+      ctx.strokeStyle = state.highlightColor;
+      ctx.lineWidth = Math.max(0.6, effectiveStroke * 0.55);
+      ctx.strokeText(char, 0, 0);
+      ctx.restore();
+
+      // 4. Structural anchor weld beads
+      if (showWelds) {
+        const beadR = Math.max(3.8, strokeWidth * 1.1) / avgScale;
+        const offsets = [
+          [-baseNominalSize * 0.35, -baseNominalSize * 0.35],
+          [baseNominalSize * 0.35, baseNominalSize * 0.35]
+        ];
+        offsets.forEach(([ox, oy]) => {
+          drawWeldBead(ctx, ox, oy, beadR);
+        });
+      }
+
+      ctx.restore();
+    }
+
+    function drawWindowFrame(ctx, width, height, frameType, strokeWidth) {
+      if (frameType === 'none') return;
+
+      const cx = width / 2;
+      const cy = height / 2;
+      const baseSize = width - 80;
+      let maxW, maxH;
+      if (state.frameRatio >= 1) {
+        maxW = baseSize;
+        maxH = baseSize / state.frameRatio;
+      } else {
+        maxH = baseSize;
+        maxW = baseSize * state.frameRatio;
+      }
+
+      ctx.strokeStyle = state.ironColor;
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+
+      // 1. Thick Outer Forged Iron Border
+      ctx.lineWidth = strokeWidth * 3.8;
+      traceGeometryShape(ctx, frameType, cx, cy, maxW, maxH, 0);
+      ctx.stroke();
+
+      // 2. Inner Architectural Molding Rail
+      ctx.lineWidth = strokeWidth * 1.6;
+      traceGeometryShape(ctx, frameType, cx, cy, maxW, maxH, 14);
+      ctx.stroke();
+
+      // 3. Highlight edge on inner rail
+      ctx.save();
+      ctx.shadowColor = 'transparent';
+      ctx.strokeStyle = state.highlightColor;
+      ctx.lineWidth = 1;
+      traceGeometryShape(ctx, frameType, cx, cy, maxW, maxH, 15.5);
+      ctx.stroke();
+      ctx.restore();
+
+      // 4. Corner Hardware L-brackets and Studded Rivets
+      drawCornerBracketsAndRivets(ctx, cx, cy, maxW, maxH, frameType, strokeWidth);
+    }
+
+    // Helper: computes all cell positions, dimensions, scaling, and character mapping
+    function computeGrilleLayout(width, height, tokens, patternType, density, charFit, frameType) {
+      const cx = width / 2;
+      const cy = height / 2;
+      const baseSpan = Math.min(width, height) - 108;
+      let totalW, totalH;
+      if (state.frameRatio >= 1) {
+        totalW = baseSpan;
+        totalH = baseSpan / state.frameRatio;
+      } else {
+        totalH = baseSpan;
+        totalW = baseSpan * state.frameRatio;
+      }
+
+      const totalTokens = tokens.length;
+      let rowCounts;
+      if (state.autoDensity) {
+        rowCounts = computeAdaptiveRowCounts(frameType, totalTokens);
+      } else {
+        const rows = density;
+        rowCounts = Array(rows).fill(Math.ceil(totalTokens / rows));
+      }
+
+      const numRows = rowCounts.length;
+      const halfW = totalW / 2;
+      const halfH = totalH / 2;
+
+      let yMin = -halfH * 0.98;
+      let yMax = halfH * 0.98;
+
+      const totalHeightSpan = yMax - yMin;
+      const rowHeight = totalHeightSpan / numRows;
+
+      const cellPositions = [];
+      let tokenIndex = 0;
+
+      for (let r = 0; r < numRows; r++) {
+        const countInRow = rowCounts[r];
+        const rowY = yMin + (r + 0.5) * rowHeight;
+        
+        // Match the shape outline seamlessly
+        const safeHalfW = Math.max(30, getShapeHalfWidth(frameType, rowY, halfW, halfH) * 0.98);
+        const colWidth = (safeHalfW * 2) / countInRow;
+
+        for (let c = 0; c < countInRow; c++) {
+          let char = tokens[tokenIndex % totalTokens];
+          tokenIndex++;
+
+          let cellX = -safeHalfW + (c + 0.5) * colWidth;
+
+          if (patternType === 'brick-stagger' && (r % 2 === 1)) {
+            cellX += colWidth * 0.25;
+          }
+
+          const cellW = colWidth;
+          const cellH = rowHeight;
+
+          // Full-bleed stretch scaling: characters stretch horizontally and vertically to fill 98-105% of each cell
+          let scaleX, scaleY;
+          if (state.stretchFill) {
+            scaleX = (cellW * charFit) / 100;
+            scaleY = (cellH * charFit) / 100;
+          } else {
+            const maxDim = Math.min(cellW, cellH);
+            scaleX = (maxDim * charFit * 0.95) / 100;
+            scaleY = scaleX;
+          }
+
+          cellPositions.push({
+            char,
+            r,
+            c,
+            countInRow,
+            x: cx + cellX,
+            y: cy + rowY,
+            relX: cellX,
+            relY: rowY,
+            safeHalfW,
+            colWidth,
+            cellW,
+            cellH,
+            scaleX,
+            scaleY
+          });
+        }
+      }
+
+      return {
+        cx,
+        cy,
+        maxSpan: baseSpan,
+        maxW: totalW,
+        maxH: totalH,
+        halfW,
+        halfH,
+        yMin,
+        yMax,
+        numRows,
+        rowHeight,
+        cellPositions
+      };
+    }
+
+    // Adaptive Geometric Grille Pattern Engine: renders seamless full-bleed characters and welds
+    function renderGrillePattern(ctx, width, height, tokens, patternType, density, charFit, rotDeg, showDividers, strokeWidth, showWelds, frameType) {
+      const layout = computeGrilleLayout(width, height, tokens, patternType, density, charFit, frameType);
+      const { cx, cy, maxW, maxH, halfW, halfH, yMin, numRows, rowHeight, cellPositions } = layout;
+
+      ctx.save();
+
+      // Apply clipping path to retain exact geometry boundary
+      if (frameType !== 'none') {
+        traceGeometryShape(ctx, frameType, cx, cy, maxW + 28, maxH + 28, 14);
+        ctx.clip();
+      }
+
+      // 1. Render Sub-Frame Dividing Lattice Bars (if enabled)
+      if (showDividers) {
+        ctx.strokeStyle = state.ironColor;
+        ctx.lineWidth = Math.max(1.2, strokeWidth * 0.75);
+
+        // Horizontal dividing rails between rows
+        for (let r = 0; r <= numRows; r++) {
+          const divY = yMin + r * rowHeight;
+          const divHalfW = Math.max(20, getShapeHalfWidth(frameType, divY, halfW, halfH) * 0.98);
+          ctx.beginPath();
+          ctx.moveTo(cx - divHalfW, cy + divY);
+          ctx.lineTo(cx + divHalfW, cy + divY);
+          ctx.stroke();
+        }
+
+        // Vertical dividing struts between cells in each row
+        cellPositions.forEach(cell => {
+          if (cell.c > 0) {
+            const vx = cell.x - cell.colWidth / 2;
+            ctx.beginPath();
+            ctx.moveTo(vx, cell.y - cell.cellH / 2);
+            ctx.lineTo(vx, cell.y + cell.cellH / 2);
+            ctx.stroke();
+          }
+        });
+      }
+
+      // 2. Render Auto-Connecting Struts (Welding all characters to borders & neighbors)
+      if (state.autoBridge) {
+        const strutW = Math.max(1.2, strokeWidth * 0.95 * state.bridgeThickness);
+        ctx.strokeStyle = state.ironColor;
+        ctx.lineWidth = strutW;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        cellPositions.forEach((cell, idx) => {
+          const reachX = (cell.cellW / 2) * 0.88;
+          const reachY = (cell.cellH / 2) * 0.88;
+
+          // Horizontal left strut: welds left edge to outer frame or neighboring char
+          ctx.beginPath();
+          if (cell.c === 0) {
+            ctx.moveTo(cell.x - reachX, cell.y);
+            ctx.lineTo(cx - cell.safeHalfW, cell.y);
+          } else {
+            const leftCell = cellPositions[idx - 1];
+            ctx.moveTo(cell.x - reachX, cell.y);
+            ctx.lineTo(leftCell.x + (leftCell.cellW / 2) * 0.88, cell.y);
+          }
+          ctx.stroke();
+
+          // Horizontal right strut: welds right edge of the last cell to frame
+          if (cell.c === cell.countInRow - 1) {
+            ctx.beginPath();
+            ctx.moveTo(cell.x + reachX, cell.y);
+            ctx.lineTo(cx + cell.safeHalfW, cell.y);
+            ctx.stroke();
+          }
+
+          // Vertical top strut: welds character top to horizontal rail or upper border
+          ctx.beginPath();
+          ctx.moveTo(cell.x, cell.y - reachY);
+          ctx.lineTo(cell.x, cell.y - cell.cellH / 2);
+          ctx.stroke();
+
+          // Vertical bottom strut: welds character bottom to horizontal rail or lower border
+          ctx.beginPath();
+          ctx.moveTo(cell.x, cell.y + reachY);
+          ctx.lineTo(cell.x, cell.y + cell.cellH / 2);
+          ctx.stroke();
+
+          // Decorative ring or diamond embellishments
+          if (state.bridgeStyle === 'rings') {
+            const ringR = Math.max(2.5, strokeWidth * 1.3);
+            ctx.beginPath();
+            ctx.arc(cell.x, cell.y - cell.cellH / 2, ringR, 0, Math.PI * 2);
+            ctx.stroke();
+          } else if (state.bridgeStyle === 'diamond') {
+            const dSize = Math.min(cell.cellW, cell.cellH) * 0.16;
+            ctx.beginPath();
+            ctx.moveTo(cell.x - dSize, cell.y);
+            ctx.lineTo(cell.x, cell.y - dSize);
+            ctx.lineTo(cell.x + dSize, cell.y);
+            ctx.lineTo(cell.x, cell.y + dSize);
+            ctx.closePath();
+            ctx.stroke();
+          }
+        });
+      }
+
+      // 2b. Render Cross-Intersection Molten Weld Beads (十字交接點熔焊微球)
+      if (showWelds) {
+        const beadR = Math.max(4.5, strokeWidth * 1.35);
+
+        // A. Weld beads at dividing lattice cross intersections
+        if (showDividers) {
+          for (let r = 0; r <= numRows; r++) {
+            const divY = yMin + r * rowHeight;
+            cellPositions.forEach(cell => {
+              if (cell.r === r || (r === numRows && cell.r === numRows - 1)) {
+                // Vertical divider line intersection with horizontal divider
+                const vx = cell.x - cell.colWidth / 2;
+                drawWeldBead(ctx, vx, cy + divY, beadR);
+                if (cell.c === cell.countInRow - 1) {
+                  drawWeldBead(ctx, cell.x + cell.colWidth / 2, cy + divY, beadR);
+                }
+              }
+            });
+          }
+        }
+
+        // B. Weld beads where auto-struts weld to horizontal rails and borders
+        if (state.autoBridge) {
+          cellPositions.forEach(cell => {
+            // Top and bottom strut connection joints
+            drawWeldBead(ctx, cell.x, cell.y - cell.cellH / 2, beadR * 0.9);
+            drawWeldBead(ctx, cell.x, cell.y + cell.cellH / 2, beadR * 0.9);
+
+            // Left and right frame attachment points
+            if (cell.c === 0) {
+              drawWeldBead(ctx, cx - cell.safeHalfW, cell.y, beadR);
+            }
+            if (cell.c === cell.countInRow - 1) {
+              drawWeldBead(ctx, cx + cell.safeHalfW, cell.y, beadR);
+            }
+          });
+        }
+      }
+
+      // 3. Render Characters with Full-Bleed Scaling (Zero Empty Gap)
+      cellPositions.forEach(cell => {
+        ctx.save();
+        ctx.translate(cell.x, cell.y);
+
+        if (rotDeg) ctx.rotate((rotDeg * Math.PI) / 180);
+
+        if (patternType === 'mirror-quad') {
+          const flipX = (cell.c % 2 === 1) ? -1 : 1;
+          const flipY = (cell.r % 2 === 1) ? -1 : 1;
+          drawWroughtIronChar(ctx, cell.char, 0, 0, cell.scaleX * flipX, cell.scaleY * flipY, strokeWidth, showWelds);
+
+        } else if (patternType === 'rotate-checker') {
+          if ((cell.r + cell.c) % 2 === 1) {
+            ctx.rotate(Math.PI / 2);
+          }
+          drawWroughtIronChar(ctx, cell.char, 0, 0, cell.scaleX, cell.scaleY, strokeWidth, showWelds);
+
+        } else if (patternType === 'diamond-flush') {
+          ctx.rotate(Math.PI / 4);
+          drawWroughtIronChar(ctx, cell.char, 0, 0, cell.scaleX * 0.95, cell.scaleY * 0.95, strokeWidth, showWelds);
+
+        } else if (patternType === 'fourfold') {
+          const subScaleX = cell.scaleX * 0.52;
+          const subScaleY = cell.scaleY * 0.52;
+          const offsetX = (cell.cellW / 2) * 0.42;
+          for (let q = 0; q < 4; q++) {
+            ctx.save();
+            ctx.rotate((q * Math.PI) / 2);
+            drawWroughtIronChar(ctx, cell.char, offsetX, 0, subScaleX, subScaleY, strokeWidth, showWelds);
+            ctx.restore();
+          }
+
+        } else {
+          // Default flush matrix (tight full-bleed fit)
+          drawWroughtIronChar(ctx, cell.char, 0, 0, cell.scaleX, cell.scaleY, strokeWidth, showWelds);
+        }
+
+        ctx.restore();
+      });
+
+      ctx.restore();
+    }
+
+    function render() {
+      const renderSize = 1600;
+      if (canvas.width !== renderSize || canvas.height !== renderSize) {
+        canvas.width = renderSize;
+        canvas.height = renderSize;
+      }
+
+      updateTokensAndGridUI();
+
+      ctx.save();
+      // Handle Pan & Zoom
+      ctx.translate(state.panX, state.panY);
+      ctx.scale(state.zoom, state.zoom);
+
+      // 1. Draw Architectural Wall Texture or Clean Flat Color
+      renderWallBackground(ctx, renderSize, renderSize, state.wallType);
+
+      // 2. Setup Drop Shadows (Disabled in Clean Mode for ultra-crisp output)
+      applyShadowSettings(ctx, state.shadowDepth, state.sunAngle);
+
+      // 3. Tokenize and Draw Grille Pattern (Adaptive geometry + auto-struts)
+      const tokens = getParsedTokens(state.text, state.extractConsonants);
+      renderGrillePattern(
+        ctx,
+        renderSize,
+        renderSize,
+        tokens,
+        state.patternType,
+        state.density,
+        state.charFit,
+        state.rotation,
+        state.showDividers,
+        state.ironStroke,
+        state.weldingBeads,
+        state.frameType
+      );
+
+      // 4. Draw Reinforced Outer Geometric Window Frame
+      drawWindowFrame(ctx, renderSize, renderSize, state.frameType, state.ironStroke);
+
+      // 5. Draw Sunlight Vignette
+      ctx.restore();
+      if (state.warmSunBeam && !state.cleanMode && state.wallType !== 'transparent') {
+        renderWarmSunlightOverlay(ctx, renderSize, renderSize);
+      }
+    }
+
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.tab;
+        tabButtons.forEach(b => {
+          b.classList.remove('border-amber-500', 'text-amber-400');
+          b.classList.add('border-transparent');
+        });
+        btn.classList.add('border-amber-500', 'text-amber-400');
+        btn.classList.remove('border-transparent');
+
+        tabContents.forEach(tc => tc.classList.add('hidden'));
+        document.getElementById(target).classList.remove('hidden');
+      });
+    });
+
+    // Text Input & Font
+    const inputText = document.getElementById('input-hangul-text');
+    inputText.addEventListener('input', (e) => {
+      state.text = e.target.value;
+      render();
+    });
+
+    const selectFont = document.getElementById('select-font-family');
+    selectFont.addEventListener('change', (e) => {
+      state.fontFamily = e.target.value;
+      render();
+    });
+
+    const checkConsonant = document.getElementById('check-consonant-extract');
+    checkConsonant.addEventListener('change', (e) => {
+      state.extractConsonants = e.target.checked;
+      render();
+    });
+
+    // Preset Text Buttons
+    document.querySelectorAll('.preset-text-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const txt = btn.dataset.text;
+        inputText.value = txt;
+        state.text = txt;
+        render();
+        showToast('已套用詞組：' + txt);
+      });
+    });
+
+    // Auto-Bridge Controls
+    const checkAutoBridge = document.getElementById('check-auto-bridge');
+    checkAutoBridge.addEventListener('change', (e) => {
+      state.autoBridge = e.target.checked;
+      render();
+      showToast(state.autoBridge ? '已開啟上下左右自動補強焊條' : '已關閉自動連接條');
+    });
+
+    const bridgeOpts = document.querySelectorAll('.bridge-opt');
+    bridgeOpts.forEach(btn => {
+      btn.addEventListener('click', () => {
+        bridgeOpts.forEach(b => {
+          b.classList.remove('active', 'border-amber-500', 'bg-amber-500/20', 'text-amber-300', 'font-bold');
+          b.classList.add('border-slate-800', 'bg-slate-950', 'text-slate-300');
+        });
+        btn.classList.add('active', 'border-amber-500', 'bg-amber-500/20', 'text-amber-300', 'font-bold');
+        btn.classList.remove('border-slate-800', 'bg-slate-950', 'text-slate-300');
+        state.bridgeStyle = btn.dataset.style;
+        render();
+      });
+    });
+
+    const sliderBridgeThick = document.getElementById('slider-bridge-thickness');
+    sliderBridgeThick.addEventListener('input', (e) => {
+      state.bridgeThickness = parseFloat(e.target.value);
+      document.getElementById('label-bridge-thickness').textContent = `${Math.round(state.bridgeThickness * 100)}%`;
+      render();
+    });
+
+    // Custom Color Pickers & Hex Inputs Sync
+    const pickerIron = document.getElementById('picker-iron');
+    const hexIron = document.getElementById('hex-iron');
+    const pickerHighlight = document.getElementById('picker-highlight');
+    const hexHighlight = document.getElementById('hex-highlight');
+    const pickerBg = document.getElementById('picker-bg');
+    const hexBg = document.getElementById('hex-bg');
+    const pickerShadow = document.getElementById('picker-shadow');
+    const hexShadow = document.getElementById('hex-shadow');
+
+    function syncColorInputs() {
+      pickerIron.value = state.ironColor;
+      hexIron.value = state.ironColor;
+      pickerHighlight.value = state.highlightColor;
+      hexHighlight.value = state.highlightColor;
+      pickerBg.value = state.bgColor;
+      hexBg.value = state.bgColor;
+      pickerShadow.value = state.shadowColor;
+      hexShadow.value = state.shadowColor;
+    }
+
+    pickerIron.addEventListener('input', (e) => {
+      state.ironColor = e.target.value;
+      hexIron.value = e.target.value;
+      render();
+    });
+    hexIron.addEventListener('change', (e) => {
+      state.ironColor = e.target.value;
+      pickerIron.value = e.target.value;
+      render();
+    });
+
+    pickerHighlight.addEventListener('input', (e) => {
+      state.highlightColor = e.target.value;
+      hexHighlight.value = e.target.value;
+      render();
+    });
+    hexHighlight.addEventListener('change', (e) => {
+      state.highlightColor = e.target.value;
+      pickerHighlight.value = e.target.value;
+      render();
+    });
+
+    pickerBg.addEventListener('input', (e) => {
+      state.bgColor = e.target.value;
+      hexBg.value = e.target.value;
+      render();
+    });
+    hexBg.addEventListener('change', (e) => {
+      state.bgColor = e.target.value;
+      pickerBg.value = e.target.value;
+      render();
+    });
+
+    pickerShadow.addEventListener('input', (e) => {
+      state.shadowColor = e.target.value;
+      hexShadow.value = e.target.value;
+      render();
+    });
+    hexShadow.addEventListener('change', (e) => {
+      state.shadowColor = e.target.value;
+      pickerShadow.value = e.target.value;
+      render();
+    });
+
+    // Preset Palettes
+    document.querySelectorAll('.palette-preset-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.palette-preset-btn').forEach(b => {
+          b.classList.remove('border-amber-500', 'bg-amber-500/10');
+          b.classList.add('border-slate-800', 'bg-slate-950/70');
+        });
+        btn.classList.add('border-amber-500', 'bg-amber-500/10');
+        btn.classList.remove('border-slate-800', 'bg-slate-950/70');
+
+        state.ironColor = btn.dataset.iron;
+        state.highlightColor = btn.dataset.highlight;
+        state.bgColor = btn.dataset.bg;
+        state.shadowColor = btn.dataset.shadow;
+        state.wallType = btn.dataset.wall;
+
+        syncColorInputs();
+
+        // Update Wall tab buttons
+        document.querySelectorAll('.wall-opt').forEach(b => {
+          b.classList.toggle('active', b.dataset.wall === state.wallType);
+          b.classList.toggle('border-amber-500', b.dataset.wall === state.wallType);
+          b.classList.toggle('bg-amber-500/10', b.dataset.wall === state.wallType);
+        });
+
+        render();
+        showToast('已套用配色盤！');
+      });
+    });
+
+    // Toggle Clean View button in header
+    const btnToggleClean = document.getElementById('btn-toggle-clean');
+    const labelCleanBtn = document.getElementById('label-clean-btn');
+    btnToggleClean.addEventListener('click', () => {
+      state.cleanMode = !state.cleanMode;
+      if (state.cleanMode) {
+        btnToggleClean.classList.add('bg-cyan-950', 'border-cyan-500', 'text-cyan-300');
+        labelCleanBtn.textContent = '復原 3D 擬真';
+        showToast('已進入極簡清爽圖面模式（無落影、純淨線條）');
+      } else {
+        btnToggleClean.classList.remove('bg-cyan-950', 'border-cyan-500', 'text-cyan-300');
+        labelCleanBtn.textContent = '極簡清爽圖';
+        showToast('已切換回 3D 陽光擬真模式');
+      }
+      render();
+    });
+
+    // Randomize Idea Combination
+    document.getElementById('btn-randomize').addEventListener('click', () => {
+      const presets = [
+        '平安 喜樂 萬事 勝意',
+        '春暖 花開 歲月 靜好',
+        '花鳥 風月 日日 是好',
+        '평안 희락 만사 승의',
+        '十 井 田 回 山 川 日 月',
+        '福 祿 壽 喜 財 丁 貴 順'
+      ];
+      const frames = ['square', 'rect-v', 'rect-h', 'hexagon', 'octagon', 'circle', 'diamond', 'arch', 'triangle'];
+      const patterns = ['flush-matrix', 'mirror-quad', 'rotate-checker', 'brick-stagger', 'diamond-flush', 'fourfold'];
+
+      state.text = presets[Math.floor(Math.random() * presets.length)];
+      inputText.value = state.text;
+      state.frameType = frames[Math.floor(Math.random() * frames.length)];
+      state.patternType = patterns[Math.floor(Math.random() * patterns.length)];
+
+      // Update frame buttons UI
+      document.querySelectorAll('.frame-opt').forEach(b => {
+        b.classList.toggle('active', b.dataset.frame === state.frameType);
+        b.classList.toggle('border-amber-500', b.dataset.frame === state.frameType);
+        b.classList.toggle('bg-amber-500/10', b.dataset.frame === state.frameType);
+      });
+
+      // Update pattern buttons UI
+      document.querySelectorAll('.pattern-opt').forEach(b => {
+        b.classList.toggle('active', b.dataset.pattern === state.patternType);
+        b.classList.toggle('border-amber-500', b.dataset.pattern === state.patternType);
+        b.classList.toggle('bg-amber-500/10', b.dataset.pattern === state.patternType);
+      });
+
+      render();
+      showToast('已為您隨機生成靈感組合！');
+    });
+
+    // Pattern Selector
+    const patternOpts = document.querySelectorAll('.pattern-opt');
+    patternOpts.forEach(btn => {
+      btn.addEventListener('click', () => {
+        patternOpts.forEach(b => {
+          b.classList.remove('active', 'border-amber-500', 'bg-amber-500/10');
+          b.classList.add('border-slate-800', 'bg-slate-950/60');
+        });
+        btn.classList.add('active', 'border-amber-500', 'bg-amber-500/10');
+        btn.classList.remove('border-slate-800', 'bg-slate-950/60');
+        state.patternType = btn.dataset.pattern;
+        render();
+      });
+    });
+
+    // Frame Selector
+    const frameOpts = document.querySelectorAll('.frame-opt');
+    frameOpts.forEach(btn => {
+      btn.addEventListener('click', () => {
+        frameOpts.forEach(b => {
+          b.classList.remove('active', 'border-amber-500', 'bg-amber-500/10');
+          b.classList.add('border-slate-800', 'bg-slate-950/60');
+        });
+        btn.classList.add('active', 'border-amber-500', 'bg-amber-500/10');
+        btn.classList.remove('border-slate-800', 'bg-slate-950/60');
+        state.frameType = btn.dataset.frame;
+        render();
+        showToast(`已切換外框，文字已自動依【${btn.querySelector('span').textContent.trim()}】幾何重排！`);
+      });
+    });
+
+    // Custom Aspect Ratio Slider & Presets
+    const sliderFrameRatio = document.getElementById('slider-frame-ratio');
+    const labelFrameRatio = document.getElementById('label-frame-ratio');
+    const ratioPresetBtns = document.querySelectorAll('.ratio-preset-btn');
+
+    function updateRatioDisplay(val) {
+      state.frameRatio = val;
+      if (Math.abs(val - 1.0) < 0.03) {
+        labelFrameRatio.textContent = '1 : 1.00 (正方)';
+      } else if (val > 1.0) {
+        labelFrameRatio.textContent = `${val.toFixed(2)} : 1 (橫向)`;
+      } else {
+        labelFrameRatio.textContent = `1 : ${(1 / val).toFixed(2)} (直立)`;
+      }
+      ratioPresetBtns.forEach(b => {
+        const bRatio = parseFloat(b.dataset.ratio);
+        const isActive = Math.abs(bRatio - val) < 0.05;
+        b.classList.toggle('active', isActive);
+        b.classList.toggle('border-amber-500', isActive);
+        b.classList.toggle('bg-amber-500/20', isActive);
+        b.classList.toggle('text-amber-300', isActive);
+        b.classList.toggle('font-bold', isActive);
+        b.classList.toggle('border-slate-800', !isActive);
+        b.classList.toggle('bg-slate-900', !isActive);
+      });
+    }
+
+    if (sliderFrameRatio) {
+      sliderFrameRatio.addEventListener('input', (e) => {
+        const val = parseFloat(e.target.value);
+        updateRatioDisplay(val);
+        render();
+      });
+    }
+
+    ratioPresetBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const val = parseFloat(btn.dataset.ratio);
+        if (sliderFrameRatio) sliderFrameRatio.value = val;
+        updateRatioDisplay(val);
+        render();
+        showToast(`已套用外框比例：${btn.textContent.trim()}`);
+      });
+    });
+
+    // Auto-Density Checkbox & Slider
+    const checkAutoDensity = document.getElementById('check-auto-density');
+    const containerDensitySlider = document.getElementById('container-density-slider');
+    checkAutoDensity.addEventListener('change', (e) => {
+      state.autoDensity = e.target.checked;
+      if (state.autoDensity) {
+        containerDensitySlider.classList.add('opacity-60', 'pointer-events-none');
+      } else {
+        containerDensitySlider.classList.remove('opacity-60', 'pointer-events-none');
+      }
+      render();
+      showToast(state.autoDensity ? '已開啟：外框形狀適配排版（100% 完整保留）' : '已切換為手動自訂網格尺寸');
+    });
+
+    // Density Slider
+    const sliderDensity = document.getElementById('slider-density');
+    sliderDensity.addEventListener('input', (e) => {
+      state.density = parseInt(e.target.value);
+      state.gridRows = state.density;
+      state.gridCols = state.density;
+      document.getElementById('label-density').textContent = `${state.density} x ${state.density}`;
+      render();
+    });
+
+    // Fit & Overlap Slider
+    const sliderFit = document.getElementById('slider-fit');
+    sliderFit.addEventListener('input', (e) => {
+      state.charFit = parseFloat(e.target.value);
+      const pct = Math.round(state.charFit * 100);
+      document.getElementById('label-fit').textContent = `${pct}% ${pct >= 100 ? '(無縫搭接)' : '(留細縫)'}`;
+      render();
+    });
+
+    const checkStretchFill = document.getElementById('check-stretch-fill');
+    if (checkStretchFill) {
+      checkStretchFill.addEventListener('change', (e) => {
+        state.stretchFill = e.target.checked;
+        render();
+        showToast(state.stretchFill ? '已啟動字元滿版微形變延展（極致填滿）' : '已切換為字元等比縮放');
+      });
+    }
+
+    document.getElementById('check-cell-dividers').addEventListener('change', (e) => {
+      state.showDividers = e.target.checked;
+      render();
+    });
+
+    // Wall Texture Selector
+    const wallOpts = document.querySelectorAll('.wall-opt');
+    wallOpts.forEach(btn => {
+      btn.addEventListener('click', () => {
+        wallOpts.forEach(b => {
+          b.classList.remove('active', 'border-amber-500', 'bg-amber-500/10');
+          b.classList.add('border-slate-800', 'bg-slate-950/60');
+        });
+        btn.classList.add('active', 'border-amber-500', 'bg-amber-500/10');
+        btn.classList.remove('border-slate-800', 'bg-slate-950/60');
+        state.wallType = btn.dataset.wall;
+        render();
+      });
+    });
+
+    // Sliders
+    const sliderRotation = document.getElementById('slider-rotation');
+    sliderRotation.addEventListener('input', (e) => {
+      state.rotation = parseInt(e.target.value);
+      document.getElementById('label-rotation').textContent = `${state.rotation}°`;
+      render();
+    });
+
+    const sliderIronStroke = document.getElementById('slider-iron-stroke');
+    sliderIronStroke.addEventListener('input', (e) => {
+      state.ironStroke = parseFloat(e.target.value);
+      document.getElementById('label-iron-stroke').textContent = `${state.ironStroke} px`;
+      render();
+    });
+
+    const sliderShadowDepth = document.getElementById('slider-shadow-depth');
+    sliderShadowDepth.addEventListener('input', (e) => {
+      state.shadowDepth = parseInt(e.target.value);
+      document.getElementById('label-shadow-depth').textContent = `${state.shadowDepth} px`;
+      render();
+    });
+
+    const sliderSunAngle = document.getElementById('slider-sun-angle');
+    sliderSunAngle.addEventListener('input', (e) => {
+      state.sunAngle = parseInt(e.target.value);
+      document.getElementById('label-sun-angle').textContent = `${state.sunAngle}°`;
+      render();
+    });
+
+    document.getElementById('check-welding-beads').addEventListener('change', (e) => {
+      state.weldingBeads = e.target.checked;
+      render();
+      showToast(state.weldingBeads ? '已啟用十字交接點熔焊微球' : '已關閉十字交接點熔焊微球');
+    });
+
+    document.getElementById('check-corner-brackets').addEventListener('change', (e) => {
+      state.cornerBrackets = e.target.checked;
+      render();
+      showToast(state.cornerBrackets ? '已啟用四角加固防護鉚釘五金' : '已關閉四角加固防護鉚釘五金');
+    });
+
+    document.getElementById('check-sun-beam').addEventListener('change', (e) => {
+      state.warmSunBeam = e.target.checked;
+      render();
+    });
+
+    const updateZoomDisplay = () => {
+      zoomIndicator.textContent = `${Math.round(state.zoom * 100)}%`;
+    };
+
+    document.getElementById('btn-zoom-in').addEventListener('click', () => {
+      state.zoom = Math.min(2.5, state.zoom + 0.15);
+      updateZoomDisplay();
+      render();
+    });
+
+    document.getElementById('btn-zoom-out').addEventListener('click', () => {
+      state.zoom = Math.max(0.4, state.zoom - 0.15);
+      updateZoomDisplay();
+      render();
+    });
+
+    document.getElementById('btn-zoom-fit').addEventListener('click', () => {
+      state.zoom = 1.0;
+      state.panX = 0;
+      state.panY = 0;
+      updateZoomDisplay();
+      render();
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+      state.isPanning = true;
+      state.lastMouseX = e.clientX;
+      state.lastMouseY = e.clientY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!state.isPanning) return;
+      const dx = e.clientX - state.lastMouseX;
+      const dy = e.clientY - state.lastMouseY;
+      state.panX += dx;
+      state.panY += dy;
+      state.lastMouseX = e.clientX;
+      state.lastMouseY = e.clientY;
+      render();
+    });
+
+    window.addEventListener('mouseup', () => {
+      state.isPanning = false;
+    });
+
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.08 : 0.92;
+      state.zoom = Math.min(3.0, Math.max(0.35, state.zoom * zoomFactor));
+      updateZoomDisplay();
+      render();
+    }, { passive: false });
+
+    // Reset Defaults
+    document.getElementById('btn-reset-default').addEventListener('click', () => {
+      state.text = '平安 喜樂 富貴 吉祥';
+      inputText.value = state.text;
+      state.frameType = 'square';
+      state.frameRatio = 1.0;
+      if (sliderFrameRatio) sliderFrameRatio.value = 1.0;
+      updateRatioDisplay(1.0);
+      state.patternType = 'flush-matrix';
+      state.ironColor = '#18181b';
+      state.highlightColor = '#52525b';
+      state.bgColor = '#f4f4f5';
+      state.shadowColor = '#71717a';
+      state.cleanMode = false;
+      state.wallType = 'clean';
+      state.warmSunBeam = false;
+      state.autoBridge = true;
+      state.autoDensity = true;
+      syncColorInputs();
+
+      const checkSun = document.getElementById('check-sun-beam');
+      if (checkSun) checkSun.checked = false;
+
+      // Reset wall options active class
+      document.querySelectorAll('.wall-opt').forEach(b => {
+        const isClean = b.dataset.wall === 'clean';
+        b.classList.toggle('active', isClean);
+        b.classList.toggle('border-amber-500', isClean);
+        b.classList.toggle('bg-amber-500/10', isClean);
+        b.classList.toggle('border-slate-800', !isClean);
+        b.classList.toggle('bg-slate-950/60', !isClean);
+      });
+
+      // Reset palette preset active class to clean default (極簡極白)
+      document.querySelectorAll('.palette-preset-btn').forEach(b => {
+        const isDefault = b.dataset.wall === 'clean' && b.dataset.iron === '#18181b';
+        b.classList.toggle('active', isDefault);
+        b.classList.toggle('border-amber-500', isDefault);
+        b.classList.toggle('bg-amber-500/10', isDefault);
+        b.classList.toggle('border-slate-800', !isDefault);
+        b.classList.toggle('bg-slate-950/70', !isDefault);
+      });
+
+      render();
+      showToast('已恢復預設設定（極簡極白風格）');
+    });
+
+    // Export High-Resolution PNG
+    document.getElementById('btn-export-png').addEventListener('click', () => {
+      const curZ = state.zoom;
+      const curPx = state.panX;
+      const curPy = state.panY;
+      state.zoom = 1.0;
+      state.panX = 0;
+      state.panY = 0;
+      render();
+
+      const dataURL = canvas.toDataURL('image/png');
+      const link = document.getElementById('download-anchor');
+      link.download = `cjk-grille-art-${Date.now()}.png`;
+      link.href = dataURL;
+      link.click();
+
+      state.zoom = curZ;
+      state.panX = curPx;
+      state.panY = curPy;
+      render();
+      showToast('高清圖檔匯出成功！');
+    });
+
+    // Export SVG Vector File (Precise Geometric Frame + Connecting Struts + Transformed Fonts)
+    document.getElementById('btn-export-svg').addEventListener('click', () => {
+      const tokens = getParsedTokens(state.text, state.extractConsonants);
+      const renderSize = 1600;
+      const layout = computeGrilleLayout(
+        renderSize,
+        renderSize,
+        tokens,
+        state.patternType,
+        state.density,
+        state.charFit,
+        state.frameType
+      );
+
+      const { cx, cy, maxW: maxLayoutW, maxH: maxLayoutH, halfW, halfH, yMin, numRows, rowHeight, cellPositions } = layout;
+      const strokeWidth = state.ironStroke;
+      const baseSize = renderSize - 80;
+      let maxW, maxH;
+      if (state.frameRatio >= 1) {
+        maxW = baseSize;
+        maxH = baseSize / state.frameRatio;
+      } else {
+        maxH = baseSize;
+        maxW = baseSize * state.frameRatio;
+      }
+
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+      svg += `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${renderSize} ${renderSize}" width="${renderSize}" height="${renderSize}">\n`;
+      svg += `  <defs>\n`;
+
+      // Define geometric clipping path matching selected frame
+      if (state.frameType !== 'none') {
+        const clipD = getShapeSvgPath(state.frameType, cx, cy, maxLayoutW + 28, maxLayoutH + 28, 14);
+        svg += `    <clipPath id="grille-frame-clip">\n`;
+        svg += `      <path d="${clipD}" />\n`;
+        svg += `    </clipPath>\n`;
+      }
+      svg += `  </defs>\n\n`;
+
+      // 1. Background layer
+      if (state.wallType !== 'transparent') {
+        svg += `  <!-- Background -->\n`;
+        svg += `  <rect width="${renderSize}" height="${renderSize}" fill="${state.bgColor}" />\n\n`;
+      }
+
+      // 2. Grille Content (Clipped strictly inside the geometric frame)
+      const clipAttr = state.frameType !== 'none' ? ` clip-path="url(#grille-frame-clip)"` : '';
+      svg += `  <!-- Grille Pattern & Interconnecting Struts -->\n`;
+      svg += `  <g id="grille-elements"${clipAttr}>\n`;
+
+      // 2a. Sub-frame Dividing Lattice Bars
+      if (state.showDividers) {
+        const divW = Math.max(1.2, strokeWidth * 0.75);
+        svg += `    <!-- Sub-frame Lattice Bars -->\n`;
+        for (let r = 0; r <= numRows; r++) {
+          const divY = yMin + r * rowHeight;
+          const divHalfW = Math.max(20, getShapeHalfWidth(state.frameType, divY, halfW, halfH) * 0.98);
+          svg += `    <line x1="${(cx - divHalfW).toFixed(1)}" y1="${(cy + divY).toFixed(1)}" x2="${(cx + divHalfW).toFixed(1)}" y2="${(cy + divY).toFixed(1)}" stroke="${state.ironColor}" stroke-width="${divW}" />\n`;
+        }
+
+        cellPositions.forEach(cell => {
+          if (cell.c > 0) {
+            const vx = cell.x - cell.colWidth / 2;
+            svg += `    <line x1="${vx.toFixed(1)}" y1="${(cell.y - cell.cellH / 2).toFixed(1)}" x2="${vx.toFixed(1)}" y2="${(cell.y + cell.cellH / 2).toFixed(1)}" stroke="${state.ironColor}" stroke-width="${divW}" />\n`;
+          }
+        });
+      }
+
+      // 2b. Auto-Connecting Struts (Welding characters to frames & neighbors)
+      if (state.autoBridge) {
+        const strutW = Math.max(1.2, strokeWidth * 0.95 * state.bridgeThickness);
+        svg += `    <!-- Auto Connecting Struts -->\n`;
+        cellPositions.forEach((cell, idx) => {
+          const reachX = (cell.cellW / 2) * 0.88;
+          const reachY = (cell.cellH / 2) * 0.88;
+
+          // Horizontal left strut
+          if (cell.c === 0) {
+            svg += `    <line x1="${(cell.x - reachX).toFixed(1)}" y1="${cell.y.toFixed(1)}" x2="${(cx - cell.safeHalfW).toFixed(1)}" y2="${cell.y.toFixed(1)}" stroke="${state.ironColor}" stroke-width="${strutW}" stroke-linecap="round" />\n`;
+          } else {
+            const leftCell = cellPositions[idx - 1];
+            svg += `    <line x1="${(cell.x - reachX).toFixed(1)}" y1="${cell.y.toFixed(1)}" x2="${(leftCell.x + (leftCell.cellW / 2) * 0.88).toFixed(1)}" y2="${cell.y.toFixed(1)}" stroke="${state.ironColor}" stroke-width="${strutW}" stroke-linecap="round" />\n`;
+          }
+
+          // Horizontal right strut
+          if (cell.c === cell.countInRow - 1) {
+            svg += `    <line x1="${(cell.x + reachX).toFixed(1)}" y1="${cell.y.toFixed(1)}" x2="${(cx + cell.safeHalfW).toFixed(1)}" y2="${cell.y.toFixed(1)}" stroke="${state.ironColor}" stroke-width="${strutW}" stroke-linecap="round" />\n`;
+          }
+
+          // Vertical top strut
+          svg += `    <line x1="${cell.x.toFixed(1)}" y1="${(cell.y - reachY).toFixed(1)}" x2="${cell.x.toFixed(1)}" y2="${(cell.y - cell.cellH / 2).toFixed(1)}" stroke="${state.ironColor}" stroke-width="${strutW}" stroke-linecap="round" />\n`;
+
+          // Vertical bottom strut
+          svg += `    <line x1="${cell.x.toFixed(1)}" y1="${(cell.y + reachY).toFixed(1)}" x2="${cell.x.toFixed(1)}" y2="${(cell.y + cell.cellH / 2).toFixed(1)}" stroke="${state.ironColor}" stroke-width="${strutW}" stroke-linecap="round" />\n`;
+
+          // Bridge ornament
+          if (state.bridgeStyle === 'rings') {
+            const ringR = Math.max(2.5, strokeWidth * 1.3);
+            svg += `    <circle cx="${cell.x.toFixed(1)}" cy="${(cell.y - cell.cellH / 2).toFixed(1)}" r="${ringR.toFixed(1)}" fill="none" stroke="${state.ironColor}" stroke-width="${strutW}" />\n`;
+          } else if (state.bridgeStyle === 'diamond') {
+            const dSize = Math.min(cell.cellW, cell.cellH) * 0.16;
+            svg += `    <polygon points="${(cell.x - dSize).toFixed(1)},${cell.y.toFixed(1)} ${cell.x.toFixed(1)},${(cell.y - dSize).toFixed(1)} ${(cell.x + dSize).toFixed(1)},${cell.y.toFixed(1)} ${cell.x.toFixed(1)},${(cell.y + dSize).toFixed(1)}" fill="none" stroke="${state.ironColor}" stroke-width="${strutW}" />\n`;
+          }
+        });
+      }
+
+      // 2b-2. SVG Export of Cross Weld Beads
+      if (state.weldingBeads) {
+        const beadR = Math.max(4.5, strokeWidth * 1.35);
+        svg += `    <!-- Cross Weld Beads -->\n`;
+        if (state.showDividers) {
+          for (let r = 0; r <= numRows; r++) {
+            const divY = yMin + r * rowHeight;
+            cellPositions.forEach(cell => {
+              if (cell.r === r || (r === numRows && cell.r === numRows - 1)) {
+                const vx = cell.x - cell.colWidth / 2;
+                svg += `    <circle cx="${vx.toFixed(1)}" cy="${(cy + divY).toFixed(1)}" r="${beadR.toFixed(1)}" fill="${state.ironColor}" stroke="${state.highlightColor}" stroke-width="1" />\n`;
+                if (cell.c === cell.countInRow - 1) {
+                  svg += `    <circle cx="${(cell.x + cell.colWidth / 2).toFixed(1)}" cy="${(cy + divY).toFixed(1)}" r="${beadR.toFixed(1)}" fill="${state.ironColor}" stroke="${state.highlightColor}" stroke-width="1" />\n`;
+                }
+              }
+            });
+          }
+        }
+        if (state.autoBridge) {
+          cellPositions.forEach(cell => {
+            svg += `    <circle cx="${cell.x.toFixed(1)}" cy="${(cell.y - cell.cellH / 2).toFixed(1)}" r="${(beadR * 0.9).toFixed(1)}" fill="${state.ironColor}" stroke="${state.highlightColor}" stroke-width="1" />\n`;
+            svg += `    <circle cx="${cell.x.toFixed(1)}" cy="${(cell.y + cell.cellH / 2).toFixed(1)}" r="${(beadR * 0.9).toFixed(1)}" fill="${state.ironColor}" stroke="${state.highlightColor}" stroke-width="1" />\n`;
+          });
+        }
+      }
+
+      // 2c. Characters with exact scaling, rotation and styling
+      svg += `    <!-- Typographic Characters -->\n`;
+      const cleanFont = state.fontFamily.replace(/'/g, '');
+
+      cellPositions.forEach(cell => {
+        let flipX = 1;
+        let flipY = 1;
+        let extraRot = state.rotation;
+
+        if (state.patternType === 'mirror-quad') {
+          flipX = (cell.c % 2 === 1) ? -1 : 1;
+          flipY = (cell.r % 2 === 1) ? -1 : 1;
+        } else if (state.patternType === 'rotate-checker') {
+          if ((cell.r + cell.c) % 2 === 1) extraRot += 90;
+        } else if (state.patternType === 'diamond-flush') {
+          extraRot += 45;
+        }
+
+        const scaleX = cell.scaleX * flipX;
+        const scaleY = cell.scaleY * flipY;
+        const avgScale = Math.max(0.001, (Math.abs(scaleX) + Math.abs(scaleY)) / 2);
+        const effectiveStroke = strokeWidth / avgScale;
+
+        svg += `    <g transform="translate(${cell.x.toFixed(1)}, ${cell.y.toFixed(1)}) rotate(${extraRot}) scale(${scaleX.toFixed(3)}, ${scaleY.toFixed(3)})">\n`;
+        // Metal stroke outer body
+        svg += `      <text x="0" y="0" font-family="${cleanFont}" font-weight="900" font-size="100" text-anchor="middle" dominant-baseline="central" stroke="${state.ironColor}" stroke-width="${(effectiveStroke * 2.2).toFixed(2)}" stroke-linejoin="round" stroke-linecap="round" fill="${state.ironColor}">${cell.char}</text>\n`;
+        // Central metallic highlight ridge
+        svg += `      <text x="0" y="0" font-family="${cleanFont}" font-weight="900" font-size="100" text-anchor="middle" dominant-baseline="central" stroke="${state.highlightColor}" stroke-width="${Math.max(0.6, effectiveStroke * 0.55).toFixed(2)}" stroke-linejoin="round" stroke-linecap="round" fill="none">${cell.char}</text>\n`;
+        svg += `    </g>\n`;
+      });
+
+      svg += `  </g>\n\n`;
+
+      // 3. Exact Geometric Window Outer & Inner Frame
+      if (state.frameType !== 'none') {
+        svg += `  <!-- Geometric Outer Frames -->\n`;
+        const outerD = getShapeSvgPath(state.frameType, cx, cy, maxW, maxH, 0);
+        const innerD = getShapeSvgPath(state.frameType, cx, cy, maxW, maxH, 14);
+        const innerHighlightD = getShapeSvgPath(state.frameType, cx, cy, maxW, maxH, 15.5);
+
+        svg += `  <path d="${outerD}" fill="none" stroke="${state.ironColor}" stroke-width="${(strokeWidth * 3.8).toFixed(1)}" stroke-linejoin="round" stroke-linecap="round" />\n`;
+        svg += `  <path d="${innerD}" fill="none" stroke="${state.ironColor}" stroke-width="${(strokeWidth * 1.6).toFixed(1)}" stroke-linejoin="round" stroke-linecap="round" />\n`;
+        svg += `  <path d="${innerHighlightD}" fill="none" stroke="${state.highlightColor}" stroke-width="1.0" />\n`;
+
+        // Corner L-brackets & Studded Rivets in SVG
+        if (state.cornerBrackets) {
+          const rivetR = Math.max(5.5, strokeWidth * 1.5);
+          svg += `  <!-- Corner Brackets and Rivets -->\n`;
+          if (state.frameType === 'square' || state.frameType === 'rect-v' || state.frameType === 'rect-h') {
+            const armLen = Math.min(maxW / 2, maxH / 2) * 0.16;
+            const armThick = Math.max(14, strokeWidth * 3.4);
+            const corners = [
+              { x: cx - maxW / 2, y: cy - maxH / 2, dx: 1, dy: 1 },
+              { x: cx + maxW / 2, y: cy - maxH / 2, dx: -1, dy: 1 },
+              { x: cx - maxW / 2, y: cy + maxH / 2, dx: 1, dy: -1 },
+              { x: cx + maxW / 2, y: cy + maxH / 2, dx: -1, dy: -1 }
+            ];
+            corners.forEach(c => {
+              const d = `M ${c.x} ${c.y} L ${c.x + c.dx * armLen} ${c.y} L ${c.x + c.dx * armLen} ${c.y + c.dy * armThick} L ${c.x + c.dx * armThick} ${c.y + c.dy * armThick} L ${c.x + c.dx * armThick} ${c.y + c.dy * armLen} L ${c.x} ${c.y + c.dy * armLen} Z`;
+              svg += `  <path d="${d}" fill="${state.ironColor}" stroke="${state.highlightColor}" stroke-width="1.4" />\n`;
+              svg += `  <circle cx="${c.x + c.dx * (armThick * 0.5)}" cy="${c.y + c.dy * (armThick * 0.5)}" r="${rivetR}" fill="${state.ironColor}" stroke="${state.highlightColor}" stroke-width="1.2" />\n`;
+              svg += `  <circle cx="${c.x + c.dx * (armLen * 0.72)}" cy="${c.y + c.dy * (armThick * 0.5)}" r="${rivetR * 0.85}" fill="${state.ironColor}" stroke="${state.highlightColor}" stroke-width="1.2" />\n`;
+              svg += `  <circle cx="${c.x + c.dx * (armThick * 0.5)}" cy="${c.y + c.dy * (armLen * 0.72)}" r="${rivetR * 0.85}" fill="${state.ironColor}" stroke="${state.highlightColor}" stroke-width="1.2" />\n`;
+            });
+          } else {
+            const rivetCount = state.frameType === 'circle' ? 8 : 8;
+            const rW = (maxW / 2) - 8;
+            const rH = (maxH / 2) - 8;
+            for (let i = 0; i < rivetCount; i++) {
+              const ang = (i / rivetCount) * Math.PI * 2;
+              const rx = cx + Math.cos(ang) * rW;
+              const ry = cy + Math.sin(ang) * rH;
+              svg += `  <circle cx="${rx.toFixed(1)}" cy="${ry.toFixed(1)}" r="${rivetR}" fill="${state.ironColor}" stroke="${state.highlightColor}" stroke-width="1.2" />\n`;
+            }
+          }
+        }
+      }
+
+      svg += `</svg>`;
+
+      const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.getElementById('download-anchor');
+      link.download = `grille-vector-${state.frameType}-${Date.now()}.svg`;
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
+      showToast('SVG 向量檔（含外框與連接線）已成功匯出！');
+    });
+
+    window.addEventListener('load', () => {
+      if (window.lucide) {
+        window.lucide.createIcons();
+      }
+      syncColorInputs();
+      render();
+    });
+  </script>
+</body>
+</html>
