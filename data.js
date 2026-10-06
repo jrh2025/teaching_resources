@@ -391,7 +391,7 @@ window.APP_DATA = {
       "title": "臺南市國民中小學教師支持暨合理管教全攻略手冊-線上諮詢查詢系統",
       "category": "班級經營",
       "description": "臺南市國民中小學教師支持暨合理管教全攻略手冊-\n線上諮詢查詢系統， 包含:完整操作使用手冊、完整逐步部署與發布教學手冊、線上測試網址。\n一個專為國民中小學校園教學現場設計，提供教師面對管教情境時的即時因應策略，並提供管理人員動態增修法規與情境指引的系統。",
-      "link": "TN_Guidelines_GAS_Deployment_Manual.html",
+      "link": "TN_Guidelines_User_Manual.html",
       "icon": "FileSearch",
       "color": "rose"
     }
