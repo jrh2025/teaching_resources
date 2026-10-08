@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>蟑螂大逃竄 - 螢幕小遊戲</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;600;800;900&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Outfit', 'Noto Sans TC', sans-serif;
+      touch-action: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.9); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 0.2; }
+      100% { transform: scale(0.9); opacity: 0.8; }
+    }
+    .animate-pulse-ring {
+      animation: pulse-ring 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @keyframes wiggle {
+      0%, 100% { transform: rotate(-2deg); }
+      50% { transform: rotate(2deg); }
+    }
+    .animate-wiggle {
+      animation: wiggle 0.6s ease-in-out infinite;
+    }
+    /* Custom scrollbars and canvas settings */
+    canvas {
+      display: block;
+      image-rendering: auto;
+    }
+  </style>
+</head>
+<body class="bg-neutral-950 text-neutral-100 h-screen w-screen overflow-hidden select-none relative">
+
+  <div class="relative w-full h-full overflow-hidden flex flex-col">
+    <!-- Game Canvas -->
+    <canvas id="gameCanvas" class="w-full h-full absolute inset-0 cursor-crosshair z-0"></canvas>
+
+    <header class="relative z-10 w-full p-4 pointer-events-none flex justify-between items-start">
+      <!-- Left Info Box -->
+      <div class="flex flex-col gap-2 pointer-events-auto">
+        <div class="bg-neutral-900/85 backdrop-blur-md border border-neutral-700/60 rounded-2xl px-4 py-2.5 shadow-2xl flex items-center gap-3">
+          <div class="w-3 h-3 rounded-full transition-colors duration-300" id="statusDot"></div>
+          <div>
+            <div class="text-xs uppercase tracking-wider text-neutral-400 font-bold" id="statusText">活動中</div>
+            <div class="text-sm font-extrabold text-amber-400" id="timerDisplay">00:00.0</div>
+          </div>
+        </div>
+
+        <div class="bg-neutral-900/75 backdrop-blur-md border border-neutral-800 rounded-xl px-3 py-1.5 shadow-lg flex items-center gap-3 text-xs text-neutral-300">
+          <span>距離老巢: <strong id="distDisplay" class="text-emerald-400 font-mono">0</strong> px</span>
+          <span class="text-neutral-600">|</span>
+          <span>定格次數: <strong id="freezeCountDisplay" class="text-sky-400 font-mono">0</strong></span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 pointer-events-auto">
+        <!-- Fullscreen Toggle Button -->
+        <button id="fullscreenBtn" class="bg-neutral-900/85 hover:bg-neutral-800 active:scale-95 transition backdrop-blur-md border border-neutral-700/60 rounded-xl p-2.5 text-neutral-300 hover:text-white shadow-xl touch-manipulation" title="全螢幕切換 (縮放滿版)">
+          <svg id="fullscreenIconEnter" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+          </svg>
+          <svg id="fullscreenIconExit" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 4v4H5m0 0l4-4M15 4v4h4m0 0l-4-4M9 20v-4H5m0 0l4 4m6-4h4v4m0 0l-4-4" />
+          </svg>
+        </button>
+
+        <!-- Audio Toggle Button -->
+        <button id="soundBtn" class="bg-neutral-900/85 hover:bg-neutral-800 active:scale-95 transition backdrop-blur-md border border-neutral-700/60 rounded-xl p-2.5 text-neutral-300 hover:text-white shadow-xl touch-manipulation" title="切換音效">
+          <svg id="soundIconOn" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          </svg>
+          <svg id="soundIconOff" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+          </svg>
+        </button>
+
+        <!-- Reset Button -->
+        <button id="restartBtn" class="bg-neutral-900/85 hover:bg-neutral-800 active:scale-95 transition backdrop-blur-md border border-neutral-700/60 rounded-xl p-2.5 text-neutral-300 hover:text-white shadow-xl touch-manipulation" title="重新開始">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="mt-auto relative z-10 w-full p-3 sm:p-4 pointer-events-none flex flex-col items-center">
+      <div id="instructionBanner" class="bg-neutral-950/85 backdrop-blur-lg border border-neutral-800/80 text-neutral-300 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-medium shadow-2xl flex items-center gap-2 transition-all duration-300 text-center max-w-[94vw]">
+        <span class="inline-block w-2.5 h-2.5 shrink-0 rounded-full bg-amber-400 animate-ping"></span>
+        <span id="instructionText">按住蟑螂可<strong class="text-amber-400">拖曳搬運</strong> ｜ 放開手：<strong>從新位置繼續逃竄</strong></span>
+      </div>
+    </div>
+
+    <div id="victoryModal" class="hidden absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md transition-opacity duration-300 opacity-0">
+      <div class="bg-neutral-900 border border-neutral-700/80 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl text-center transform scale-95 transition-transform duration-300" id="modalCard">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-3xl">
+          🏠
+        </div>
+        <h2 class="text-2xl font-black text-white mb-1">蟑螂順利到家了！</h2>
+        <p class="text-neutral-400 text-sm mb-5">牠成功鑽回了溫暖漆黑的角落裡...</p>
+
+        <div class="bg-neutral-950/80 rounded-2xl p-4 border border-neutral-800 mb-6 text-left space-y-2.5">
+          <div class="flex justify-between items-center text-xs sm:text-sm">
+            <span class="text-neutral-400">總耗時：</span>
+            <span id="finalTime" class="font-extrabold text-amber-400 font-mono text-base">00:00.0</span>
+          </div>
+          <div class="flex justify-between items-center text-xs sm:text-sm">
+            <span class="text-neutral-400">按住定格次數：</span>
+            <span id="finalFreezes" class="font-bold text-sky-400 font-mono">0 次</span>
+          </div>
+          <div class="flex justify-between items-center text-xs sm:text-sm">
+            <span class="text-neutral-400">逃竄總里程：</span>
+            <span id="finalDistance" class="font-bold text-emerald-400 font-mono">0 px</span>
+          </div>
+        </div>
+
+        <button id="modalPlayAgain" class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:scale-98 text-neutral-950 font-black text-sm uppercase tracking-wide transition shadow-lg shadow-amber-500/20">
+          再抓一隻（重新開始）
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Audio engine using Web Audio API
+    class InsectSoundFX {
+      constructor() {
+        this.ctx = null;
+        this.isMuted = false;
+        this.scuttleNode = null;
+        this.scuttleGain = null;
+        this.init();
+      }
+
+      init() {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        this.ctx = new AudioContext();
+      }
+
+      ensureContext() {
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      startScuttleNoise() {
+        if (this.isMuted || !this.ctx || this.scuttleNode) return;
+        this.ensureContext();
+
+        // Procedural rustling white noise with bandpass filtering for insect footsteps
+        const bufferSize = this.ctx.sampleRate * 1;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * 0.18;
+        }
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        noise.loop = true;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.setValueAtTime(3200, this.ctx.currentTime);
+        filter.Q.setValueAtTime(4.0, this.ctx.currentTime);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.001, this.ctx.currentTime);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        noise.start();
+        this.scuttleNode = noise;
+        this.scuttleGain = gain;
+      }
+
+      setScuttleIntensity(speedRatio) {
+        if (!this.scuttleGain || this.isMuted) return;
+        const targetGain = Math.max(0.0001, Math.min(0.06, speedRatio * 0.05));
+        this.scuttleGain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.05);
+      }
+
+      stopScuttleNoise() {
+        if (this.scuttleGain) {
+          this.scuttleGain.gain.setTargetAtTime(0.00001, this.ctx.currentTime, 0.04);
+        }
+      }
+
+      playFreezeBlip() {
+        if (this.isMuted || !this.ctx) return;
+        this.ensureContext();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(420, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(140, this.ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.13);
+      }
+
+      playUnfreezeChirp() {
+        if (this.isMuted || !this.ctx) return;
+        this.ensureContext();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(180, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(680, this.ctx.currentTime + 0.09);
+        gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.09);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.1);
+      }
+
+      playHomeArrival() {
+        if (this.isMuted || !this.ctx) return;
+        this.ensureContext();
+        const notes = [261.63, 329.63, 392.00, 523.25];
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.09);
+          gain.gain.setValueAtTime(0.12, this.ctx.currentTime + idx * 0.09);
+          gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + idx * 0.09 + 0.35);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(this.ctx.currentTime + idx * 0.09);
+          osc.stop(this.ctx.currentTime + idx * 0.09 + 0.36);
+        });
+      }
+    }
+
+    class Cockroach {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.angle = Math.random() * Math.PI * 2;
+        this.targetAngle = this.angle;
+        this.speed = 0;
+        this.maxSpeed = 380;
+        this.minSpeed = 120;
+        this.length = 50; 
+        this.width = 20;
+
+        // Tripod gait mechanics: 6 legs arranged left 3, right 3
+        this.gaitPhase = 0;
+        this.isFrozen = false;
+        this.isBeingDragged = false;
+
+        // Realistic behavioral timer
+        this.behaviorTimer = 0;
+        this.behaviorState = 'sprint'; // sprint, wander, pause, steer
+        this.antennaTwitch = 0;
+        this.bodyWiggle = 0;
+
+        // Distance accumulator
+        this.totalDistanceTravelled = 0;
+
+        // Foot placement offsets for rendering smooth IK joints
+        this.legs = [
+          // Front-Left, Mid-Left, Rear-Left
+          { side: -1, pos: 0.6, length1: 16, length2: 20, phaseOffset: 0 },
+          { side: -1, pos: 0.0, length1: 18, length2: 24, phaseOffset: Math.PI },
+          { side: -1, pos: -0.6, length1: 22, length2: 30, phaseOffset: 0 },
+          // Front-Right, Mid-Right, Rear-Right
+          { side: 1, pos: 0.6, length1: 16, length2: 20, phaseOffset: Math.PI },
+          { side: 1, pos: 0.0, length1: 18, length2: 24, phaseOffset: 0 },
+          { side: 1, pos: -0.6, length1: 22, length2: 30, phaseOffset: Math.PI }
+        ];
+      }
+
+      // Precise hit test ensuring pointer touches or clicks directly on the cockroach
+      isPointInside(px, py) {
+        const dx = px - this.x;
+        const dy = py - this.y;
+        // Generous touch target margin (radius ~46px) to accommodate mobile thumbs comfortably
+        const hitRadius = Math.max(46, this.length * 0.85);
+        return Math.hypot(dx, dy) <= hitRadius;
+      }
+
+      update(dt, homeX, homeY, canvasWidth, canvasHeight) {
+        this.antennaTwitch += dt * (this.isFrozen ? 3.0 : 12.0);
+
+        if (this.isFrozen) {
+          this.speed = 0;
+          // 被拖曳時六足手忙腳亂微幅掙扎
+          if (this.isBeingDragged) {
+            this.gaitPhase += dt * 16.0;
+            this.bodyWiggle = Math.sin(this.gaitPhase * 2) * 0.08;
+          }
+          return;
+        }
+
+        this.behaviorTimer -= dt;
+        if (this.behaviorTimer <= 0) {
+          this.pickNewBehavior(homeX, homeY, canvasWidth, canvasHeight);
+        }
+
+        // Angle smoothing - cockroaches turn with swift, snappy pivots
+        let angleDiff = this.targetAngle - this.angle;
+        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+        while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+        this.angle += angleDiff * Math.min(1.0, dt * 14.0);
+
+        // Movement step
+        const stepDist = this.speed * dt;
+        const prevX = this.x;
+        const prevY = this.y;
+
+        this.x += Math.cos(this.angle) * stepDist;
+        this.y += Math.sin(this.angle) * stepDist;
+
+        this.totalDistanceTravelled += Math.hypot(this.x - prevX, this.y - prevY);
+
+        // Keep inside boundaries with natural bounce
+        const margin = 35;
+        if (this.x < margin) {
+          this.x = margin;
+          this.targetAngle = 0 + (Math.random() - 0.5) * 1.2;
+        } else if (this.x > canvasWidth - margin) {
+          this.x = canvasWidth - margin;
+          this.targetAngle = Math.PI + (Math.random() - 0.5) * 1.2;
+        }
+        if (this.y < margin) {
+          this.y = margin;
+          this.targetAngle = Math.PI * 0.5 + (Math.random() - 0.5) * 1.2;
+        } else if (this.y > canvasHeight - margin) {
+          this.y = canvasHeight - margin;
+          this.targetAngle = -Math.PI * 0.5 + (Math.random() - 0.5) * 1.2;
+        }
+
+        // Advance tripod gait proportional to movement speed
+        this.gaitPhase += dt * (this.speed * 0.08);
+        this.bodyWiggle = Math.sin(this.gaitPhase * 2) * 0.06;
+      }
+
+      pickNewBehavior(homeX, homeY, canvasWidth, canvasHeight) {
+        const rand = Math.random();
+        const distToHome = Math.hypot(homeX - this.x, homeY - this.y);
+        const dirToHome = Math.atan2(homeY - this.y, homeX - this.x);
+
+        // 35% chance of homing bias (keeps game playable and engaging), 65% erratic scurry
+        if (rand < 0.35 || distToHome < 180) {
+          this.behaviorState = 'homing';
+          this.speed = this.minSpeed + Math.random() * (this.maxSpeed - this.minSpeed);
+          // Angle biased towards home with noisy wobble
+          this.targetAngle = dirToHome + (Math.random() - 0.5) * 0.75;
+          this.behaviorTimer = 0.4 + Math.random() * 0.9;
+        } else if (rand < 0.70) {
+          // Sprint burst
+          this.behaviorState = 'sprint';
+          this.speed = this.maxSpeed * (0.8 + Math.random() * 0.25);
+          this.targetAngle += (Math.random() - 0.5) * 1.6;
+          this.behaviorTimer = 0.3 + Math.random() * 0.7;
+        } else if (rand < 0.88) {
+          // Sharp zigzag veer
+          this.behaviorState = 'veer';
+          this.speed = this.minSpeed + Math.random() * 120;
+          this.targetAngle += (Math.random() > 0.5 ? 1 : -1) * (0.9 + Math.random() * 1.2);
+          this.behaviorTimer = 0.2 + Math.random() * 0.5;
+        } else {
+          // Quick hesitation pause
+          this.behaviorState = 'pause';
+          this.speed = 0;
+          this.behaviorTimer = 0.15 + Math.random() * 0.3;
+        }
+      }
+
+      draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle + this.bodyWiggle);
+
+        // Cast ground shadow
+        ctx.save();
+        ctx.translate(8, 9);
+        this.drawBodySilhoutte(ctx, 'rgba(0, 0, 0, 0.45)');
+        ctx.restore();
+
+        // 1. Draw 6 Segmented Insect Legs with Spines
+        this.drawLegs(ctx);
+
+        // 2. Draw Whiplike Antennae
+        this.drawAntennae(ctx);
+
+        // 3. Draw Cerci (rear sensory appendages)
+        this.drawCerci(ctx);
+
+        // 4. Draw Abdomen & Wings (Carapace)
+        this.drawAbdomen(ctx);
+
+        // 5. Draw Pronotum (large shield covering head/thorax)
+        this.drawPronotum(ctx);
+
+        // 6. Draw Head & Compound Eyes
+        this.drawHead(ctx);
+
+        ctx.restore();
+      }
+
+      drawLegs(ctx) {
+        ctx.lineWidth = 2.4;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        this.legs.forEach(leg => {
+          const side = leg.side;
+          const attachX = leg.pos * (this.length * 0.38);
+          const attachY = side * (this.width * 0.42);
+
+          // Cycle angle using tripod gait
+          const phase = this.gaitPhase + leg.phaseOffset;
+          const swing = this.isFrozen ? 0 : Math.sin(phase) * 0.45;
+
+          // Base joint angle
+          const defaultAngle = side > 0 ? Math.PI * 0.5 : -Math.PI * 0.5;
+          const joint1Angle = defaultAngle + leg.pos * -0.4 + swing;
+
+          // Femur (first joint)
+          const kneeX = attachX + Math.cos(joint1Angle) * leg.length1;
+          const kneeY = attachY + Math.sin(joint1Angle) * leg.length1;
+
+          // Tibia & Tarsus (second joint reaching out/back)
+          const joint2Angle = joint1Angle + (side > 0 ? 0.75 : -0.75) + swing * 0.3;
+          const footX = kneeX + Math.cos(joint2Angle) * leg.length2;
+          const footY = kneeY + Math.sin(joint2Angle) * leg.length2;
+
+          // Leg shadow
+          ctx.strokeStyle = '#220d04';
+          ctx.beginPath();
+          ctx.moveTo(attachX, attachY);
+          ctx.lineTo(kneeX, kneeY);
+          ctx.lineTo(footX, footY);
+          ctx.stroke();
+
+          // Highlight gradient on leg
+          ctx.strokeStyle = '#4e230f';
+          ctx.lineWidth = 1.6;
+          ctx.beginPath();
+          ctx.moveTo(attachX, attachY);
+          ctx.lineTo(kneeX, kneeY);
+          ctx.lineTo(footX, footY);
+          ctx.stroke();
+
+          // Tiny leg bristles / spines
+          ctx.strokeStyle = '#1b0a03';
+          ctx.lineWidth = 1.0;
+          for (let s = 0.3; s < 0.9; s += 0.3) {
+            const sx = kneeX + (footX - kneeX) * s;
+            const sy = kneeY + (footY - kneeY) * s;
+            ctx.beginPath();
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(sx + side * 2.5, sy + (side > 0 ? 3 : -3));
+            ctx.stroke();
+          }
+        });
+      }
+
+      drawAntennae(ctx) {
+        ctx.strokeStyle = '#3e1a0b';
+        ctx.lineWidth = 1.1;
+
+        const headX = this.length * 0.54;
+        const sides = [-1, 1];
+
+        sides.forEach((side, idx) => {
+          const sway = Math.sin(this.antennaTwitch + idx * 2.1) * 6;
+          const swayEnd = Math.cos(this.antennaTwitch * 0.7 + idx) * 12;
+
+          ctx.beginPath();
+          ctx.moveTo(headX, side * 3.5);
+          // Bezier curve out and forward
+          ctx.bezierCurveTo(
+            headX + 22, side * 14 + sway,
+            headX + 45, side * 24 + swayEnd,
+            headX + 68, side * 18 + swayEnd * 1.4
+          );
+          ctx.stroke();
+        });
+      }
+
+      drawCerci(ctx) {
+        ctx.strokeStyle = '#3a1708';
+        ctx.lineWidth = 1.4;
+        const rearX = -this.length * 0.54;
+
+        [-1, 1].forEach(side => {
+          ctx.beginPath();
+          ctx.moveTo(rearX, side * 3.5);
+          ctx.lineTo(rearX - 12, side * 9);
+          ctx.stroke();
+        });
+      }
+
+      drawAbdomen(ctx) {
+        const halfL = this.length * 0.5;
+        const halfW = this.width * 0.5;
+
+        // Abdomen gradient (glossy chestnut-brown periplaneta americana style)
+        const wingGrad = ctx.createLinearGradient(0, -halfW, 0, halfW);
+        wingGrad.addColorStop(0, '#5a240c');
+        wingGrad.addColorStop(0.3, '#7c3311');
+        wingGrad.addColorStop(0.5, '#994215');
+        wingGrad.addColorStop(0.7, '#7c3311');
+        wingGrad.addColorStop(1, '#441908');
+
+        ctx.fillStyle = wingGrad;
+        ctx.beginPath();
+        // Teardrop aerodynamic roach shell
+        ctx.moveTo(halfL * 0.3, -halfW * 0.95);
+        ctx.quadraticCurveTo(-halfL * 0.1, -halfW * 1.08, -halfL * 0.95, -halfW * 0.25);
+        ctx.quadraticCurveTo(-halfL * 1.06, 0, -halfL * 0.95, halfW * 0.25);
+        ctx.quadraticCurveTo(-halfL * 0.1, halfW * 1.08, halfL * 0.3, halfW * 0.95);
+        ctx.closePath();
+        ctx.fill();
+
+        // Longitudinal wing split line & venation
+        ctx.strokeStyle = '#2b0f04';
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.moveTo(halfL * 0.3, 0);
+        ctx.lineTo(-halfL * 0.95, 0);
+        ctx.stroke();
+
+        // Wing vein arcs
+        ctx.strokeStyle = 'rgba(45, 16, 5, 0.45)';
+        ctx.lineWidth = 0.8;
+        for (let i = -0.7; i <= 0.2; i += 0.22) {
+          ctx.beginPath();
+          ctx.moveTo(halfL * i, -halfW * 0.9);
+          ctx.quadraticCurveTo(halfL * (i - 0.1), 0, halfL * i, halfW * 0.9);
+          ctx.stroke();
+        }
+
+        // Glossy chitin light reflection
+        const highlightGrad = ctx.createLinearGradient(0, -halfW * 0.7, 0, 0);
+        highlightGrad.addColorStop(0, 'rgba(255, 200, 160, 0.45)');
+        highlightGrad.addColorStop(1, 'rgba(255, 200, 160, 0)');
+        ctx.fillStyle = highlightGrad;
+        ctx.beginPath();
+        ctx.ellipse(-halfL * 0.2, -halfW * 0.35, halfL * 0.45, halfW * 0.22, -0.1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      drawPronotum(ctx) {
+        const px = this.length * 0.32;
+        const pw = this.width * 0.94;
+        const pl = this.length * 0.34;
+
+        // Dark shield with signature pale margin
+        const pGrad = ctx.createRadialGradient(px, 0, 2, px, 0, pl * 0.85);
+        pGrad.addColorStop(0, '#1a0601');
+        pGrad.addColorStop(0.65, '#2e0f05');
+        pGrad.addColorStop(0.88, '#6b2d10');
+        pGrad.addColorStop(1, '#94441b');
+
+        ctx.fillStyle = pGrad;
+        ctx.beginPath();
+        ctx.ellipse(px, 0, pl * 0.55, pw * 0.52, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = '#120401';
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      }
+
+      drawHead(ctx) {
+        const hx = this.length * 0.52;
+        ctx.fillStyle = '#1c0803';
+        ctx.beginPath();
+        ctx.ellipse(hx, 0, 5.5, 4.2, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dark compound eyes
+        ctx.fillStyle = '#0d0301';
+        ctx.beginPath();
+        ctx.ellipse(hx + 1.2, -3.2, 1.8, 1.3, 0.3, 0, Math.PI * 2);
+        ctx.ellipse(hx + 1.2, 3.2, 1.8, 1.3, -0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Eye glint
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.fillRect(hx + 1.5, -3.5, 0.8, 0.8);
+        ctx.fillRect(hx + 1.5, 2.9, 0.8, 0.8);
+      }
+
+      /* Silhouette for shadow */
+      drawBodySilhoutte(ctx, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, this.length * 0.52, this.width * 0.55, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    class CockroachHome {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.radius = 42;
+        this.pulse = 0;
+      }
+
+      update(dt) {
+        this.pulse += dt * 3.5;
+      }
+
+      draw(ctx) {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+
+        // Ambient dark grime aura around nest
+        const auraGrad = ctx.createRadialGradient(0, 0, this.radius * 0.4, 0, 0, this.radius * 1.8);
+        auraGrad.addColorStop(0, 'rgba(12, 6, 3, 0.95)');
+        auraGrad.addColorStop(0.6, 'rgba(12, 6, 3, 0.6)');
+        auraGrad.addColorStop(1, 'rgba(12, 6, 3, 0)');
+        ctx.fillStyle = auraGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius * 1.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Glowing guide pulse ring
+        const pulseR = this.radius + Math.sin(this.pulse) * 6;
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(0, 0, pulseR, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Deep dark crevice hole
+        const holeGrad = ctx.createRadialGradient(-4, -4, 2, 0, 0, this.radius);
+        holeGrad.addColorStop(0, '#050201');
+        holeGrad.addColorStop(0.7, '#150803');
+        holeGrad.addColorStop(0.9, '#361507');
+        holeGrad.addColorStop(1, '#1b0902');
+        ctx.fillStyle = holeGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Metal floor drain grate lines
+        ctx.strokeStyle = 'rgba(75, 40, 20, 0.7)';
+        ctx.lineWidth = 3;
+        for (let i = -this.radius + 10; i <= this.radius - 10; i += 12) {
+          const chord = Math.sqrt(Math.max(0, this.radius * this.radius - i * i));
+          ctx.beginPath();
+          ctx.moveTo(i, -chord + 4);
+          ctx.lineTo(i, chord - 4);
+          ctx.stroke();
+        }
+
+        // Enticing cookie crumb food bait inside nest
+        ctx.fillStyle = '#d97706';
+        ctx.beginPath();
+        ctx.arc(5, -6, 5, 0, Math.PI * 2);
+        ctx.arc(-8, 7, 3.5, 0, Math.PI * 2);
+        ctx.arc(10, 8, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Signboard / Label above hole
+        ctx.restore();
+        ctx.save();
+        ctx.translate(this.x, this.y - this.radius - 16);
+        ctx.font = '800 13px "Noto Sans TC", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#fbbf24';
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.shadowBlur = 8;
+        ctx.fillText('蟑螂的家 🕳️', 0, 0);
+        ctx.restore();
+      }
+    }
+
+    class FloorRenderer {
+      constructor() {
+        this.patternCanvas = null;
+        this.createPattern();
+      }
+
+      createPattern() {
+        const size = 96;
+        const pCanvas = document.createElement('canvas');
+        pCanvas.width = size;
+        pCanvas.height = size;
+        const pCtx = pCanvas.getContext('2d');
+
+        // Dirty kitchen tile base
+        pCtx.fillStyle = '#1c1917';
+        pCtx.fillRect(0, 0, size, size);
+
+        // Tile inner surface
+        pCtx.fillStyle = '#221f1d';
+        pCtx.fillRect(1, 1, size - 2, size - 2);
+
+        // Subtle grime speckles
+        pCtx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+        for (let i = 0; i < 40; i++) {
+          const rx = Math.random() * size;
+          const ry = Math.random() * size;
+          pCtx.fillRect(rx, ry, Math.random() * 2 + 1, Math.random() * 2 + 1);
+        }
+
+        // Grout seams
+        pCtx.strokeStyle = '#0c0a09';
+        pCtx.lineWidth = 2;
+        pCtx.strokeRect(0, 0, size, size);
+
+        this.patternCanvas = pCanvas;
+      }
+
+      draw(ctx, width, height) {
+        if (!this.patternCanvas) return;
+        const pattern = ctx.createPattern(this.patternCanvas, 'repeat');
+        ctx.fillStyle = pattern;
+        ctx.fillRect(0, 0, width, height);
+
+        // Vignette edges
+        const vigGrad = ctx.createRadialGradient(
+          width * 0.5, height * 0.5, Math.min(width, height) * 0.35,
+          width * 0.5, height * 0.5, Math.max(width, height) * 0.75
+        );
+        vigGrad.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        vigGrad.addColorStop(1, 'rgba(0, 0, 0, 0.7)');
+        ctx.fillStyle = vigGrad;
+        ctx.fillRect(0, 0, width, height);
+      }
+    }
+
+    class GameManager {
+      constructor() {
+        this.canvas = document.getElementById('gameCanvas');
+        this.ctx = this.canvas.getContext('2d');
+        this.soundFX = new InsectSoundFX();
+        this.floor = new FloorRenderer();
+
+        // UI references
+        this.statusDot = document.getElementById('statusDot');
+        this.statusText = document.getElementById('statusText');
+        this.timerDisplay = document.getElementById('timerDisplay');
+        this.distDisplay = document.getElementById('distDisplay');
+        this.freezeCountDisplay = document.getElementById('freezeCountDisplay');
+        this.instructionBanner = document.getElementById('instructionBanner');
+        this.victoryModal = document.getElementById('victoryModal');
+        this.modalCard = document.getElementById('modalCard');
+        this.finalTime = document.getElementById('finalTime');
+        this.finalFreezes = document.getElementById('finalFreezes');
+        this.finalDistance = document.getElementById('finalDistance');
+        this.modalPlayAgain = document.getElementById('modalPlayAgain');
+        this.soundBtn = document.getElementById('soundBtn');
+        this.soundIconOn = document.getElementById('soundIconOn');
+        this.soundIconOff = document.getElementById('soundIconOff');
+        this.fullscreenBtn = document.getElementById('fullscreenBtn');
+        this.fullscreenIconEnter = document.getElementById('fullscreenIconEnter');
+        this.fullscreenIconExit = document.getElementById('fullscreenIconExit');
+        this.restartBtn = document.getElementById('restartBtn');
+
+        // State trackers
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+        this.isHolding = false;
+        this.dragOffset = { x: 0, y: 0 };
+        this.freezeCount = 0;
+        this.gameTime = 0;
+        this.isGameOver = false;
+        this.pointerPos = { x: 0, y: 0 };
+        this.lastFrameTime = performance.now();
+        this.missRipples = [];
+
+        // Entities
+        this.roach = null;
+        this.home = null;
+
+        this.init();
+      }
+
+      init() {
+        this.handleResize();
+        window.addEventListener('resize', () => this.handleResize());
+        window.addEventListener('orientationchange', () => {
+          setTimeout(() => this.handleResize(), 150);
+        });
+
+        this.spawnEntities();
+        this.setupEventListeners();
+        this.setupFullscreen();
+        this.updateHUD();
+
+        // Begin main rendering loop
+        requestAnimationFrame(time => this.gameLoop(time));
+      }
+
+      handleResize() {
+        const prevWidth = this.width || window.innerWidth;
+        const prevHeight = this.height || window.innerHeight;
+
+        this.width = window.innerWidth;
+        this.height = window.innerHeight;
+        const dpr = window.devicePixelRatio || 1;
+        this.canvas.width = this.width * dpr;
+        this.canvas.height = this.height * dpr;
+        this.ctx.resetTransform();
+        this.ctx.scale(dpr, dpr);
+
+        // Responsive position recalculation during screen rotation or resize
+        if (this.roach && prevWidth && prevHeight) {
+          const ratioX = this.width / prevWidth;
+          const ratioY = this.height / prevHeight;
+          this.roach.x = Math.max(50, Math.min(this.width - 50, this.roach.x * ratioX));
+          this.roach.y = Math.max(50, Math.min(this.height - 50, this.roach.y * ratioY));
+        }
+
+        if (this.home && prevWidth && prevHeight) {
+          const ratioX = this.width / prevWidth;
+          const ratioY = this.height / prevHeight;
+          this.home.x = Math.max(70, Math.min(this.width - 70, this.home.x * ratioX));
+          this.home.y = Math.max(70, Math.min(this.height - 70, this.home.y * ratioY));
+        }
+      }
+
+      setupFullscreen() {
+        const toggleFS = () => {
+          if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+            const docEl = document.documentElement;
+            if (docEl.requestFullscreen) {
+              docEl.requestFullscreen().catch(() => {});
+            } else if (docEl.webkitRequestFullscreen) {
+              docEl.webkitRequestFullscreen();
+            }
+          } else {
+            if (document.exitFullscreen) {
+              document.exitFullscreen().catch(() => {});
+            } else if (document.webkitExitFullscreen) {
+              document.webkitExitFullscreen();
+            }
+          }
+        };
+
+        const updateFSIcons = () => {
+          const isFS = !!(document.fullscreenElement || document.webkitFullscreenElement);
+          if (isFS) {
+            this.fullscreenIconEnter.classList.add('hidden');
+            this.fullscreenIconExit.classList.remove('hidden');
+          } else {
+            this.fullscreenIconEnter.classList.remove('hidden');
+            this.fullscreenIconExit.classList.add('hidden');
+          }
+          this.handleResize();
+        };
+
+        this.fullscreenBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          toggleFS();
+        });
+
+        document.addEventListener('fullscreenchange', updateFSIcons);
+        document.addEventListener('webkitfullscreenchange', updateFSIcons);
+      }
+
+      spawnEntities() {
+        // Place Home in a random quadrant away from center
+        const quadX = Math.random() > 0.5 ? 0.8 : 0.2;
+        const quadY = Math.random() > 0.5 ? 0.8 : 0.2;
+        const homeX = this.width * (quadX + (Math.random() - 0.5) * 0.15);
+        const homeY = this.height * (quadY + (Math.random() - 0.5) * 0.15);
+        this.home = new CockroachHome(homeX, homeY);
+
+        // Roach starts from opposite side
+        const roachX = this.width - homeX + (Math.random() - 0.5) * 100;
+        const roachY = this.height - homeY + (Math.random() - 0.5) * 100;
+
+        const clampedX = Math.max(60, Math.min(this.width - 60, roachX));
+        const clampedY = Math.max(60, Math.min(this.height - 60, roachY));
+
+        this.roach = new Cockroach(clampedX, clampedY);
+        this.isGameOver = false;
+        this.gameTime = 0;
+        this.freezeCount = 0;
+        this.isHolding = false;
+
+        this.victoryModal.classList.add('hidden', 'opacity-0');
+        this.victoryModal.classList.remove('opacity-100');
+        this.modalCard.classList.remove('scale-100');
+        this.modalCard.classList.add('scale-95');
+
+        this.soundFX.stopScuttleNoise();
+      }
+
+      setupEventListeners() {
+        // Pointer down: MUST click/press directly on the cockroach to pin it down and begin dragging
+        const handlePointerDown = (e) => {
+          if (this.isGameOver) return;
+          this.soundFX.ensureContext();
+
+          // Get precise canvas coordinates
+          const rect = this.canvas.getBoundingClientRect();
+          const clickX = e.clientX - rect.left;
+          const clickY = e.clientY - rect.top;
+
+          if (this.roach.isPointInside(clickX, clickY)) {
+            // Hit! Lock cockroach in place & calculate drag displacement offset
+            if (!this.isHolding) {
+              this.isHolding = true;
+              this.freezeCount++;
+              this.roach.isFrozen = true;
+              this.roach.isBeingDragged = true;
+              this.dragOffset.x = this.roach.x - clickX;
+              this.dragOffset.y = this.roach.y - clickY;
+              this.soundFX.playFreezeBlip();
+              this.soundFX.stopScuttleNoise();
+              this.updateHoldStateVisuals();
+            }
+            this.pointerPos.x = clickX;
+            this.pointerPos.y = clickY;
+          } else {
+            // Missed! Cockroach continues running, visual ripple feedback
+            this.addMissFeedback(clickX, clickY);
+          }
+        };
+
+        // Pointer move: Drag cockroach to new position while held
+        const handlePointerMove = (e) => {
+          const rect = this.canvas.getBoundingClientRect();
+          const curX = e.clientX - rect.left;
+          const curY = e.clientY - rect.top;
+          this.pointerPos.x = curX;
+          this.pointerPos.y = curY;
+
+          if (this.isHolding && this.roach.isBeingDragged) {
+            const targetX = curX + this.dragOffset.x;
+            const targetY = curY + this.dragOffset.y;
+            const margin = 35;
+            const nextX = Math.max(margin, Math.min(this.width - margin, targetX));
+            const nextY = Math.max(margin, Math.min(this.height - margin, targetY));
+
+            const moveDeltaX = nextX - this.roach.x;
+            const moveDeltaY = nextY - this.roach.y;
+
+            // 拖曳時頭部轉向移動方向，並自然前進
+            if (Math.hypot(moveDeltaX, moveDeltaY) > 1.5) {
+              this.roach.targetAngle = Math.atan2(moveDeltaY, moveDeltaX);
+              this.roach.angle = this.roach.targetAngle;
+              this.roach.totalDistanceTravelled += Math.hypot(moveDeltaX, moveDeltaY);
+            }
+
+            this.roach.x = nextX;
+            this.roach.y = nextY;
+          }
+        };
+
+        // Pointer release resumes random crawling from the newly dragged location
+        const handlePointerUp = () => {
+          if (this.isGameOver) return;
+          if (this.isHolding) {
+            this.isHolding = false;
+            this.roach.isFrozen = false;
+            this.roach.isBeingDragged = false;
+            // Roach receives startling burst of speed on release!
+            this.roach.behaviorTimer = 0.5;
+            this.roach.speed = this.roach.maxSpeed * (0.9 + Math.random() * 0.2);
+            this.roach.targetAngle += (Math.random() - 0.5) * 1.5;
+            this.soundFX.playUnfreezeChirp();
+            this.updateHoldStateVisuals();
+          }
+        };
+
+        window.addEventListener('pointerdown', handlePointerDown, { passive: false });
+        window.addEventListener('pointermove', handlePointerMove, { passive: true });
+        window.addEventListener('pointerup', handlePointerUp);
+        window.addEventListener('pointercancel', handlePointerUp);
+
+        // Restart buttons
+        this.restartBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.spawnEntities();
+        });
+
+        this.modalPlayAgain.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.spawnEntities();
+        });
+
+        // Sound Toggle
+        this.soundBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.soundFX.ensureContext();
+          this.soundFX.isMuted = !this.soundFX.isMuted;
+          if (this.soundFX.isMuted) {
+            this.soundIconOn.classList.add('hidden');
+            this.soundIconOff.classList.remove('hidden');
+            this.soundFX.stopScuttleNoise();
+          } else {
+            this.soundIconOn.classList.remove('hidden');
+            this.soundIconOff.classList.add('hidden');
+            if (!this.roach.isFrozen && !this.isGameOver) {
+              this.soundFX.startScuttleNoise();
+            }
+          }
+        });
+      }
+
+      addMissFeedback(x, y) {
+        this.missRipples.push({
+          x: x,
+          y: y,
+          radius: 12,
+          maxRadius: 40,
+          opacity: 0.8
+        });
+
+        // Gentle UI prompt shake indicating user missed the cockroach
+        this.instructionBanner.classList.add('border-rose-500/80', 'text-rose-300');
+        setTimeout(() => {
+          if (!this.isHolding) {
+            this.instructionBanner.classList.remove('border-rose-500/80', 'text-rose-300');
+          }
+        }, 350);
+      }
+
+      updateHoldStateVisuals() {
+        if (this.isHolding) {
+          this.statusDot.className = 'w-3 h-3 rounded-full bg-sky-400 shadow-[0_0_12px_rgba(56,189,248,0.8)]';
+          this.statusText.textContent = '按住搬運中 (可拖曳)';
+          this.statusText.className = 'text-xs uppercase tracking-wider text-sky-400 font-bold';
+          this.instructionBanner.classList.add('border-sky-500/80', 'bg-sky-950/40');
+        } else {
+          this.statusDot.className = 'w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)] animate-pulse';
+          this.statusText.textContent = '狂奔逃竄中';
+          this.statusText.className = 'text-xs uppercase tracking-wider text-emerald-400 font-bold';
+          this.instructionBanner.classList.remove('border-sky-500/80', 'bg-sky-950/40');
+        }
+      }
+
+      onReachHome() {
+        this.isGameOver = true;
+        this.soundFX.stopScuttleNoise();
+        this.soundFX.playHomeArrival();
+
+        this.finalTime.textContent = this.formatTime(this.gameTime);
+        this.finalFreezes.textContent = `${this.freezeCount} 次`;
+        this.finalDistance.textContent = `${Math.round(this.roach.totalDistanceTravelled)} px`;
+
+        this.victoryModal.classList.remove('hidden');
+        requestAnimationFrame(() => {
+          this.victoryModal.classList.remove('opacity-0');
+          this.victoryModal.classList.add('opacity-100');
+          this.modalCard.classList.remove('scale-95');
+          this.modalCard.classList.add('scale-100');
+        });
+      }
+
+      formatTime(seconds) {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        const ms = Math.floor((seconds % 1) * 10);
+        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${ms}`;
+      }
+
+      updateHUD() {
+        if (!this.roach || !this.home) return;
+        const dist = Math.hypot(this.home.x - this.roach.x, this.home.y - this.roach.y);
+        this.distDisplay.textContent = Math.round(dist);
+        this.freezeCountDisplay.textContent = this.freezeCount;
+        this.timerDisplay.textContent = this.formatTime(this.gameTime);
+      }
+
+      gameLoop(currentTime) {
+        const dt = Math.min((currentTime - this.lastFrameTime) / 1000, 0.1);
+        this.lastFrameTime = currentTime;
+
+        if (!this.isGameOver) {
+          this.gameTime += dt;
+          this.home.update(dt);
+          this.roach.update(dt, this.home.x, this.home.y, this.width, this.height);
+
+          // Audio intensity feedback
+          if (!this.roach.isFrozen) {
+            this.soundFX.setScuttleIntensity(this.roach.speed / this.roach.maxSpeed);
+          }
+
+          // Check Win Condition: Distance to Home center <= Home radius
+          const distToHome = Math.hypot(this.home.x - this.roach.x, this.home.y - this.roach.y);
+          if (distToHome < this.home.radius * 0.75) {
+            this.onReachHome();
+          }
+
+          this.updateHUD();
+        }
+
+        // Draw Canvas Elements
+        this.ctx.clearRect(0, 0, this.width, this.height);
+
+        // 1. Floor Tile Texture
+        this.floor.draw(this.ctx, this.width, this.height);
+
+        // 2. Cockroach's Home
+        this.home.draw(this.ctx);
+
+        // 3. Cockroach Entity
+        this.roach.draw(this.ctx);
+
+        // Render miss ripples
+        for (let i = this.missRipples.length - 1; i >= 0; i--) {
+          const r = this.missRipples[i];
+          r.radius += (r.maxRadius - r.radius) * 0.18 + 0.8;
+          r.opacity *= 0.91;
+
+          this.ctx.strokeStyle = `rgba(244, 63, 94, ${r.opacity})`;
+          this.ctx.lineWidth = 2;
+          this.ctx.beginPath();
+          this.ctx.arc(r.x, r.y, r.radius, 0, Math.PI * 2);
+          this.ctx.stroke();
+
+          if (r.opacity < 0.04) {
+            this.missRipples.splice(i, 1);
+          }
+        }
+
+        // 4. Spotlight Beam when user successfully holds onto cockroach
+        if (this.isHolding && !this.isGameOver) {
+          this.drawSpotlight(this.ctx);
+        }
+
+        requestAnimationFrame(time => this.gameLoop(time));
+      }
+
+      drawSpotlight(ctx) {
+        ctx.save();
+        // Beam centered around the frozen cockroach
+        const spotGrad = ctx.createRadialGradient(
+          this.roach.x, this.roach.y, 20,
+          this.roach.x, this.roach.y, 160
+        );
+        spotGrad.addColorStop(0, 'rgba(255, 245, 200, 0.45)');
+        spotGrad.addColorStop(0.5, 'rgba(255, 230, 160, 0.18)');
+        spotGrad.addColorStop(1, 'rgba(255, 220, 150, 0)');
+
+        ctx.fillStyle = spotGrad;
+        ctx.beginPath();
+        ctx.arc(this.roach.x, this.roach.y, 160, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Pinning reticle showing direct contact on the cockroach
+        ctx.strokeStyle = 'rgba(56, 189, 248, 0.9)';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(this.roach.x, this.roach.y, 45, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    window.onload = () => {
+      new GameManager();
+    };
+  </script>
+</body>
+</html>
