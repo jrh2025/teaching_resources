@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>課堂互動 RPG 遊戲系統 — 完整安裝、操作、使用與軟體設計理念手冊</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #3730a3;
+      --accent: #f59e0b;
+      --success: #10b981;
+      --danger: #ef4444;
+      --bg-page: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --border: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", sans-serif;
+      background: var(--bg-page);
+      color: var(--text-main);
+      line-height: 1.7;
+      font-size: 15.5px;
+    }
+
+    .container {
+      max-width: 1020px;
+      margin: 0 auto;
+      padding: 2.2rem 1.8rem 4rem;
+    }
+
+    /* 頂部封面橫幅 */
+    .hero-banner {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 55%, #4c1d95 100%);
+      color: #ffffff;
+      border-radius: 20px;
+      padding: 2.6rem 2.5rem;
+      box-shadow: 0 16px 36px rgba(30, 27, 75, 0.22);
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: rgba(245, 158, 11, 0.22);
+      border: 1px solid #fbbf24;
+      color: #fde68a;
+      font-weight: 800;
+      font-size: 0.85rem;
+      padding: 0.28rem 0.85rem;
+      border-radius: 999px;
+      margin-bottom: 0.8rem;
+    }
+
+    .hero-banner h1 {
+      margin: 0 0 0.65rem;
+      font-size: 2.15rem;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      color: #ffffff;
+    }
+
+    .hero-banner p {
+      margin: 0;
+      color: #e0e7ff;
+      font-size: 1.05rem;
+      max-width: 820px;
+    }
+
+    .hero-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.9rem;
+      margin-top: 1.5rem;
+    }
+
+    .hero-meta-item {
+      background: rgba(15, 23, 42, 0.45);
+      border: 1px solid rgba(165, 180, 252, 0.28);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+    }
+
+    .hero-meta-item .label {
+      font-size: 0.78rem;
+      color: #a5b4fc;
+      font-weight: 700;
+    }
+
+    .hero-meta-item .value {
+      font-size: 0.98rem;
+      color: #fbbf24;
+      font-weight: 900;
+      margin-top: 2px;
+    }
+
+    .hero-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #fbbf24;
+      color: #1e1b4b;
+      font-weight: 900;
+      font-size: 1.05rem;
+      padding: 0.75rem 1.6rem;
+      border-radius: 12px;
+      text-decoration: none;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+      margin-top: 1.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .hero-btn:hover {
+      background: #f59e0b;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.32);
+    }
+
+    /* 導覽目錄卡片 */
+    .toc-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 6px solid var(--primary);
+      border-radius: 14px;
+      padding: 1.3rem 1.6rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+    }
+
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem 1.5rem;
+      margin-top: 0.6rem;
+    }
+
+    .toc-grid a {
+      color: var(--primary-dark);
+      text-decoration: none;
+      font-weight: 700;
+      padding: 0.25rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .toc-grid a:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+
+    /* 章節卡片 */
+    .section-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.8rem 2rem;
+      margin-bottom: 1.8rem;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+      break-inside: avoid-page;
+    }
+
+    h2.section-title {
+      margin: 0 0 1.1rem;
+      font-size: 1.45rem;
+      font-weight: 900;
+      color: #1e1b4b;
+      padding-bottom: 0.65rem;
+      border-bottom: 2px solid #e0e7ff;
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    h3 {
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: #312e81;
+      margin: 1.3rem 0 0.55rem;
+    }
+
+    p {
+      margin: 0.45rem 0 0.85rem;
+    }
+
+    /* 理念三欄/雙欄網格 */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.1rem;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    .feature-box {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 1.1rem 1.2rem;
+      break-inside: avoid;
+    }
+
+    .feature-box .f-title {
+      font-weight: 900;
+      font-size: 1.04rem;
+      color: #1e1b4b;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .callout {
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      font-size: 0.95rem;
+      break-inside: avoid;
+    }
+
+    .callout-info {
+      background: #eef2ff;
+      border-left: 5px solid #4f46e5;
+      color: #1e1b4b;
+    }
+
+    .callout-warn {
+      background: #fffbeb;
+      border-left: 5px solid #f59e0b;
+      color: #78350f;
+    }
+
+    .callout-success {
+      background: #ecfdf5;
+      border-left: 5px solid #10b981;
+      color: #064e3b;
+    }
+
+    /* 表格樣式 */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0.9rem 0;
+      font-size: 0.94rem;
+    }
+
+    th, td {
+      border: 1px solid #cbd5e1;
+      padding: 0.65rem 0.9rem;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #1e1b4b;
+      color: #ffffff;
+      font-weight: 800;
+    }
+
+    tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+
+    /* 程式碼區塊 */
+    pre {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 1.1rem 1.25rem;
+      border-radius: 12px;
+      overflow-x: auto;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      margin: 0.75rem 0;
+      break-inside: avoid;
+    }
+
+    code {
+      background: #e2e8f0;
+      color: #be123c;
+      padding: 0.12rem 0.4rem;
+      border-radius: 5px;
+      font-family: Consolas, monospace;
+      font-size: 0.9em;
+    }
+
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+    }
+
+    .step-list {
+      counter-reset: step-counter;
+      list-style: none;
+      padding: 0;
+      margin: 0.8rem 0;
+    }
+
+    .step-list li {
+      counter-increment: step-counter;
+      position: relative;
+      padding-left: 2.6rem;
+      margin-bottom: 0.9rem;
+    }
+
+    .step-list li::before {
+      content: counter(step-counter);
+      position: absolute;
+      left: 0;
+      top: 2px;
+      width: 1.85rem;
+      height: 1.85rem;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 900;
+      font-size: 0.9rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .boss-pill-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.7rem;
+      margin: 0.8rem 0;
+    }
+
+    .boss-pill {
+      background: #1e1b4b;
+      color: #f8fafc;
+      border-radius: 10px;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+    }
+
+    .boss-pill .b-icon {
+      font-size: 1.6rem;
+    }
+
+    @page {
+      size: A4;
+      margin: 14mm 12mm;
+    }
+
+    @media print {
+      body {
+        background: #ffffff;
+        font-size: 13.5px;
+      }
+      .container {
+        max-width: 100%;
+        padding: 0;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .section-card {
+        box-shadow: none;
+        border: 1px solid #cbd5e1;
+        margin-bottom: 1.2rem;
+        padding: 1.3rem 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- 封面橫幅 -->
+    <header class="hero-banner">
+      <div class="hero-badge">⚔️ 雙軌共鬥 RPG 形成性評量教學系統 v2.0</div>
+      <h1>課堂互動 RPG 遊戲系統 — 完整教學與設計手冊</h1>
+      <p>
+        結合「個人差異化節點迷宮探索」與「全班即時共鬥討伐大魔王」，專為學校教室區域網路 (LAN) 打造的零雲端依賴、高互動課堂評量與即時診斷講解平台。
+      </p>
+      <div class="hero-meta-grid">
+        <div class="hero-meta-item">
+          <div class="label">部署模式</div>
+          <div class="value">免安裝單一執行檔 .exe</div>
+        </div>
+        <div class="hero-meta-item">
+          <div class="label">網路需求</div>
+          <div class="value">純教室 Wi-Fi 離線可用</div>
+        </div>
+        <div class="hero-meta-item">
+          <div class="label">學生端設備</div>
+          <div class="value">平板 / 手機 / 筆電免裝 App</div>
+        </div>
+        <div class="hero-meta-item">
+          <div class="label">課後產出</div>
+          <div class="value">一鍵匯出雙表 Excel 診斷</div>
+        </div>
+      </div>
+      <div>
+        <a href="https://drive.google.com/file/d/1mINzrTqF9XvL4DKwpDc8dWa10Dh3ce0l/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="hero-btn">
+          📥 點此下載遊戲完整包 (Google 雲端硬碟)
+        </a>
+      </div>
+    </header>
+
+    <!-- 快速導覽目錄 -->
+    <nav class="toc-card">
+      <strong style="font-size: 1.08rem; color: #1e1b4b;">📑 手冊章節導覽</strong>
+      <div class="toc-grid">
+        <a href="#sec-1">1. 軟體設計理念與教育學理基礎</a>
+        <a href="#sec-2">2. 系統核心功能與六大特色亮點</a>
+        <a href="#sec-3">3. 系統環境需求與純區網架構</a>
+        <a href="#sec-4">4. 快速安裝與一鍵啟動指南</a>
+        <a href="#sec-5">5. 教師大螢幕主控台完整操作流程</a>
+        <a href="#sec-6">6. 學生平板／手機闖關操作說明</a>
+        <a href="#sec-7">7. 自製題本壓縮檔 (.zip) 規格教學</a>
+        <a href="#sec-8">8. 常見問題排解與防火牆設定 (FAQ)</a>
+      </div>
+    </nav>
+
+    <!-- 第一章：軟體設計理念 -->
+    <section id="sec-1" class="section-card">
+      <h2 class="section-title">🎓 一、軟體設計理念與教育學理基礎</h2>
+      <p>
+        傳統課堂電競搶答軟體（如單純比手速的選擇題競賽）在教學現場常面臨兩大困境：其一是<strong>「快手壟斷、後段放棄」</strong>——閱讀較慢或需要思考時間的學生因搶不到分數而產生「習得性無助 (Learned Helplessness)」，最後淪為盲目亂猜；其二是<strong>「測驗與講解脫節」</strong>——老師無法在學生犯錯當下立即針對全班共同迷思進行視覺化介入。
+      </p>
+      <p>
+        本系統融合<strong>認知負荷理論 (Cognitive Load Theory)</strong>、<strong>差異化自主配速 (Self-Paced Mastery)</strong> 與<strong>合作學習理論 (Cooperative Learning)</strong>，首創<strong>「雙軌連動共鬥 (Dual-Track Co-op RPG)」</strong>架構：
+      </p>
+
+      <div class="grid-2">
+        <div class="feature-box">
+          <div class="f-title">🧭 第一軌：個人平板「差異化節點迷宮探索」</div>
+          <p style="margin: 0; font-size: 0.93rem; color: var(--text-muted);">
+            每位學生登入後皆生成獨立的 Top-Down 2D 節點迷宮（可設定 <strong>5 ~ 20 座守門怪聖殿</strong>與 <strong>2 ~ 5 間秘寶箱密室</strong>）。學生依照自己的思考節奏探索解題，不與他人比拼單題搶答手速，大幅降低測驗焦慮。
+          </p>
+        </div>
+        <div class="feature-box">
+          <div class="f-title">🐉 第二軌：教室大螢幕「全班世界魔王共鬥」</div>
+          <p style="margin: 0; font-size: 0.93rem; color: var(--text-muted);">
+            全班每位學生的正確作答（造成 100 傷，雙倍水 200 傷）與消耗 3 AP 發動的「🔥 集火攻擊」（500 點爆擊傷），皆透過 WebSocket 即時扣除大螢幕魔王總血量並觸發全班彈幕與跑馬燈，讓每位孩子的努力都成為團隊獲勝的關鍵！
+          </p>
+        </div>
+        <div class="feature-box">
+          <div class="f-title">🛡️ 無劇透鷹架與遊戲化容錯機制</div>
+          <p style="margin: 0; font-size: 0.93rem; color: var(--text-muted);">
+            作答前自動隱藏細項知識點標籤（僅顯示大單元名稱）杜絕標題洩題；答錯時明確標示 <strong>「❌ 答錯了：（所選選項）」</strong> 並呈現觀念詳解，重試時選項自動重洗牌。搭配「聖光護盾」、「消除卡 50/50」與「HP 歸零保留進度重生」，鼓勵學生從錯誤中學習。
+          </p>
+        </div>
+        <div class="feature-box">
+          <div class="f-title">❄️ 即時診斷矩陣與「一鍵全班凍結講解」</div>
+          <p style="margin: 0; font-size: 0.93rem; color: var(--text-muted);">
+            教師大螢幕右側即時統計全班各題答錯率並自動排序「熱點錯題」。老師點擊任一高錯誤率題目，即可<strong>一鍵鎖定全班平板畫面、暫停計時並同步投影該題詳解與放大圖表</strong>，達成「測驗 ➔ 診斷 ➔ 即時講解 ➔ 繼續闖關」的完整教學閉環。
+          </p>
+        </div>
+      </div>
+
+      <div class="callout callout-info">
+        <strong>📐 高挑戰度魔王血量平衡、答錯回血與「🛡️ 1 HP 不滅結界」過關標準：</strong><br />
+        • <strong>動態或固定魔王血量</strong>：預設採用高挑戰公式 <code>BossMaxHP = 在線學生人數 × 每人抽取題數 × 260</code>（精準對應基礎傷害與 3 AP 集火期望傷害），教師亦可一鍵切換 <strong>「🟢標準 / 🟡困難(預設) / 🔴地獄史詩」</strong>、直接指定<strong>自訂固定總血量（如 15,000 HP）</strong>，或於戰鬥中按大螢幕 <strong>「➕ 魔王補血 (+2000)」</strong> 即時延長戰線！<br />
+        • <strong>🧛 答錯題魔王闇能回血</strong>：學生答錯時，魔王會吸收錯誤能量<strong>自動回血（預設 +120 HP，教師可設 0~2000 HP）</strong>並觸發全班警示，有效杜絕亂猜。<br />
+        • <strong>🛡️ 教師自訂過關標準（1 HP 不滅結界）</strong>：教師可自訂<strong>全班最低通關進度 %（預設 75%）</strong>與<strong>全班最低答對率 %（預設 60%）</strong>；未達標前魔王最低會鎖血在 <strong>1 HP（啟動不滅結界）</strong>，確保全班共同達標後才能完成最終斬殺！
+      </div>
+    </section>
+
+    <!-- 第二章：核心功能與七大特色 -->
+    <section id="sec-2" class="section-card">
+      <h2 class="section-title">✨ 二、系統核心功能與七大特色亮點</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 24%;">功能模組</th>
+            <th>教育現場實用特色說明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>1. 多種魔王與「👑 教師魔王」</strong></td>
+            <td>
+              內建 6 大史詩級 SVG 動態魔王，支援大螢幕一鍵<strong>「🎲 隨機換魔王」</strong>、指定魔王與自訂魔王稱號；更支援<strong>上傳老師照片或趣味圖片化身頭戴皇冠的「👑 教師大魔王」</strong>，瞬間點燃全班學習熱情！
+            </td>
+          </tr>
+          <tr>
+            <td><strong>2. 難度、答錯回血與過關標準自訂</strong></td>
+            <td>
+              內建 <strong>「🟢標準 / 🟡困難(預設) / 🔴地獄史詩」</strong> 三段難度與完整自訂參數：可設定<strong>魔王固定總血量</strong>、<strong>答錯魔王回血量（預設 +120 HP）</strong>、<strong>全班過關標準（最低通關進度 % 與最低答對率 %）</strong>及 <strong>1 HP 不滅結界鎖血機制</strong>，大螢幕更提供 <strong>「➕ 魔王補血 (+2000)」</strong> 按鈕！
+            </td>
+          </tr>
+          <tr>
+            <td><strong>3. 題目與詳解圖檔放大燈箱</strong></td>
+            <td>
+              闖關遇到幾何圖形、實驗裝置圖或地圖看不清楚時，學生與教師皆可點擊圖片上的 <strong>「🔍 點擊放大看清楚」</strong> 開啟全螢幕燈箱，支援 <code>➕ 放大</code>（最高 400%）、<code>➖ 縮小</code>、滑鼠滾輪縮放與<strong>手指按住拖曳平移</strong>。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>4. 完全體通關討伐特效動畫</strong></td>
+            <td>
+              當全班合力將魔王 HP 歸零時，大螢幕與所有學生平板同步播放<strong>三道聖光劍氣斬擊、雙層能量震波、28 顆璀璨煙火星芒爆破與皇家勝利號角交響樂</strong>，並提供 <strong>「🎬 重播討伐動畫」</strong> 按鈕可無限次重播慶祝。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>5. 平板與手機觸控全方位優化</strong></td>
+            <td>
+              針對平板與手機螢幕，提供 <strong>① 手指直接拖曳滑動地圖</strong>、<strong>② 跨列往下關卡智慧鏡頭偏移</strong>、<strong>③ 頂部一鍵「🚶 前往下一關」捷徑鈕</strong> 與 <strong>④ 左下角虛擬十字方向鍵</strong>，確保任何尺寸螢幕皆不會遮擋關卡。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>6. 彈性題數 (5~20題) 與防窺洗牌</strong></td>
+            <td>
+              教師可依課堂時間自由設定每人隨機抽取 <strong>5 ~ 20 題</strong>；每位學生的題目順序與 A/B/C/D 選項順序皆獨立隨機打散，徹底防止鄰座互相抄襲。
+            </td>
+          </tr>
+          <tr>
+            <td><strong>7. 主題音樂與雙表 Excel 匯出</strong></td>
+            <td>
+              內建 4 首 Web Audio 即時合成零版權背景音樂（奇幻地城、熱血共鬥、輕快學院、星際科幻），亦支援教師上傳 MP3/OGG/WAV；課後一鍵下載含「個人表現總表」與「題目錯誤率統計表」的 <code>.xlsx</code> 報表。
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>👹 內建 6 大史詩魔王 + 自訂教師魔王一覽</h3>
+      <div class="boss-pill-grid">
+        <div class="boss-pill"><span class="b-icon">🐉</span><div><strong>深淵混沌魔龍・奧米加</strong><br /><span style="font-size:0.78rem;color:#cbd5e1;">闇雷次元支配者</span></div></div>
+        <div class="boss-pill"><span class="b-icon">👹</span><div><strong>煉獄炎魔領主・巴爾羅格</strong><br /><span style="font-size:0.78rem;color:#cbd5e1;">熔岩業火毀滅者</span></div></div>
+        <div class="boss-pill"><span class="b-icon">💀</span><div><strong>永凍冰霜巫妖王・阿薩斯</strong><br /><span style="font-size:0.78rem;color:#cbd5e1;">極寒靈魂收割者</span></div></div>
+        <div class="boss-pill"><span class="b-icon">🤖</span><div><strong>星際超合金泰坦・克羅諾斯</strong><br /><span style="font-size:0.78rem;color:#cbd5e1;">量子電漿重裝機神</span></div></div>
+        <div class="boss-pill"><span class="b-icon">🐍</span><div><strong>劇毒九頭蛇皇・海德拉</strong><br /><span style="font-size:0.78rem;color:#cbd5e1;">迷霧深沼不死巨獸</span></div></div>
+        <div class="boss-pill"><span class="b-icon">👑</span><div><strong>自訂「教師大魔王」</strong><br /><span style="font-size:0.78rem;color:#fbbf24;">支援上傳老師照片與自訂稱號</span></div></div>
+      </div>
+    </section>
+
+    <!-- 第三章：環境需求與純區網架構 -->
+    <section id="sec-3" class="section-card">
+      <h2 class="section-title">📡 三、系統環境需求與純區網離線架構</h2>
+      <div class="grid-2">
+        <div class="feature-box">
+          <div class="f-title">🖥️ 教師端主機需求</div>
+          <ul style="margin: 0.4rem 0 0; padding-left: 1.2rem; font-size: 0.93rem;">
+            <li><strong>作業系統</strong>：Windows 10 / 11 (64-bit)（原始碼版亦支援 macOS / Linux）</li>
+            <li><strong>瀏覽器</strong>：Microsoft Edge 或 Google Chrome</li>
+            <li><strong>網路連線</strong>：與學生平板連上<strong>同一個教室 Wi-Fi 分享器</strong>（或由教師筆電開啟 Windows 內建「行動熱點」供學生平板連線，完全不需外網！）</li>
+          </ul>
+        </div>
+        <div class="feature-box">
+          <div class="f-title">📱 學生端平板 / 手機需求</div>
+          <ul style="margin: 0.4rem 0 0; padding-left: 1.2rem; font-size: 0.93rem;">
+            <li><strong>適用設備</strong>：iPad、Android 平板、Chromebook、手機或學生筆電</li>
+            <li><strong>零安裝負擔</strong>：<strong>免安裝任何 App、免註冊帳號</strong></li>
+            <li><strong>連線方式</strong>：使用平板相機掃描教師大螢幕上的 QR Code，輸入「座號」與「姓名」即刻進入迷宮！</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 第四章：快速安裝與啟動指南 -->
+    <section id="sec-4" class="section-card">
+      <h2 class="section-title">🚀 四、快速安裝與一鍵啟動指南</h2>
+
+      <h3>方式 A：免安裝綠色執行檔版（推薦直接分享給各科老師，免裝 Python）</h3>
+      <ol class="step-list">
+        <li>前往下載 <a href="https://drive.google.com/file/d/1mINzrTqF9XvL4DKwpDc8dWa10Dh3ce0l/view?usp=sharing" target="_blank" rel="noopener noreferrer" style="color: var(--primary); font-weight: bold; text-decoration: underline;"><code>課堂互動RPG遊戲_教師分享完整包.zip</code>（點此前往 Google 雲端硬碟下載）</a> 並解壓縮至電腦任意位置（例如桌面）。</li>
+        <li>打開資料夾，直接雙擊 <strong><code>一鍵啟動_課堂互動RPG.bat</code></strong>（或直接雙擊 <strong><code>ClassroomRPG_HostServer.exe</code></strong>）。</li>
+        <li>系統會開啟一個黑色伺服器運作視窗（<strong>上課期間請保持此視窗開啟，勿關閉</strong>），並自動彈出瀏覽器進入 <strong>「教師大螢幕主控台 (http://127.0.0.1:8000/teacher)」</strong>。</li>
+        <li><strong>首次啟動防火牆設定</strong>：若 Windows 彈出「Windows Defender 防火牆已封鎖此應用程式的部分功能」視窗，請務必<strong>同時勾選「私人網路」與「公用網路」</strong>，再點擊 <strong>「允許存取」</strong>。</li>
+      </ol>
+
+      <h3>方式 B：Python 原始碼環境啟動版（適合資訊教師或進階修改）</h3>
+      <p>若電腦已安裝 Python 3.10+，可直接雙擊 <code>Python原始碼與進階工具_SourceCode/start_server.bat</code>，或於終端機執行：</p>
+      <pre><code>pip install -r requirements.txt
+python main.py</code></pre>
+    </section>
+
+    <!-- 第五章：教師大螢幕操作流程 -->
+    <section id="sec-5" class="section-card">
+      <h2 class="section-title">🖥️ 五、教師大螢幕主控台完整操作流程</h2>
+
+      <ol class="step-list">
+        <li>
+          <strong>課前設定（📦 題本・魔王・音樂設定）</strong><br />
+          點擊大螢幕右上角 <strong>「📦 題本・魔王・音樂設定」</strong>：
+          <ul>
+            <li><strong>匯入題本 ZIP</strong>：可上傳自製的 <code>.zip</code> 題庫檔（分享包內附 <code>範例題庫包_SamplePacks/rhetoric_elem_100.zip</code> 可直接測試）。</li>
+            <li><strong>指定守關魔王</strong>：可選擇「🎲 隨機產生魔王」、指定 6 大內建魔王、輸入自訂魔王稱號，或<strong>上傳老師照片點擊「👑 上傳並化身教師魔王」</strong>。</li>
+            <li><strong>主題背景音樂 (BGM)</strong>：可即時切換 4 首內建合成音樂或上傳自訂 <code>.mp3/.ogg/.wav</code> 音樂檔。</li>
+            <li><strong>魔王挑戰難度、血量、答錯回血與過關標準</strong>：可一鍵套用 <strong>「🟢標準 / 🟡困難(預設) / 🔴地獄史詩」</strong>，或自訂<strong>每人每題魔王血量係數（預設 260）</strong>、<strong>魔王固定總血量</strong>、<strong>答錯時魔王回血量（預設 +120 HP）</strong>，以及破除 1 HP 不滅結界的<strong>全班最低通關進度 %（預設 75%）</strong>與<strong>最低答對率 %（預設 60%）</strong>；戰鬥中亦可隨時按大螢幕 <strong>「➕ 魔王補血 (+2000)」</strong>！</li>
+            <li><strong>建立新課堂局次</strong>：選擇題本、設定課堂限時（1~60 分鐘）與<strong>每人隨機抽題守門怪數（<code>5 ~ 20</code> 題）</strong>，點擊「✨ 建立新局並切換大螢幕」。</li>
+          </ul>
+        </li>
+        <li>
+          <strong>投影 QR Code 讓全班連線登入</strong><br />
+          點擊左上角 <strong>「📱 QR Code」</strong> 放大顯示連線條碼。學生掃描登入後，大螢幕左側排行榜與右上角「🚀 開始遊戲 (N 人在線)」會即時顯示已連線學生，魔王總血量也會依人數自動平衡調整。
+        </li>
+        <li>
+          <strong>點擊「🚀 開始遊戲」與即時觀戰</strong><br />
+          開戰後全班平板同步解鎖迷宮。每當學生答對題目或施放 3 AP 集火攻擊，大螢幕魔王會受擊震動並飄出傷害彈幕與黃金跑馬燈。
+        </li>
+        <li>
+          <strong>點擊熱點錯題發動「❄️ 一鍵全班凍結廣播講解」</strong><br />
+          大螢幕右側「🩺 題本診斷矩陣」會即時將全班答錯率最高的題目排在最上方。老師點擊任一題目卡片，<strong>全班平板畫面會瞬間鎖定並同步顯示該題詳解（同時暫停倒數計時）</strong>；點擊附圖可 400% 放大平移講解。講解完畢點擊 <strong>「▶️ 解除凍結・恢復全班遊戲」</strong> 即可繼續闖關。
+        </li>
+        <li>
+          <strong>成功討伐魔王特效動畫與匯出 Excel 報表</strong><br />
+          當魔王血量歸零時，自動播放全螢幕討伐勝利特效動畫（可隨時點擊 <strong>「🎬 重播成功討伐魔王特效動畫」</strong> 重複播放）。課後點擊 <strong>「📊 匯出 Excel 報表」</strong> 即可下載雙工作表 <code>.xlsx</code> 成績與錯題分析檔。
+        </li>
+      </ol>
+    </section>
+
+    <!-- 第六章：學生平板闖關操作說明 -->
+    <section id="sec-6" class="section-card">
+      <h2 class="section-title">📱 六、學生平板／手機闖關操作說明</h2>
+      <div class="grid-2">
+        <div class="feature-box">
+          <div class="f-title">🚶 1. 四種迷宮移動方式（平板/手機皆順暢）</div>
+          <ul style="margin: 0.3rem 0 0; padding-left: 1.15rem; font-size: 0.92rem;">
+            <li><strong>一鍵導航（最推薦）</strong>：破關後直接點擊畫面頂部綠色 <strong>「🚶 前往下一關 (第 X 關)」</strong> 按鈕，勇者自動尋路走到下一關！</li>
+            <li><strong>點擊房間方塊</strong>：點擊地圖上已解鎖的房間即可自動行走。</li>
+            <li><strong>左下角虛擬十字鍵</strong>：點擊 <code>▲ ▼ ◀ ▶</code> 移動，按中央 <code>⚔️</code> 互動。</li>
+            <li><strong>手指拖曳滑動地圖</strong>：用手指按住地圖上下左右滑動檢視遠方關卡，按「🎯 視角置中」回到勇者身上。</li>
+          </ul>
+        </div>
+        <div class="feature-box">
+          <div class="f-title">⚔️ 2. 作答回饋、圖片放大與策略道具</div>
+          <ul style="margin: 0.3rem 0 0; padding-left: 1.15rem; font-size: 0.92rem;">
+            <li><strong>🔍 圖檔放大</strong>：點擊題目或詳解附圖即可開啟全螢幕放大鏡（支援縮放與手指拖曳平移）。</li>
+            <li><strong>✅/❌ 清晰正誤回饋</strong>：答對顯示綠字「✅ 答對了：...」，答錯顯示紅字「❌ 答錯了：...」與詳解說明。</li>
+            <li><strong>🎁 三大秘寶箱道具</strong>：<strong>✂️消除卡</strong>（刪去 2 個錯誤選項）、<strong>🛡️聖光護盾</strong>（自動抵擋一次答錯扣血）、<strong>🧪雙倍水</strong>（下一題雙倍 AP 與雙倍傷害）。</li>
+            <li><strong>🔥 集火攻擊</strong>：集滿 3 AP 可點擊頂部「🔥 集火攻擊」對大螢幕魔王轟出 500 點爆擊！</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 第七章：自製題本 ZIP 教學 -->
+    <section id="sec-7" class="section-card">
+      <h2 class="section-title">📦 七、如何自製與匯入專屬題本 (.zip) 教學</h2>
+      <p>
+        老師完全不需撰寫複雜程式！只需使用 Excel 填寫題目表（可直接開啟分享包內的 <code>範例題庫包_SamplePacks/題庫範本_questions_template.xlsx</code> 修改），搭配簡單的 <code>manifest.json</code> 與選填的圖片/音樂資料夾，壓縮成 <code>.zip</code> 即可匯入：
+      </p>
+
+      <h3>1. 題庫包 (.zip) 資料夾結構</h3>
+      <pre><code>my_pack.zip
+├── manifest.json       (必填：設定題本名稱、學科、預設抽題數與時間)
+├── questions.xlsx      (必填：標準 9 欄 Excel 題目表)
+├── images/             (選填：存放題目附圖 .png / .jpg / .webp)
+└── audio/              (選填：存放隨包主題音樂 .mp3 / .ogg / .wav)</code></pre>
+
+      <h3>2. Excel 題目表 (<code>questions.xlsx</code>) 9 大欄位規格</h3>
+      <table>
+        <thead>
+          <tr>
+            <th style="width:18%;">欄位名稱</th>
+            <th style="width:12%;">必填</th>
+            <th>填寫說明與教學設計機制</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>A. 題號</strong></td><td>必填</td><td>題目唯一編號（如 <code>1, 2, 3...</code>）。</td></tr>
+          <tr><td><strong>B. 主題</strong></td><td>必填</td><td>細項知識點名稱（<strong>作答前自動隱藏防洩題</strong>，僅於作答後詳解與教師診斷矩陣顯示）。</td></tr>
+          <tr><td><strong>C. 題幹</strong></td><td>必填</td><td>完整題目敘述文字。</td></tr>
+          <tr><td><strong>D. 正確答案</strong></td><td>必填</td><td>填入正確選項文字（<strong>系統發題時會自動與錯誤選項隨機洗牌打散順序！</strong>）。</td></tr>
+          <tr><td><strong>E~G. 錯誤選項1~3</strong></td><td>必填</td><td>填入 3 個誘答錯誤選項文字。</td></tr>
+          <tr><td><strong>H. 詳解</strong></td><td>選填</td><td>學生答錯時即時彈出之觀念解析，亦用於教師一鍵全班凍結講解。</td></tr>
+          <tr><td><strong>I. 圖片檔名</strong></td><td>選填</td><td>若題目有附圖，填入 <code>images/</code> 下的檔名（如 <code>q1.png</code>），無附圖留空即可。</td></tr>
+        </tbody>
+      </table>
+
+      <h3>3. <code>manifest.json</code> 設定檔範例</h3>
+      <pre><code>{
+  "pack_id": "science_unit1",
+  "pack_title": "自然科學：力與摩擦力大挑戰",
+  "subject": "自然科學",
+  "grade": "國中二年級",
+  "bgm": "theme_dungeon",
+  "default_settings": {
+    "time_limit_sec": 900,
+    "draw_count": 10
+  }
+}</code></pre>
+    </section>
+
+    <!-- 第八章：常見問題排解 -->
+    <section id="sec-8" class="section-card">
+      <h2 class="section-title">🛠️ 八、常見問題排解 (FAQ & 網路防火牆設定)</h2>
+      <h3>Q1：學生平板掃描 QR Code 後顯示「無法連上這個網站」怎麼辦？</h3>
+      <ul>
+        <li><strong>確認同一個 Wi-Fi 網段</strong>：請確保教師電腦與學生平板連接在同一個教室 Wi-Fi 下。若教室電腦使用校園有線網路、而平板連無線網路導致不同網段，<strong>最穩定的做法是開啟教師筆電的 Windows「行動熱點 (Mobile Hotspot)」讓學生平板連入</strong>，即使沒有外網也能 100% 順暢連線！</li>
+        <li><strong>允許 Windows 防火牆通過</strong>：首次啟動 <code>ClassroomRPG_HostServer.exe</code> 時，請於防火牆提示視窗勾選「私人網路」與「公用網路」並點擊「允許存取」。</li>
+      </ul>
+
+      <h3>Q2：學生不小心關閉瀏覽器或重新整理網頁，闖關進度會消失嗎？</h3>
+      <ul>
+        <li><strong>完全不會消失！</strong> 只要重新掃描或重新整理網頁，甚至換一台平板輸入<strong>相同的「座號」與「姓名」</strong>，伺服器會立即從 SQLite 資料庫恢復該學生的所在房間、已破關卡、HP、AP 與持有道具。</li>
+      </ul>
+    </section>
+  </div>
+</body>
+</html>
