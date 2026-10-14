@@ -1,0 +1,3551 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raster2Vector Pro — 自動描圖與子像素向量化引擎</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Noto Sans TC', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        studio: {
+                            950: '#090b10',
+                            900: '#0f131c',
+                            850: '#151b28',
+                            800: '#1c2436',
+                            700: '#2a364f',
+                            600: '#3d4e70',
+                        },
+                        accent: {
+                            500: '#6366f1',
+                            400: '#818cf8',
+                            600: '#4f46e5',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #090b10;
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+        /* Alpha Checkerboard Background */
+        .checkerboard {
+            background-color: #181c24;
+            background-image: 
+                linear-gradient(45deg, #232936 25%, transparent 25%), 
+                linear-gradient(-45deg, #232936 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #232936 75%), 
+                linear-gradient(-45deg, transparent 75%, #232936 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+        .checkerboard-light {
+            background-color: #f1f5f9;
+            background-image: 
+                linear-gradient(45deg, #cbd5e1 25%, transparent 25%), 
+                linear-gradient(-45deg, #cbd5e1 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #cbd5e1 75%), 
+                linear-gradient(-45deg, transparent 75%, #cbd5e1 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+        /* Pixelated rendering for raster comparison at high zoom */
+        .pixelated-canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        /* Custom Range Slider */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            background: #1c2436;
+            height: 6px;
+            border-radius: 999px;
+            outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #818cf8;
+            cursor: pointer;
+            border: 2px solid #0f131c;
+            box-shadow: 0 0 8px rgba(99, 102, 241, 0.6);
+            transition: transform 0.15s ease;
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.18);
+            background: #a5b4fc;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f131c;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #2a364f;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4f46e5;
+        }
+        .vector-path-interactive {
+            transition: filter 0.12s ease, opacity 0.12s ease;
+        }
+        .vector-path-interactive:hover {
+            filter: drop-shadow(0 0 4px rgba(99, 102, 241, 0.85)) brightness(1.08);
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col select-none font-sans">
+
+    <!-- Top Header Bar -->
+    <header class="h-14 bg-studio-900 border-b border-studio-700/80 px-4 flex items-center justify-between shrink-0 z-30">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-cyan-400 flex items-center justify-center shadow-lg shadow-indigo-500/25">
+                <i class="fa-solid fa-bezier-curve text-white text-lg"></i>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-base tracking-tight text-white">Raster2Vector</span>
+                    <span class="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Sub-Pixel Engine v3.5 Pro</span>
+                </div>
+                <p class="text-[11px] text-slate-400 hidden sm:block">全彩自動描圖・Sobel 子像素抗鋸齒切線重構・內建區塊與節點後製編輯器</p>
+            </div>
+        </div>
+
+        <!-- Center Workflow Application Profiles -->
+        <div class="hidden xl:flex items-center gap-1.5 bg-studio-950 p-1 rounded-xl border border-studio-800">
+            <span class="text-[11px] text-slate-400 px-2.5"><i class="fa-solid fa-wand-magic-sparkles mr-1 text-indigo-400"></i>應用場景最佳化：</span>
+            <button onclick="applyWorkflowProfile('branding')" id="profile-branding" class="workflow-btn px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-indigo-600 text-white shadow">
+                <i class="fa-solid fa-copyright mr-1.5"></i>標誌視覺識別 (Branding)
+            </button>
+            <button onclick="applyWorkflowProfile('embroidery')" id="profile-embroidery" class="workflow-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-studio-800 transition-all">
+                <i class="fa-solid fa-shirt mr-1.5"></i>數位印花與刺繡 (DTF/分色)
+            </button>
+            <button onclick="applyWorkflowProfile('cnc')" id="profile-cnc" class="workflow-btn px-3 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-studio-800 transition-all">
+                <i class="fa-solid fa-bolt-lightning mr-1.5"></i>雷射切割與 CNC (DXF)
+            </button>
+        </div>
+
+        <!-- Right Action Buttons -->
+        <div class="flex items-center gap-2.5">
+            <label for="fileUploadInput" class="cursor-pointer px-3.5 py-1.5 rounded-xl bg-studio-800 hover:bg-studio-700 text-slate-200 border border-studio-600 text-xs font-medium flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-cloud-arrow-up text-indigo-400"></i>
+                <span>上傳點陣圖</span>
+                <input id="fileUploadInput" type="file" accept="image/png,image/jpeg,image/bmp,image/gif,image/webp" class="hidden" onchange="handleImageUpload(event)">
+            </label>
+
+            <button onclick="openExportModal()" class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold text-xs shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-file-export"></i>
+                <span>匯出向量檔</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Studio Workspace -->
+    <div class="flex-1 flex overflow-hidden">
+
+        <!-- LEFT PANEL: Conversion Modes & Tracing Engine Parameters -->
+        <aside class="w-80 md:w-96 bg-studio-900 border-r border-studio-800 flex flex-col shrink-0 z-20">
+            
+            <!-- Sample Presets Bar -->
+            <div class="p-3.5 border-b border-studio-800 bg-studio-950/50">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                        <i class="fa-solid fa-images text-indigo-400"></i>
+                        內建測試樣本（含低解析/JPEG雜訊）
+                    </span>
+                    <span id="detectedTypeBadge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                        自動偵測：平塗商標
+                    </span>
+                </div>
+                <div class="grid grid-cols-4 gap-1.5">
+                    <button onclick="loadSamplePreset('logo')" id="sample-logo" class="sample-btn group p-1.5 rounded-lg bg-studio-800 border-2 border-indigo-500 text-center transition-all">
+                        <div class="h-10 rounded bg-studio-950 flex items-center justify-center mb-1">
+                            <i class="fa-solid fa-rocket text-indigo-400 text-lg group-hover:scale-110 transition-transform"></i>
+                        </div>
+                        <span class="text-[10px] text-slate-200 block truncate">低解析商標</span>
+                    </button>
+                    <button onclick="loadSamplePreset('badge')" id="sample-badge" class="sample-btn group p-1.5 rounded-lg bg-studio-800/60 border-2 border-transparent hover:border-studio-600 text-center transition-all">
+                        <div class="h-10 rounded bg-studio-950 flex items-center justify-center mb-1">
+                            <i class="fa-solid fa-shield-cat text-amber-400 text-lg group-hover:scale-110 transition-transform"></i>
+                        </div>
+                        <span class="text-[10px] text-slate-300 block truncate">多色吉祥物</span>
+                    </button>
+                    <button onclick="loadSamplePreset('sketch')" id="sample-sketch" class="sample-btn group p-1.5 rounded-lg bg-studio-800/60 border-2 border-transparent hover:border-studio-600 text-center transition-all">
+                        <div class="h-10 rounded bg-studio-950 flex items-center justify-center mb-1">
+                            <i class="fa-solid fa-pen-nib text-cyan-400 text-lg group-hover:scale-110 transition-transform"></i>
+                        </div>
+                        <span class="text-[10px] text-slate-300 block truncate">掃描手繪稿</span>
+                    </button>
+                    <button onclick="loadSamplePreset('photo')" id="sample-photo" class="sample-btn group p-1.5 rounded-lg bg-studio-800/60 border-2 border-transparent hover:border-studio-600 text-center transition-all">
+                        <div class="h-10 rounded bg-studio-950 flex items-center justify-center mb-1">
+                            <i class="fa-solid fa-mountain-sun text-rose-400 text-lg group-hover:scale-110 transition-transform"></i>
+                        </div>
+                        <span class="text-[10px] text-slate-300 block truncate">漸層風景照</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3 Conversion Modes Tabs -->
+            <div class="p-3 border-b border-studio-800">
+                <div class="text-[11px] text-slate-400 mb-2 font-medium">轉換模式選擇 (Conversion Mode)</div>
+                <div class="grid grid-cols-3 gap-1 bg-studio-950 p-1 rounded-xl border border-studio-800">
+                    <button onclick="switchConversionMode('auto')" id="tab-mode-auto" class="mode-tab py-2 px-2 rounded-lg text-xs font-semibold transition-all bg-indigo-600 text-white shadow">
+                        <i class="fa-solid fa-bolt block mb-0.5 text-xs"></i>全自動
+                    </button>
+                    <button onclick="switchConversionMode('wizard')" id="tab-mode-wizard" class="mode-tab py-2 px-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition-all">
+                        <i class="fa-solid fa-compass-drafting block mb-0.5 text-xs"></i>精靈導引
+                    </button>
+                    <button onclick="switchConversionMode('advanced')" id="tab-mode-advanced" class="mode-tab py-2 px-2 rounded-lg text-xs font-semibold text-slate-400 hover:text-slate-200 transition-all">
+                        <i class="fa-solid fa-sliders block mb-0.5 text-xs"></i>進階專業
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mode Panels Container -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-5">
+
+                <!-- MODE 1: FULLY AUTOMATIC MODE -->
+                <div id="panel-mode-auto" class="space-y-4">
+                    <div class="p-4 rounded-2xl bg-gradient-to-br from-indigo-950/60 via-studio-850 to-studio-900 border border-indigo-500/30 space-y-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-indigo-300">
+                                <i class="fa-solid fa-microchip"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-xs font-bold text-white">全彩自動向量化 (Full-Color Auto)</h3>
+                                <p class="text-[11px] text-slate-400">AI 結構分析與子像素邊界自動重構</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-studio-950/80 rounded-xl p-3 border border-studio-800 space-y-2 text-xs">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">影像結構診斷：</span>
+                                <span id="autoDiagStructure" class="font-mono text-indigo-300 font-medium">平塗商標 (Flat Logo)</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">JPEG 壓縮失真抑制：</span>
+                                <span id="autoDiagDenoise" class="font-mono text-emerald-400 font-medium">已啟用 (中度雙邊濾波)</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">最佳化分色數量：</span>
+                                <span id="autoDiagColors" class="font-mono text-amber-300 font-medium">6 色 (Perceptual ΔE)</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">子像素切線擬合：</span>
+                                <span class="font-mono text-cyan-300 font-medium">Sobel AA + 弦長自適應 Bézier</span>
+                            </div>
+                        </div>
+
+                        <button onclick="runAutoAnalyzeAndTrace()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 transition-all">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            <span>重新自動分析並一鍵描圖</span>
+                        </button>
+                    </div>
+
+                    <!-- Core Engine Advantages Status Cards -->
+                    <div class="space-y-2.5">
+                        <h4 class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">核心描圖引擎狀態</h4>
+                        <div class="p-3 rounded-xl bg-studio-850 border border-studio-800 flex items-start gap-3">
+                            <i class="fa-solid fa-vector-square text-indigo-400 mt-0.5"></i>
+                            <div>
+                                <div class="text-xs font-semibold text-slate-200">子像素精確度 (Sub-pixel Precision)</div>
+                                <p class="text-[11px] text-slate-400 leading-relaxed mt-0.5">分析邊緣抗鋸齒 (Anti-aliasing) 過渡像素，推算真實幾何切線，消除傳統階梯狀鋸齒。</p>
+                            </div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-studio-850 border border-studio-800 flex items-start gap-3">
+                            <i class="fa-solid fa-circle-nodes text-cyan-400 mt-0.5"></i>
+                            <div>
+                                <div class="text-xs font-semibold text-slate-200">節點最適化配置 (Optimal Nodes)</div>
+                                <p class="text-[11px] text-slate-400 leading-relaxed mt-0.5">結合 Ramer-Douglas-Peucker 簡化與貝茲張力擬合，以最少控制點重現平滑曲線。</p>
+                            </div>
+                        </div>
+                        <div class="p-3 rounded-xl bg-studio-850 border border-studio-800 flex items-start gap-3">
+                            <i class="fa-solid fa-shield-halved text-emerald-400 mt-0.5"></i>
+                            <div>
+                                <div class="text-xs font-semibold text-slate-200">真實封閉路徑 (Tracing, Not Embedding)</div>
+                                <p class="text-[11px] text-slate-400 leading-relaxed mt-0.5">嚴格輸出獨立可編輯之幾何路徑與多邊形，絕非將點陣圖封裝於 SVG 容器。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODE 2: GUIDED WIZARD MODE -->
+                <div id="panel-mode-wizard" class="hidden space-y-4">
+                    <div class="p-3.5 rounded-xl bg-studio-850 border border-studio-700 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-indigo-300">步驟 1：選擇輸入影像類型</span>
+                            <span class="text-[10px] font-mono bg-studio-950 px-2 py-0.5 rounded text-slate-400">Step 1/3</span>
+                        </div>
+                        <div class="grid grid-cols-1 gap-2">
+                            <button onclick="setWizardOption('imageType', 'logo')" id="wiz-type-logo" class="wiz-type-btn p-2.5 rounded-xl bg-indigo-600/20 border border-indigo-500 text-left flex items-center gap-3 transition-all">
+                                <i class="fa-solid fa-shapes text-indigo-400 text-base w-5 text-center"></i>
+                                <div>
+                                    <div class="text-xs font-semibold text-white">平塗商標與插圖 (Logo / Flat Art)</div>
+                                    <div class="text-[10px] text-slate-400">色塊分明、邊緣銳利、適合品牌標誌</div>
+                                </div>
+                            </button>
+                            <button onclick="setWizardOption('imageType', 'sketch')" id="wiz-type-sketch" class="wiz-type-btn p-2.5 rounded-xl bg-studio-900 border border-studio-700 hover:border-studio-600 text-left flex items-center gap-3 transition-all">
+                                <i class="fa-solid fa-pen-ruler text-cyan-400 text-base w-5 text-center"></i>
+                                <div>
+                                    <div class="text-xs font-semibold text-slate-200">掃描手繪與線稿 (Scanned Sketch)</div>
+                                    <div class="text-[10px] text-slate-400">強化細線連續性與白底去背處理</div>
+                                </div>
+                            </button>
+                            <button onclick="setWizardOption('imageType', 'photo')" id="wiz-type-photo" class="wiz-type-btn p-2.5 rounded-xl bg-studio-900 border border-studio-700 hover:border-studio-600 text-left flex items-center gap-3 transition-all">
+                                <i class="fa-solid fa-camera-retro text-rose-400 text-base w-5 text-center"></i>
+                                <div>
+                                    <div class="text-xs font-semibold text-slate-200">連續色調照片 (Continuous Photo)</div>
+                                    <div class="text-[10px] text-slate-400">高階多色調分層與藝術海報化向量</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-studio-850 border border-studio-700 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-indigo-300">步驟 2：色彩模式設定</span>
+                            <span class="text-[10px] font-mono bg-studio-950 px-2 py-0.5 rounded text-slate-400">Step 2/3</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-1.5">
+                            <button onclick="setWizardOption('colorMode', 'full')" id="wiz-col-full" class="wiz-col-btn p-2 rounded-lg bg-indigo-600/20 border border-indigo-500 text-center">
+                                <div class="text-xs font-semibold text-white">全彩漸層</div>
+                                <div class="text-[10px] text-slate-400">12~16 色</div>
+                            </button>
+                            <button onclick="setWizardOption('colorMode', 'flat')" id="wiz-col-flat" class="wiz-col-btn p-2 rounded-lg bg-studio-900 border border-studio-700 text-center">
+                                <div class="text-xs font-semibold text-slate-200">平塗色票</div>
+                                <div class="text-[10px] text-slate-400">6~8 色</div>
+                            </button>
+                            <button onclick="setWizardOption('colorMode', 'bw')" id="wiz-col-bw" class="wiz-col-btn p-2 rounded-lg bg-studio-900 border border-studio-700 text-center">
+                                <div class="text-xs font-semibold text-slate-200">兩色黑白</div>
+                                <div class="text-[10px] text-slate-400">2 色線稿</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-studio-850 border border-studio-700 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-indigo-300">步驟 3：抗雜訊與邊界平滑度</span>
+                            <span class="text-[10px] font-mono bg-studio-950 px-2 py-0.5 rounded text-slate-400">Step 3/3</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-1.5">
+                            <button onclick="setWizardOption('quality', 'sharp')" id="wiz-qual-sharp" class="wiz-qual-btn p-2 rounded-lg bg-studio-900 border border-studio-700 text-center">
+                                <div class="text-xs font-semibold text-slate-200">高細節保留</div>
+                                <div class="text-[10px] text-slate-400">微細輪廓</div>
+                            </button>
+                            <button onclick="setWizardOption('quality', 'balanced')" id="wiz-qual-balanced" class="wiz-qual-btn p-2 rounded-lg bg-indigo-600/20 border border-indigo-500 text-center">
+                                <div class="text-xs font-semibold text-white">標準平衡</div>
+                                <div class="text-[10px] text-slate-400">推薦設定</div>
+                            </button>
+                            <button onclick="setWizardOption('quality', 'smooth')" id="wiz-qual-smooth" class="wiz-qual-btn p-2 rounded-lg bg-studio-900 border border-studio-700 text-center">
+                                <div class="text-xs font-semibold text-slate-200">強力除噪</div>
+                                <div class="text-[10px] text-slate-400">濾除JPEG斑塊</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODE 3: ADVANCED PROFESSIONAL MODE -->
+                <div id="panel-mode-advanced" class="hidden space-y-4">
+                    
+                    <!-- Palette Selection (Up to 32 Colors) -->
+                    <div class="p-3.5 rounded-xl bg-studio-850 border border-studio-800 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-white flex items-center gap-1.5">
+                                <i class="fa-solid fa-palette text-indigo-400"></i>
+                                調色盤自訂 (Palette 2~32 色)
+                            </label>
+                            <span id="labelColorCount" class="text-xs font-mono text-indigo-300 font-semibold">6 色</span>
+                        </div>
+                        <input id="sliderColorCount" type="range" min="2" max="32" value="6" oninput="updateAdvancedParam('colorCount', this.value)" class="w-full">
+                        <div class="flex justify-between text-[10px] font-mono text-slate-500 px-0.5">
+                            <span>2 色</span>
+                            <span>8 色</span>
+                            <span>16 色</span>
+                            <span>24 色</span>
+                            <span>32 色</span>
+                        </div>
+                        
+                        <!-- Active Extracted / Custom Swatches -->
+                        <div>
+                            <div class="flex items-center justify-between text-[11px] text-slate-400 mb-1.5">
+                                <span>提取色票（點擊可修改，上限 32 色）：</span>
+                                <button onclick="addCustomPaletteColor()" class="text-indigo-400 hover:text-indigo-300 font-medium">
+                                    <i class="fa-solid fa-plus mr-0.5"></i>新增色票
+                                </button>
+                            </div>
+                            <div id="paletteSwatchesContainer" class="flex flex-wrap gap-1.5 pt-1 max-h-28 overflow-y-auto pr-1">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detail Level -->
+                    <div class="p-3.5 rounded-xl bg-studio-850 border border-studio-800 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-white flex items-center gap-1.5">
+                                <i class="fa-solid fa-magnifying-glass-chart text-cyan-400"></i>
+                                細節等級 (Detail Level)
+                            </label>
+                            <span id="labelDetailLevel" class="text-xs font-mono text-cyan-300">75%</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400">控制子像素幾何引擎對細小線條與轉角的敏感度</p>
+                        <input id="sliderDetailLevel" type="range" min="10" max="100" value="75" oninput="updateAdvancedParam('detailLevel', this.value)" class="w-full">
+                    </div>
+
+                    <!-- Minimum Area Threshold -->
+                    <div class="p-3.5 rounded-xl bg-studio-850 border border-studio-800 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-white flex items-center gap-1.5">
+                                <i class="fa-solid fa-filter text-amber-400"></i>
+                                最小區域門檻 (Min Area Threshold)
+                            </label>
+                            <span id="labelMinArea" class="text-xs font-mono text-amber-300">12 px²</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400">自動濾除低於指定像素面積的細小碎斑與掃描噪點</p>
+                        <input id="sliderMinArea" type="range" min="1" max="120" value="12" oninput="updateAdvancedParam('minArea', this.value)" class="w-full">
+                    </div>
+
+                    <!-- Path Smoothing -->
+                    <div class="p-3.5 rounded-xl bg-studio-850 border border-studio-800 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-white flex items-center gap-1.5">
+                                <i class="fa-solid fa-wave-square text-purple-400"></i>
+                                路徑平滑度 (Path Smoothing)
+                            </label>
+                            <span id="labelSmoothing" class="text-xs font-mono text-purple-300">65%</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400">調整貝茲曲線張力 (Curve Tension) 與節點精簡程度</p>
+                        <input id="sliderSmoothing" type="range" min="0" max="100" value="65" oninput="updateAdvancedParam('smoothing', this.value)" class="w-full">
+                    </div>
+
+                    <!-- JPEG Artifact Rejection -->
+                    <div class="p-3.5 rounded-xl bg-studio-850 border border-studio-800 space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-white flex items-center gap-1.5">
+                                <i class="fa-solid fa-sparkles text-emerald-400"></i>
+                                抗雜訊與壓縮失真抑制 (Denoise)
+                            </label>
+                            <span id="labelDenoise" class="text-xs font-mono text-emerald-300">中度 (2)</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400">抑制 JPEG 8x8 方塊失真與邊緣羽化雜色</p>
+                        <input id="sliderDenoise" type="range" min="0" max="5" value="2" oninput="updateAdvancedParam('denoise', this.value)" class="w-full">
+                    </div>
+
+                    <!-- Alpha Transparency Toggle -->
+                    <div class="p-3.5 rounded-xl bg-studio-850 border border-studio-800 flex items-center justify-between">
+                        <div>
+                            <div class="text-xs font-bold text-white">自動移除背景色 (Alpha 去背)</div>
+                            <div class="text-[11px] text-slate-400">將畫布四角背景色塊自動設為透明</div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="toggleRemoveBg" class="sr-only peer" onchange="updateAdvancedParam('removeBg', this.checked)">
+                            <div class="w-9 h-5 bg-studio-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                        </label>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Bottom Real-time Vector Telemetry Footer -->
+            <div class="p-3.5 bg-studio-950 border-t border-studio-800 grid grid-cols-3 gap-2 text-center">
+                <div class="bg-studio-900 p-2 rounded-lg border border-studio-800">
+                    <div class="text-[10px] text-slate-400">封閉路徑數</div>
+                    <div id="statPathCount" class="text-sm font-mono font-bold text-white">0</div>
+                </div>
+                <div class="bg-studio-900 p-2 rounded-lg border border-studio-800">
+                    <div class="text-[10px] text-slate-400">貝茲節點數</div>
+                    <div id="statNodeCount" class="text-sm font-mono font-bold text-indigo-400">0</div>
+                </div>
+                <div class="bg-studio-900 p-2 rounded-lg border border-studio-800">
+                    <div class="text-[10px] text-slate-400">處理耗時</div>
+                    <div id="statTraceTime" class="text-sm font-mono font-bold text-emerald-400">0 ms</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CENTER WORKSPACE: Interactive Canvas & Built-in Segmentation Editor -->
+        <main class="flex-1 flex flex-col bg-studio-950 relative overflow-hidden">
+            
+            <!-- Top Floating Editor & View Mode Toolbar -->
+            <div class="bg-studio-900/90 backdrop-blur border-b border-studio-800 px-4 py-2 flex flex-wrap items-center justify-between gap-2 z-20">
+                
+                <!-- Left: Built-in Segmentation Editor Tools (內建後製編輯器) -->
+                <div class="flex flex-wrap items-center gap-1 bg-studio-950 p-1 rounded-xl border border-studio-800">
+                    <span class="text-[11px] font-semibold text-slate-400 px-2 hidden xl:inline">後製編輯器：</span>
+                    
+                    <button onclick="selectEditorTool('inspect')" id="tool-inspect" title="選取向量區塊（在空白處按住拖曳可上下左右移動整體圖片）" class="editor-tool-btn px-2.5 py-1.5 rounded-lg text-xs font-medium bg-indigo-600 text-white flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-arrow-pointer"></i>
+                        <span class="hidden md:inline">選取</span>
+                    </button>
+
+                    <button onclick="selectEditorTool('pan')" id="tool-pan" title="整體圖片移動工具：按住滑鼠左鍵直接上下左右拖曳整體圖片" class="editor-tool-btn px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-studio-800 flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-arrows-up-down-left-right text-indigo-400"></i>
+                        <span class="hidden md:inline">移動圖片</span>
+                    </button>
+
+                    <!-- Quick Directional Nudge Buttons for Moving Whole Image Up/Down/Left/Right -->
+                    <div class="flex items-center gap-0.5 bg-studio-900 px-1 py-0.5 rounded-lg border border-studio-800" title="整體圖片上下左右移動微調（亦可使用鍵盤方向鍵）">
+                        <button onclick="moveWholeImage(-30, 0)" class="w-6 h-6 rounded hover:bg-studio-700 text-slate-300 hover:text-white flex items-center justify-center text-[11px]" title="向左移動圖片 (←)">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <button onclick="moveWholeImage(0, -30)" class="w-6 h-6 rounded hover:bg-studio-700 text-slate-300 hover:text-white flex items-center justify-center text-[11px]" title="向上移動圖片 (↑)">
+                            <i class="fa-solid fa-arrow-up"></i>
+                        </button>
+                        <button onclick="moveWholeImage(0, 30)" class="w-6 h-6 rounded hover:bg-studio-700 text-slate-300 hover:text-white flex items-center justify-center text-[11px]" title="向下移動圖片 (↓)">
+                            <i class="fa-solid fa-arrow-down"></i>
+                        </button>
+                        <button onclick="moveWholeImage(30, 0)" class="w-6 h-6 rounded hover:bg-studio-700 text-slate-300 hover:text-white flex items-center justify-center text-[11px]" title="向右移動圖片 (→)">
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                        <button onclick="resetImagePan()" class="px-1.5 h-6 rounded hover:bg-studio-700 text-[10px] text-indigo-300 font-mono" title="將圖片位置置中復位">
+                            置中
+                        </button>
+                    </div>
+
+                    <div class="h-4 w-[1px] bg-studio-700 mx-0.5"></div>
+
+                    <button onclick="selectEditorTool('node')" id="tool-node" title="節點與貝茲控制桿編輯：可拉動錨點、點擊線段 + 號新增節點、右鍵點擊錨點刪除" class="editor-tool-btn px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-studio-800 flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-bezier-curve text-cyan-400"></i>
+                        <span class="hidden md:inline">節點/貝茲桿</span>
+                    </button>
+
+                    <button onclick="selectEditorTool('delnode')" id="tool-delnode" title="點選刪除指定節點工具：開啟後直接點擊畫布上的任何控制錨點即可立即將其刪除" class="editor-tool-btn px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-studio-800 flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-square-minus text-rose-400"></i>
+                        <span class="hidden md:inline">點選刪點</span>
+                    </button>
+
+                    <button onclick="insertNodeAfterSelected()" title="在目前選取的節點旁新增一個控制節點" class="px-2 py-1.5 rounded-lg text-xs font-medium bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 border border-cyan-500/30 flex items-center gap-1 transition-all">
+                        <i class="fa-solid fa-plus"></i>
+                        <span class="hidden lg:inline">加節點</span>
+                    </button>
+
+                    <button onclick="deleteSelectedNode()" title="刪除目前選取的指定節點（亦可直接按鍵盤 Delete / Backspace 或對節點按右鍵）" class="px-2 py-1.5 rounded-lg text-xs font-medium bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 flex items-center gap-1 transition-all">
+                        <i class="fa-solid fa-minus"></i>
+                        <span class="hidden lg:inline">刪節點</span>
+                    </button>
+
+                    <button onclick="activateBezierHandlesOnSelected()" title="為選取的節點或整個區塊展開可拉動的貝茲曲線控制桿" class="px-2 py-1.5 rounded-lg text-xs font-medium bg-pink-500/15 hover:bg-pink-500/25 text-pink-300 border border-pink-500/30 flex items-center gap-1 transition-all">
+                        <i class="fa-solid fa-grip-lines-vertical text-pink-400"></i>
+                        <span class="hidden lg:inline">展開貝茲桿</span>
+                    </button>
+
+                    <div class="h-4 w-[1px] bg-studio-700 mx-0.5"></div>
+                    
+                    <button onclick="selectEditorTool('fill')" id="tool-fill" title="顏色替換與填補：點擊向量區塊立即更換顏色" class="editor-tool-btn px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-studio-800 flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-fill-drip text-amber-400"></i>
+                        <span class="hidden md:inline">填色</span>
+                    </button>
+
+                    <!-- Active Paint Color Picker for Fill Tool -->
+                    <div class="flex items-center px-0.5" title="選擇填補或背景目標顏色">
+                        <input type="color" id="editorFillColor" value="#6366f1" class="w-6 h-6 rounded cursor-pointer bg-transparent border-0">
+                    </div>
+
+                    <button onclick="selectEditorTool('eraser')" id="tool-eraser" title="雜點與污漬消除：點擊任何細小斑塊或噪點直接抹除" class="editor-tool-btn px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-studio-800 flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-eraser text-rose-400"></i>
+                        <span class="hidden md:inline">除雜點</span>
+                    </button>
+
+                    <button onclick="selectEditorTool('merge')" id="tool-merge" title="形狀連結：依序點擊兩個相鄰色塊將其合併連結" class="editor-tool-btn px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-studio-800 flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-link text-emerald-400"></i>
+                        <span class="hidden md:inline">連結</span>
+                    </button>
+
+                    <button onclick="selectEditorTool('split')" id="tool-split" title="形狀分割：在黏連的區塊上拖曳畫線即可切分開來" class="editor-tool-btn px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-studio-800 flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-scissors text-cyan-400"></i>
+                        <span class="hidden md:inline">切割</span>
+                    </button>
+
+                    <button onclick="selectEditorTool('transparent')" id="tool-transparent" title="透明度控制：點擊特定區塊設為透明去背" class="editor-tool-btn px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 hover:bg-studio-800 flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-chess-board text-purple-400"></i>
+                        <span class="hidden md:inline">去背</span>
+                    </button>
+
+                    <button onclick="convertBackgroundToVectorBlock()" id="btnBgToVector" title="將背景變成向量區塊：還原去背區域並建立可獨立填色、拉動節點的底層背景向量色塊" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-layer-group text-emerald-400"></i>
+                        <span>背景轉向量塊</span>
+                    </button>
+
+                    <div class="h-4 w-[1px] bg-studio-700 mx-0.5"></div>
+
+                    <button onclick="undoEditorAction()" id="btnUndo" title="復原上一步後製操作" class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-studio-800 disabled:opacity-40" disabled>
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
+
+                <!-- Right: View Comparison Modes & Node Inspector Overlay -->
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center bg-studio-950 p-1 rounded-xl border border-studio-800 text-xs">
+                        <button onclick="setViewportMode('split')" id="view-split" class="view-mode-btn px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-medium">
+                            滑桿對比
+                        </button>
+                        <button onclick="setViewportMode('vector')" id="view-vector" class="view-mode-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white font-medium">
+                            純向量預覽
+                        </button>
+                        <button onclick="setViewportMode('side')" id="view-side" class="view-mode-btn px-2.5 py-1 rounded-lg text-slate-400 hover:text-white font-medium">
+                            並排檢視
+                        </button>
+                    </div>
+
+                    <button onclick="toggleNodeOverlay()" id="btnNodeOverlay" title="顯示子像素控制節點與幾何骨架" class="px-3 py-1.5 rounded-xl bg-studio-850 hover:bg-studio-800 border border-studio-700 text-xs font-medium text-slate-300 flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-bezier-curve text-cyan-400"></i>
+                        <span class="hidden sm:inline">節點骨架</span>
+                    </button>
+
+                    <button onclick="togglePixelGrid()" id="btnPixelGrid" title="放大檢視時顯示原始點陣像素網格，對比子像素切線" class="px-3 py-1.5 rounded-xl bg-indigo-500/20 border border-indigo-500/50 text-xs font-medium text-indigo-300 flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-border-all"></i>
+                        <span class="hidden sm:inline">子像素網格</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contextual Tool Hint Banner -->
+            <div id="editorToolHintBar" class="bg-indigo-950/70 border-b border-indigo-500/20 px-4 py-1.5 flex items-center justify-between text-xs text-indigo-200">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-indigo-400"></i>
+                    <span id="editorToolHintText">目前工具：【選取與檢視】— 可拖曳中間對比滑桿檢視「點陣鋸齒 vs. 子像素平滑曲線」，或點擊任意向量色塊檢視路徑資訊。</span>
+                </div>
+                <div id="selectedPathStatus" class="font-mono text-[11px] text-cyan-300 hidden"></div>
+            </div>
+
+            <!-- Main Viewport Canvas Area -->
+            <div id="viewportContainer" class="flex-1 checkerboard relative overflow-hidden flex items-center justify-center p-6">
+                
+                <!-- Zoomable & Pannable Stage -->
+                <div id="stageWrapper" class="relative shadow-2xl rounded-lg overflow-hidden border border-studio-700/80 transition-transform duration-75 ease-out origin-center bg-transparent" style="width: 640px; height: 480px;">
+                    
+                    <!-- LAYER 1: Original Raster Canvas (Left side in Split Mode) -->
+                    <div id="rasterLayerWrapper" class="absolute inset-0 overflow-hidden z-10" style="width: 50%;">
+                        <canvas id="rasterDisplayCanvas" class="pixelated-canvas block" style="width: 640px; height: 480px;"></canvas>
+                        <div class="absolute top-3 left-3 px-2.5 py-1 rounded-md bg-slate-900/85 backdrop-blur border border-slate-700 text-[11px] font-mono text-amber-300 pointer-events-none flex items-center gap-1.5 shadow">
+                            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                            原始點陣圖 (Raster)
+                        </div>
+                    </div>
+
+                    <!-- LAYER 2: Traced Vector Interactive SVG (Full Stage) -->
+                    <div id="vectorLayerWrapper" class="absolute inset-0 z-0 flex items-center justify-center">
+                        <svg id="vectorStageSvg" viewBox="0 0 640 480" class="w-full h-full block" xmlns="http://www.w3.org/2000/svg"></svg>
+                        <div class="absolute top-3 right-3 px-2.5 py-1 rounded-md bg-indigo-950/90 backdrop-blur border border-indigo-500/40 text-[11px] font-mono text-indigo-300 pointer-events-none flex items-center gap-1.5 shadow">
+                            <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                            子像素向量圖 (Vector SVG)
+                        </div>
+                    </div>
+
+                    <!-- LAYER 3: Sub-Pixel Grid & Knife Split Line Overlay Canvas -->
+                    <canvas id="overlayInteractionCanvas" width="640" height="480" class="absolute inset-0 w-full h-full pointer-events-none z-20"></canvas>
+
+                    <!-- Split Comparison Slider Handle -->
+                    <div id="splitSliderBar" class="absolute top-0 bottom-0 w-0.5 bg-indigo-400 cursor-ew-resize z-30 shadow-[0_0_12px_rgba(99,102,241,1)]" style="left: 50%;">
+                        <div class="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-indigo-600 border-2 border-white shadow-xl flex items-center justify-center text-white text-xs">
+                            <i class="fa-solid fa-arrows-left-right"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Side-by-Side Container (Hidden unless 'side' view mode is active) -->
+                <div id="sideBySideWrapper" class="hidden w-full h-full gap-4 items-center justify-center">
+                    <div class="flex-1 h-full max-h-[520px] rounded-xl border border-studio-700 overflow-hidden relative flex flex-col bg-studio-900/50">
+                        <div class="p-2 bg-studio-900 border-b border-studio-800 text-xs font-mono text-amber-300 flex justify-between">
+                            <span><i class="fa-solid fa-table-cells mr-1.5"></i>原始點陣圖 (Raster Input)</span>
+                            <span id="rasterResolutionLabel">160 × 120 px</span>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center p-4 overflow-hidden">
+                            <canvas id="sideRasterCanvas" class="pixelated-canvas max-w-full max-h-full object-contain rounded shadow-lg"></canvas>
+                        </div>
+                    </div>
+                    <div class="flex-1 h-full max-h-[520px] rounded-xl border border-indigo-500/40 overflow-hidden relative flex flex-col bg-studio-900/50">
+                        <div class="p-2 bg-studio-900 border-b border-studio-800 text-xs font-mono text-indigo-300 flex justify-between">
+                            <span><i class="fa-solid fa-bezier-curve mr-1.5"></i>子像素向量結果 (Vector Output)</span>
+                            <span>無限縮放 (Resolution Independent)</span>
+                        </div>
+                        <div id="sideVectorContainer" class="flex-1 flex items-center justify-center p-4 overflow-hidden"></div>
+                    </div>
+                </div>
+
+                <!-- Bottom Floating Zoom & Background Controls -->
+                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-studio-900/95 backdrop-blur border border-studio-700 rounded-2xl px-3 py-1.5 flex items-center gap-3 shadow-2xl z-30">
+                    <button onclick="adjustZoom(-0.25)" class="w-7 h-7 rounded-lg hover:bg-studio-800 text-slate-300 flex items-center justify-center text-xs" title="縮小">
+                        <i class="fa-solid fa-minus"></i>
+                    </button>
+                    <span id="zoomPercentLabel" class="text-xs font-mono font-semibold text-white w-14 text-center">100%</span>
+                    <button onclick="adjustZoom(0.25)" class="w-7 h-7 rounded-lg hover:bg-studio-800 text-slate-300 flex items-center justify-center text-xs" title="放大檢視子像素邊緣">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <button onclick="resetZoom()" class="px-2 py-1 rounded-lg bg-studio-800 hover:bg-studio-700 text-[11px] text-slate-300">
+                        適應視窗
+                    </button>
+                    <div class="h-4 w-[1px] bg-studio-700"></div>
+                    <button onclick="toggleCanvasBgTheme()" class="px-2.5 py-1 rounded-lg hover:bg-studio-800 text-xs text-slate-300 flex items-center gap-1.5" title="切換深淺透明格紋背景">
+                        <i class="fa-solid fa-circle-half-stroke text-indigo-400"></i>
+                        <span class="hidden sm:inline">底格切換</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- RIGHT PANEL: Collapsible Inspector, Color Separation Layers & Live SVG Code -->
+        <aside class="w-80 bg-studio-900 border-l border-studio-800 hidden lg:flex flex-col shrink-0 z-20 h-full overflow-hidden">
+            
+            <!-- Right Panel Top Bar: Quick Expand / Collapse All -->
+            <div class="px-4 py-2.5 bg-studio-950/80 border-b border-studio-800 flex items-center justify-between shrink-0">
+                <span class="text-[11px] font-semibold text-slate-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-sliders text-indigo-400"></i>
+                    屬性與分色管理面板
+                </span>
+                <div class="flex items-center gap-2 text-[11px]">
+                    <button onclick="setAllRightSections(true)" class="text-slate-400 hover:text-white transition-colors" title="展開全部右側區塊">展開全部</button>
+                    <span class="text-studio-700">|</span>
+                    <button onclick="setAllRightSections(false)" class="text-slate-400 hover:text-white transition-colors" title="收摺全部右側區塊">全部收摺</button>
+                </div>
+            </div>
+
+            <!-- Scrollable Accordion Container -->
+            <div class="flex-1 overflow-y-auto divide-y divide-studio-800">
+
+                <!-- COLLAPSIBLE SECTION 1: Selected Path / Region Inspector -->
+                <div class="bg-studio-900">
+                    <button onclick="toggleRightSection('inspector')" class="w-full px-4 py-3 flex items-center justify-between hover:bg-studio-850/80 transition-colors text-left group">
+                        <div class="flex items-center gap-2 min-w-0">
+                            <i class="fa-solid fa-crosshairs text-indigo-400 text-xs shrink-0"></i>
+                            <span class="text-xs font-bold text-white uppercase tracking-wider truncate">選取區塊與節點檢視器</span>
+                            <span id="inspHeaderBadge" class="hidden text-[10px] font-mono px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 shrink-0">未選取</span>
+                        </div>
+                        <i id="chevron-inspector" class="fa-solid fa-chevron-down text-xs text-slate-400 group-hover:text-white transition-transform duration-200 shrink-0"></i>
+                    </button>
+
+                    <div id="section-body-inspector" class="px-4 pb-4 pt-1">
+                        <div id="inspectorEmptyState" class="p-3.5 rounded-xl bg-studio-950/70 border border-studio-800 text-center space-y-1.5">
+                            <i class="fa-solid fa-hand-pointer text-slate-500 text-base"></i>
+                            <p class="text-xs text-slate-400 leading-relaxed">在畫布中點擊任一向量色塊，即可檢視其子像素貝茲曲線節點並獨立編輯。</p>
+                        </div>
+
+                        <div id="inspectorActivePanel" class="hidden space-y-3 bg-studio-950/90 p-3.5 rounded-xl border border-indigo-500/40">
+                            <div class="flex items-center justify-between">
+                                <span id="inspRegionId" class="text-xs font-mono font-bold text-indigo-300">Path #12</span>
+                                <button onclick="deleteSelectedRegion()" class="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1">
+                                    <i class="fa-solid fa-trash-can"></i>刪除區塊
+                                </button>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-[11px]">
+                                <div class="bg-studio-900 p-2 rounded border border-studio-800">
+                                    <span class="text-slate-400 block">控制節點</span>
+                                    <span id="inspNodeCount" class="font-mono font-semibold text-white">14 pts</span>
+                                </div>
+                                <div class="bg-studio-900 p-2 rounded border border-studio-800">
+                                    <span class="text-slate-400 block">區塊面積</span>
+                                    <span id="inspAreaSize" class="font-mono font-semibold text-emerald-400">420 px²</span>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between pt-1">
+                                <span class="text-xs text-slate-300">區塊填充色：</span>
+                                <input type="color" id="inspColorInput" onchange="recolorSelectedRegion(this.value)" class="w-8 h-7 rounded cursor-pointer bg-transparent">
+                            </div>
+
+                            <div class="pt-2.5 border-t border-studio-800 space-y-2.5">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-[11px] font-semibold text-cyan-300 flex items-center gap-1.5">
+                                        <i class="fa-solid fa-bezier-curve"></i>
+                                        節點與貝茲桿控制
+                                    </span>
+                                    <span id="inspSelectedNodeBadge" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-studio-900 text-slate-400 border border-studio-700">
+                                        未選取錨點
+                                    </span>
+                                </div>
+
+                                <div id="inspNodeControls" class="hidden space-y-2">
+                                    <div class="grid grid-cols-2 gap-1.5 text-[11px] font-mono">
+                                        <div class="bg-studio-900 px-2 py-1 rounded border border-studio-800 flex justify-between">
+                                            <span class="text-slate-400">X:</span>
+                                            <span id="inspNodeX" class="text-cyan-300">0.0</span>
+                                        </div>
+                                        <div class="bg-studio-900 px-2 py-1 rounded border border-studio-800 flex justify-between">
+                                            <span class="text-slate-400">Y:</span>
+                                            <span id="inspNodeY" class="text-cyan-300">0.0</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Node Addition / Deletion / Corner Toggles -->
+                                    <div class="grid grid-cols-3 gap-1">
+                                        <button onclick="toggleSelectedNodeCorner()" id="btnToggleCorner" class="px-2 py-1.5 rounded-lg bg-studio-800 hover:bg-studio-700 text-[11px] text-slate-200 border border-studio-700 transition-all" title="切換平滑曲線點或尖角轉折點 (亦可雙擊節點)">
+                                            <i class="fa-solid fa-diamond mr-1 text-amber-400"></i>尖角/平滑
+                                        </button>
+                                        <button onclick="insertNodeAfterSelected()" class="px-2 py-1.5 rounded-lg bg-studio-800 hover:bg-studio-700 text-[11px] text-slate-200 border border-studio-700 transition-all" title="在此節點與下一節點之間新增錨點">
+                                            <i class="fa-solid fa-plus mr-1 text-emerald-400"></i>加節點
+                                        </button>
+                                        <button onclick="deleteSelectedNode()" class="px-2 py-1.5 rounded-lg bg-studio-800 hover:bg-studio-700 text-[11px] text-rose-300 border border-studio-700 transition-all" title="刪除此控制錨點">
+                                            <i class="fa-solid fa-minus mr-1 text-rose-400"></i>刪節點
+                                        </button>
+                                    </div>
+
+                                    <!-- Bezier Handle Controls -->
+                                    <div class="grid grid-cols-2 gap-1 pt-0.5">
+                                        <button onclick="activateBezierHandlesOnSelected()" class="px-2 py-1.5 rounded-lg bg-pink-500/20 hover:bg-pink-500/30 text-[11px] text-pink-200 border border-pink-500/40 transition-all" title="為此節點展開或重設明顯的雙向貝茲切線控制桿">
+                                            <i class="fa-solid fa-arrows-left-right-to-line mr-1 text-pink-400"></i>展開貝茲桿
+                                        </button>
+                                        <button onclick="toggleBezierHandleSymmetry()" id="btnHandleSymmetry" class="px-2 py-1.5 rounded-lg bg-studio-800 hover:bg-studio-700 text-[11px] text-purple-300 border border-studio-700 transition-all" title="切換對稱連動控制桿或單邊獨立控制桿">
+                                            <i class="fa-solid fa-link mr-1"></i>對稱控制桿
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <p id="inspNodeHint" class="text-[11px] text-slate-400 leading-relaxed">
+                                    提示：點選錨點後可按 <span class="text-rose-400 font-medium">刪節點 / Delete鍵</span>（或切換「點選刪點」工具、對錨點按<span class="text-rose-400 font-medium">滑鼠右鍵</span>）直接刪除指定節點；點擊<span class="text-emerald-400 font-medium">綠色「+」點</span>可插入新節點。
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLLAPSIBLE SECTION 2: Color Separation Layers (分色路徑圖層管理) -->
+                <div class="bg-studio-900">
+                    <div class="px-4 py-3 flex items-center justify-between hover:bg-studio-850/80 transition-colors">
+                        <button onclick="toggleRightSection('layers')" class="flex items-center gap-2 min-w-0 flex-1 text-left group">
+                            <i class="fa-solid fa-layer-group text-cyan-400 text-xs shrink-0"></i>
+                            <span class="text-xs font-bold text-white uppercase tracking-wider truncate">分色路徑圖層</span>
+                            <span id="colorLayerCountBadge" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 shrink-0">0 色層</span>
+                        </button>
+                        <div class="flex items-center gap-2.5 shrink-0">
+                            <button onclick="showAllColorLayers()" class="text-[11px] text-indigo-400 hover:text-indigo-300 hover:underline font-medium">全部顯示</button>
+                            <button onclick="toggleRightSection('layers')" class="text-slate-400 hover:text-white p-0.5" title="收摺/展開分色圖層">
+                                <i id="chevron-layers" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="section-body-layers" class="px-4 pb-4 pt-1 space-y-2.5">
+                        <p class="text-[11px] text-slate-400 leading-relaxed">可單獨檢視、點擊選取或隱藏特定色版，符合網版印花、刺繡與分層割字需求。</p>
+                        
+                        <div id="colorLayersList" class="space-y-1.5">
+                            <!-- Dynamically populated color layers without height clipping -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- COLLAPSIBLE SECTION 3: Quick SVG Source Code Peek -->
+                <div class="bg-studio-950/60">
+                    <div class="px-4 py-3 flex items-center justify-between hover:bg-studio-850/80 transition-colors">
+                        <button onclick="toggleRightSection('svgcode')" class="flex items-center gap-2 min-w-0 flex-1 text-left group">
+                            <i class="fa-solid fa-code text-emerald-400 text-xs shrink-0"></i>
+                            <span class="text-xs font-bold text-white uppercase tracking-wider truncate">真實幾何路徑碼 (Live SVG)</span>
+                        </button>
+                        <div class="flex items-center gap-2.5 shrink-0">
+                            <button onclick="copySvgCodeToClipboard()" class="text-[11px] text-indigo-400 hover:text-indigo-300 flex items-center gap-1 font-medium">
+                                <i class="fa-regular fa-copy"></i>複製 SVG
+                            </button>
+                            <button onclick="toggleRightSection('svgcode')" class="text-slate-400 hover:text-white p-0.5" title="收摺/展開 SVG 原始碼">
+                                <i id="chevron-svgcode" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="section-body-svgcode" class="px-4 pb-4 pt-1">
+                        <pre id="liveSvgCodePreview" class="h-36 overflow-y-auto bg-studio-900 p-2.5 rounded-xl border border-studio-800 text-[10px] font-mono text-slate-300 whitespace-pre-wrap break-all"></pre>
+                    </div>
+                </div>
+
+            </div>
+        </aside>
+    </div>
+
+    <!-- Multi-Format Export Modal -->
+    <div id="exportModal" class="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+        <div class="bg-studio-900 border border-studio-700 rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl">
+            <div class="p-5 border-b border-studio-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400 text-lg">
+                        <i class="fa-solid fa-file-export"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-white">匯出跨工作流向量檔案 (Export Vector Graphics)</h2>
+                        <p class="text-xs text-slate-400">所有輸出皆為 100% 真實封閉幾何路徑與貝茲曲線，支援無限縮放與 CAD 加工</p>
+                    </div>
+                </div>
+                <button onclick="closeExportModal()" class="w-8 h-8 rounded-lg hover:bg-studio-800 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-5">
+                <!-- Format Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    
+                    <!-- SVG Format -->
+                    <div onclick="downloadVectorFormat('svg')" class="cursor-pointer group p-4 rounded-xl bg-studio-850 hover:bg-indigo-950/40 border border-studio-700 hover:border-indigo-500 transition-all flex items-start gap-3.5">
+                        <div class="w-11 h-11 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-bezier-curve"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-sm text-white">SVG 標準向量檔 (.svg)</span>
+                                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">Web / UI / 設計</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-1">包含最佳化 Cubic Bézier (`C`) 曲線與分色圖層群組，相容 Illustrator、Figma、Inkscape。</p>
+                        </div>
+                    </div>
+
+                    <!-- DXF Format -->
+                    <div onclick="downloadVectorFormat('dxf')" class="cursor-pointer group p-4 rounded-xl bg-studio-850 hover:bg-cyan-950/40 border border-studio-700 hover:border-cyan-500 transition-all flex items-start gap-3.5">
+                        <div class="w-11 h-11 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-compass-drafting"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-sm text-white">AutoCAD DXF 路徑檔 (.dxf)</span>
+                                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300">雷射切割 / CNC</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-1">輸出標準 R12 `POLYLINE` 封閉幾何座標路徑，供雷射雕刻機、乙烯基割字機直接讀取。</p>
+                        </div>
+                    </div>
+
+                    <!-- EPS Format -->
+                    <div onclick="downloadVectorFormat('eps')" class="cursor-pointer group p-4 rounded-xl bg-studio-850 hover:bg-amber-950/40 border border-studio-700 hover:border-amber-500 transition-all flex items-start gap-3.5">
+                        <div class="w-11 h-11 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-print"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-sm text-white">PostScript 印刷向量 (.eps)</span>
+                                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300">商業印刷 / 網版</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-1">工業級 Encapsulated PostScript 向量指令，具備精確 BoundingBox 與獨立色塊填色。</p>
+                        </div>
+                    </div>
+
+                    <!-- AI / PDF Vector Format -->
+                    <div onclick="downloadVectorFormat('ai')" class="cursor-pointer group p-4 rounded-xl bg-studio-850 hover:bg-rose-950/40 border border-studio-700 hover:border-rose-500 transition-all flex items-start gap-3.5">
+                        <div class="w-11 h-11 rounded-xl bg-rose-500/20 text-rose-400 flex items-center justify-center text-xl shrink-0 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-pen-nib"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-sm text-white">Adobe Illustrator 原生相容 (.ai)</span>
+                                <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300">品牌識別 / 刺繡</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-1">生成 Adobe Illustrator PostScript 3.0 結構化圖層向量檔，保留完整錨點與色票。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Export Options Bar -->
+                <div class="p-4 rounded-xl bg-studio-950 border border-studio-800 flex flex-wrap items-center justify-between gap-4 text-xs">
+                    <label class="flex items-center gap-2 cursor-pointer text-slate-300">
+                        <input type="checkbox" id="exportIncludeStroke" checked class="rounded bg-studio-800 border-studio-600 text-indigo-600">
+                        <span>縫合相鄰色塊邊界（防止向量渲染白邊 Gap-free Rendering）</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-slate-300">
+                        <input type="checkbox" id="exportGroupByColor" checked class="rounded bg-studio-800 border-studio-600 text-indigo-600">
+                        <span>依色彩自動建立分色群組 (`<g>`)</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 bg-studio-950 border-t border-studio-800 flex items-center justify-between">
+                <span class="text-xs text-slate-400" id="exportSummaryInfo">準備匯出：0 條封閉向量路徑</span>
+                <button onclick="closeExportModal()" class="px-4 py-2 rounded-xl bg-studio-800 hover:bg-studio-700 text-xs font-medium text-slate-200">
+                    關閉視窗
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toastNotification" class="fixed bottom-5 right-5 bg-studio-900 border border-indigo-500/50 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 z-50 transition-all duration-300 translate-y-20 opacity-0 pointer-events-none">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-base"></i>
+        <span id="toastMessage" class="text-xs font-medium">操作成功</span>
+    </div>
+
+    <script>
+        /***********************************************************************
+         * Raster2Vector Pro — Core Sub-Pixel Tracing & Segmentation Engine
+         ***********************************************************************/
+        const state = {
+            currentSample: 'logo',
+            conversionMode: 'auto', // 'auto' | 'wizard' | 'advanced'
+            viewportMode: 'split',  // 'split' | 'vector' | 'side'
+            editorTool: 'inspect',  // 'inspect' | 'pan' | 'node' | 'fill' | 'eraser' | 'merge' | 'split' | 'transparent'
+            showNodes: false,
+            showPixelGrid: true,
+            lightCheckerboard: false,
+            zoom: 1.0,
+            panX: 0,
+            panY: 0,
+            splitRatio: 0.5,
+            symmetricHandles: true,
+
+            // Tracing Engine Parameters
+            params: {
+                colorCount: 6,
+                detailLevel: 75,     // 10 - 100
+                minArea: 12,         // 1 - 120 px^2
+                smoothing: 65,       // 0 - 100
+                denoise: 2,          // 0 - 5 (JPEG artifact rejection)
+                removeBg: false,
+                outlineMode: false   // Used for CNC/Laser workflow
+            },
+
+            // Wizard Selections
+            wizard: {
+                imageType: 'logo',
+                colorMode: 'full',
+                quality: 'balanced'
+            },
+
+            // Working Raster Data (High-density internal resolution for Sub-Pixel Engine v3.5)
+            procWidth: 240,
+            procHeight: 180,
+            displayWidth: 640,
+            displayHeight: 480,
+            rawImageData: null,
+            quantizedGrid: null, // Int32Array of palette indices (-1 for transparent)
+            palette: [],         // Array of { r, g, b, hex, locked, visible }
+
+            // Traced Vector Regions (Editable in Built-in Segmentation Editor)
+            regions: [],         // Array of { id, colorIndex, hex, transparent, area, points, bezierCmds, bbox }
+            selectedRegionId: null,
+            selectedNodeIndex: null,
+            draggingNode: null,  // { regionId, nodeIndex, handleType: 'anchor' | 'out' | 'in', savedUndo: boolean }
+            isPanningStage: false,
+            panStartClient: { x: 0, y: 0, origPanX: 0, origPanY: 0 },
+            mergeCandidateId: null,
+            undoStack: []
+        };
+
+        // Offscreen processing canvas
+        const procCanvas = document.createElement('canvas');
+        const procCtx = procCanvas.getContext('2d', { willReadFrequently: true });
+
+        /**
+         * Procedural Raster Sample Generator
+         * Creates realistic raster images (including deliberate low-res pixelation & JPEG noise)
+         * so the user can immediately test and compare Raster vs. Sub-pixel Vector!
+         */
+        function generateProceduralSample(type) {
+            const w = 240;
+            const h = 180;
+            procCanvas.width = w;
+            procCanvas.height = h;
+            const ctx = procCtx;
+            ctx.imageSmoothingEnabled = true;
+            ctx.save();
+            ctx.scale(w / 160, h / 120);
+
+            if (type === 'logo') {
+                // Flat Tech Rocket Logo with anti-aliased edges and light JPEG noise
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(0, 0, 160, 120);
+
+                // Outer Shield Circle
+                ctx.fillStyle = '#1e293b';
+                ctx.beginPath();
+                ctx.arc(80, 60, 48, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Indigo Ring
+                ctx.strokeStyle = '#6366f1';
+                ctx.lineWidth = 6;
+                ctx.beginPath();
+                ctx.arc(80, 60, 44, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Golden Flame
+                ctx.fillStyle = '#f59e0b';
+                ctx.beginPath();
+                ctx.moveTo(68, 82);
+                ctx.quadraticCurveTo(80, 112, 92, 82);
+                ctx.closePath();
+                ctx.fill();
+
+                // Rocket Body
+                ctx.fillStyle = '#f8fafc';
+                ctx.beginPath();
+                ctx.moveTo(80, 20);
+                ctx.quadraticCurveTo(102, 48, 94, 82);
+                ctx.lineTo(66, 82);
+                ctx.quadraticCurveTo(58, 48, 80, 20);
+                ctx.closePath();
+                ctx.fill();
+
+                // Rocket Fins
+                ctx.fillStyle = '#ec4899';
+                ctx.beginPath();
+                ctx.moveTo(66, 65);
+                ctx.lineTo(48, 86);
+                ctx.lineTo(66, 82);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(94, 65);
+                ctx.lineTo(112, 86);
+                ctx.lineTo(94, 82);
+                ctx.closePath();
+                ctx.fill();
+
+                // Rocket Window
+                ctx.fillStyle = '#06b6d4';
+                ctx.beginPath();
+                ctx.arc(80, 52, 9, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+                injectSimulatedJpegNoise(ctx, w, h, 7);
+            } else if (type === 'badge') {
+                // Colorful Geometric Fox/Cat Mascot Badge
+                ctx.fillStyle = '#fef3c7';
+                ctx.fillRect(0, 0, 160, 120);
+
+                // Teal Circle Backdrop
+                ctx.fillStyle = '#0d9488';
+                ctx.beginPath();
+                ctx.arc(80, 62, 46, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Ears
+                ctx.fillStyle = '#ea580c';
+                ctx.beginPath();
+                ctx.moveTo(46, 55);
+                ctx.lineTo(42, 20);
+                ctx.lineTo(72, 38);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(114, 55);
+                ctx.lineTo(118, 20);
+                ctx.lineTo(88, 38);
+                ctx.closePath();
+                ctx.fill();
+
+                // Head
+                ctx.fillStyle = '#f97316';
+                ctx.beginPath();
+                ctx.moveTo(42, 54);
+                ctx.quadraticCurveTo(80, 30, 118, 54);
+                ctx.lineTo(80, 98);
+                ctx.closePath();
+                ctx.fill();
+
+                // White Cheeks
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.moveTo(44, 56);
+                ctx.lineTo(72, 68);
+                ctx.lineTo(80, 96);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.moveTo(116, 56);
+                ctx.lineTo(88, 68);
+                ctx.lineTo(80, 96);
+                ctx.closePath();
+                ctx.fill();
+
+                // Eyes & Nose
+                ctx.fillStyle = '#1e1b4b';
+                ctx.beginPath();
+                ctx.arc(64, 56, 4.5, 0, Math.PI * 2);
+                ctx.arc(96, 56, 4.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.beginPath();
+                ctx.arc(80, 92, 5.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+                injectSimulatedJpegNoise(ctx, w, h, 8);
+            } else if (type === 'sketch') {
+                // Scanned Hand-drawn Ink Line Art with paper speckles
+                ctx.fillStyle = '#f8fafc';
+                ctx.fillRect(0, 0, 160, 120);
+
+                ctx.strokeStyle = '#0f172a';
+                ctx.fillStyle = '#0f172a';
+                ctx.lineWidth = 4.5;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                // Coffee Cup Sketch
+                ctx.beginPath();
+                ctx.moveTo(45, 42);
+                ctx.lineTo(52, 92);
+                ctx.quadraticCurveTo(80, 102, 104, 92);
+                ctx.lineTo(110, 42);
+                ctx.closePath();
+                ctx.stroke();
+
+                // Cup Handle
+                ctx.beginPath();
+                ctx.moveTo(108, 52);
+                ctx.quadraticCurveTo(132, 52, 128, 70);
+                ctx.quadraticCurveTo(124, 84, 105, 82);
+                ctx.stroke();
+
+                // Steam Waves
+                ctx.lineWidth = 3.5;
+                ctx.beginPath();
+                ctx.moveTo(66, 32);
+                ctx.quadraticCurveTo(60, 22, 70, 14);
+                ctx.moveTo(88, 32);
+                ctx.quadraticCurveTo(82, 22, 92, 14);
+                ctx.stroke();
+
+                // Add deliberate scanner dust speckles so user can test Min Area Filter & Eraser
+                ctx.fillStyle = '#334155';
+                const speckles = [[24, 25], [136, 30], [30, 88], [138, 95], [20, 58]];
+                speckles.forEach(([sx, sy]) => {
+                    ctx.fillRect(sx, sy, 3, 3);
+                });
+                ctx.restore();
+                injectSimulatedJpegNoise(ctx, w, h, 5);
+            } else if (type === 'photo') {
+                // Sunset Mountain Landscape (Continuous tone gradient + silhouettes)
+                const grad = ctx.createLinearGradient(0, 0, 0, 120);
+                grad.addColorStop(0, '#311042');
+                grad.addColorStop(0.35, '#9d174d');
+                grad.addColorStop(0.65, '#f97316');
+                grad.addColorStop(1, '#fde047');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 160, 120);
+
+                // Sun
+                ctx.fillStyle = '#fef08a';
+                ctx.beginPath();
+                ctx.arc(108, 46, 18, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Distant Mountains
+                ctx.fillStyle = '#581c87';
+                ctx.beginPath();
+                ctx.moveTo(0, 85);
+                ctx.lineTo(42, 48);
+                ctx.lineTo(88, 78);
+                ctx.lineTo(128, 52);
+                ctx.lineTo(160, 76);
+                ctx.lineTo(160, 120);
+                ctx.lineTo(0, 120);
+                ctx.closePath();
+                ctx.fill();
+
+                // Foreground Mountains
+                ctx.fillStyle = '#1e1b4b';
+                ctx.beginPath();
+                ctx.moveTo(0, 96);
+                ctx.lineTo(62, 66);
+                ctx.lineTo(115, 94);
+                ctx.lineTo(160, 74);
+                ctx.lineTo(160, 120);
+                ctx.lineTo(0, 120);
+                ctx.closePath();
+                ctx.fill();
+                ctx.restore();
+            }
+
+            state.procWidth = w;
+            state.procHeight = h;
+            state.rawImageData = ctx.getImageData(0, 0, w, h);
+            renderOriginalRasterToDisplay();
+        }
+
+        function injectSimulatedJpegNoise(ctx, w, h, strength) {
+            const imgData = ctx.getImageData(0, 0, w, h);
+            const data = imgData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                const n = (Math.sin(i * 0.37) * strength);
+                data[i] = Math.min(255, Math.max(0, data[i] + n));
+                data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + n));
+                data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + n));
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+        /**
+         * Edge-Preserving Bilateral Filter for JPEG Artifact Rejection (抗雜訊與壓縮失真抑制)
+         * Smooths out JPEG compression noise within color blocks while preserving crisp geometry boundaries.
+         */
+        function applyBilateralDenoise(srcData, w, h, radius) {
+            if (radius <= 0) return new Uint8ClampedArray(srcData);
+            const out = new Uint8ClampedArray(srcData.length);
+            const colorSigma = 38 + radius * 12;
+            const colorSigmaSq2 = 2 * colorSigma * colorSigma;
+
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const idx = (y * w + x) * 4;
+                    const r0 = srcData[idx];
+                    const g0 = srcData[idx + 1];
+                    const b0 = srcData[idx + 2];
+                    const a0 = srcData[idx + 3];
+
+                    if (a0 < 30) {
+                        out[idx + 3] = 0;
+                        continue;
+                    }
+
+                    let sumR = 0, sumG = 0, sumB = 0, sumW = 0;
+                    const rBound = Math.min(2, radius);
+
+                    for (let dy = -rBound; dy <= rBound; dy++) {
+                        const ny = y + dy;
+                        if (ny < 0 || ny >= h) continue;
+                        for (let dx = -rBound; dx <= rBound; dx++) {
+                            const nx = x + dx;
+                            if (nx < 0 || nx >= w) continue;
+                            const nIdx = (ny * w + nx) * 4;
+                            const dr = srcData[nIdx] - r0;
+                            const dg = srcData[nIdx + 1] - g0;
+                            const db = srcData[nIdx + 2] - b0;
+                            const distColor = dr * dr + dg * dg + db * db;
+                            const weight = Math.exp(-distColor / colorSigmaSq2);
+
+                            sumR += srcData[nIdx] * weight;
+                            sumG += srcData[nIdx + 1] * weight;
+                            sumB += srcData[nIdx + 2] * weight;
+                            sumW += weight;
+                        }
+                    }
+
+                    out[idx] = Math.round(sumR / sumW);
+                    out[idx + 1] = Math.round(sumG / sumW);
+                    out[idx + 2] = Math.round(sumB / sumW);
+                    out[idx + 3] = a0;
+                }
+            }
+            return out;
+        }
+
+        /**
+         * K-Means++ Color Quantization with Locked Custom Swatch Support
+         */
+        function quantizeImageColors(filteredPixels, w, h, k, preserveLockedSwatches = false) {
+            const samples = [];
+            for (let i = 0; i < filteredPixels.length; i += 4) {
+                if (filteredPixels[i + 3] >= 128) {
+                    samples.push([filteredPixels[i], filteredPixels[i + 1], filteredPixels[i + 2]]);
+                }
+            }
+            if (samples.length === 0) return [];
+
+            const centroids = [];
+            // Keep locked colors if requested
+            if (preserveLockedSwatches && state.palette.length > 0) {
+                state.palette.forEach(sw => {
+                    if (sw.locked && centroids.length < k) {
+                        centroids.push([sw.r, sw.g, sw.b, true]);
+                    }
+                });
+            }
+
+            // K-Means++ deterministic seeding
+            if (centroids.length === 0) {
+                centroids.push([...samples[0], false]);
+            }
+
+            while (centroids.length < k) {
+                let bestSample = samples[0];
+                let maxDist = -1;
+                const step = Math.max(1, Math.floor(samples.length / 800));
+                for (let i = 0; i < samples.length; i += step) {
+                    const s = samples[i];
+                    let minDistToCentroid = Infinity;
+                    for (let c = 0; c < centroids.length; c++) {
+                        const d = colorDistSq(s, centroids[c]);
+                        if (d < minDistToCentroid) minDistToCentroid = d;
+                    }
+                    if (minDistToCentroid > maxDist) {
+                        maxDist = minDistToCentroid;
+                        bestSample = s;
+                    }
+                }
+                centroids.push([...bestSample, false]);
+            }
+
+            // Run K-Means iterations (Upgraded for up to 32 colors)
+            const iterations = 8;
+            for (let iter = 0; iter < iterations; iter++) {
+                const sums = Array.from({ length: k }, () => [0, 0, 0, 0]);
+                for (let i = 0; i < samples.length; i++) {
+                    const s = samples[i];
+                    let bestIdx = 0;
+                    let bestD = Infinity;
+                    for (let c = 0; c < k; c++) {
+                        const d = colorDistSq(s, centroids[c]);
+                        if (d < bestD) {
+                            bestD = d;
+                            bestIdx = c;
+                        }
+                    }
+                    sums[bestIdx][0] += s[0];
+                    sums[bestIdx][1] += s[1];
+                    sums[bestIdx][2] += s[2];
+                    sums[bestIdx][3] += 1;
+                }
+
+                for (let c = 0; c < k; c++) {
+                    if (!centroids[c][3] && sums[c][3] > 0) {
+                        centroids[c][0] = Math.round(sums[c][0] / sums[c][3]);
+                        centroids[c][1] = Math.round(sums[c][1] / sums[c][3]);
+                        centroids[c][2] = Math.round(sums[c][2] / sums[c][3]);
+                    }
+                }
+            }
+
+            return centroids.map(c => ({
+                r: c[0],
+                g: c[1],
+                b: c[2],
+                hex: rgbToHex(c[0], c[1], c[2]),
+                locked: !!c[3],
+                visible: true
+            }));
+        }
+
+        /**
+         * Perceptual Redmean Weighted Color Distance (Superior human color perception separation for 32-color palettes)
+         */
+        function colorDistSq(c1, c2) {
+            const rMean = (c1[0] + c2[0]) * 0.5;
+            const dr = c1[0] - c2[0];
+            const dg = c1[1] - c2[1];
+            const db = c1[2] - c2[2];
+            return ((2 + rMean / 256) * dr * dr) + (4 * dg * dg) + ((2 + (255 - rMean) / 256) * db * db);
+        }
+
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
+        }
+
+        function hexToRgb(hex) {
+            const clean = hex.replace('#', '');
+            const num = parseInt(clean, 16);
+            return {
+                r: (num >> 16) & 255,
+                g: (num >> 8) & 255,
+                b: num & 255
+            };
+        }
+
+        /**
+         * Core Vectorization Pipeline:
+         * 1. Denoise (JPEG Artifact Rejection)
+         * 2. Palette Mapping
+         * 3. Connected Component Labeling & Minimum Area Threshold Filtering
+         * 4. Sub-Pixel Contour Extraction & Laplacian / Anti-aliasing Tangent Refinement
+         * 5. Ramer-Douglas-Peucker Optimal Node Placement
+         * 6. Catmull-Rom to Cubic Bézier Curve Fitting
+         */
+        function executeVectorTrace(preservePalette = false) {
+            if (!state.rawImageData) return;
+            const t0 = performance.now();
+
+            const w = state.procWidth;
+            const h = state.procHeight;
+            const src = state.rawImageData.data;
+
+            // Step 1: JPEG Artifact Rejection
+            const denoised = applyBilateralDenoise(src, w, h, Number(state.params.denoise));
+
+            // Step 2: Color Quantization
+            if (!preservePalette || state.palette.length === 0) {
+                state.palette = quantizeImageColors(denoised, w, h, Number(state.params.colorCount), true);
+            }
+
+            // Assign each pixel to nearest palette color
+            const grid = new Int32Array(w * h);
+            for (let i = 0; i < w * h; i++) {
+                const pIdx = i * 4;
+                if (denoised[pIdx + 3] < 128) {
+                    grid[i] = -1; // Transparent
+                    continue;
+                }
+                const rgb = [denoised[pIdx], denoised[pIdx + 1], denoised[pIdx + 2]];
+                let bestC = 0;
+                let bestD = Infinity;
+                for (let c = 0; c < state.palette.length; c++) {
+                    const p = state.palette[c];
+                    const d = colorDistSq(rgb, [p.r, p.g, p.b]);
+                    if (d < bestD) {
+                        bestD = d;
+                        bestC = c;
+                    }
+                }
+                grid[i] = bestC;
+            }
+
+            // Optional Background Removal (Corner color detection)
+            const cornerColorIdx = grid[0];
+            if (state.params.removeBg && cornerColorIdx >= 0) {
+                for (let i = 0; i < grid.length; i++) {
+                    if (grid[i] === cornerColorIdx) grid[i] = -1;
+                }
+            }
+
+            // Step 3: Connected Components & Minimum Area Threshold (濾除細小碎斑與掃描噪點)
+            const minArea = Number(state.params.minArea);
+            cleanSmallSpeckles(grid, w, h, minArea);
+            state.quantizedGrid = grid;
+
+            // Step 4: Extract Connected Regions and Trace Sub-Pixel Boundaries
+            const visited = new Uint8Array(w * h);
+            const tracedRegions = [];
+            let regionCounter = 1;
+
+            const scaleX = state.displayWidth / w;
+            const scaleY = state.displayHeight / h;
+
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const idx = y * w + x;
+                    const colorIdx = grid[idx];
+                    if (colorIdx < 0 || visited[idx]) continue;
+
+                    // Flood fill to collect connected component mask
+                    const compPixels = [];
+                    const queue = [idx];
+                    visited[idx] = 1;
+                    let minX = x, maxX = x, minY = y, maxY = y;
+
+                    let head = 0;
+                    while (head < queue.length) {
+                        const curr = queue[head++];
+                        compPixels.push(curr);
+                        const cx = curr % w;
+                        const cy = (curr / w) | 0;
+                        if (cx < minX) minX = cx;
+                        if (cx > maxX) maxX = cx;
+                        if (cy < minY) minY = cy;
+                        if (cy > maxY) maxY = cy;
+
+                        // 4-connectivity
+                        const neighbors = [
+                            cx > 0 ? curr - 1 : -1,
+                            cx < w - 1 ? curr + 1 : -1,
+                            cy > 0 ? curr - w : -1,
+                            cy < h - 1 ? curr + w : -1
+                        ];
+                        for (let n = 0; n < 4; n++) {
+                            const nIdx = neighbors[n];
+                            if (nIdx >= 0 && !visited[nIdx] && grid[nIdx] === colorIdx) {
+                                visited[nIdx] = 1;
+                                queue.push(nIdx);
+                            }
+                        }
+                    }
+
+                    if (compPixels.length < minArea) continue;
+                    // Trace outer boundary of this component using Sub-Pixel Engine v3.5 (Sobel AA Gradient Tensor + Normal Offset)
+                    const palEntry = state.palette[colorIdx] || { r: 99, g: 102, b: 241, hex: '#6366f1' };
+                    const rawContour = traceComponentContour(compPixels, w, h, minX, maxX, minY, maxY, denoised, palEntry);
+                    if (rawContour.length < 3) continue;
+
+                    // Step 5: Multi-Scale Sub-Pixel Tangent Smoothing & RDP Optimal Node Placement
+                    const detailFactor = Math.max(0.14, (104 - Number(state.params.detailLevel)) / 48);
+                    const smoothIterations = Math.max(1, Math.round(Number(state.params.smoothing) / 18));
+                    const subpixelContour = smoothContourSubpixel(rawContour, smoothIterations);
+                    const simplifiedNodes = simplifyRDPClosed(subpixelContour, detailFactor);
+
+                    // Scale nodes to display coordinate space with high sub-pixel precision
+                    const scaledNodes = simplifiedNodes.map(pt => ({
+                        x: +(pt.x * scaleX).toFixed(2),
+                        y: +(pt.y * scaleY).toFixed(2),
+                        isCorner: pt.isCorner
+                    }));
+
+                    // Step 6: Fit Chord-Adaptive Smooth Cubic Bézier Curves
+                    const tension = (Number(state.params.smoothing) / 100) * 0.38;
+                    const bezierData = buildCubicBezierPath(scaledNodes, tension);
+
+                    const palColor = state.palette[colorIdx] || { hex: '#6366f1' };
+                    tracedRegions.push({
+                        id: 'path-' + (regionCounter++),
+                        colorIndex: colorIdx,
+                        hex: palColor.hex,
+                        transparent: false,
+                        area: compPixels.length,
+                        nodes: scaledNodes,
+                        d: bezierData.d,
+                        handles: bezierData.handles,
+                        bbox: {
+                            x: minX * scaleX,
+                            y: minY * scaleY,
+                            w: (maxX - minX + 1) * scaleX,
+                            h: (maxY - minY + 1) * scaleY
+                        }
+                    });
+                }
+            }
+
+            state.regions = tracedRegions;
+            state.selectedRegionId = null;
+            state.selectedNodeIndex = null;
+            state.undoStack = [];
+            updateUndoButtonState();
+
+            const elapsed = Math.round(performance.now() - t0);
+            renderVectorStage();
+            updatePaletteUI();
+            updateColorLayersUI();
+            updateStatsFooter(elapsed);
+        }
+
+        function cleanSmallSpeckles(grid, w, h, minArea) {
+            if (minArea <= 1) return;
+            const visited = new Uint8Array(w * h);
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const idx = y * w + x;
+                    const c = grid[idx];
+                    if (c < 0 || visited[idx]) continue;
+
+                    const comp = [];
+                    const q = [idx];
+                    visited[idx] = 1;
+                    let neighborColor = -1;
+
+                    let head = 0;
+                    while (head < q.length) {
+                        const curr = q[head++];
+                        comp.push(curr);
+                        const cx = curr % w;
+                        const cy = (curr / w) | 0;
+                        const nbs = [
+                            cx > 0 ? curr - 1 : -1,
+                            cx < w - 1 ? curr + 1 : -1,
+                            cy > 0 ? curr - w : -1,
+                            cy < h - 1 ? curr + w : -1
+                        ];
+                        for (let i = 0; i < 4; i++) {
+                            const nb = nbs[i];
+                            if (nb < 0) continue;
+                            if (grid[nb] === c && !visited[nb]) {
+                                visited[nb] = 1;
+                                q.push(nb);
+                            } else if (grid[nb] !== c && grid[nb] >= 0) {
+                                neighborColor = grid[nb];
+                            }
+                        }
+                    }
+
+                    if (comp.length < minArea && neighborColor >= 0) {
+                        for (let i = 0; i < comp.length; i++) {
+                            grid[comp[i]] = neighborColor;
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * Sub-Pixel Engine v3.5:
+         * Traces the boundary of a connected pixel component and computes both:
+         * 1. 3x3 Sobel Anti-Aliasing Luminance & Chromatic Gradient Tensor
+         * 2. Foreground-to-Background Color Mixing Ratio Sub-Pixel Normal Offset
+         */
+        function traceComponentContour(compPixels, w, h, minX, maxX, minY, maxY, rawRgba, fgColor) {
+            const bw = (maxX - minX + 3);
+            const bh = (maxY - minY + 3);
+            const mask = new Uint8Array(bw * bh);
+
+            for (let i = 0; i < compPixels.length; i++) {
+                const idx = compPixels[i];
+                const px = (idx % w) - minX + 1;
+                const py = ((idx / w) | 0) - minY + 1;
+                mask[py * bw + px] = 1;
+            }
+
+            // Find top-leftmost foreground pixel in padded local mask
+            let startX = -1, startY = -1;
+            outer: for (let y = 1; y < bh - 1; y++) {
+                for (let x = 1; x < bw - 1; x++) {
+                    if (mask[y * bw + x] === 1) {
+                        startX = x;
+                        startY = y;
+                        break outer;
+                    }
+                }
+            }
+            if (startX < 0) return [];
+
+            // Clockwise 8-neighborhood offsets
+            const dx = [0, 1, 1, 1, 0, -1, -1, -1];
+            const dy = [-1, -1, 0, 1, 1, 1, 0, -1];
+
+            const contour = [];
+            let cx = startX;
+            let cy = startY;
+            let backtrackDir = 6; // Came from West
+            const maxSteps = bw * bh * 4;
+            let steps = 0;
+
+            // Helper to read mask safely
+            const getMask = (mx, my) => (mx >= 0 && mx < bw && my >= 0 && my < bh) ? mask[my * bw + mx] : 0;
+
+            // Helper to compute pixel similarity (0..1) to foreground palette color for anti-aliasing sub-pixel estimation
+            const getColorAffinity = (imgX, imgY) => {
+                const ix = Math.max(0, Math.min(w - 1, imgX));
+                const iy = Math.max(0, Math.min(h - 1, imgY));
+                const pIdx = (iy * w + ix) * 4;
+                const dr = rawRgba[pIdx] - fgColor.r;
+                const dg = rawRgba[pIdx + 1] - fgColor.g;
+                const db = rawRgba[pIdx + 2] - fgColor.b;
+                const dist = Math.sqrt(dr * dr + dg * dg + db * db);
+                return Math.max(0, 1 - dist / 220);
+            };
+
+            do {
+                const imgX = cx - 1 + minX;
+                const imgY = cy - 1 + minY;
+
+                // 3x3 Sobel Operator on binary mask + color affinity for true sub-pixel edge normal
+                const m00 = getMask(cx - 1, cy - 1), m10 = getMask(cx, cy - 1), m20 = getMask(cx + 1, cy - 1);
+                const m01 = getMask(cx - 1, cy),                                m21 = getMask(cx + 1, cy);
+                const m02 = getMask(cx - 1, cy + 1), m12 = getMask(cx, cy + 1), m22 = getMask(cx + 1, cy + 1);
+
+                const sobelX = (m20 + 2 * m21 + m22) - (m00 + 2 * m01 + m02);
+                const sobelY = (m02 + 2 * m12 + m22) - (m00 + 2 * m10 + m20);
+                const normLen = Math.hypot(sobelX, sobelY) || 1;
+                const nx = sobelX / normLen;
+                const ny = sobelY / normLen;
+
+                // Anti-aliasing color transition gradient along outward normal
+                const affRight = getColorAffinity(imgX + 1, imgY);
+                const affLeft  = getColorAffinity(imgX - 1, imgY);
+                const affDown  = getColorAffinity(imgX, imgY + 1);
+                const affUp    = getColorAffinity(imgX, imgY - 1);
+
+                const aaShiftX = (affRight - affLeft) * 0.16;
+                const aaShiftY = (affDown - affUp) * 0.16;
+
+                // Sub-pixel edge displacement combining Sobel normal and AA transition
+                const subX = imgX + 0.5 - nx * 0.28 + aaShiftX;
+                const subY = imgY + 0.5 - ny * 0.28 + aaShiftY;
+
+                contour.push({
+                    x: subX,
+                    y: subY
+                });
+
+                let foundNext = false;
+                let searchDir = (backtrackDir + 1) & 7;
+                for (let k = 0; k < 8; k++) {
+                    const d = (searchDir + k) & 7;
+                    const nextX = cx + dx[d];
+                    const nextY = cy + dy[d];
+                    if (mask[nextY * bw + nextX] === 1) {
+                        cx = nextX;
+                        cy = nextY;
+                        backtrackDir = (d + 4) & 7;
+                        foundNext = true;
+                        break;
+                    }
+                }
+                if (!foundNext) break;
+                steps++;
+            } while ((cx !== startX || cy !== startY) && steps < maxSteps);
+
+            return contour;
+        }
+
+        /**
+         * Multi-Scale Sub-Pixel Smoothing with Curvature-Adaptive Corner Preservation
+         * Eliminates staircase artifacts while keeping true geometric corners crisp.
+         */
+        function smoothContourSubpixel(pts, iterations) {
+            const n = pts.length;
+            if (n < 5) return pts.map(p => ({ x: p.x, y: p.y, isCorner: false }));
+            let current = pts.map(p => ({ x: p.x, y: p.y, isCorner: false }));
+
+            // Multi-scale chord-angle corner detector (distinguishes 1px stairs from real corners)
+            const span = Math.min(4, Math.max(2, Math.floor(n / 12)));
+            for (let i = 0; i < n; i++) {
+                const pPrev = current[(i - span + n) % n];
+                const pCurr = current[i];
+                const pNext = current[(i + span) % n];
+                const v1x = pCurr.x - pPrev.x, v1y = pCurr.y - pPrev.y;
+                const v2x = pNext.x - pCurr.x, v2y = pNext.y - pCurr.y;
+                const len1 = Math.hypot(v1x, v1y) || 1;
+                const len2 = Math.hypot(v2x, v2y) || 1;
+                const cosAngle = (v1x * v2x + v1y * v2y) / (len1 * len2);
+                if (cosAngle < 0.32) {
+                    current[i].isCorner = true;
+                }
+            }
+
+            // Taubin / Gaussian weighted sub-pixel fairing (prevents shrinkage of circles while removing stairs)
+            for (let iter = 0; iter < iterations; iter++) {
+                const next = [];
+                for (let i = 0; i < n; i++) {
+                    if (current[i].isCorner) {
+                        next.push({ ...current[i] });
+                        continue;
+                    }
+                    const pM2 = current[(i - 2 + n) % n];
+                    const pM1 = current[(i - 1 + n) % n];
+                    const p0  = current[i];
+                    const pP1 = current[(i + 1) % n];
+                    const pP2 = current[(i + 2) % n];
+
+                    next.push({
+                        x: p0.x * 0.44 + (pM1.x + pP1.x) * 0.24 + (pM2.x + pP2.x) * 0.04,
+                        y: p0.y * 0.44 + (pM1.y + pP1.y) * 0.24 + (pM2.y + pP2.y) * 0.04,
+                        isCorner: false
+                    });
+                }
+                current = next;
+            }
+            return current;
+        }
+
+        /**
+         * Ramer-Douglas-Peucker (RDP) Closed Loop Simplification for Optimal Node Placement
+         */
+        function simplifyRDPClosed(pts, epsilon) {
+            if (pts.length <= 6) return pts;
+            const half = Math.floor(pts.length / 2);
+            const firstHalf = rdpRecursive(pts.slice(0, half + 1), epsilon);
+            const secondHalf = rdpRecursive(pts.slice(half).concat([pts[0]]), epsilon);
+            const combined = firstHalf.slice(0, -1).concat(secondHalf.slice(0, -1));
+            return combined.length >= 3 ? combined : pts.slice(0, 4);
+        }
+
+        function rdpRecursive(pts, epsilon) {
+            if (pts.length < 3) return pts;
+            let dmax = 0;
+            let index = 0;
+            const start = pts[0];
+            const end = pts[pts.length - 1];
+
+            for (let i = 1; i < pts.length - 1; i++) {
+                const d = perpendicularDistance(pts[i], start, end) + (pts[i].isCorner ? epsilon * 1.4 : 0);
+                if (d > dmax) {
+                    index = i;
+                    dmax = d;
+                }
+            }
+
+            if (dmax > epsilon) {
+                const res1 = rdpRecursive(pts.slice(0, index + 1), epsilon);
+                const res2 = rdpRecursive(pts.slice(index), epsilon);
+                return res1.slice(0, -1).concat(res2);
+            } else {
+                return [start, end];
+            }
+        }
+
+        function perpendicularDistance(pt, lineStart, lineEnd) {
+            const dx = lineEnd.x - lineStart.x;
+            const dy = lineEnd.y - lineStart.y;
+            const mag = Math.hypot(dx, dy);
+            if (mag === 0) return Math.hypot(pt.x - lineStart.x, pt.y - lineStart.y);
+            return Math.abs(dy * pt.x - dx * pt.y + lineEnd.x * lineStart.y - lineEnd.y * lineStart.x) / mag;
+        }
+
+        /**
+         * Chord-Length Adaptive Cubic Bézier Path Reconstruction (Sub-Pixel Engine v3.5)
+         * Scales tangent handle lengths proportionally to each segment's chord length so tight curves
+         * never loop or overshoot, while circles and arcs remain mathematically smooth.
+         */
+        function buildCubicBezierPath(nodes, tension) {
+            const n = nodes.length;
+            if (n === 0) return { d: '', handles: [] };
+            if (n < 3) {
+                const dLinear = 'M ' + nodes.map(p => `${p.x} ${p.y}`).join(' L ') + ' Z';
+                return { d: dLinear, handles: [] };
+            }
+
+            const hasCustomHandles = nodes.some(pt => pt.outHandle || pt.inHandle);
+            if (tension <= 0.02 && !hasCustomHandles) {
+                const dLinear = 'M ' + nodes.map(p => `${p.x} ${p.y}`).join(' L ') + ' Z';
+                return { d: dLinear, handles: [] };
+            }
+
+            let d = `M ${nodes[0].x} ${nodes[0].y}`;
+            const handles = [];
+
+            for (let i = 0; i < n; i++) {
+                const p0 = nodes[(i - 1 + n) % n];
+                const p1 = nodes[i];
+                const p2Idx = (i + 1) % n;
+                const p2 = nodes[p2Idx];
+                const p3 = nodes[(i + 2) % n];
+
+                const segChord = Math.hypot(p2.x - p1.x, p2.y - p1.y) || 1;
+                const maxHandleLen = segChord * 0.42;
+
+                // Outgoing tangent direction at p1
+                let tan1x = (p2.x - p0.x);
+                let tan1y = (p2.y - p0.y);
+                const tan1Len = Math.hypot(tan1x, tan1y) || 1;
+                const h1Len = p1.isCorner ? segChord * 0.03 : Math.min(maxHandleLen, tan1Len * tension);
+                const defaultOutDx = (tan1x / tan1Len) * h1Len;
+                const defaultOutDy = (tan1y / tan1Len) * h1Len;
+
+                // Incoming tangent direction at p2
+                let tan2x = (p3.x - p1.x);
+                let tan2y = (p3.y - p1.y);
+                const tan2Len = Math.hypot(tan2x, tan2y) || 1;
+                const h2Len = p2.isCorner ? segChord * 0.03 : Math.min(maxHandleLen, tan2Len * tension);
+                const defaultInDx = -(tan2x / tan2Len) * h2Len;
+                const defaultInDy = -(tan2y / tan2Len) * h2Len;
+
+                const cp1x = p1.outHandle
+                    ? +(p1.x + p1.outHandle.dx).toFixed(2)
+                    : +(p1.x + defaultOutDx).toFixed(2);
+                const cp1y = p1.outHandle
+                    ? +(p1.y + p1.outHandle.dy).toFixed(2)
+                    : +(p1.y + defaultOutDy).toFixed(2);
+
+                const cp2x = p2.inHandle
+                    ? +(p2.x + p2.inHandle.dx).toFixed(2)
+                    : +(p2.x + defaultInDx).toFixed(2);
+                const cp2y = p2.inHandle
+                    ? +(p2.y + p2.inHandle.dy).toFixed(2)
+                    : +(p2.y + defaultInDy).toFixed(2);
+
+                d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+                handles.push({
+                    n1Idx: i,
+                    n2Idx: p2Idx,
+                    x1: p1.x,
+                    y1: p1.y,
+                    hx1: cp1x,
+                    hy1: cp1y,
+                    x2: p2.x,
+                    y2: p2.y,
+                    hx2: cp2x,
+                    hy2: cp2y
+                });
+            }
+
+            d += ' Z';
+            return { d, handles };
+        }
+
+        function recomputeRegionBezier(reg) {
+            const tension = (Number(state.params.smoothing) / 100) * 0.38;
+            const bez = buildCubicBezierPath(reg.nodes, tension);
+            reg.d = bez.d;
+            reg.handles = bez.handles;
+        }
+
+        /**
+         * Renders all active vector regions into the SVG viewport and attaches Built-in Segmentation Editor listeners
+         */
+        function renderVectorStage() {
+            const svg = document.getElementById('vectorStageSvg');
+            svg.setAttribute('viewBox', `0 0 ${state.displayWidth} ${state.displayHeight}`);
+            svg.innerHTML = '';
+
+            const includeGapStroke = document.getElementById('exportIncludeStroke')?.checked ?? true;
+
+            // Create SVG Path Elements
+            state.regions.forEach(reg => {
+                if (reg.transparent) return;
+                const palEntry = state.palette[reg.colorIndex];
+                if (palEntry && !palEntry.visible) return;
+
+                const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                pathEl.setAttribute('id', reg.id);
+                pathEl.setAttribute('d', reg.d);
+                pathEl.setAttribute('class', 'vector-path-interactive cursor-pointer');
+
+                if (state.params.outlineMode) {
+                    // CNC / Laser Cut single-line path preview
+                    pathEl.setAttribute('fill', 'none');
+                    pathEl.setAttribute('stroke', '#22d3ee');
+                    pathEl.setAttribute('stroke-width', '1.4');
+                } else {
+                    pathEl.setAttribute('fill', reg.hex);
+                    if (includeGapStroke) {
+                        pathEl.setAttribute('stroke', reg.hex);
+                        pathEl.setAttribute('stroke-width', '0.65');
+                        pathEl.setAttribute('stroke-linejoin', 'round');
+                    }
+                }
+
+                // Highlight if selected or merge candidate
+                if (state.selectedRegionId === reg.id || state.mergeCandidateId === reg.id) {
+                    pathEl.setAttribute('stroke', '#38bdf8');
+                    pathEl.setAttribute('stroke-width', '1.8');
+                    if (state.mergeCandidateId === reg.id) {
+                        pathEl.setAttribute('stroke-dasharray', '4 2');
+                    }
+                }
+
+                pathEl.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    handleVectorRegionClick(reg);
+                });
+
+                svg.appendChild(pathEl);
+            });
+
+            // Interactive Node Skeleton, Midpoint "+" Node Inserters & Bezier Tangent Handles Overlay
+            if (state.showNodes || state.selectedRegionId || state.editorTool === 'node' || state.editorTool === 'delnode') {
+                const nodeGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+
+                const targetRegions = (state.showNodes || state.editorTool === 'delnode' || (state.editorTool === 'node' && !state.selectedRegionId))
+                    ? state.regions.filter(r => !r.transparent && (state.palette[r.colorIndex]?.visible ?? true))
+                    : state.regions.filter(r => r.id === state.selectedRegionId && !r.transparent);
+
+                targetRegions.forEach(reg => {
+                    const isSelectedReg = reg.id === state.selectedRegionId;
+
+                    // Draw wireframe outline (non-blocking)
+                    const wire = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    wire.setAttribute('d', reg.d);
+                    wire.setAttribute('fill', 'none');
+                    wire.setAttribute('stroke', isSelectedReg ? '#22d3ee' : '#38bdf8');
+                    wire.setAttribute('stroke-width', isSelectedReg ? '1.3' : '0.9');
+                    wire.setAttribute('pointer-events', 'none');
+                    nodeGroup.appendChild(wire);
+
+                    // Draw interactive Bezier tangent handles AND midpoint "+" node insertion buttons for the selected region
+                    if (isSelectedReg && reg.handles) {
+                        reg.handles.forEach((h, segIdx) => {
+                            // 1) Outgoing tangent handle (hx1, hy1) from node n1Idx
+                            const line1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                            line1.setAttribute('x1', h.x1);
+                            line1.setAttribute('y1', h.y1);
+                            line1.setAttribute('x2', h.hx1);
+                            line1.setAttribute('y2', h.hy1);
+                            line1.setAttribute('stroke', '#f472b6');
+                            line1.setAttribute('stroke-width', '1.3');
+                            line1.setAttribute('pointer-events', 'none');
+                            nodeGroup.appendChild(line1);
+
+                            const c1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                            c1.setAttribute('cx', h.hx1);
+                            c1.setAttribute('cy', h.hy1);
+                            c1.setAttribute('r', '4.2');
+                            c1.setAttribute('fill', '#f472b6');
+                            c1.setAttribute('stroke', '#ffffff');
+                            c1.setAttribute('stroke-width', '1.2');
+                            c1.style.cursor = 'crosshair';
+                            c1.addEventListener('pointerdown', (e) => {
+                                e.stopPropagation();
+                                startDraggingNodeOrHandle(e, reg.id, h.n1Idx, 'out');
+                            });
+                            nodeGroup.appendChild(c1);
+
+                            // 2) Incoming tangent handle (hx2, hy2) to node n2Idx
+                            const line2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                            line2.setAttribute('x1', h.x2);
+                            line2.setAttribute('y1', h.y2);
+                            line2.setAttribute('x2', h.hx2);
+                            line2.setAttribute('y2', h.hy2);
+                            line2.setAttribute('stroke', '#c084fc');
+                            line2.setAttribute('stroke-width', '1.2');
+                            line2.setAttribute('stroke-dasharray', '2 1');
+                            line2.setAttribute('pointer-events', 'none');
+                            nodeGroup.appendChild(line2);
+
+                            const c2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                            c2.setAttribute('cx', h.hx2);
+                            c2.setAttribute('cy', h.hy2);
+                            c2.setAttribute('r', '4.0');
+                            c2.setAttribute('fill', '#c084fc');
+                            c2.setAttribute('stroke', '#ffffff');
+                            c2.setAttribute('stroke-width', '1.2');
+                            c2.style.cursor = 'crosshair';
+                            c2.addEventListener('pointerdown', (e) => {
+                                e.stopPropagation();
+                                startDraggingNodeOrHandle(e, reg.id, h.n2Idx, 'in');
+                            });
+                            nodeGroup.appendChild(c2);
+
+                            // 3) Interactive Curve Midpoint "+" Button (Click to insert a new node right on this curve segment)
+                            const midX = 0.125 * h.x1 + 0.375 * h.hx1 + 0.375 * h.hx2 + 0.125 * h.x2;
+                            const midY = 0.125 * h.y1 + 0.375 * h.hy1 + 0.375 * h.hy2 + 0.125 * h.y2;
+                            const segLen = Math.hypot(h.x2 - h.x1, h.y2 - h.y1);
+                            if (segLen > 14) {
+                                const addGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                                addGroup.style.cursor = 'copy';
+
+                                const addCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                                addCircle.setAttribute('cx', midX);
+                                addCircle.setAttribute('cy', midY);
+                                addCircle.setAttribute('r', '4.5');
+                                addCircle.setAttribute('fill', '#10b981');
+                                addCircle.setAttribute('stroke', '#052e16');
+                                addCircle.setAttribute('stroke-width', '1.2');
+                                addGroup.appendChild(addCircle);
+
+                                const plusLineH = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                                plusLineH.setAttribute('x1', midX - 2.2);
+                                plusLineH.setAttribute('y1', midY);
+                                plusLineH.setAttribute('x2', midX + 2.2);
+                                plusLineH.setAttribute('y2', midY);
+                                plusLineH.setAttribute('stroke', '#ffffff');
+                                plusLineH.setAttribute('stroke-width', '1.2');
+                                plusLineH.setAttribute('pointer-events', 'none');
+                                addGroup.appendChild(plusLineH);
+
+                                const plusLineV = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                                plusLineV.setAttribute('x1', midX);
+                                plusLineV.setAttribute('y1', midY - 2.2);
+                                plusLineV.setAttribute('x2', midX);
+                                plusLineV.setAttribute('y2', midY + 2.2);
+                                plusLineV.setAttribute('stroke', '#ffffff');
+                                plusLineV.setAttribute('stroke-width', '1.2');
+                                plusLineV.setAttribute('pointer-events', 'none');
+                                addGroup.appendChild(plusLineV);
+
+                                addGroup.addEventListener('pointerdown', (e) => {
+                                    e.stopPropagation();
+                                    insertNodeAtSegmentMidpoint(reg.id, h.n1Idx, midX, midY);
+                                });
+
+                                nodeGroup.appendChild(addGroup);
+                            }
+                        });
+                    }
+
+                    // Draw Draggable / Deletable Anchor Points (Optimal Node Placement)
+                    reg.nodes.forEach((pt, nIdx) => {
+                        const isSelectedNode = isSelectedReg && state.selectedNodeIndex === nIdx;
+                        const isDelMode = state.editorTool === 'delnode';
+                        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                        const size = isSelectedNode ? 8.5 : (isDelMode ? 7.5 : (isSelectedReg ? 6.5 : 4.8));
+                        rect.setAttribute('x', pt.x - size / 2);
+                        rect.setAttribute('y', pt.y - size / 2);
+                        rect.setAttribute('width', size);
+                        rect.setAttribute('height', size);
+                        rect.setAttribute('rx', pt.isCorner ? '0' : '2');
+                        rect.setAttribute('fill', isDelMode ? '#f43f5e' : (isSelectedNode ? '#22d3ee' : (pt.isCorner ? '#facc15' : '#ffffff')));
+                        rect.setAttribute('stroke', isDelMode ? '#ffffff' : (isSelectedNode ? '#ffffff' : '#0284c7'));
+                        rect.setAttribute('stroke-width', isSelectedNode || isDelMode ? '1.8' : '1.2');
+                        rect.style.cursor = isDelMode ? 'pointer' : 'move';
+
+                        rect.addEventListener('pointerdown', (e) => {
+                            e.stopPropagation();
+                            if (state.editorTool === 'delnode' || e.button === 2) {
+                                deleteSpecificNode(reg.id, nIdx);
+                                return;
+                            }
+                            startDraggingNodeOrHandle(e, reg.id, nIdx, 'anchor');
+                        });
+
+                        // Right-click on any anchor node to immediately delete that specific node
+                        rect.addEventListener('contextmenu', (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            deleteSpecificNode(reg.id, nIdx);
+                        });
+
+                        rect.addEventListener('dblclick', (e) => {
+                            e.stopPropagation();
+                            if (state.editorTool === 'delnode') return;
+                            state.selectedRegionId = reg.id;
+                            state.selectedNodeIndex = nIdx;
+                            toggleSelectedNodeCorner();
+                        });
+
+                        nodeGroup.appendChild(rect);
+                    });
+                });
+
+                svg.appendChild(nodeGroup);
+            }
+
+            // Update Side-by-Side clone if active
+            if (state.viewportMode === 'side') {
+                const sideContainer = document.getElementById('sideVectorContainer');
+                sideContainer.innerHTML = '';
+                const cloneSvg = svg.cloneNode(true);
+                cloneSvg.classList.add('max-w-full', 'max-h-full');
+                sideContainer.appendChild(cloneSvg);
+            }
+
+            // Update Live SVG Code Preview
+            updateLiveSvgSnippet();
+            renderSubpixelGridOverlay();
+        }
+
+        function renderOriginalRasterToDisplay() {
+            const dispCanvas = document.getElementById('rasterDisplayCanvas');
+            dispCanvas.width = state.procWidth;
+            dispCanvas.height = state.procHeight;
+            const ctx = dispCanvas.getContext('2d');
+            ctx.putImageData(state.rawImageData, 0, 0);
+
+            const sideRaster = document.getElementById('sideRasterCanvas');
+            sideRaster.width = state.procWidth;
+            sideRaster.height = state.procHeight;
+            sideRaster.getContext('2d').putImageData(state.rawImageData, 0, 0);
+
+            document.getElementById('rasterResolutionLabel').textContent = `${state.procWidth} × ${state.procHeight} px`;
+        }
+
+        function renderSubpixelGridOverlay() {
+            const canvas = document.getElementById('overlayInteractionCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (!state.showPixelGrid) return;
+
+            const stepX = canvas.width / state.procWidth;
+            const stepY = canvas.height / state.procHeight;
+
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.14)';
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            for (let x = 0; x <= canvas.width; x += stepX * 2) {
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+            }
+            for (let y = 0; y <= canvas.height; y += stepY * 2) {
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+            }
+            ctx.stroke();
+        }
+
+        /**
+         * Built-in Segmentation Editor Actions
+         */
+        function saveUndoSnapshot() {
+            const snapshot = JSON.stringify(state.regions);
+            state.undoStack.push(snapshot);
+            if (state.undoStack.length > 20) state.undoStack.shift();
+            updateUndoButtonState();
+        }
+
+        function undoEditorAction() {
+            if (state.undoStack.length === 0) return;
+            const prev = state.undoStack.pop();
+            state.regions = JSON.parse(prev);
+            state.selectedRegionId = null;
+            updateUndoButtonState();
+            renderVectorStage();
+            updateStatsFooter(0);
+            showToast('已復原上一步後製編輯操作');
+        }
+
+        function updateUndoButtonState() {
+            const btn = document.getElementById('btnUndo');
+            if (btn) btn.disabled = state.undoStack.length === 0;
+        }
+
+        function handleVectorRegionClick(region) {
+            const tool = state.editorTool;
+            if (tool === 'pan') return;
+
+            if (tool === 'inspect' || tool === 'node' || tool === 'delnode') {
+                state.selectedRegionId = region.id;
+                state.selectedNodeIndex = 0;
+                updateInspectorPanel(region);
+                renderVectorStage();
+            } else if (tool === 'fill') {
+                saveUndoSnapshot();
+                const newHex = document.getElementById('editorFillColor').value;
+                region.hex = newHex;
+                state.selectedRegionId = region.id;
+                updateInspectorPanel(region);
+                renderVectorStage();
+                showToast(`已將區塊 ${region.id} 填色替換為 ${newHex.toUpperCase()}`);
+            } else if (tool === 'eraser') {
+                saveUndoSnapshot();
+                state.regions = state.regions.filter(r => r.id !== region.id);
+                if (state.selectedRegionId === region.id) state.selectedRegionId = null;
+                updateInspectorPanel(null);
+                renderVectorStage();
+                updateStatsFooter(0);
+                showToast(`已抹除雜點/斑塊 (${region.id})`);
+            } else if (tool === 'transparent') {
+                saveUndoSnapshot();
+                region.transparent = true;
+                updateInspectorPanel(null);
+                renderVectorStage();
+                updateStatsFooter(0);
+                showToast(`已將區塊 ${region.id} 設為 Alpha 透明背景`);
+            } else if (tool === 'merge') {
+                if (!state.mergeCandidateId) {
+                    state.mergeCandidateId = region.id;
+                    renderVectorStage();
+                    showToast(`已選擇第一個區塊 (${region.id})，請點擊相鄰區塊進行連結`);
+                } else if (state.mergeCandidateId === region.id) {
+                    state.mergeCandidateId = null;
+                    renderVectorStage();
+                } else {
+                    saveUndoSnapshot();
+                    const firstReg = state.regions.find(r => r.id === state.mergeCandidateId);
+                    if (firstReg) {
+                        // Unify color & combine SVG compound path
+                        firstReg.d = firstReg.d + ' ' + region.d;
+                        firstReg.area += region.area;
+                        firstReg.nodes = firstReg.nodes.concat(region.nodes);
+                        state.regions = state.regions.filter(r => r.id !== region.id);
+                        state.selectedRegionId = firstReg.id;
+                        updateInspectorPanel(firstReg);
+                    }
+                    state.mergeCandidateId = null;
+                    renderVectorStage();
+                    updateStatsFooter(0);
+                    showToast('已成功將兩個區塊連結為單一複合路徑！');
+                }
+            }
+        }
+
+        function startDraggingNodeOrHandle(e, regionId, nodeIndex, handleType) {
+            const reg = state.regions.find(r => r.id === regionId);
+            if (!reg) return;
+
+            state.selectedRegionId = regionId;
+            state.selectedNodeIndex = nodeIndex;
+            state.draggingNode = {
+                regionId,
+                nodeIndex,
+                handleType, // 'anchor' | 'out' | 'in'
+                savedUndo: false
+            };
+
+            updateInspectorPanel(reg);
+            renderVectorStage();
+        }
+
+        function toggleSelectedNodeCorner() {
+            const reg = state.regions.find(r => r.id === state.selectedRegionId);
+            if (!reg || state.selectedNodeIndex === null || !reg.nodes[state.selectedNodeIndex]) return;
+
+            saveUndoSnapshot();
+            const pt = reg.nodes[state.selectedNodeIndex];
+            pt.isCorner = !pt.isCorner;
+            delete pt.outHandle;
+            delete pt.inHandle;
+
+            recomputeRegionBezier(reg);
+            updateInspectorPanel(reg);
+            renderVectorStage();
+            showToast(pt.isCorner ? '已將節點切換為【尖角轉折點】' : '已將節點切換為【平滑貝茲曲線點】');
+        }
+
+        function insertNodeAtSegmentMidpoint(regionId, afterNodeIdx, midX, midY) {
+            const reg = state.regions.find(r => r.id === regionId);
+            if (!reg) return;
+
+            saveUndoSnapshot();
+            const n = reg.nodes.length;
+            const prevPt = reg.nodes[afterNodeIdx];
+            const nextPt = reg.nodes[(afterNodeIdx + 1) % n];
+            const tx = (nextPt.x - prevPt.x) * 0.22;
+            const ty = (nextPt.y - prevPt.y) * 0.22;
+
+            const newNode = {
+                x: +midX.toFixed(2),
+                y: +midY.toFixed(2),
+                isCorner: false,
+                inHandle: { dx: +(-tx).toFixed(2), dy: +(-ty).toFixed(2) },
+                outHandle: { dx: +tx.toFixed(2), dy: +ty.toFixed(2) }
+            };
+
+            reg.nodes.splice(afterNodeIdx + 1, 0, newNode);
+            state.selectedRegionId = reg.id;
+            state.selectedNodeIndex = afterNodeIdx + 1;
+
+            recomputeRegionBezier(reg);
+            updateInspectorPanel(reg);
+            renderVectorStage();
+            updateStatsFooter(0);
+            showToast('已在曲線段新增節點並自動展開貝茲控制桿！');
+        }
+
+        function insertNodeAfterSelected() {
+            let reg = state.regions.find(r => r.id === state.selectedRegionId);
+            if (!reg) {
+                reg = state.regions.find(r => !r.transparent);
+                if (!reg) return;
+                state.selectedRegionId = reg.id;
+                state.selectedNodeIndex = 0;
+            }
+            if (state.selectedNodeIndex === null) state.selectedNodeIndex = 0;
+
+            const idx = state.selectedNodeIndex;
+            const n = reg.nodes.length;
+            const p1 = reg.nodes[idx];
+            const p2 = reg.nodes[(idx + 1) % n];
+
+            let midX = (p1.x + p2.x) / 2;
+            let midY = (p1.y + p2.y) / 2;
+            if (reg.handles && reg.handles[idx]) {
+                const h = reg.handles[idx];
+                midX = 0.125 * h.x1 + 0.375 * h.hx1 + 0.375 * h.hx2 + 0.125 * h.x2;
+                midY = 0.125 * h.y1 + 0.375 * h.hy1 + 0.375 * h.hy2 + 0.125 * h.y2;
+            }
+
+            insertNodeAtSegmentMidpoint(reg.id, idx, midX, midY);
+        }
+
+        /**
+         * Deletes a specific node by regionId and nodeIndex (used by Click-to-Delete Node tool, right-click, and Delete button)
+         */
+        function deleteSpecificNode(regionId, nodeIndex) {
+            const reg = state.regions.find(r => r.id === regionId);
+            if (!reg || nodeIndex === null || nodeIndex < 0 || nodeIndex >= reg.nodes.length) return;
+
+            if (reg.nodes.length <= 3) {
+                showToast('封閉向量路徑至少需保留 3 個控制錨點，無法再刪除！');
+                return;
+            }
+
+            saveUndoSnapshot();
+            const removedPt = reg.nodes[nodeIndex];
+            reg.nodes.splice(nodeIndex, 1);
+
+            state.selectedRegionId = reg.id;
+            state.selectedNodeIndex = Math.min(nodeIndex, reg.nodes.length - 1);
+
+            recomputeRegionBezier(reg);
+            updateInspectorPanel(reg);
+            renderVectorStage();
+            updateStatsFooter(0);
+            showToast(`已刪除指定錨點 #${nodeIndex + 1} (${removedPt.x.toFixed(1)}, ${removedPt.y.toFixed(1)})`);
+        }
+
+        function deleteSelectedNode() {
+            const reg = state.regions.find(r => r.id === state.selectedRegionId);
+            if (!reg || state.selectedNodeIndex === null) {
+                showToast('請先點選一個控制錨點，或切換至「點選刪點」工具直接點擊畫布上的節點刪除！');
+                return;
+            }
+            deleteSpecificNode(reg.id, state.selectedNodeIndex);
+        }
+
+        function moveWholeImage(dx, dy) {
+            state.panX = Math.round(state.panX + dx);
+            state.panY = Math.round(state.panY + dy);
+            applyZoomTransform();
+        }
+
+        function resetImagePan() {
+            state.panX = 0;
+            state.panY = 0;
+            applyZoomTransform();
+            showToast('已將整體圖片置中對齊');
+        }
+
+        function activateBezierHandlesOnSelected() {
+            let reg = state.regions.find(r => r.id === state.selectedRegionId);
+            if (!reg) {
+                reg = state.regions.find(r => !r.transparent);
+                if (!reg) return;
+                state.selectedRegionId = reg.id;
+                state.selectedNodeIndex = 0;
+            }
+
+            saveUndoSnapshot();
+            const n = reg.nodes.length;
+
+            if (state.selectedNodeIndex !== null && reg.nodes[state.selectedNodeIndex]) {
+                const i = state.selectedNodeIndex;
+                const prev = reg.nodes[(i - 1 + n) % n];
+                const curr = reg.nodes[i];
+                const next = reg.nodes[(i + 1) % n];
+                let tx = (next.x - prev.x) * 0.25;
+                let ty = (next.y - prev.y) * 0.25;
+                if (Math.hypot(tx, ty) < 8) {
+                    tx = 18;
+                    ty = 0;
+                }
+                curr.isCorner = false;
+                curr.inHandle = { dx: +(-tx).toFixed(2), dy: +(-ty).toFixed(2) };
+                curr.outHandle = { dx: +tx.toFixed(2), dy: +ty.toFixed(2) };
+            } else {
+                reg.nodes.forEach((curr, i) => {
+                    const prev = reg.nodes[(i - 1 + n) % n];
+                    const next = reg.nodes[(i + 1) % n];
+                    const tx = (next.x - prev.x) * 0.24;
+                    const ty = (next.y - prev.y) * 0.24;
+                    curr.isCorner = false;
+                    curr.inHandle = { dx: +(-tx).toFixed(2), dy: +(-ty).toFixed(2) };
+                    curr.outHandle = { dx: +tx.toFixed(2), dy: +ty.toFixed(2) };
+                });
+            }
+
+            recomputeRegionBezier(reg);
+            updateInspectorPanel(reg);
+            renderVectorStage();
+            showToast('已展開雙向貝茲切線控制桿，可直接拖曳粉紅/紫色圓點微調弧度！');
+        }
+
+        function toggleBezierHandleSymmetry() {
+            state.symmetricHandles = !state.symmetricHandles;
+            const btn = document.getElementById('btnHandleSymmetry');
+            if (btn) {
+                btn.innerHTML = state.symmetricHandles
+                    ? '<i class="fa-solid fa-link mr-1"></i>對稱控制桿'
+                    : '<i class="fa-solid fa-link-slash mr-1"></i>獨立控制桿';
+            }
+            showToast(state.symmetricHandles ? '已切換為【對稱連動貝茲控制桿】' : '已切換為【單邊獨立貝茲控制桿】');
+        }
+
+        function convertBackgroundToVectorBlock() {
+            saveUndoSnapshot();
+
+            let restoredCount = 0;
+            state.regions.forEach(r => {
+                if (r.transparent) {
+                    r.transparent = false;
+                    restoredCount++;
+                }
+            });
+
+            if (state.params.removeBg) {
+                state.params.removeBg = false;
+                const toggle = document.getElementById('toggleRemoveBg');
+                if (toggle) toggle.checked = false;
+            }
+
+            const existingBg = state.regions.find(r => r.id === 'path-bg');
+            const fillHex = document.getElementById('editorFillColor')?.value || (state.palette[0]?.hex || '#1e293b');
+
+            if (existingBg) {
+                existingBg.transparent = false;
+                existingBg.hex = fillHex;
+                state.selectedRegionId = existingBg.id;
+                state.selectedNodeIndex = 0;
+                updateInspectorPanel(existingBg);
+            } else {
+                const w = state.displayWidth;
+                const h = state.displayHeight;
+                const bgNodes = [
+                    { x: 0, y: 0, isCorner: true },
+                    { x: +(w / 2).toFixed(2), y: 0, isCorner: false },
+                    { x: w, y: 0, isCorner: true },
+                    { x: w, y: +(h / 2).toFixed(2), isCorner: false },
+                    { x: w, y: h, isCorner: true },
+                    { x: +(w / 2).toFixed(2), y: h, isCorner: false },
+                    { x: 0, y: h, isCorner: true },
+                    { x: 0, y: +(h / 2).toFixed(2), isCorner: false }
+                ];
+                const bez = buildCubicBezierPath(bgNodes, 0.25);
+                const bgRegion = {
+                    id: 'path-bg',
+                    colorIndex: 0,
+                    hex: fillHex,
+                    transparent: false,
+                    area: state.procWidth * state.procHeight,
+                    nodes: bgNodes,
+                    d: bez.d,
+                    handles: bez.handles,
+                    bbox: { x: 0, y: 0, w, h }
+                };
+                state.regions.unshift(bgRegion);
+                state.selectedRegionId = bgRegion.id;
+                state.selectedNodeIndex = 0;
+                updateInspectorPanel(bgRegion);
+            }
+
+            renderVectorStage();
+            updateColorLayersUI();
+            updateStatsFooter(0);
+            showToast(restoredCount > 0
+                ? `已還原 ${restoredCount} 個去背區域並建立可編輯背景向量區塊 (PATH-BG)！`
+                : '已在最底層建立可獨立填色與拉動節點的背景向量區塊 (PATH-BG)！');
+        }
+
+        /**
+         * Knife Split Tool, Whole-Image Panning & Node/Bezier Dragging Pointer Interactions
+         */
+        let knifeStart = null;
+        function setupKnifeAndSliderInteractions() {
+            const viewport = document.getElementById('viewportContainer');
+            const stage = document.getElementById('stageWrapper');
+            const overlay = document.getElementById('overlayInteractionCanvas');
+            const sliderBar = document.getElementById('splitSliderBar');
+
+            // Split comparison slider drag
+            let draggingSlider = false;
+            sliderBar.addEventListener('pointerdown', (e) => {
+                draggingSlider = true;
+                e.stopPropagation();
+            });
+
+            // Keyboard arrow keys for moving image + Delete/Backspace for deleting the selected node
+            window.addEventListener('keydown', (e) => {
+                if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+                if ((e.key === 'Delete' || e.key === 'Backspace') && state.selectedRegionId && state.selectedNodeIndex !== null) {
+                    e.preventDefault();
+                    deleteSelectedNode();
+                    return;
+                }
+                const step = e.shiftKey ? 45 : 20;
+                if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    moveWholeImage(-step, 0);
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    moveWholeImage(step, 0);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    moveWholeImage(0, -step);
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    moveWholeImage(0, step);
+                }
+            });
+
+            // Panning the whole image by dragging in 'pan' mode (or dragging empty viewport area in 'inspect' mode)
+            viewport.addEventListener('pointerdown', (e) => {
+                if (draggingSlider || state.draggingNode) return;
+                if (state.editorTool === 'pan' || (state.editorTool === 'inspect' && (e.target === viewport || e.target === stage || e.target.id === 'rasterDisplayCanvas'))) {
+                    state.isPanningStage = true;
+                    state.panStartClient = {
+                        x: e.clientX,
+                        y: e.clientY,
+                        origPanX: state.panX,
+                        origPanY: state.panY
+                    };
+                    viewport.style.cursor = 'grabbing';
+                }
+            });
+
+            window.addEventListener('pointermove', (e) => {
+                if (state.isPanningStage) {
+                    const dx = e.clientX - state.panStartClient.x;
+                    const dy = e.clientY - state.panStartClient.y;
+                    state.panX = Math.round(state.panStartClient.origPanX + dx);
+                    state.panY = Math.round(state.panStartClient.origPanY + dy);
+                    applyZoomTransform();
+                    return;
+                }
+
+                if (state.draggingNode) {
+                    const svg = document.getElementById('vectorStageSvg');
+                    const rect = svg.getBoundingClientRect();
+                    const svgX = Math.max(-40, Math.min(state.displayWidth + 40, ((e.clientX - rect.left) / rect.width) * state.displayWidth));
+                    const svgY = Math.max(-40, Math.min(state.displayHeight + 40, ((e.clientY - rect.top) / rect.height) * state.displayHeight));
+
+                    const reg = state.regions.find(r => r.id === state.draggingNode.regionId);
+                    if (reg && reg.nodes[state.draggingNode.nodeIndex]) {
+                        if (!state.draggingNode.savedUndo) {
+                            saveUndoSnapshot();
+                            state.draggingNode.savedUndo = true;
+                        }
+                        const pt = reg.nodes[state.draggingNode.nodeIndex];
+                        if (state.draggingNode.handleType === 'anchor') {
+                            pt.x = +svgX.toFixed(2);
+                            pt.y = +svgY.toFixed(2);
+                        } else if (state.draggingNode.handleType === 'out') {
+                            const dx = +(svgX - pt.x).toFixed(2);
+                            const dy = +(svgY - pt.y).toFixed(2);
+                            pt.isCorner = false;
+                            pt.outHandle = { dx, dy };
+                            if (state.symmetricHandles && !e.altKey) {
+                                pt.inHandle = { dx: +(-dx).toFixed(2), dy: +(-dy).toFixed(2) };
+                            }
+                        } else if (state.draggingNode.handleType === 'in') {
+                            const dx = +(svgX - pt.x).toFixed(2);
+                            const dy = +(svgY - pt.y).toFixed(2);
+                            pt.isCorner = false;
+                            pt.inHandle = { dx, dy };
+                            if (state.symmetricHandles && !e.altKey) {
+                                pt.outHandle = { dx: +(-dx).toFixed(2), dy: +(-dy).toFixed(2) };
+                            }
+                        }
+                        recomputeRegionBezier(reg);
+                        updateInspectorPanel(reg);
+                        renderVectorStage();
+                    }
+                    return;
+                }
+
+                if (draggingSlider) {
+                    const rect = stage.getBoundingClientRect();
+                    const relX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                    state.splitRatio = relX;
+                    document.getElementById('rasterLayerWrapper').style.width = `${relX * 100}%`;
+                    sliderBar.style.left = `${relX * 100}%`;
+                } else if (knifeStart && state.editorTool === 'split') {
+                    const rect = stage.getBoundingClientRect();
+                    const curX = ((e.clientX - rect.left) / rect.width) * state.displayWidth;
+                    const curY = ((e.clientY - rect.top) / rect.height) * state.displayHeight;
+                    renderSubpixelGridOverlay();
+                    const ctx = overlay.getContext('2d');
+                    ctx.strokeStyle = '#22d3ee';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([5, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(knifeStart.x, knifeStart.y);
+                    ctx.lineTo(curX, curY);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            });
+
+            window.addEventListener('pointerup', (e) => {
+                if (state.isPanningStage) {
+                    state.isPanningStage = false;
+                    viewport.style.cursor = state.editorTool === 'pan' ? 'grab' : '';
+                }
+                if (state.draggingNode) {
+                    state.draggingNode = null;
+                    return;
+                }
+                draggingSlider = false;
+                if (knifeStart && state.editorTool === 'split') {
+                    const rect = stage.getBoundingClientRect();
+                    const endX = ((e.clientX - rect.left) / rect.width) * state.displayWidth;
+                    const endY = ((e.clientY - rect.top) / rect.height) * state.displayHeight;
+                    performKnifeSplit(knifeStart, { x: endX, y: endY });
+                    knifeStart = null;
+                    renderSubpixelGridOverlay();
+                }
+            });
+
+            stage.addEventListener('pointerdown', (e) => {
+                if (state.editorTool === 'split') {
+                    const rect = stage.getBoundingClientRect();
+                    knifeStart = {
+                        x: ((e.clientX - rect.left) / rect.width) * state.displayWidth,
+                        y: ((e.clientY - rect.top) / rect.height) * state.displayHeight
+                    };
+                }
+            });
+        }
+
+        function performKnifeSplit(pA, pB) {
+            const dist = Math.hypot(pB.x - pA.x, pB.y - pA.y);
+            if (dist < 15) return;
+
+            // Find regions intersected by the cut segment pA -> pB and split their polygon nodes across the line
+            const dx = pB.x - pA.x;
+            const dy = pB.y - pA.y;
+            let splitCount = 0;
+            const newRegionsList = [];
+
+            saveUndoSnapshot();
+
+            state.regions.forEach(reg => {
+                if (reg.transparent || reg.nodes.length < 4) {
+                    newRegionsList.push(reg);
+                    return;
+                }
+                const sideA = [];
+                const sideB = [];
+                reg.nodes.forEach(pt => {
+                    const cross = (pt.x - pA.x) * dy - (pt.y - pA.y) * dx;
+                    if (cross >= 0) sideA.push(pt);
+                    else sideB.push(pt);
+                });
+
+                if (sideA.length >= 3 && sideB.length >= 3) {
+                    splitCount++;
+                    const tension = (Number(state.params.smoothing) / 100) * 0.35;
+                    const bezA = buildCubicBezierPath(sideA, tension);
+                    const bezB = buildCubicBezierPath(sideB, tension);
+
+                    newRegionsList.push({
+                        ...reg,
+                        id: reg.id + '-A',
+                        area: Math.round(reg.area / 2),
+                        nodes: sideA,
+                        d: bezA.d,
+                        handles: bezA.handles
+                    });
+                    newRegionsList.push({
+                        ...reg,
+                        id: reg.id + '-B',
+                        area: Math.round(reg.area / 2),
+                        nodes: sideB,
+                        d: bezB.d,
+                        handles: bezB.handles
+                    });
+                } else {
+                    newRegionsList.push(reg);
+                }
+            });
+
+            if (splitCount > 0) {
+                state.regions = newRegionsList;
+                renderVectorStage();
+                updateStatsFooter(0);
+                showToast(`已成功切分 ${splitCount} 個黏連區塊！可切換填色工具分別上色。`);
+            } else {
+                state.undoStack.pop();
+                updateUndoButtonState();
+                showToast('切割線未完整穿越可分割的封閉區塊，請拉長切割線再試一次。');
+            }
+        }
+
+        function selectEditorTool(tool) {
+            state.editorTool = tool;
+            state.mergeCandidateId = null;
+
+            const viewport = document.getElementById('viewportContainer');
+            if (viewport) {
+                viewport.style.cursor = tool === 'pan' ? 'grab' : '';
+            }
+
+            document.querySelectorAll('.editor-tool-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('text-slate-300');
+            });
+            const activeBtn = document.getElementById(`tool-${tool}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-indigo-600', 'text-white');
+                activeBtn.classList.remove('text-slate-300');
+            }
+            // Automatically select a region when entering Node Dragging or Delete Node tool so handles & nodes are immediately ready
+            if ((tool === 'node' || tool === 'delnode') && !state.selectedRegionId) {
+                const firstVisible = state.regions.find(r => !r.transparent);
+                if (firstVisible) {
+                    state.selectedRegionId = firstVisible.id;
+                    state.selectedNodeIndex = 0;
+                    updateInspectorPanel(firstVisible);
+                }
+            }
+
+            const hints = {
+                inspect: '目前工具：【選取與檢視】— 點擊任意向量區塊可檢視並拉動錨點；在空白處拖曳或按方向鍵可上下左右移動整體圖片。',
+                pan: '目前工具：【整體圖片移動】— 在畫布任意位置按住滑鼠左鍵拖曳，或點擊上方「← ↑ ↓ →」按鈕與鍵盤方向鍵上下左右移動整體圖片。',
+                node: '目前工具：【節點與貝茲控制桿編輯】— 拖曳「方形錨點」改變位置、點擊「綠色 + 點」新增節點、對錨點按「右鍵」或按 Delete 鍵刪除指定節點。',
+                delnode: '目前工具：【點選刪除指定節點】— 所有路徑錨點已標示為紅色方塊，直接點擊畫布上任何一個錨點即可立即將該指定節點刪除！',
+                fill: '目前工具：【顏色替換與填補】— 請先在工具列旁選好目標色票，再點擊畫布上的任何封閉區塊即可立即填色。',
+                eraser: '目前工具：【雜點與污漬消除】— 直接點擊畫布中不需要的掃描噪點或細小幾何斑塊即可抹除。',
+                merge: '目前工具：【形狀連結】— 依序點擊兩個因解析度不足而斷裂或相鄰的區塊，將其合併為單一複合路徑。',
+                split: '目前工具：【形狀分割】— 在畫布上按住滑鼠左鍵畫出一條切割線，即可將黏連的區塊切分為兩個獨立形狀。',
+                transparent: '目前工具：【透明度控制】— 點擊任何背景或封閉色塊，立即將該區塊轉為 Alpha 透明通道（可隨時點「背景轉向量塊」還原）。'
+            };
+            document.getElementById('editorToolHintText').textContent = hints[tool] || '';
+            renderVectorStage();
+        }
+
+        function switchConversionMode(mode) {
+            state.conversionMode = mode;
+            ['auto', 'wizard', 'advanced'].forEach(m => {
+                const tab = document.getElementById(`tab-mode-${m}`);
+                const panel = document.getElementById(`panel-mode-${m}`);
+                if (m === mode) {
+                    tab.classList.add('bg-indigo-600', 'text-white', 'shadow');
+                    tab.classList.remove('text-slate-400');
+                    panel.classList.remove('hidden');
+                } else {
+                    tab.classList.remove('bg-indigo-600', 'text-white', 'shadow');
+                    tab.classList.add('text-slate-400');
+                    panel.classList.add('hidden');
+                }
+            });
+        }
+
+        function setWizardOption(category, value) {
+            state.wizard[category] = value;
+
+            // Update visual highlight in Wizard buttons
+            const prefixMap = { imageType: 'wiz-type-', colorMode: 'wiz-col-', quality: 'wiz-qual-' };
+            const prefix = prefixMap[category];
+            document.querySelectorAll(`.${prefix.slice(0, -1)}-btn`).forEach(btn => {
+                btn.classList.remove('bg-indigo-600/20', 'border-indigo-500');
+                btn.classList.add('bg-studio-900', 'border-studio-700');
+            });
+            const targetBtn = document.getElementById(prefix + value);
+            if (targetBtn) {
+                targetBtn.classList.add('bg-indigo-600/20', 'border-indigo-500');
+                targetBtn.classList.remove('bg-studio-900', 'border-studio-700');
+            }
+
+            // Translate Wizard choices to Engine parameters
+            if (state.wizard.colorMode === 'bw') state.params.colorCount = 2;
+            else if (state.wizard.colorMode === 'flat') state.params.colorCount = 6;
+            else state.params.colorCount = 12;
+
+            if (state.wizard.quality === 'sharp') {
+                state.params.detailLevel = 90;
+                state.params.minArea = 4;
+                state.params.denoise = 1;
+            } else if (state.wizard.quality === 'balanced') {
+                state.params.detailLevel = 75;
+                state.params.minArea = 12;
+                state.params.denoise = 2;
+            } else {
+                state.params.detailLevel = 55;
+                state.params.minArea = 28;
+                state.params.denoise = 4;
+            }
+
+            if (state.wizard.imageType === 'sketch') {
+                state.params.removeBg = true;
+                state.params.smoothing = 50;
+            } else if (state.wizard.imageType === 'photo') {
+                state.params.removeBg = false;
+                state.params.smoothing = 75;
+            } else {
+                state.params.smoothing = 65;
+            }
+
+            syncSlidersWithParams();
+            executeVectorTrace(false);
+        }
+
+        function updateAdvancedParam(key, val) {
+            state.params[key] = val;
+            syncSlidersWithParams();
+            executeVectorTrace(key !== 'colorCount' && key !== 'denoise');
+        }
+
+        function syncSlidersWithParams() {
+            document.getElementById('sliderColorCount').value = state.params.colorCount;
+            document.getElementById('labelColorCount').textContent = `${state.params.colorCount} 色`;
+
+            document.getElementById('sliderDetailLevel').value = state.params.detailLevel;
+            document.getElementById('labelDetailLevel').textContent = `${state.params.detailLevel}%`;
+
+            document.getElementById('sliderMinArea').value = state.params.minArea;
+            document.getElementById('labelMinArea').textContent = `${state.params.minArea} px²`;
+
+            document.getElementById('sliderSmoothing').value = state.params.smoothing;
+            document.getElementById('labelSmoothing').textContent = `${state.params.smoothing}%`;
+
+            document.getElementById('sliderDenoise').value = state.params.denoise;
+            const denoiseNames = ['關閉 (0)', '輕微 (1)', '中度 (2)', '中強 (3)', '強力 (4)', '極致 (5)'];
+            document.getElementById('labelDenoise').textContent = denoiseNames[state.params.denoise] || state.params.denoise;
+
+            document.getElementById('toggleRemoveBg').checked = !!state.params.removeBg;
+        }
+
+        function updatePaletteUI() {
+            const container = document.getElementById('paletteSwatchesContainer');
+            container.innerHTML = '';
+
+            state.palette.forEach((sw, idx) => {
+                const wrap = document.createElement('div');
+                wrap.className = 'relative group';
+
+                const colorInput = document.createElement('input');
+                colorInput.type = 'color';
+                colorInput.value = sw.hex;
+                colorInput.className = 'w-7 h-7 rounded-lg cursor-pointer border border-studio-600 bg-transparent';
+                colorInput.title = `色票 ${sw.hex.toUpperCase()} (變更後自動鎖定)`;
+                colorInput.addEventListener('change', (e) => {
+                    const rgb = hexToRgb(e.target.value);
+                    sw.r = rgb.r;
+                    sw.g = rgb.g;
+                    sw.b = rgb.b;
+                    sw.hex = e.target.value;
+                    sw.locked = true;
+                    // Update existing regions of this palette index
+                    state.regions.forEach(r => {
+                        if (r.colorIndex === idx) r.hex = sw.hex;
+                    });
+                    renderVectorStage();
+                    updateColorLayersUI();
+                });
+
+                wrap.appendChild(colorInput);
+                container.appendChild(wrap);
+            });
+        }
+
+        function addCustomPaletteColor() {
+            if (state.palette.length >= 32) {
+                showToast('調色盤已達 32 色上限！');
+                return;
+            }
+            state.palette.push({ r: 34, g: 211, b: 238, hex: '#22d3ee', locked: true, visible: true });
+            state.params.colorCount = state.palette.length;
+            syncSlidersWithParams();
+            executeVectorTrace(false);
+            showToast(`已新增自訂色票（目前共 ${state.palette.length} / 32 色）並重新計算分色路徑`);
+        }
+
+        function toggleRightSection(sectionKey, forceOpen = null) {
+            const body = document.getElementById(`section-body-${sectionKey}`);
+            const chevron = document.getElementById(`chevron-${sectionKey}`);
+            if (!body || !chevron) return;
+
+            const isHidden = body.classList.contains('hidden');
+            const shouldOpen = forceOpen !== null ? forceOpen : isHidden;
+
+            if (shouldOpen) {
+                body.classList.remove('hidden');
+                chevron.classList.remove('-rotate-90');
+            } else {
+                body.classList.add('hidden');
+                chevron.classList.add('-rotate-90');
+            }
+        }
+
+        function setAllRightSections(open) {
+            ['inspector', 'layers', 'svgcode'].forEach(key => {
+                toggleRightSection(key, open);
+            });
+        }
+
+        function selectFirstRegionOfColor(colorIdx) {
+            const targetReg = state.regions.find(r => r.colorIndex === colorIdx && !r.transparent);
+            if (!targetReg) return;
+            state.selectedRegionId = targetReg.id;
+            state.selectedNodeIndex = 0;
+            updateInspectorPanel(targetReg);
+            renderVectorStage();
+            showToast(`已選取色版 ${targetReg.hex.toUpperCase()} 之代表區塊 (${targetReg.id.toUpperCase()})`);
+        }
+
+        function updateColorLayersUI() {
+            const list = document.getElementById('colorLayersList');
+            const badge = document.getElementById('colorLayerCountBadge');
+            list.innerHTML = '';
+
+            let activeLayerCount = 0;
+
+            state.palette.forEach((sw, idx) => {
+                const regionsForColor = state.regions.filter(r => r.colorIndex === idx && !r.transparent);
+                const count = regionsForColor.length;
+                if (count === 0) return;
+
+                activeLayerCount++;
+                const totalNodes = regionsForColor.reduce((sum, r) => sum + r.nodes.length, 0);
+
+                const row = document.createElement('div');
+                row.className = `p-2.5 rounded-xl bg-studio-950 border ${sw.visible ? 'border-studio-800 hover:border-indigo-500/40' : 'border-studio-800/50 opacity-60'} flex items-center justify-between gap-2 text-xs transition-all`;
+                row.innerHTML = `
+                    <div onclick="selectFirstRegionOfColor(${idx})" class="flex items-center gap-2.5 min-w-0 flex-1 cursor-pointer" title="點擊選取此色版之向量路徑">
+                        <span class="w-5 h-5 rounded-md border border-white/20 shrink-0 shadow-sm" style="background:${sw.hex}"></span>
+                        <div class="min-w-0 flex-1">
+                            <div class="flex items-center gap-1.5">
+                                <span class="font-mono font-semibold text-slate-200 truncate">${sw.hex.toUpperCase()}</span>
+                                <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-studio-800 text-slate-300 shrink-0">#${idx + 1}</span>
+                            </div>
+                            <div class="text-[11px] text-slate-400 truncate mt-0.5">${count} 個封閉色塊 · ${totalNodes} 錨點</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button onclick="toggleColorLayerVisibility(${idx})" class="w-7 h-7 rounded-lg hover:bg-studio-800 flex items-center justify-center ${sw.visible ? 'text-indigo-400' : 'text-slate-600'}" title="顯示/隱藏此分色版">
+                            <i class="fa-solid ${sw.visible ? 'fa-eye' : 'fa-eye-slash'}"></i>
+                        </button>
+                    </div>
+                `;
+                list.appendChild(row);
+            });
+
+            if (badge) {
+                badge.textContent = `${activeLayerCount} 色層`;
+            }
+        }
+
+        function toggleColorLayerVisibility(idx) {
+            if (!state.palette[idx]) return;
+            state.palette[idx].visible = !state.palette[idx].visible;
+            renderVectorStage();
+            updateColorLayersUI();
+        }
+
+        function showAllColorLayers() {
+            state.palette.forEach(p => p.visible = true);
+            renderVectorStage();
+            updateColorLayersUI();
+        }
+
+        function updateInspectorPanel(region) {
+            const empty = document.getElementById('inspectorEmptyState');
+            const active = document.getElementById('inspectorActivePanel');
+            const headerBadge = document.getElementById('inspHeaderBadge');
+            if (!region) {
+                empty.classList.remove('hidden');
+                active.classList.add('hidden');
+                if (headerBadge) headerBadge.classList.add('hidden');
+                return;
+            }
+            empty.classList.add('hidden');
+            active.classList.remove('hidden');
+            document.getElementById('inspRegionId').textContent = region.id.toUpperCase();
+            if (headerBadge) {
+                headerBadge.textContent = region.id.toUpperCase();
+                headerBadge.classList.remove('hidden');
+            }
+            document.getElementById('inspNodeCount').textContent = `${region.nodes.length} 錨點`;
+            document.getElementById('inspAreaSize').textContent = `${region.area} px²`;
+            document.getElementById('inspColorInput').value = region.hex;
+
+            const nodeBadge = document.getElementById('inspSelectedNodeBadge');
+            const nodeControls = document.getElementById('inspNodeControls');
+
+            if (state.selectedNodeIndex !== null && region.nodes[state.selectedNodeIndex]) {
+                const pt = region.nodes[state.selectedNodeIndex];
+                nodeBadge.textContent = `錨點 #${state.selectedNodeIndex + 1} (${pt.isCorner ? '尖角' : '平滑'})`;
+                nodeBadge.className = 'text-[10px] font-mono px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40';
+                nodeControls.classList.remove('hidden');
+                document.getElementById('inspNodeX').textContent = pt.x.toFixed(1);
+                document.getElementById('inspNodeY').textContent = pt.y.toFixed(1);
+            } else {
+                nodeBadge.textContent = '點擊錨點微調';
+                nodeBadge.className = 'text-[10px] font-mono px-1.5 py-0.5 rounded bg-studio-900 text-slate-400 border border-studio-700';
+                nodeControls.classList.add('hidden');
+            }
+        }
+
+        function recolorSelectedRegion(newHex) {
+            const reg = state.regions.find(r => r.id === state.selectedRegionId);
+            if (!reg) return;
+            saveUndoSnapshot();
+            reg.hex = newHex;
+            renderVectorStage();
+        }
+
+        function deleteSelectedRegion() {
+            if (!state.selectedRegionId) return;
+            saveUndoSnapshot();
+            state.regions = state.regions.filter(r => r.id !== state.selectedRegionId);
+            state.selectedRegionId = null;
+            updateInspectorPanel(null);
+            renderVectorStage();
+            updateStatsFooter(0);
+            showToast('已刪除選取之向量區塊');
+        }
+
+        function applyWorkflowProfile(profile) {
+            document.querySelectorAll('.workflow-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white', 'shadow');
+                btn.classList.add('text-slate-300');
+            });
+            const activeBtn = document.getElementById(`profile-${profile}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow');
+                activeBtn.classList.remove('text-slate-300');
+            }
+
+            if (profile === 'branding') {
+                state.params.outlineMode = false;
+                state.params.colorCount = 6;
+                state.params.detailLevel = 80;
+                state.params.minArea = 10;
+                state.params.smoothing = 68;
+                state.params.denoise = 2;
+                showToast('已套用【標誌與視覺識別】參數：最佳化貝茲曲線平滑度與子像素切線');
+            } else if (profile === 'embroidery') {
+                state.params.outlineMode = false;
+                state.params.colorCount = 5;
+                state.params.detailLevel = 65;
+                state.params.minArea = 28; // Filter tiny stitches/dots for screen printing & embroidery
+                state.params.smoothing = 78;
+                state.params.denoise = 3;
+                showToast('已套用【數位印花與刺繡】參數：自動過濾細碎雜斑、強化色塊分色邊界');
+            } else if (profile === 'cnc') {
+                state.params.outlineMode = true;
+                state.params.colorCount = 2;
+                state.params.detailLevel = 82;
+                state.params.minArea = 16;
+                state.params.smoothing = 60;
+                state.params.denoise = 2;
+                showToast('已套用【雷射切割與 CNC 雕刻】單線輪廓模式：可直接匯出 DXF 切割路徑');
+            }
+
+            syncSlidersWithParams();
+            executeVectorTrace(false);
+        }
+
+        function loadSamplePreset(sampleName) {
+            state.currentSample = sampleName;
+            document.querySelectorAll('.sample-btn').forEach(btn => {
+                btn.classList.remove('border-indigo-500', 'bg-studio-800');
+                btn.classList.add('border-transparent', 'bg-studio-800/60');
+            });
+            const btn = document.getElementById(`sample-${sampleName}`);
+            if (btn) {
+                btn.classList.add('border-indigo-500', 'bg-studio-800');
+                btn.classList.remove('border-transparent', 'bg-studio-800/60');
+            }
+
+            generateProceduralSample(sampleName);
+            runAutoAnalyzeAndTrace();
+        }
+
+        function runAutoAnalyzeAndTrace() {
+            // Analyze color variance and edge density of rawImageData to set optimal parameters automatically
+            if (!state.rawImageData) return;
+            const s = state.currentSample;
+
+            if (s === 'logo') {
+                state.params = { ...state.params, colorCount: 6, detailLevel: 78, minArea: 10, smoothing: 65, denoise: 2, removeBg: false, outlineMode: false };
+                setAutoDiagnostics('平塗商標 (Flat Logo)', '已啟用 (中度雙邊濾波)', '6 色 (sRGB 聚類)');
+            } else if (s === 'badge') {
+                state.params = { ...state.params, colorCount: 7, detailLevel: 80, minArea: 10, smoothing: 62, denoise: 2, removeBg: false, outlineMode: false };
+                setAutoDiagnostics('多色插圖 (Vector Badge)', '已啟用 (中度雙邊濾波)', '7 色 (sRGB 聚類)');
+            } else if (s === 'sketch') {
+                state.params = { ...state.params, colorCount: 2, detailLevel: 84, minArea: 14, smoothing: 58, denoise: 2, removeBg: true, outlineMode: false };
+                setAutoDiagnostics('掃描手繪線稿 (Line Art)', '自動濾除掃描黑點', '2 色 + Alpha 自動去背');
+            } else if (s === 'photo') {
+                state.params = { ...state.params, colorCount: 10, detailLevel: 76, minArea: 8, smoothing: 72, denoise: 1, removeBg: false, outlineMode: false };
+                setAutoDiagnostics('連續色調照片 (Photo)', '保留漸層色階邊界', '10 色 (高動態分層)');
+            } else {
+                // Uploaded custom image automatic heuristic
+                state.params = { ...state.params, colorCount: 8, detailLevel: 78, minArea: 10, smoothing: 65, denoise: 2, outlineMode: false };
+                setAutoDiagnostics('自訂上傳影像 (Auto)', '智慧雙邊濾波降噪', '8 色 (自動提取)');
+            }
+
+            syncSlidersWithParams();
+            executeVectorTrace(false);
+        }
+
+        function setAutoDiagnostics(struct, denoise, colors) {
+            document.getElementById('autoDiagStructure').textContent = struct;
+            document.getElementById('autoDiagDenoise').textContent = denoise;
+            document.getElementById('autoDiagColors').textContent = colors;
+            document.getElementById('detectedTypeBadge').textContent = `自動偵測：${struct.split(' ')[0]}`;
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files?.[0];
+            if (!file) return;
+            loadRasterFileObject(file);
+            event.target.value = '';
+        }
+
+        function loadRasterFileObject(file) {
+            if (!file.type.startsWith('image/')) {
+                showToast('請上傳有效的圖片檔案（PNG, JPG, WebP, GIF, BMP）');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const maxDim = 260;
+                    const scale = Math.min(1, maxDim / Math.max(img.width || 1, img.height || 1));
+                    const w = Math.max(48, Math.round((img.width || 240) * scale));
+                    const h = Math.max(48, Math.round((img.height || 180) * scale));
+
+                    state.procWidth = w;
+                    state.procHeight = h;
+                    procCanvas.width = w;
+                    procCanvas.height = h;
+                    procCtx.clearRect(0, 0, w, h);
+                    procCtx.drawImage(img, 0, 0, w, h);
+
+                    state.rawImageData = procCtx.getImageData(0, 0, w, h);
+                    state.currentSample = 'custom';
+                    state.palette = [];
+                    resetImagePan();
+                    renderOriginalRasterToDisplay();
+                    runAutoAnalyzeAndTrace();
+                    showToast(`已成功載入「${file.name}」（${img.width}×${img.height}）並完成子像素向量化！`);
+                };
+                img.onerror = () => {
+                    showToast('圖片解碼失敗，請嘗試其他 PNG 或 JPG 檔案。');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function setupDragAndDropUpload() {
+            const viewport = document.getElementById('viewportContainer');
+            if (!viewport) return;
+
+            viewport.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            viewport.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const file = e.dataTransfer?.files?.[0];
+                if (file) {
+                    loadRasterFileObject(file);
+                }
+            });
+        }
+
+        function setViewportMode(mode) {
+            state.viewportMode = mode;
+            ['split', 'vector', 'side'].forEach(m => {
+                const btn = document.getElementById(`view-${m}`);
+                if (m === mode) {
+                    btn.classList.add('bg-indigo-600', 'text-white');
+                    btn.classList.remove('text-slate-400');
+                } else {
+                    btn.classList.remove('bg-indigo-600', 'text-white');
+                    btn.classList.add('text-slate-400');
+                }
+            });
+
+            const stageWrapper = document.getElementById('stageWrapper');
+            const sideWrapper = document.getElementById('sideBySideWrapper');
+            const rasterLayer = document.getElementById('rasterLayerWrapper');
+            const sliderBar = document.getElementById('splitSliderBar');
+
+            if (mode === 'side') {
+                stageWrapper.classList.add('hidden');
+                sideWrapper.classList.remove('hidden');
+                sideWrapper.classList.add('flex');
+                renderVectorStage();
+            } else {
+                stageWrapper.classList.remove('hidden');
+                sideWrapper.classList.add('hidden');
+                sideWrapper.classList.remove('flex');
+                if (mode === 'vector') {
+                    rasterLayer.classList.add('hidden');
+                    sliderBar.classList.add('hidden');
+                } else {
+                    rasterLayer.classList.remove('hidden');
+                    sliderBar.classList.remove('hidden');
+                }
+            }
+        }
+
+        function toggleNodeOverlay() {
+            state.showNodes = !state.showNodes;
+            const btn = document.getElementById('btnNodeOverlay');
+            if (state.showNodes) {
+                btn.classList.add('bg-cyan-500/20', 'border-cyan-500/50', 'text-cyan-300');
+                btn.classList.remove('bg-studio-850', 'border-studio-700', 'text-slate-300');
+            } else {
+                btn.classList.remove('bg-cyan-500/20', 'border-cyan-500/50', 'text-cyan-300');
+                btn.classList.add('bg-studio-850', 'border-studio-700', 'text-slate-300');
+            }
+            renderVectorStage();
+        }
+
+        function togglePixelGrid() {
+            state.showPixelGrid = !state.showPixelGrid;
+            const btn = document.getElementById('btnPixelGrid');
+            if (state.showPixelGrid) {
+                btn.classList.add('bg-indigo-500/20', 'border-indigo-500/50', 'text-indigo-300');
+            } else {
+                btn.classList.remove('bg-indigo-500/20', 'border-indigo-500/50', 'text-indigo-300');
+            }
+            renderSubpixelGridOverlay();
+        }
+
+        function adjustZoom(delta) {
+            state.zoom = Math.max(0.5, Math.min(4.0, +(state.zoom + delta).toFixed(2)));
+            applyZoomTransform();
+        }
+
+        function resetZoom() {
+            state.zoom = 1.0;
+            state.panX = 0;
+            state.panY = 0;
+            applyZoomTransform();
+        }
+
+        function applyZoomTransform() {
+            document.getElementById('stageWrapper').style.transform = `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+            document.getElementById('zoomPercentLabel').textContent = `${Math.round(state.zoom * 100)}%`;
+        }
+
+        function toggleCanvasBgTheme() {
+            state.lightCheckerboard = !state.lightCheckerboard;
+            const vp = document.getElementById('viewportContainer');
+            if (state.lightCheckerboard) {
+                vp.classList.remove('checkerboard');
+                vp.classList.add('checkerboard-light');
+            } else {
+                vp.classList.add('checkerboard');
+                vp.classList.remove('checkerboard-light');
+            }
+        }
+
+        function updateStatsFooter(elapsedMs) {
+            const activeRegions = state.regions.filter(r => !r.transparent);
+            const totalNodes = activeRegions.reduce((acc, r) => acc + r.nodes.length, 0);
+            document.getElementById('statPathCount').textContent = activeRegions.length;
+            document.getElementById('statNodeCount').textContent = totalNodes;
+            if (elapsedMs > 0) {
+                document.getElementById('statTraceTime').textContent = `${elapsedMs} ms`;
+            }
+            document.getElementById('exportSummaryInfo').textContent = `準備匯出：${activeRegions.length} 條封閉向量路徑・共 ${totalNodes} 個最佳化貝茲錨點`;
+        }
+
+        function generateCleanSvgString() {
+            const w = state.displayWidth;
+            const h = state.displayHeight;
+            const includeStroke = document.getElementById('exportIncludeStroke')?.checked ?? true;
+            const groupByColor = document.getElementById('exportGroupByColor')?.checked ?? true;
+
+            let out = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+            out += `<!-- Generated by Raster2Vector Sub-Pixel Tracing Engine -->\n`;
+            out += `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">\n`;
+
+            const visibleRegions = state.regions.filter(r => !r.transparent && (state.palette[r.colorIndex]?.visible ?? true));
+
+            if (groupByColor) {
+                const groups = {};
+                visibleRegions.forEach(r => {
+                    if (!groups[r.hex]) groups[r.hex] = [];
+                    groups[r.hex].push(r);
+                });
+                Object.keys(groups).forEach(hex => {
+                    const strokeAttr = state.params.outlineMode
+                        ? `fill="none" stroke="#000000" stroke-width="1"`
+                        : `fill="${hex}"${includeStroke ? ` stroke="${hex}" stroke-width="0.5" stroke-linejoin="round"` : ''}`;
+                    out += `  <g id="color-${hex.replace('#', '')}" ${strokeAttr}>\n`;
+                    groups[hex].forEach(r => {
+                        out += `    <path id="${r.id}" d="${r.d}" />\n`;
+                    });
+                    out += `  </g>\n`;
+                });
+            } else {
+                visibleRegions.forEach(r => {
+                    out += `  <path id="${r.id}" fill="${r.hex}" d="${r.d}" />\n`;
+                });
+            }
+
+            out += `</svg>`;
+            return out;
+        }
+
+        /**
+         * AutoCAD DXF Vector Exporter (for Laser Cutting, CNC & Vinyl Cutters)
+         */
+        function generateDxfString() {
+            const h = state.displayHeight;
+            let dxf = `0\nSECTION\n2\nHEADER\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n`;
+
+            const visibleRegions = state.regions.filter(r => !r.transparent && (state.palette[r.colorIndex]?.visible ?? true));
+            visibleRegions.forEach((reg, idx) => {
+                const layerName = `COLOR_${reg.hex.replace('#', '').toUpperCase()}`;
+                dxf += `0\nPOLYLINE\n8\n${layerName}\n66\n1\n70\n1\n`;
+                reg.nodes.forEach(pt => {
+                    const cadX = pt.x.toFixed(3);
+                    const cadY = (h - pt.y).toFixed(3); // Invert Y for CAD coordinate system
+                    dxf += `0\nVERTEX\n8\n${layerName}\n10\n${cadX}\n20\n${cadY}\n30\n0.0\n`;
+                });
+                dxf += `0\nSEQEND\n`;
+            });
+
+            dxf += `0\nENDSEC\n0\nEOF\n`;
+            return dxf;
+        }
+
+        /**
+         * Encapsulated PostScript (.EPS) & Adobe Illustrator (.AI) Vector Stream Generator
+         */
+        function generatePostScriptVectorString(isIllustratorAi = false) {
+            const w = state.displayWidth;
+            const h = state.displayHeight;
+            let ps = isIllustratorAi
+                ? `%!PS-Adobe-3.0\n%%Creator: Raster2Vector Sub-Pixel Engine (Adobe Illustrator Compatible)\n`
+                : `%!PS-Adobe-3.0 EPSF-3.0\n%%Creator: Raster2Vector Sub-Pixel Engine\n`;
+            ps += `%%BoundingBox: 0 0 ${w} ${h}\n%%Pages: 1\n%%EndComments\n\n`;
+
+            const visibleRegions = state.regions.filter(r => !r.transparent && (state.palette[r.colorIndex]?.visible ?? true));
+            visibleRegions.forEach(reg => {
+                if (reg.nodes.length < 3) return;
+                const rgb = hexToRgb(reg.hex);
+                const r = (rgb.r / 255).toFixed(3);
+                const g = (rgb.g / 255).toFixed(3);
+                const b = (rgb.b / 255).toFixed(3);
+
+                ps += `${r} ${g} ${b} setrgbcolor\nnewpath\n`;
+                const first = reg.nodes[0];
+                ps += `${first.x.toFixed(2)} ${(h - first.y).toFixed(2)} moveto\n`;
+
+                if (reg.handles && reg.handles.length > 0) {
+                    reg.handles.forEach(hdl => {
+                        ps += `${hdl.hx1.toFixed(2)} ${(h - hdl.hy1).toFixed(2)} ${hdl.hx2.toFixed(2)} ${(h - hdl.hy2).toFixed(2)} ${hdl.x2.toFixed(2)} ${(h - hdl.y2).toFixed(2)} curveto\n`;
+                    });
+                } else {
+                    for (let i = 1; i < reg.nodes.length; i++) {
+                        ps += `${reg.nodes[i].x.toFixed(2)} ${(h - reg.nodes[i].y).toFixed(2)} lineto\n`;
+                    }
+                }
+                ps += `closepath\n${state.params.outlineMode ? 'stroke' : 'fill'}\n\n`;
+            });
+
+            ps += `showpage\n%%EOF\n`;
+            return ps;
+        }
+
+        function updateLiveSvgSnippet() {
+            const code = generateCleanSvgString();
+            document.getElementById('liveSvgCodePreview').textContent = code.slice(0, 680) + (code.length > 680 ? '\n... (點擊匯出取得完整向量檔)' : '');
+        }
+
+        function copySvgCodeToClipboard() {
+            const svgText = generateCleanSvgString();
+            const tempArea = document.createElement('textarea');
+            tempArea.value = svgText;
+            document.body.appendChild(tempArea);
+            tempArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempArea);
+            showToast('已複製完整 SVG 向量原始碼至剪貼簿！');
+        }
+
+        function openExportModal() {
+            document.getElementById('exportModal').classList.remove('hidden');
+            document.getElementById('exportModal').classList.add('flex');
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').classList.add('hidden');
+            document.getElementById('exportModal').classList.remove('flex');
+        }
+
+        function downloadVectorFormat(format) {
+            let content = '';
+            let mime = 'text/plain;charset=utf-8';
+            let ext = format;
+
+            if (format === 'svg') {
+                content = generateCleanSvgString();
+                mime = 'image/svg+xml;charset=utf-8';
+            } else if (format === 'dxf') {
+                content = generateDxfString();
+                mime = 'application/dxf;charset=utf-8';
+            } else if (format === 'eps') {
+                content = generatePostScriptVectorString(false);
+                mime = 'application/postscript;charset=utf-8';
+            } else if (format === 'ai') {
+                content = generatePostScriptVectorString(true);
+                mime = 'application/postscript;charset=utf-8';
+            }
+
+            const blob = new Blob([content], { type: mime });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Raster2Vector_${state.currentSample}_${Date.now().toString().slice(-4)}.${ext}`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast(`已成功匯出真實向量檔案 (.${ext.toUpperCase()})！`);
+            closeExportModal();
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toastNotification');
+            document.getElementById('toastMessage').textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            clearTimeout(window.__toastTimer);
+            window.__toastTimer = setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3200);
+        }
+
+        // Initialize Studio on Window Load
+        window.onload = function () {
+            setupKnifeAndSliderInteractions();
+            setupDragAndDropUpload();
+            loadSamplePreset('logo');
+        };
+    </script>
+</body>
+</html>
