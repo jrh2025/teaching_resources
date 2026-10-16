@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-TW" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ProPDF Studio — 專業直覺 PDF 編輯與簽署桌面工具 | 軟體特色介紹與完整使用說明書</title>
+  <meta name="description" content="ProPDF Studio 1.0.0 官方完整軟體特色介紹與使用手冊。支援可視化文字圖片編輯、表單設計、電子簽名、多頁PDF組織、高精度離線繁中神經網絡 OCR、密碼保護與災難暫存復原。" />
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Noto Sans TC & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Inter"', '"Noto Sans TC"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#fef2f2',
+              100: '#fee2e2',
+              500: '#ef4444',
+              600: '#dc2626',
+              700: '#b91c1c',
+              800: '#991b1b',
+              900: '#7f1d1d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #09090b;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #27272a;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3f3f46;
+    }
+    
+    .glass-nav {
+      background: rgba(9, 9, 11, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    
+    .gradient-hero {
+      background: radial-gradient(circle at 50% 20%, rgba(220, 38, 38, 0.18) 0%, rgba(9, 9, 11, 1) 75%);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    }
+
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+      }
+      .print-break {
+        page-break-before: always;
+      }
+    }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 font-sans antialiased selection:bg-red-600 selection:text-white">
+
+  <!-- ================= 頂部導覽列 (Sticky Header) ================= -->
+  <header class="fixed top-0 left-0 right-0 z-50 glass-nav border-b border-zinc-800/80 transition-all duration-300">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Logo & 產品名稱 -->
+      <a href="#hero" class="flex items-center gap-3 group">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-red-500 to-rose-700 flex items-center justify-center font-black text-white text-sm shadow-lg shadow-red-900/50 group-hover:scale-105 transition-transform">
+          PDF
+        </div>
+        <div class="flex flex-col">
+          <span class="font-extrabold text-base tracking-tight text-white flex items-center gap-2">
+            ProPDF Studio
+            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/30">v1.0.0</span>
+          </span>
+          <span class="text-[11px] text-zinc-400 font-medium">專業直覺 PDF 編輯與簽署桌面工具</span>
+        </div>
+      </a>
+
+      <!-- 導航選單 -->
+      <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-zinc-300">
+        <a href="#download" class="hover:text-red-400 transition">📥 軟體下載</a>
+        <a href="#features" class="hover:text-red-400 transition">✨ 核心特色</a>
+        <a href="#guide" class="hover:text-red-400 transition">📖 使用說明書</a>
+        <a href="#shortcuts" class="hover:text-red-400 transition">⌨️ 快捷鍵清單</a>
+        <a href="#faq" class="hover:text-red-400 transition">❓ 常見問答</a>
+      </nav>
+
+      <!-- 右側快速下載按鈕 -->
+      <div class="flex items-center gap-3">
+        <a href="#download" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white shadow-lg shadow-red-950/60 transition-all hover:shadow-red-600/30 hover:scale-[1.02] active:scale-95">
+          <span>⚡ 立即取得</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= 主視覺 Hero Section ================= -->
+  <section id="hero" class="pt-32 pb-20 relative overflow-hidden gradient-hero border-b border-zinc-800/80">
+    <!-- 背景光暈飾底 -->
+    <div class="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-red-600/10 blur-[140px] pointer-events-none rounded-full"></div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+      <!-- 標籤 -->
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-700/80 text-xs font-semibold text-zinc-300 mb-6 shadow-sm">
+        <span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>2026 最新旗艦版 1.0.0 正式發布</span>
+        <span class="text-zinc-500">|</span>
+        <span class="text-red-400">100% 離線安全・無廣告・免授權費</span>
+      </div>
+
+      <!-- 主標題 -->
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight text-white max-w-4xl mx-auto leading-tight sm:leading-none mb-6">
+        重新定義 PDF 處理體驗<br />
+        <span class="bg-gradient-to-r from-red-400 via-rose-400 to-amber-300 bg-clip-text text-transparent">
+          更直覺、更強大、極致流暢
+        </span>
+      </h1>
+
+      <!-- 副標題 -->
+      <p class="text-base sm:text-lg text-zinc-400 max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
+        告別昂貴且臃腫的訂閱軟體！ProPDF Studio 具備所見即所得文字編輯、互動表單自由切換、手寫電子簽章、多頁面拆合旋轉，以及內建官方頂級 13MB 神經網絡離線 OCR 繁中識別引擎。
+      </p>
+
+      <!-- 快速行動召喚區 (Direct Download CTAs) -->
+      <div class="flex flex-wrap items-center justify-center gap-4 mb-14">
+        <a href="#download" class="px-6 py-3.5 rounded-xl text-sm font-bold bg-red-600 hover:bg-red-500 text-white shadow-xl shadow-red-600/25 transition-all hover:scale-105 flex items-center gap-2.5">
+          <span class="text-lg">📥</span>
+          <span>下載 ProPDF Studio</span>
+        </a>
+        <a href="#guide" class="px-6 py-3.5 rounded-xl text-sm font-semibold bg-zinc-900 hover:bg-zinc-800 text-zinc-200 border border-zinc-700 transition flex items-center gap-2">
+          <span>📖</span>
+          <span>查閱完整操作手冊</span>
+        </a>
+      </div>
+
+      <!-- 介面展示預覽圖卡 -->
+      <div class="max-w-5xl mx-auto rounded-2xl p-2 bg-gradient-to-b from-zinc-700/50 to-zinc-900/50 border border-zinc-700/60 shadow-2xl shadow-black/80">
+        <div class="rounded-xl overflow-hidden bg-zinc-950 border border-zinc-800/80 relative">
+          <!-- 模擬視窗頂部邊框 -->
+          <div class="h-9 bg-zinc-900 border-b border-zinc-800 px-4 flex items-center justify-between text-xs text-zinc-400">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block"></span>
+              <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block"></span>
+              <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
+              <span class="ml-2 font-mono text-[11px] text-zinc-300">ProPDF Studio — 專業工作台介面</span>
+            </div>
+            <div class="flex items-center gap-2 font-mono text-[11px] text-emerald-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>100% 離線隱私守護</span>
+            </div>
+          </div>
+          <!-- 產品特色展示區 -->
+          <div class="p-8 sm:p-12 text-left bg-gradient-to-b from-zinc-950 via-zinc-900 to-zinc-950">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="p-5 rounded-xl bg-zinc-900/80 border border-zinc-800">
+                <div class="w-10 h-10 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center text-xl mb-3">✏️</div>
+                <h4 class="font-bold text-white mb-1">所見即所得文字編輯</h4>
+                <p class="text-xs text-zinc-400 leading-relaxed">點擊文字即可如同 Word 一般直接編輯，字型、行高、顏色與文字對齊隨心調整。</p>
+              </div>
+              <div class="p-5 rounded-xl bg-zinc-900/80 border border-zinc-800">
+                <div class="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xl mb-3">🔍</div>
+                <h4 class="font-bold text-white mb-1">神經網絡離線 OCR 繁中識別</h4>
+                <p class="text-xs text-zinc-400 leading-relaxed">內建 13MB 繁體中文高階神經網絡模型，支援掃描圖檔自動增強與局部框選辨識。</p>
+              </div>
+              <div class="p-5 rounded-xl bg-zinc-900/80 border border-zinc-800">
+                <div class="w-10 h-10 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center text-xl mb-3">🛡️</div>
+                <h4 class="font-bold text-white mb-1">防手滑自動暫存與個資遮蔽</h4>
+                <p class="text-xs text-zinc-400 leading-relaxed">攔截誤按 F5 重整，每 1.2 秒無感存入 IndexedDB 本機庫；物理塗黑保障敏感機密。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= 軟體下載專區 (Download Center) ================= -->
+  <section id="download" class="py-20 bg-zinc-900/50 border-b border-zinc-800 relative">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto mb-14">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 text-red-400 text-xs font-semibold mb-3">
+          <span>官方高速下載節點</span>
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          選擇最適合您的 ProPDF Studio 版本
+        </h2>
+        <p class="text-zinc-400 mt-3 text-sm sm:text-base">
+          無論是個人臨時使用、隨身碟攜帶，或是企業辦公標準部署，我們均提供專屬版本，完全不需安裝 Python 或 Node.js 環境。
+        </p>
+      </div>
+
+      <!-- 三大下載版本卡片 -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <!-- 1. 單一檔案執行版 (Portable EXE) -->
+        <div class="bg-gradient-to-b from-zinc-800/80 to-zinc-900/90 rounded-2xl p-7 border-2 border-red-500/40 hover:border-red-500 transition-all flex flex-col justify-between shadow-xl relative group">
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-red-600 text-white text-[11px] font-black px-3 py-0.5 rounded-full shadow-md uppercase tracking-wide">
+            最推薦・隨點即用
+          </div>
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center text-2xl mb-4 font-black">
+              🚀
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">單一檔案執行版 (Portable)</h3>
+            <p class="text-xs text-zinc-400 leading-relaxed mb-4">
+              單一獨立可執行檔（<code class="text-red-300 font-mono">.exe</code>），無需安裝、無需解壓縮。下載後雙點即開，適合任何 Windows 電腦與急件處理。
+            </p>
+            <ul class="text-xs text-zinc-300 space-y-2.5 mb-6">
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-400">✓</span> <span>單一 EXE，桌面上乾淨俐落</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-400">✓</span> <span>免安裝、不寫入 Windows 機碼</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-400">✓</span> <span>內建 13MB 繁中神經網絡 OCR 模型</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-400">✓</span> <span>檔案大小約 109 MB</span>
+              </li>
+            </ul>
+          </div>
+          <div class="pt-4 border-t border-zinc-800">
+            <a href="https://drive.google.com/file/d/1Lv4J37GTKzZPEiQ22mObS2Uj0_IeOFfS/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="w-full py-3 px-4 rounded-xl font-bold text-sm bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-900/40 text-center transition flex items-center justify-center gap-2 group-hover:scale-[1.02]">
+              <span>📥 下載單一執行檔</span>
+              <span class="text-xs opacity-75">↗</span>
+            </a>
+            <span class="block text-center text-[11px] text-zinc-500 mt-2 font-mono">Google Drive 官方載點 (1Lv4J...)</span>
+          </div>
+        </div>
+
+        <!-- 2. 綠色免安裝版 (ZIP) -->
+        <div class="bg-zinc-900/90 rounded-2xl p-7 border border-zinc-800 hover:border-zinc-700 transition-all flex flex-col justify-between shadow-xl relative group">
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-2xl mb-4 font-black">
+              📦
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">綠色免安裝版 (ZIP)</h3>
+            <p class="text-xs text-zinc-400 leading-relaxed mb-4">
+              標準壓縮包（<code class="text-emerald-300 font-mono">.zip</code>），解壓縮後點擊目錄中的 <code class="text-zinc-200">ProPDF Studio.exe</code> 即可啟動。非常適合存入隨身碟（USB）隨插即用。
+            </p>
+            <ul class="text-xs text-zinc-300 space-y-2.5 mb-6">
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-400">✓</span> <span>免管理者權限，隨身碟必備</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-400">✓</span> <span>解壓即用，啟動速度極快</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-400">✓</span> <span>模型資源離線就緒</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-400">✓</span> <span>檔案大小約 163 MB (ZIP)</span>
+              </li>
+            </ul>
+          </div>
+          <div class="pt-4 border-t border-zinc-800">
+            <a href="https://drive.google.com/file/d/1AOrgYm1qLZyaNK6TLpP33DhXYZrH4rY-/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="w-full py-3 px-4 rounded-xl font-bold text-sm bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 text-center transition flex items-center justify-center gap-2 group-hover:scale-[1.02]">
+              <span>📥 下載綠色免安裝 ZIP</span>
+              <span class="text-xs opacity-75">↗</span>
+            </a>
+            <span class="block text-center text-[11px] text-zinc-500 mt-2 font-mono">Google Drive 官方載點 (1AOrg...)</span>
+          </div>
+        </div>
+
+        <!-- 3. Windows 安裝版 (Setup Installer) -->
+        <div class="bg-zinc-900/90 rounded-2xl p-7 border border-zinc-800 hover:border-zinc-700 transition-all flex flex-col justify-between shadow-xl relative group">
+          <div>
+            <div class="w-12 h-12 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-2xl mb-4 font-black">
+              💻
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Windows 標準安裝版 (Setup)</h3>
+            <p class="text-xs text-zinc-400 leading-relaxed mb-4">
+              標準 Windows 安裝程式（<code class="text-blue-300 font-mono">Setup.exe</code>），自動在桌面建立專屬捷徑、整合至 Windows 開始功能表，並支援完整乾淨卸載。
+            </p>
+            <ul class="text-xs text-zinc-300 space-y-2.5 mb-6">
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-400">✓</span> <span>自動建立桌面與開始功能表捷徑</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-400">✓</span> <span>適合辦公電腦與一般使用者日常使用</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-400">✓</span> <span>系統控制台支援一鍵乾淨解除安裝</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-400">✓</span> <span>檔案大小約 124 MB</span>
+              </li>
+            </ul>
+          </div>
+          <div class="pt-4 border-t border-zinc-800">
+            <a href="https://drive.google.com/file/d/1Ol6ov-DWAb28gRVrpSxrIzcaM3AGzcWI/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="w-full py-3 px-4 rounded-xl font-bold text-sm bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/40 text-center transition flex items-center justify-center gap-2 group-hover:scale-[1.02]">
+              <span>📥 下載 Windows 安裝程式</span>
+              <span class="text-xs opacity-75">↗</span>
+            </a>
+            <span class="block text-center text-[11px] text-zinc-500 mt-2 font-mono">Google Drive 官方載點 (1Ol6o...)</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 下載說明提示 -->
+      <div class="mt-10 p-4 rounded-xl bg-zinc-950 border border-zinc-800/80 text-xs text-zinc-400 flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <span class="text-amber-400 font-bold text-base">💡</span>
+          <span><strong>系統支援環境：</strong> Windows 10 / Windows 11 (64 位元架構)。無需設定任何環境變數或安裝額外套件。</span>
+        </div>
+        <div class="text-zinc-500">
+          MD5 / 檔案校驗安全無虞・絕無後門
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 八大核心亮點特色 (Core Features) ================= -->
+  <section id="features" class="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 text-red-400 text-xs font-semibold mb-3">
+        <span>強悍核心・無可比擬</span>
+      </div>
+      <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+        專為高效辦公與專業製稿打造的強大功能
+      </h2>
+      <p class="text-zinc-400 mt-3 text-sm sm:text-base">
+        從頁面微調到大篇幅批次轉檔，ProPDF Studio 滿足您對 PDF 文件的所有想像。
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      
+      <!-- 特色 1 -->
+      <div class="feature-card bg-zinc-900/70 border border-zinc-800/80 p-6 rounded-2xl transition duration-300 flex flex-col">
+        <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center text-2xl mb-4">
+          ✏️
+        </div>
+        <h3 class="text-base font-bold text-white mb-2">視覺化文字與圖片編輯</h3>
+        <p class="text-xs text-zinc-400 leading-relaxed flex-1">
+          點擊任意文字框即可即時修改文字內容。完整支援字體、字級（px/pt）、加粗、斜體、字元色彩、行高間距及文字對齊；亦可自由插入圖片並支援等比縮放與任意拖曳旋轉。
+        </p>
+        <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-blue-400 font-semibold">
+          <span>支援文字塊任意排版</span> <span>→</span>
+        </div>
+      </div>
+
+      <!-- 特色 2 -->
+      <div class="feature-card bg-zinc-900/70 border border-zinc-800/80 p-6 rounded-2xl transition duration-300 flex flex-col">
+        <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-400 flex items-center justify-center text-2xl mb-4">
+          🖊️
+        </div>
+        <h3 class="text-base font-bold text-white mb-2">互動表單自由開關</h3>
+        <p class="text-xs text-zinc-400 leading-relaxed flex-1">
+          完美支援文字框、多行文字區、下拉選單、單複選框與送出按鈕。首創「一鍵顯示/隱藏表單」按鈕，讓您在專心審閱合約時隱藏干擾，填寫時一鍵喚出。
+        </p>
+        <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-purple-400 font-semibold">
+          <span>靈活表單控制項</span> <span>→</span>
+        </div>
+      </div>
+
+      <!-- 特色 3 -->
+      <div class="feature-card bg-zinc-900/70 border border-zinc-800/80 p-6 rounded-2xl transition duration-300 flex flex-col">
+        <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center text-2xl mb-4">
+          🖍️
+        </div>
+        <h3 class="text-base font-bold text-white mb-2">專業審核批註與電子簽章</h3>
+        <p class="text-xs text-zinc-400 leading-relaxed flex-1">
+          內建螢光筆標記、下劃線、刪除線與文字註解。具備手寫板觸控電子簽名、多款商務印章（如「審核核准」、「極機密」、「已付款」），支援透明背景去背儲存。
+        </p>
+        <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-amber-400 font-semibold">
+          <span>簽署蓋章秒速完成</span> <span>→</span>
+        </div>
+      </div>
+
+      <!-- 特色 4 -->
+      <div class="feature-card bg-zinc-900/70 border border-zinc-800/80 p-6 rounded-2xl transition duration-300 flex flex-col">
+        <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-2xl mb-4">
+          📑
+        </div>
+        <h3 class="text-base font-bold text-white mb-2">強大頁面組織與管理</h3>
+        <p class="text-xs text-zinc-400 leading-relaxed flex-1">
+          左側視覺化縮圖清單，支援滑鼠拖曳頁面重新排序、單頁或全部旋轉 90°/180°、插入空白頁或外部 PDF 檔案、刪除冗頁與快速頁面拆分。
+        </p>
+        <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-emerald-400 font-semibold">
+          <span>頁面拖曳與任意組合</span> <span>→</span>
+        </div>
+      </div>
+
+      <!-- 特色 5 -->
+      <div class="feature-card bg-zinc-900/70 border border-zinc-800/80 p-6 rounded-2xl transition duration-300 flex flex-col">
+        <div class="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center text-2xl mb-4">
+          🧠
+        </div>
+        <h3 class="text-base font-bold text-white mb-2">頂級離線繁中神經網絡 OCR</h3>
+        <p class="text-xs text-zinc-400 leading-relaxed flex-1">
+          直接內建官方最新 13MB <code class="text-rose-300">tessdata_best</code> 深度學習模型，具備 2x 超解析度放大與自適應去背二值化；更支援「框選區域局部辨識」，精確提取圖中內文。
+        </p>
+        <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-rose-400 font-semibold">
+          <span>離線神經網絡驅動</span> <span>→</span>
+        </div>
+      </div>
+
+      <!-- 特色 6 -->
+      <div class="feature-card bg-zinc-900/70 border border-zinc-800/80 p-6 rounded-2xl transition duration-300 flex flex-col">
+        <div class="w-12 h-12 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-2xl mb-4">
+          🛡️
+        </div>
+        <h3 class="text-base font-bold text-white mb-2">高階密碼防護與個資塗黑</h3>
+        <p class="text-xs text-zinc-400 leading-relaxed flex-1">
+          支援高強度文件加密密碼，防範未經授權開啟；提供真物理級「個資塗黑（Redaction）」工具，將身分證號、金額、機密姓名永久抹除，杜絕被複製取出。
+        </p>
+        <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-cyan-400 font-semibold">
+          <span>永久遮蔽隱私資訊</span> <span>→</span>
+        </div>
+      </div>
+
+      <!-- 特色 7 -->
+      <div class="feature-card bg-zinc-900/70 border border-zinc-800/80 p-6 rounded-2xl transition duration-300 flex flex-col">
+        <div class="w-12 h-12 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center text-2xl mb-4">
+          💾
+        </div>
+        <h3 class="text-base font-bold text-white mb-2">防誤按 F5 與災難暫存復原</h3>
+        <p class="text-xs text-zinc-400 leading-relaxed flex-1">
+          全面攔截 F5 及 Ctrl+R 誤觸，每 1.2 秒自動存入 IndexedDB 高容量資料庫。即使遭遇電腦突發斷電或程式關閉，重新開啟即可「一鍵立即還原草稿」。
+        </p>
+        <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-teal-400 font-semibold">
+          <span>資料安全零遺失保證</span> <span>→</span>
+        </div>
+      </div>
+
+      <!-- 特色 8 -->
+      <div class="feature-card bg-zinc-900/70 border border-zinc-800/80 p-6 rounded-2xl transition duration-300 flex flex-col">
+        <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-2xl mb-4">
+          🖨️
+        </div>
+        <h3 class="text-base font-bold text-white mb-2">完美等比 1:1 A4 PDF 輸出</h3>
+        <p class="text-xs text-zinc-400 leading-relaxed flex-1">
+          針對 Adobe Acrobat 及標準印刷規格最佳化，徹底解決傳統瀏覽器列印造成的右下側大片空白或邊界走位。支援無干擾全螢幕預覽，所見即為最終 PDF！
+        </p>
+        <div class="mt-4 pt-3 border-t border-zinc-800/80 flex items-center justify-between text-[11px] text-indigo-400 font-semibold">
+          <span>精準印刷級輸出</span> <span>→</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= 完整使用說明書 (Step-by-Step User Guide) ================= -->
+  <section id="guide" class="py-20 bg-zinc-900/30 border-y border-zinc-800">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <!-- 章節標頭 -->
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold mb-3">
+          <span>從入門到精通</span>
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+          ProPDF Studio 完整使用操作指南
+        </h2>
+        <p class="text-zinc-400 mt-3 text-sm sm:text-base">
+          詳細拆解六大核心工作流程，協助您在數分鐘內熟悉所有操作細節與進階技巧。
+        </p>
+      </div>
+
+      <!-- 說明書各章節卡片 -->
+      <div class="space-y-10">
+
+        <!-- 第 1 章 -->
+        <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 sm:p-8">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-8 h-8 rounded-lg bg-blue-600 text-white font-black text-sm flex items-center justify-center">01</span>
+            <h3 class="text-xl font-bold text-white">介面佈局與檔案管理入門</h3>
+          </div>
+          <div class="text-sm text-zinc-300 leading-relaxed space-y-4">
+            <p>
+              ProPDF Studio 採用類似 Adobe Acrobat 的高效率現代化三段式架構：
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-4">
+              <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800">
+                <span class="font-bold text-blue-400 block mb-1">1. 頂部精簡工具列</span>
+                <p class="text-xs text-zinc-400">
+                  左側包含 <code class="text-zinc-200">➕ 新建</code>、<code class="text-zinc-200">📂 開啟</code> 與 <code class="text-zinc-200">↩️ 上一步 / ↪️ 下一步</code>；中間為四大閱讀模式（日間、護眼、暗黑、羊皮紙）；右側包含自動暫存藥丸、<code class="text-purple-400">📦 存專案</code>、<code class="text-cyan-400">👁️ 預覽</code> 與 <code class="text-red-400">💾 另存 PDF</code>。
+                </p>
+              </div>
+              <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800">
+                <span class="font-bold text-emerald-400 block mb-1">2. 模組分頁列 (Nav Bar)</span>
+                <p class="text-xs text-zinc-400">
+                  一鍵在「✏️ 編輯文字與圖片」、「🖍️ 註解與簽名」、「📑 整理頁面」、「🔍 掃描轉文字 (OCR)」、「🛡️ 密碼與塗黑」、「🔄 轉檔批次」之間平滑切換，下方次級工具列自動連動。
+                </p>
+              </div>
+              <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800">
+                <span class="font-bold text-amber-400 block mb-1">3. 畫布編輯與側欄</span>
+                <p class="text-xs text-zinc-400">
+                  左側抽屜可快速檢視頁面縮圖、目錄大綱與註解列表；中間畫布呈現高解析 1:1 標準 A4 紙張；右側為即時屬性控制面板。
+                </p>
+              </div>
+            </div>
+            <div class="p-4 rounded-xl bg-zinc-950/80 border-l-4 border-blue-500 text-xs text-zinc-400">
+              <strong class="text-blue-300">💡 專家提示（存專案 vs 另存 PDF）：</strong><br />
+              • <strong>📦 存專案 (.propdf)</strong>：會保留所有文字區塊、表單物件、簽章圖層等所有非破壞性向量資料，日後重新開啟可隨時再次調整。<br />
+              • <strong>💾 另存 PDF</strong>：產生符合國際標準的 PDF 檔案，供分享給他人檢視、送印或在任何手機與電腦上開啟。
+            </div>
+          </div>
+        </div>
+
+        <!-- 第 2 章 -->
+        <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 sm:p-8">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-8 h-8 rounded-lg bg-emerald-600 text-white font-black text-sm flex items-center justify-center">02</span>
+            <h3 class="text-xl font-bold text-white">文字編輯、圖片排版與正則搜尋取代</h3>
+          </div>
+          <div class="text-sm text-zinc-300 leading-relaxed space-y-4">
+            <ol class="list-decimal list-inside space-y-2 text-xs sm:text-sm text-zinc-300">
+              <li><strong>編輯現有文字：</strong>雙擊畫布上的任意文字段落，游標將進入編輯狀態。此時可直接輸入文字、修改內容。</li>
+              <li><strong>修改樣式：</strong>選中文字區塊後，可在次級工具列或右側屬性欄自訂字體（思源黑體、標楷體、Arial 等）、字級大小、文字色彩、粗體/斜體、行距與對齊方式。</li>
+              <li><strong>新增文字方塊：</strong>點擊工具列上的「➕ 新增文字」，滑鼠在畫布上點擊即可放置新文字。</li>
+              <li><strong>插入圖片：</strong>點擊「🖼️ 插入圖片」選擇本機圖檔（PNG / JPG / WebP），插入後可自由拖曳調整位置，或拉動邊角控制點等比縮放。</li>
+              <li><strong>全文搜尋與取代（Ctrl+F）：</strong>點擊頂部的放大鏡圖示 <code class="text-zinc-200">🔍</code> 展開搜尋列，支援即時關鍵字高亮、批次替換，並支援勾選「進階正則模式（Regex）」進行高效批次批改。</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- 第 3 章 -->
+        <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 sm:p-8">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-8 h-8 rounded-lg bg-amber-600 text-white font-black text-sm flex items-center justify-center">03</span>
+            <h3 class="text-xl font-bold text-white">互動式表單設計與一鍵隱藏</h3>
+          </div>
+          <div class="text-sm text-zinc-300 leading-relaxed space-y-4">
+            <p>
+              本軟體提供完整的可填寫表單（Interactive Forms）支援，解決了傳統 PDF 表單欄位僵硬難以管理的痛點：
+            </p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div class="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800">
+                <strong class="text-amber-400 block mb-1">新增表單欄位</strong>
+                在「編輯」或專屬表單工具列中，選擇要新增的控制項：單行輸入框、多行文字區、下拉式清單、核取方塊（Checkbox）或送出按鈕，拖曳至指定位置。
+              </div>
+              <div class="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800">
+                <strong class="text-amber-400 block mb-1">一鍵切換「隱藏/顯示表單」</strong>
+                在次級工具列中點擊 <code class="text-amber-300 font-bold">👁️ 隱藏互動式表單</code>，即可瞬間將所有表單外框與預覽隱藏，回歸純淨文件檢視；再次點擊即可恢復互動輸入。
+              </div>
+            </div>
+            <p class="text-xs text-zinc-400">
+              * 貼心設計：表單輸入框內建智慧失焦防護機制，在點擊輸入時不會發生游標意外跳出或無法連續輸入的問題。
+            </p>
+          </div>
+        </div>
+
+        <!-- 第 4 章 -->
+        <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 sm:p-8">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-8 h-8 rounded-lg bg-rose-600 text-white font-black text-sm flex items-center justify-center">04</span>
+            <h3 class="text-xl font-bold text-white">電子簽章、核准印章與批註審閱</h3>
+          </div>
+          <div class="text-sm text-zinc-300 leading-relaxed space-y-3">
+            <ul class="space-y-3 text-xs sm:text-sm">
+              <li class="flex items-start gap-2.5">
+                <span class="text-rose-400 font-bold">✍️</span>
+                <div>
+                  <strong>手寫觸控電子簽名：</strong>
+                  點擊切換至「🖍️ 註解與簽名」模組，按下「✍️ 電子簽名」。系統提供流暢的手寫畫布，您可以用滑鼠或觸控筆親筆簽名，完成後可選擇筆跡顏色並自動透明去背存為常駐簽章，下次即可一鍵直接蓋在合約末端。
+                </div>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <span class="text-rose-400 font-bold">🔏</span>
+                <div>
+                  <strong>商務審核圖章庫：</strong>
+                  內建「審核通過」、「機密文件」、「急件處理」、「作廢無效」等專業印章，支援自訂文字與蓋章日期，滿足公文與商務合約簽核流程。
+                </div>
+              </li>
+              <li class="flex items-start gap-2.5">
+                <span class="text-rose-400 font-bold">🖍️</span>
+                <div>
+                  <strong>螢光筆與畫線標註：</strong>
+                  提供黃色、綠色、粉色螢光標記筆，支援自由手繪劃記與便條紙註釋，所有標記均會自動彙整於左側抽屜的「註解列表」。
+                </div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- 第 5 章 -->
+        <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 sm:p-8">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-8 h-8 rounded-lg bg-purple-600 text-white font-black text-sm flex items-center justify-center">05</span>
+            <h3 class="text-xl font-bold text-white">離線神經網絡 OCR 繁中識別與框選辨識</h3>
+          </div>
+          <div class="text-sm text-zinc-300 leading-relaxed space-y-3">
+            <p>
+              ProPDF Studio 打破了傳統 OCR 辨識需要付費上傳雲端的隱私疑慮，軟體直接內建了 13MB 官方頂級 <code class="text-purple-300">tessdata_best</code> 繁體中文深度學習權重模型。
+            </p>
+            <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2 text-xs">
+              <p><strong class="text-purple-400">如何使用 OCR 功能：</strong></p>
+              <p>1. 點擊頂部模組列的「🔍 掃描轉文字 (OCR)」。</p>
+              <p>2. 選擇辨識語言（預設為「繁體中文 + 英文」）。</p>
+              <p>3. <strong>全頁辨識：</strong>點擊「⚡ 開始全頁 OCR 辨識」，系統自動進行 2x 超解析度放大與自適應二值化去底色，完成後將內文轉換為可編輯之文字區塊。</p>
+              <p>4. <strong>局部區域框選辨識：</strong>若只需要提取表格或局部圖段，請使用「🔲 框選區域辨識」，在圖檔上拉出矩形框即可精準提取該區域文字！</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 第 6 章 -->
+        <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 sm:p-8">
+          <div class="flex items-center gap-3 mb-4">
+            <span class="w-8 h-8 rounded-lg bg-teal-600 text-white font-black text-sm flex items-center justify-center">06</span>
+            <h3 class="text-xl font-bold text-white">防誤觸 F5、自動暫存災難復原與安全密碼</h3>
+          </div>
+          <div class="text-sm text-zinc-300 leading-relaxed space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800">
+                <strong class="text-teal-400 block mb-1">🛡️ 自動暫存與 F5 誤觸攔截</strong>
+                每次編輯操作後 1.2 秒內，系統無感寫入 IndexedDB 本機資料庫。當您不小心誤按鍵盤 F5 或 Ctrl+R 時，軟體會立即彈出確認防護對話框；即使電腦意外重啟，頂部會顯示「⚡ 立即還原草稿」藥丸，點擊立即恢復最後編輯狀態。
+              </div>
+              <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800">
+                <strong class="text-cyan-400 block mb-1">🔒 密碼保護與個資塗黑</strong>
+                前往「🛡️ 密碼保護與個資塗黑」模組，設定「開啟密碼」或限制防拷貝/防列印權限；使用「⬛ 個資塗黑」刷過敏感的電話、身分證字號或財務數字，系統會進行物理抹除，保證輸出後的 PDF 絕無法被反白複製。
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 常用快捷鍵一覽 (Shortcuts) ================= -->
+  <section id="shortcuts" class="py-20 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-800 text-zinc-300 text-xs font-semibold mb-3">
+        <span>鍵盤流極速操作</span>
+      </div>
+      <h2 class="text-3xl font-extrabold text-white tracking-tight">常用快捷鍵清單</h2>
+      <p class="text-zinc-400 mt-2 text-sm">記住這幾組核心快速鍵，讓您的 PDF 處理效率倍增。</p>
+    </div>
+
+    <div class="overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/60 shadow-xl">
+      <table class="w-full text-left text-xs sm:text-sm">
+        <thead class="bg-zinc-800/80 text-zinc-300 border-b border-zinc-700 font-bold">
+          <tr>
+            <th class="py-3 px-4 sm:px-6">功能描述</th>
+            <th class="py-3 px-4 sm:px-6">快捷鍵組合</th>
+            <th class="py-3 px-4 sm:px-6 hidden sm:table-cell">適用範圍</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-zinc-800/80 font-mono text-zinc-300">
+          <tr class="hover:bg-zinc-800/40">
+            <td class="py-3 px-4 sm:px-6 font-sans">建立新檔案 / 範本庫</td>
+            <td class="py-3 px-4 sm:px-6 text-red-400 font-bold">Ctrl + N</td>
+            <td class="py-3 px-4 sm:px-6 hidden sm:table-cell text-zinc-400 font-sans">全域</td>
+          </tr>
+          <tr class="hover:bg-zinc-800/40">
+            <td class="py-3 px-4 sm:px-6 font-sans">開啟本機 PDF / 專案檔</td>
+            <td class="py-3 px-4 sm:px-6 text-red-400 font-bold">Ctrl + O</td>
+            <td class="py-3 px-4 sm:px-6 hidden sm:table-cell text-zinc-400 font-sans">全域</td>
+          </tr>
+          <tr class="hover:bg-zinc-800/40">
+            <td class="py-3 px-4 sm:px-6 font-sans">儲存可編輯專案檔 (.propdf)</td>
+            <td class="py-3 px-4 sm:px-6 text-purple-400 font-bold">Ctrl + S</td>
+            <td class="py-3 px-4 sm:px-6 hidden sm:table-cell text-zinc-400 font-sans">全域</td>
+          </tr>
+          <tr class="hover:bg-zinc-800/40">
+            <td class="py-3 px-4 sm:px-6 font-sans">匯出為標準 PDF / 列印</td>
+            <td class="py-3 px-4 sm:px-6 text-emerald-400 font-bold">Ctrl + P</td>
+            <td class="py-3 px-4 sm:px-6 hidden sm:table-cell text-zinc-400 font-sans">全域</td>
+          </tr>
+          <tr class="hover:bg-zinc-800/40">
+            <td class="py-3 px-4 sm:px-6 font-sans">復原上一步 (Undo)</td>
+            <td class="py-3 px-4 sm:px-6 text-blue-400 font-bold">Ctrl + Z</td>
+            <td class="py-3 px-4 sm:px-6 hidden sm:table-cell text-zinc-400 font-sans">文字/圖形/操作</td>
+          </tr>
+          <tr class="hover:bg-zinc-800/40">
+            <td class="py-3 px-4 sm:px-6 font-sans">重做下一步 (Redo)</td>
+            <td class="py-3 px-4 sm:px-6 text-blue-400 font-bold">Ctrl + Y 或 Ctrl + Shift + Z</td>
+            <td class="py-3 px-4 sm:px-6 hidden sm:table-cell text-zinc-400 font-sans">歷程記錄</td>
+          </tr>
+          <tr class="hover:bg-zinc-800/40">
+            <td class="py-3 px-4 sm:px-6 font-sans">全文搜尋與正則取代</td>
+            <td class="py-3 px-4 sm:px-6 text-amber-400 font-bold">Ctrl + F</td>
+            <td class="py-3 px-4 sm:px-6 hidden sm:table-cell text-zinc-400 font-sans">畫布檢視</td>
+          </tr>
+          <tr class="hover:bg-zinc-800/40">
+            <td class="py-3 px-4 sm:px-6 font-sans">刪除選取之文字框或物件</td>
+            <td class="py-3 px-4 sm:px-6 text-rose-400 font-bold">Delete / Backspace</td>
+            <td class="py-3 px-4 sm:px-6 hidden sm:table-cell text-zinc-400 font-sans">編輯模式</td>
+          </tr>
+          <tr class="hover:bg-zinc-800/40">
+            <td class="py-3 px-4 sm:px-6 font-sans">防手滑重新整理攔截保護</td>
+            <td class="py-3 px-4 sm:px-6 text-teal-400 font-bold">F5 / Ctrl + R</td>
+            <td class="py-3 px-4 sm:px-6 hidden sm:table-cell text-zinc-400 font-sans">自動彈出確認防止流失</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= 常見問題 FAQ ================= -->
+  <section id="faq" class="py-20 bg-zinc-900/40 border-t border-zinc-800">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-14">
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 text-red-400 text-xs font-semibold mb-3">
+          <span>解惑釋疑</span>
+        </div>
+        <h2 class="text-3xl font-extrabold text-white tracking-tight">常見問題解答 (FAQ)</h2>
+      </div>
+
+      <div class="space-y-4">
+        <!-- Q1 -->
+        <details class="group bg-zinc-900 border border-zinc-800 rounded-xl p-5 open:border-zinc-700 transition">
+          <summary class="flex justify-between items-center font-bold text-white text-sm sm:text-base cursor-pointer list-none">
+            <span>Q1：三個下載版本有什麼差別？我應該下載哪一個？</span>
+            <span class="text-zinc-500 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="mt-3 text-xs sm:text-sm text-zinc-400 leading-relaxed pt-2 border-t border-zinc-800">
+            • <strong>單一檔案執行版（最推薦）</strong>：只有一個獨立的 <code class="text-zinc-300">.exe</code>，不需要安裝也不用解壓，雙點即可運行。<br />
+            • <strong>綠色免安裝 ZIP 版</strong>：適合放在隨身碟（USB）隨插即用，解壓縮後直接執行。<br />
+            • <strong>Windows 安裝版</strong>：適合希望在桌面建立圖示捷徑與開始功能表的使用者。
+          </div>
+        </details>
+
+        <!-- Q2 -->
+        <details class="group bg-zinc-900 border border-zinc-800 rounded-xl p-5 open:border-zinc-700 transition">
+          <summary class="flex justify-between items-center font-bold text-white text-sm sm:text-base cursor-pointer list-none">
+            <span>Q2：使用 OCR 功能時需要連上網路或額外下載語言包嗎？</span>
+            <span class="text-zinc-500 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="mt-3 text-xs sm:text-sm text-zinc-400 leading-relaxed pt-2 border-t border-zinc-800">
+            <strong>不需要！</strong> 本程式已將官方最頂級的 13MB 繁體中文深度學習模型（<code class="text-zinc-300">chi_tra.traineddata</code>）及英文模型完整打包在程式內部。無論是在無網路的飛機上、保密內網或機房，都能 100% 離線秒速辨識，機密文件絕不外流。
+          </div>
+        </details>
+
+        <!-- Q3 -->
+        <details class="group bg-zinc-900 border border-zinc-800 rounded-xl p-5 open:border-zinc-700 transition">
+          <summary class="flex justify-between items-center font-bold text-white text-sm sm:text-base cursor-pointer list-none">
+            <span>Q3：匯出的 PDF 會出現排版走位或邊界多出大片空白嗎？</span>
+            <span class="text-zinc-500 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="mt-3 text-xs sm:text-sm text-zinc-400 leading-relaxed pt-2 border-t border-zinc-800">
+            <strong>不會！</strong> ProPDF Studio 採用高規格向量 1:1 等比 A4 輸出技術（595.28px × 841.89px 精確映射至 210mm × 297mm 印刷規格），並已徹底修正傳統列印視窗中右側與下方的留白問題。
+          </div>
+        </details>
+
+        <!-- Q4 -->
+        <details class="group bg-zinc-900 border border-zinc-800 rounded-xl p-5 open:border-zinc-700 transition">
+          <summary class="flex justify-between items-center font-bold text-white text-sm sm:text-base cursor-pointer list-none">
+            <span>Q4：如果編輯到一半不小心按到 F5 或電腦當機怎麼辦？</span>
+            <span class="text-zinc-500 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div class="mt-3 text-xs sm:text-sm text-zinc-400 leading-relaxed pt-2 border-t border-zinc-800">
+            不用擔心！軟體內建「自動暫存防護機制」，每次編輯 1.2 秒內會自動存入本地高容量 IndexedDB。若誤按 F5 會主動攔截提示；若強行重開，工具列頂部會出現「⚡ 立即還原草稿」藥丸，點擊即可瞬間找回所有編輯內容！
+          </div>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 頁尾 Footer ================= -->
+  <footer class="py-12 bg-zinc-950 border-t border-zinc-800/80 text-zinc-500 text-xs">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <div class="w-7 h-7 rounded-lg bg-red-600 flex items-center justify-center font-black text-white text-xs">
+          PDF
+        </div>
+        <span class="text-zinc-300 font-bold text-sm">ProPDF Studio 1.0.0</span>
+        <span class="text-zinc-600">|</span>
+        <span>專業直覺 PDF 編輯與簽署桌面工具</span>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-6 text-zinc-400">
+        <a href="#hero" class="hover:text-white transition">回頂部 ↑</a>
+        <a href="#download" class="hover:text-white transition">下載載點</a>
+        <a href="#features" class="hover:text-white transition">軟體特色</a>
+        <a href="#guide" class="hover:text-white transition">使用手冊</a>
+        <a href="#shortcuts" class="hover:text-white transition">快捷鍵</a>
+      </div>
+
+      <div class="text-zinc-600 text-center md:text-right">
+        版權所有 © 2026 ProPDF Studio. 保留一切權利。<br />
+        致力於提供極致純淨、離線安全的 PDF 生產力工具。
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
