@@ -503,7 +503,7 @@
               <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800">
                 <span class="font-bold text-blue-400 block mb-1">1. 頂部精簡工具列</span>
                 <p class="text-xs text-zinc-400">
-                  左側包含 <code class="text-zinc-200">➕ 新建</code>、<code class="text-zinc-200">📂 開啟</code> 與 <code class="text-zinc-200">↩️ 上一步 / ↪️ 下一步</code>；中間為四大閱讀模式（日間、護眼、暗黑、羊皮紙）；右側包含自動暫存藥丸、<code class="text-purple-400">📦 存專案</code>、<code class="text-cyan-400">👁️ 預覽</code> 與 <code class="text-red-400">💾 另存 PDF</code>。
+                  左側包含 <code class="text-zinc-200">➕ 新建</code>、<code class="text-zinc-200">📂 開啟</code> 與 <code class="text-zinc-200">↩️ 上一步 / ↪️ 下一步</code>；中間為四大閱讀模式；右側包含自動暫存藥丸、<code class="text-purple-400">📦 存專案</code>、<code class="text-cyan-400">👁️ 預覽</code>、<code class="text-red-400">💾 另存 PDF</code>、<code class="text-blue-400">📝 轉存 Word</code> 與 <code class="text-emerald-400">📊 轉存 Excel</code>。
                 </p>
               </div>
               <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800">
@@ -520,9 +520,11 @@
               </div>
             </div>
             <div class="p-4 rounded-xl bg-zinc-950/80 border-l-4 border-blue-500 text-xs text-zinc-400">
-              <strong class="text-blue-300">💡 專家提示（存專案 vs 另存 PDF）：</strong><br />
-              • <strong>📦 存專案 (.propdf)</strong>：會保留所有文字區塊、表單物件、簽章圖層等所有非破壞性向量資料，日後重新開啟可隨時再次調整。<br />
-              • <strong>💾 另存 PDF</strong>：產生符合國際標準的 PDF 檔案，供分享給他人檢視、送印或在任何手機與電腦上開啟。
+              <strong class="text-blue-300">💡 專家提示（多元匯出格式指南）：</strong><br />
+              • <strong>📦 存專案 (.propdf)</strong>：保留所有向量物件、字型樣式、表單欄位與圖層，供日後 100% 重新載入繼續編輯。<br />
+              • <strong>💾 另存 PDF</strong>：產生符合國際標準的高解析度 PDF 檔案，供正式列印、送簽或跨平台檢視。<br />
+              • <strong>📝 轉存 Word (.doc)</strong>：完整保留所有頁面的標題大小、文字段落與行距，直接可用 Microsoft Word 開啟編輯。<br />
+              • <strong>📊 轉存 Excel (.csv)</strong>：將文件中的條文段落、表格數據與互動表單填寫內容匯出為 CSV 試算表（UTF-8 繁中防亂碼）。
             </div>
           </div>
         </div>
@@ -611,7 +613,7 @@
           </div>
           <div class="text-sm text-zinc-300 leading-relaxed space-y-3">
             <p>
-              ProPDF Studio 打破了傳統 OCR 辨識需要付費上傳雲端的隱私疑慮，軟體直接內建了 13MB 官方頂級 <code class="text-purple-300">tessdata_best</code> 繁體中文深度學習權重模型。
+              ProPDF Studio 打破了傳統 OCR 辨識需要付費上傳雲端的隱私疑慮，軟體直接內建了 13MB 官方頂級 <code class="text-purple-300">tessdata_best</code> 繁體中文深度學習權重模型。此外，針對手寫稿、草書或複雜表格，更內建支援 Google Gemini 雲端視覺大模型（預設模型為 <code class="text-emerald-400">gemini-flash-lite</code>，並開放使用者自行輸入任意 Gemini 多模態模型名稱）。
             </p>
             <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2 text-xs">
               <p><strong class="text-purple-400">如何使用 OCR 功能：</strong></p>
@@ -619,6 +621,7 @@
               <p>2. 選擇辨識語言（預設為「繁體中文 + 英文」）。</p>
               <p>3. <strong>全頁辨識：</strong>點擊「⚡ 開始全頁 OCR 辨識」，系統自動進行 2x 超解析度放大與自適應二值化去底色，完成後將內文轉換為可編輯之文字區塊。</p>
               <p>4. <strong>局部區域框選辨識：</strong>若只需要提取表格或局部圖段，請使用「🔲 框選區域辨識」，在圖檔上拉出矩形框即可精準提取該區域文字！</p>
+              <p>5. <strong>AI 視覺引擎設定：</strong>點擊「⚙️ OCR 增強與 AI 引擎」，可切換為雲端視覺 AI，輸入 API Key 後可自訂模型（預設為 <code>gemini-flash-lite</code>，亦可自由輸入其他模型），兼顧極致隱私與最高識別準確率。</p>
             </div>
           </div>
         </div>
@@ -630,14 +633,24 @@
             <h3 class="text-xl font-bold text-white">防誤觸 F5、自動暫存災難復原與安全密碼</h3>
           </div>
           <div class="text-sm text-zinc-300 leading-relaxed space-y-3">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2">
                 <strong class="text-teal-400 block mb-1">🛡️ 自動暫存與 F5 誤觸攔截</strong>
                 每次編輯操作後 1.2 秒內，系統無感寫入 IndexedDB 本機資料庫。當您不小心誤按鍵盤 F5 或 Ctrl+R 時，軟體會立即彈出確認防護對話框；即使電腦意外重啟，頂部會顯示「⚡ 立即還原草稿」藥丸，點擊立即恢復最後編輯狀態。
               </div>
-              <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800">
-                <strong class="text-cyan-400 block mb-1">🔒 密碼保護與個資塗黑</strong>
-                前往「🛡️ 密碼保護與個資塗黑」模組，設定「開啟密碼」或限制防拷貝/防列印權限；使用「⬛ 個資塗黑」刷過敏感的電話、身分證字號或財務數字，系統會進行物理抹除，保證輸出後的 PDF 絕無法被反白複製。
+              <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2">
+                <strong class="text-rose-400 block mb-1">🔒 雙層密碼安全體系（開啟密碼 vs 權限密碼）</strong>
+                • <strong>開啟密碼 (User PW)</strong>：設定後，啟動保護時會自動遮蔽頁面並呈現安全解鎖關卡，輸入正確開啟密碼後才能檢視頁面。<br />
+                • <strong>權限管理密碼 (Owner PW)</strong>：設定後可用於解鎖以下被勾選限制的操作，確保公文與機密合約不被竄改。
+              </div>
+            </div>
+            <div class="p-4 rounded-xl bg-zinc-950/80 border border-rose-500/30 text-xs text-zinc-300 space-y-2">
+              <strong class="text-rose-300 block">🚫 四大實質權限強制攔截機制（點擊受限項目自動彈出解鎖對話框）：</strong>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-zinc-400">
+                <div>• <strong>另存 PDF / 檔案匯出</strong>：未獲授權時禁止另存 PDF、Word、Excel 及系統列印。</div>
+                <div>• <strong>頁面整理</strong>：未獲授權時禁止插入新頁、旋轉角度、刪除或拖曳重排頁面。</div>
+                <div>• <strong>註解與簽名</strong>：未獲授權時禁止新增手繪簽名、審核印章、螢光筆及便利貼。</div>
+                <div>• <strong>內文修改與複製</strong>：未獲授權時禁止雙擊修改文字框、編輯表單及 Ctrl+C 複製。</div>
               </div>
             </div>
           </div>
