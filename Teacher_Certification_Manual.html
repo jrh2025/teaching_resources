@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>高級中等以下學校及幼兒園教師資格考試全類科智慧刷題系統 - 完整技術手冊與使用說明指南</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #1e293b;
+      background-color: #f8fafc;
+      line-height: 1.75;
+    }
+    .prose-manual h1 { font-size: 2.25rem; font-weight: 900; color: #0f172a; margin-bottom: 1rem; }
+    .prose-manual h2 { font-size: 1.65rem; font-weight: 800; color: #1e293b; margin-top: 2.5rem; margin-bottom: 1rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+    .prose-manual h3 { font-size: 1.25rem; font-weight: 700; color: #334155; margin-top: 1.75rem; margin-bottom: 0.75rem; }
+    .prose-manual p { margin-bottom: 1rem; }
+    .code-block {
+      background-color: #0f172a;
+      color: #e2e8f0;
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      margin-bottom: 1.25rem;
+    }
+    .table-custom {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.9rem;
+    }
+    .table-custom th, .table-custom td {
+      border: 1px solid #cbd5e1;
+      padding: 0.75rem 1rem;
+      text-align: left;
+    }
+    .table-custom th {
+      background-color: #f1f5f9;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .table-custom tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    /* 列印與 PDF 分頁樣式 */
+    @page {
+      size: A4;
+      margin: 18mm 16mm;
+    }
+    @media print {
+      body { background-color: #ffffff; color: #000000; }
+      .no-print { display: none !important; }
+      .page-break { page-break-before: always; }
+      .avoid-break { page-break-inside: avoid; }
+      .prose-manual h2 { page-break-before: always; border-bottom: 2px solid #334155; }
+      .shadow-sm, .shadow-md, .shadow-xl { box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
+      a { text-decoration: none; color: inherit; }
+    }
+  </style>
+</head>
+<body class="py-10 px-4 sm:px-8 max-w-5xl mx-auto">
+
+  <!-- 封面卡片 -->
+  <header class="bg-gradient-to-r from-indigo-700 via-indigo-800 to-violet-800 rounded-3xl p-8 sm:p-12 text-white shadow-xl mb-12 avoid-break">
+    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-xs font-semibold backdrop-blur-sm mb-4">
+      <span>官方標準題庫</span>
+      <span>•</span>
+      <span>110–115年度全類科</span>
+      <span>•</span>
+      <span>技術架構與操作指南</span>
+    </div>
+    <h1 class="text-3xl sm:text-4xl font-black tracking-tight leading-tight mb-4">
+      高級中等以下學校及幼兒園教師資格考試<br>
+      全類科智慧刷題與錯題特訓系統
+    </h1>
+    <p class="text-indigo-100 text-sm sm:text-base max-w-2xl leading-relaxed mb-6">
+      完整技術架構、Zero-Backend 運作原理、認知卸載設計理念與功能實務操作手冊。
+    </p>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-white/20 text-xs sm:text-sm">
+      <div>
+        <div class="text-indigo-200 text-xs">系統檔案</div>
+        <div class="font-bold">Teacher_Certification.html</div>
+      </div>
+      <div>
+        <div class="text-indigo-200 text-xs">涵蓋題數</div>
+        <div class="font-bold">2,927 題完整收錄</div>
+      </div>
+      <div>
+        <div class="text-indigo-200 text-xs">架構技術</div>
+        <div class="font-bold">HTML5 / Pako / sql.js</div>
+      </div>
+      <div>
+        <div class="text-indigo-200 text-xs">文件發布</div>
+        <div class="font-bold">2026年10月修訂版</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 快捷目錄導覽 (No Print) -->
+  <nav class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-12 no-print">
+    <h3 class="text-base font-bold text-slate-900 mb-3 flex items-center gap-2">
+      <span>📑</span><span>手冊章節快速導航</span>
+    </h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 text-xs sm:text-sm">
+      <a href="#chap1" class="p-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 transition-colors font-medium">1. 設計理念與核心願景</a>
+      <a href="#chap2" class="p-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 transition-colors font-medium">2. 系統架構與運作原理</a>
+      <a href="#chap3" class="p-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 transition-colors font-medium">3. 資料庫 Schema 規格</a>
+      <a href="#chap4" class="p-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 transition-colors font-medium">4. 完整功能模組使用手冊</a>
+      <a href="#chap5" class="p-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 transition-colors font-medium">5. PDF 轉題庫工具指南</a>
+      <a href="#chap6" class="p-2.5 rounded-xl bg-slate-50 hover:bg-indigo-50 hover:text-indigo-700 transition-colors font-medium">6. 常見問答與故障排除</a>
+    </div>
+  </nav>
+
+  <article class="prose-manual space-y-12 bg-white rounded-3xl p-8 sm:p-12 border border-slate-200 shadow-sm">
+
+    <!-- 第一章 -->
+    <section id="chap1" class="space-y-4">
+      <h2>第一章 設計理念與核心願景</h2>
+      <h3>1.1 研發背景與考生痛點分析</h3>
+      <p>
+        每年參加教育部「高級中等以下學校及幼兒園教師資格考試」（教師檢定）的實習生與師資生高達數萬人。然而傳統的考古題複習面臨諸多痛點：
+      </p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+          <div class="font-bold text-slate-900 mb-1">❌ 試題分散難以檢索</div>
+          <p class="text-xs text-slate-600">歷屆試題散落在數十份 PDF 中，試題本與參考答案分開存放，核對極度耗時耗神。</p>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+          <div class="font-bold text-slate-900 mb-1">❌ 題組文章閱讀體驗極差</div>
+          <p class="text-xs text-slate-600">長篇閱讀測驗動輒上千字，一般網頁必須頻繁上下滾動，嚴重打斷作答思路與解題專注力。</p>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+          <div class="font-bold text-slate-900 mb-1">❌ 資訊過載缺乏單科專注</div>
+          <p class="text-xs text-slate-600">多數考生僅報考國小、中等、幼兒園或特教其中一種，強行載入全科會造成記憶體臃腫與操作困擾。</p>
+        </div>
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+          <div class="font-bold text-slate-900 mb-1">❌ 口試試教缺乏念稿排版</div>
+          <p class="text-xs text-slate-600">筆試通過後緊接著是面試試教，需要朗讀擬答訓練語感，一般題庫系統字體過小無法做為念稿工具。</p>
+        </div>
+      </div>
+
+      <h3>1.2 四大核心設計哲學</h3>
+      <ul class="list-disc pl-6 space-y-2 text-sm text-slate-700">
+        <li><strong>零後端（Zero-Backend）與離線優先（Offline-First）</strong>：純前端單一檔案架構，題庫、高解析圖片、WebAssembly SQLite 與圖表引擎全數內嵌，下載單一 HTML 即可離線永久使用。</li>
+        <li><strong>認知卸載（Cognitive Offloading）</strong>：排除多餘視覺雜訊，透過「🧘 極致專注模式」、題組長文摺疊與手機懸浮抽屜，將考生的注意力完全釋放至深度知識提取。</li>
+        <li><strong>考科自主瘦身（Single-Category Optimization）</strong>：內建題庫管理員，一鍵剔除其餘無關考科，專為報考類科提供毫秒級的極速反應。</li>
+        <li><strong>念稿與試教口說雙用（Speech-Ready Typography）</strong>：首創 4 段級距式字體縮放，提供專為朗讀訓練打造的 28px 巨字排版與 2.15 倍行距，無縫銜接教師甄試複試準備。</li>
+      </ul>
+    </section>
+
+    <!-- 第二章 -->
+    <section id="chap2" class="space-y-4">
+      <h2>第二章 系統架構與技術運作原理</h2>
+      <h3>2.1 單一檔案 Web App (SFA) 架構全景</h3>
+      <p>
+        系統突破傳統網頁應用程式對後端 API 伺服器與資料庫主機的依賴，採用先進的單一檔案封裝技術：
+      </p>
+      <div class="p-4 rounded-2xl bg-indigo-50 border border-indigo-200 text-xs sm:text-sm text-indigo-950 font-mono space-y-2">
+        <div>[Teacher_Certification.html]</div>
+        <div class="pl-4">├── HTML5 結構層 (儀表板 / 練習區 / 專注浮動條 / 題庫管理 Modal)</div>
+        <div class="pl-4">├── Tailwind CSS + Custom Typography (原子化 CSS + 4段念稿字級樣式)</div>
+        <div class="pl-4">├── WebAssembly SQLite (sql.js 1.10.3) + Chart.js 圖表引擎</div>
+        <div class="pl-4">├── Pako.js 2.1.0 (zlib/deflate 前端即時解壓縮)</div>
+        <div class="pl-4">└── COMPRESSED_EXAM_DATA (5.6MB Base64 內嵌高密度全量題庫)</div>
+      </div>
+
+      <h3>2.2 數據層雙軌運作機制</h3>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-4">
+        <div class="p-4 rounded-2xl bg-white border border-slate-300 shadow-xs">
+          <div class="font-bold text-indigo-700 text-sm mb-1">軌道一：內建記憶體資料集 (In-Memory)</div>
+          <p class="text-xs text-slate-600">
+            檔案開啟時，<code>initBuiltInDataset()</code> 透過 <code>atob()</code> 與 <code>pako.inflate()</code> 在瀏覽器記憶體中將 Base64 字串瞬間還原為 2,927 道去重題目 JSON，耗時僅約 50～80 毫秒，實現完全離線免伺服器。
+          </p>
+        </div>
+        <div class="p-4 rounded-2xl bg-white border border-slate-300 shadow-xs">
+          <div class="font-bold text-indigo-700 text-sm mb-1">軌道二：WebAssembly SQLite 動態掛載</div>
+          <p class="text-xs text-slate-600">
+            點擊「📂 載入 .db 題庫」時，啟動 <code>sql.js</code> 引擎，直接在瀏覽器記憶體中以二進位 ArrayBuffer 掛載 SQLite 資料庫，執行標準 SQL 語法查詢並動態替換題目。
+          </p>
+        </div>
+      </div>
+
+      <h3>2.3 本機持久化存儲模型 (localStorage)</h3>
+      <p class="text-sm">系統所有作答紀錄皆嚴格保存在考生本機端，無個資洩露風險：</p>
+      <table class="table-custom">
+        <thead>
+          <tr>
+            <th>Key 名稱</th>
+            <th>儲存結構</th>
+            <th>功能描述</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>teacherExamUserRecords</code></td>
+            <td>JSON Array</td>
+            <td>歷次刷題與模考 session 紀錄（答題數、正確率、耗時）</td>
+          </tr>
+          <tr>
+            <td><code>teacherExamUserMistakes</code></td>
+            <td>JSON Object</td>
+            <td>錯題本字典，紀錄每題的答錯次數、連續答對數與口訣筆記</td>
+          </tr>
+          <tr>
+            <td><code>teacherExamFontLevelIdx</code></td>
+            <td>Integer (0~3)</td>
+            <td>儲存使用者偏好的排版字級（0:標準, 1:大字, 2:特大, 3:念稿巨字）</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 第三章 -->
+    <section id="chap3" class="space-y-4">
+      <h2>第三章 資料庫 Schema 規格</h2>
+      <h3>3.1 試卷資料表結構（exams）</h3>
+      <p class="text-sm">定義歷屆考卷規格（共 108 卷），對應學習儀表板試卷卡片呈現：</p>
+      <table class="table-custom">
+        <thead>
+          <tr><th>欄位名</th><th>型態</th><th>說明</th><th>範例值</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>exam_id</code></td><td>TEXT (PK)</td><td>考卷編號</td><td>115_國民小學_國語文能力測驗</td></tr>
+          <tr><td><code>year</code></td><td>INTEGER</td><td>考試民國年度</td><td>115</td></tr>
+          <tr><td><code>category</code></td><td>TEXT</td><td>師資類科</td><td>國民小學</td></tr>
+          <tr><td><code>sub_category</code></td><td>TEXT</td><td>細部組別</td><td>共同、資優組、身障組</td></tr>
+          <tr><td><code>subject</code></td><td>TEXT</td><td>科目名稱</td><td>國語文能力測驗、數學能力測驗</td></tr>
+          <tr><td><code>exam_time_minutes</code></td><td>INTEGER</td><td>作答時長（分鐘）</td><td>80 或 100</td></tr>
+          <tr><td><code>mc_count</code></td><td>INTEGER</td><td>選擇題數量</td><td>25 或 30</td></tr>
+          <tr><td><code>non_mc_count</code></td><td>INTEGER</td><td>非選題數量</td><td>4 或 5</td></tr>
+          <tr><td><code>total_questions</code></td><td>INTEGER</td><td>全卷總題數</td><td>30</td></tr>
+        </tbody>
+      </table>
+
+      <h3>3.2 試題資料表結構（questions）</h3>
+      <p class="text-sm">收錄完整試題、長篇引文、選項與解析（共 2,927 道去重題目）：</p>
+      <table class="table-custom">
+        <thead>
+          <tr><th>欄位名</th><th>型態</th><th>說明</th><th>關鍵機制</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>question_id</code></td><td>TEXT (PK)</td><td>試題唯一 ID</td><td>如 <code>115_國民小學_國語文能力測驗_MC_01</code></td></tr>
+          <tr><td><code>passage_text</code></td><td>TEXT</td><td><strong>題組閱讀長文</strong></td><td><strong>自動關聯題組，支援展開折疊與手機浮動抽屜</strong></td></tr>
+          <tr><td><code>question_text</code></td><td>TEXT</td><td>題目題幹</td><td>保留段落縮排與提示情境</td></tr>
+          <tr><td><code>option_a~d</code></td><td>TEXT</td><td>ABCD 選項內容</td><td>自動分離，選項按鈕觸控區域最佳化</td></tr>
+          <tr><td><code>official_answer</code></td><td>TEXT</td><td>官方標準答案</td><td>支援 <code>C</code>、<code>A、B</code> 複選及 <code>一律給分</code></td></tr>
+          <tr><td><code>model_answer</code></td><td>TEXT</td><td>非選題高分擬答</td><td>官方給分標準與條列式作答示範</td></tr>
+          <tr><td><code>key_concepts</code></td><td>TEXT</td><td>核心概念標籤</td><td>如 <code>108課綱, 評量規準</code>，支援點擊一鍵專項特訓</td></tr>
+          <tr><td><code>image_base64</code></td><td>TEXT</td><td>內嵌圖檔</td><td>包含數學幾何圖形、教育圖表之 Base64 資料</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 第四章 -->
+    <section id="chap4" class="space-y-6">
+      <h2>第四章 完整功能模組深度使用指南</h2>
+
+      <h3>4.1 師資類科切換與選單連動</h3>
+      <p class="text-sm">
+        點擊頂部【幼兒園】、【國民小學】、【中等學校】、【特殊教育】膠囊標籤，系統即刻自全量題庫中進行動態過濾，同時更新歷年試卷清單、考試科目選單，並將共同考科（國語文）自動映射歸屬。
+      </p>
+
+      <h3>4.2 學習儀表板（Dashboard）與歷年試卷卡片</h3>
+      <ul class="list-disc pl-6 space-y-1 text-sm text-slate-700">
+        <li><strong>總體學習 KPI</strong>：即時統計目前類科累計作答數、正確率、錯題複習進度。</li>
+        <li><strong>弱點概念雷達</strong>：自動分析答錯頻率最高的知識點標籤（如 `#課程評鑑`、`#艾瑞克森心理社會期`）。</li>
+        <li><strong>歷年試卷卡片（Exam Cards Grid）</strong>：依年度由新至舊（115→110年）完整排列。每張試卷卡片皆具備：
+          <ul class="list-circle pl-6 mt-1">
+            <li><strong>📝 循序刷題</strong>：照題號循序練習，可即時查看詳解。</li>
+            <li><strong>⏱️ 全真模考</strong>：進入官方 80/100 分鐘倒數計時模擬考，模擬真實考場情境。</li>
+          </ul>
+        </li>
+      </ul>
+
+      <h3>4.3 刷題與全真模擬（Practice & Mock Exam）</h3>
+      <p class="text-sm">
+        主介面分為左側「試題卡片」與右側「答題進度卡」：
+      </p>
+      <ul class="list-disc pl-6 space-y-1 text-sm text-slate-700">
+        <li><strong>選擇題作答</strong>：點選選項按鈕或使用鍵盤 <code>1～4</code>、<code>A～D</code> 快速劃記。</li>
+        <li><strong>非選擇題擬稿與自評規準</strong>：提供打字作答框（自動計字）。點擊「👁️ 顯示高分擬答」展開官方給分規準，支援四階自評（需加強 30% / 部分掌握 60% / 良好 85% / 完全精熟 100%）。低於 70% 自動加入錯題本。</li>
+        <li><strong>鍵盤快捷鍵</strong>：<code>←</code>（上一題）、<code>→</code>（下一題）、<code>F</code>（專注模式）、<code>Esc</code>（退出專注）。</li>
+      </ul>
+
+      <h3>4.4 🧘 極致精簡專注模式（Zen / Focus Mode）</h3>
+      <p class="text-sm">
+        一鍵排除干擾，享受沉浸式刷題：
+      </p>
+      <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-xs sm:text-sm text-amber-950 space-y-2">
+        <div class="font-bold">✨ 專注模式核心特色：</div>
+        <div>• <strong>啟用方式</strong>：點擊頂部橘色「🧘 專注模式」按鈕，或隨時按下鍵盤 <strong><code>F</code></strong> 鍵。</div>
+        <div>• <strong>介面簡化</strong>：全域自動隱藏 header、導覽列、側邊題號抽屜及頁尾，視窗置中於適讀寬度（860px）。</div>
+        <div>• <strong>三大護眼主題</strong>：支援切換「極簡純白」、「護眼暖米（Warm）」與「沉浸深黑（Dark）」。</div>
+        <div>• <strong>隨手返回一般模式</strong>：提供 3 處返回按鈕（頂部浮動列右上角、題目卡片底部操作列、右下角懸浮膠囊），或按 <strong><code>Esc</code></strong> 鍵秒退回標準模式。</div>
+      </div>
+
+      <h3>4.5 🔤 念稿大字排版模式（Speech & Large Text Mode）</h3>
+      <p class="text-sm">
+        專為口試面試與試教朗讀設計，點選頂部「🔤 字級」可循環切換：
+      </p>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center my-3 text-xs">
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium">1. 標準 (16px)</div>
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium">2. 大字 (19px)</div>
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium">3. 特大 (23px)</div>
+        <div class="p-3 bg-indigo-50 border border-indigo-200 rounded-xl font-bold text-indigo-700">4. 🎙️ 念稿巨字 (28px)</div>
+      </div>
+      <p class="text-xs text-slate-600">
+        切換為「念稿巨字」時，文字放大至 28px、行距擴增為 <strong>2.15 倍</strong>，段落清晰，即使站立在螢幕 1～2 公尺外進行口說背誦練習亦清晰可見。
+      </p>
+
+      <h3>4.6 行動端極致適配與閱讀文章抽屜</h3>
+      <ul class="list-disc pl-6 space-y-1 text-sm text-slate-700">
+        <li><strong>觸控熱區最佳化</strong>：選項卡片加大 padding，直立手機單手點擊精準不誤觸。</li>
+        <li><strong>懸浮查看文章抽屜</strong>：遇到長篇閱讀測驗（如國語文題組、教育情境題），手機右下角會出現跳動的 <strong>「📖 查看文章」</strong> 按鈕，點擊立即滑出全螢幕文章抽屜，閱讀完畢關閉即可作答，不必在題目與文章間來回滑動。</li>
+      </ul>
+
+      <h3>4.7 錯題本與弱點消滅特訓（Mistake Book）</h3>
+      <ul class="list-disc pl-6 space-y-1 text-sm text-slate-700">
+        <li><strong>熟練度機制</strong>：答錯自動收錄；在特訓中<strong>連續答對 3 次</strong>，題目狀態自動躍升為「已精熟」並自待加強清單中消滅。</li>
+        <li><strong>概念標籤特訓</strong>：可按標籤（如 `#班級經營`）集中發動「⚡ 啟動錯題消滅戰」。</li>
+      </ul>
+
+      <h3>4.8 歷屆試題檢索庫（Explorer）</h3>
+      <p class="text-sm">
+        支援年度、科目、大題類型複合檢索與全文關鍵字搜尋，檢索結果可一鍵「📝 在刷題練習中開啟」直接作答。
+      </p>
+
+      <h3>4.9 ⚙️ 題庫管理中心（Bank Manager）</h3>
+      <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm space-y-2">
+        <div>• <strong>🎯 類科瘦身</strong>：一鍵清除其他 3 類科題目，只保留目標考科（例如從 2,927 題精簡為國小 981 題），記憶體節省 66%，並可匯出專屬 JSON 題庫。</div>
+        <div>• <strong>📥 擴充更多年度</strong>：直接上傳由 <code>pdf_exam_extractor.py</code> 產出的 JSON 或 SQLite 檔案，無縫擴展 109、108 年考古題。</div>
+        <div>• <strong>➕ 手動新增／✏️ 編輯／🗑️ 刪除</strong>：可線上修正題幹解析或刪除已廢止之爭議題。</div>
+        <div>• <strong>🔄 一鍵還原</strong>：隨時還原回 110–115 全類科官方完整題庫。</div>
+      </div>
+    </section>
+
+    <!-- 第五章 -->
+    <section id="chap5" class="space-y-4">
+      <h2>第五章 題庫自動化轉換與擴充工具</h2>
+      <p class="text-sm">
+        專案內建專用 Python 工具程式 <code>pdf_exam_extractor.py</code>，支援將官方試題本與答案 PDF 一鍵轉為本系統相容之 JSON 與 SQLite 檔案。
+      </p>
+
+      <h3>5.1 轉換指令語法</h3>
+      <div class="code-block">
+# 方式 1：互動引導模式（適合初學者，直接按提示輸入檔案路徑）
+python pdf_exam_extractor.py
+
+# 方式 2：單行指令批次轉換（指定試題本與答案檔）
+python pdf_exam_extractor.py -q "109_國小試題本.pdf" -a "109_國小答案.pdf" -o "109_國小.json" --db "109_國小.db"
+
+# 方式 3：指定年度與類科覆寫
+python pdf_exam_extractor.py -q "試題.pdf" -a "答案.pdf" --year 109 --cat "國民小學" --subj "數學能力測驗"
+      </div>
+
+      <h3>5.2 匯入系統方法</h3>
+      <ol class="list-decimal pl-6 space-y-1 text-sm text-slate-700">
+        <li>產出的 <code>.json</code> 檔案：開啟 <code>Teacher_Certification.html</code> 點擊右上角「⚙️ 題庫管理」→「📥 擴充更多年度」→ 點選檔案即可完成匯入。</li>
+        <li>產出的 <code>.db</code> 檔案：點擊右上角「📂 載入 .db 題庫」選取檔案，直接以 WebAssembly SQLite 即時掛載。</li>
+      </ol>
+    </section>
+
+    <!-- 第六章 -->
+    <section id="chap6" class="space-y-4">
+      <h2>第六章 常見問答與故障排除</h2>
+      <div class="space-y-3 text-sm">
+        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+          <div class="font-bold text-slate-900">Q1: 重新整理或關閉瀏覽器後，我的作答紀錄會消失嗎？</div>
+          <div class="text-xs text-slate-600 mt-1">不會。所有紀錄儲存於瀏覽器 localStorage 中。建議考前點擊頂部「💾 匯出紀錄」備份為 JSON 檔案保存。</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+          <div class="font-bold text-slate-900">Q2: 遇到按鈕無反應或更新後畫面沒變？</div>
+          <div class="text-xs text-slate-600 mt-1">請按下鍵盤 <strong>Ctrl + F5</strong>（Windows）或 <strong>Cmd + Shift + R</strong>（Mac）強制重新整理以清除瀏覽器快取。</div>
+        </div>
+        <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+          <div class="font-bold text-slate-900">Q3: 如何在筆電與手機之間同步錯題本？</div>
+          <div class="text-xs text-slate-600 mt-1">在筆電點擊「💾 匯出紀錄」，將產生的 JSON 檔案傳到手機，在手機瀏覽器開啟系統後點擊載入，即可無痛繼承進度。</div>
+        </div>
+      </div>
+    </section>
+
+  </article>
+
+  <footer class="mt-12 text-center text-xs text-slate-400 pb-12 avoid-break">
+    <p>© 2026 高級中等以下學校及幼兒園教師資格考試全類科智慧刷題系統 • 本手冊支援全設備自適應瀏覽與高品質 A4 列印</p>
+  </footer>
+
+</body>
+</html>
