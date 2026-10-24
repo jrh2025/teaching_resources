@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClassNet Sentinel 班級網盾 — 官方使用說明手冊與系統白皮書 (v2.4.0)</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --primary-light: #e0f2fe;
+      --accent: #06b6d4;
+      --dark: #0f172a;
+      --dark-card: #1e293b;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --bg: #f8fafc;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.85;
+      font-size: 15px;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 頂部操作列 */
+    .top-nav {
+      background: #0f172a;
+      color: #fff;
+      padding: 12px 28px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      border-bottom: 1px solid #1e293b;
+    }
+    .top-nav .logo {
+      font-size: 16px;
+      font-weight: 700;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .top-nav .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .top-nav .download-nav-btn {
+      background: #10b981;
+      color: #fff;
+      text-decoration: none;
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .top-nav .download-nav-btn:hover {
+      background: #059669;
+      transform: translateY(-1px);
+    }
+    .top-nav .print-btn {
+      background: #0284c7;
+      color: #fff;
+      border: none;
+      padding: 7px 18px;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .top-nav .print-btn:hover {
+      background: #0369a1;
+      transform: translateY(-1px);
+    }
+
+    /* 主內容容器 */
+    .container {
+      max-width: 980px;
+      margin: 36px auto;
+      background: #ffffff;
+      padding: 60px 72px;
+      border-radius: 20px;
+      box-shadow: 0 4px 30px rgba(15, 23, 42, 0.05);
+      border: 1px solid var(--border);
+    }
+
+    /* 封面 Hero 卡片 */
+    .hero-banner {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: #ffffff;
+      padding: 48px 52px;
+      border-radius: 16px;
+      margin-bottom: 36px;
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #334155;
+    }
+    .hero-banner::after {
+      content: "";
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 260px;
+      height: 260px;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.25) 0%, rgba(6, 182, 212, 0) 70%);
+      border-radius: 50%;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(6, 182, 212, 0.16);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 18px;
+      letter-spacing: 0.5px;
+    }
+    .hero-banner h1 {
+      font-size: 30px;
+      font-weight: 900;
+      line-height: 1.35;
+      margin-bottom: 14px;
+      color: #f8fafc;
+    }
+    .hero-banner p {
+      font-size: 15px;
+      color: #94a3b8;
+      line-height: 1.7;
+      max-width: 760px;
+    }
+    .hero-btn-group {
+      margin-top: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      position: relative;
+      z-index: 2;
+    }
+    .hero-download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #10b981;
+      color: #ffffff;
+      padding: 10px 22px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+      transition: all 0.2s ease;
+    }
+    .hero-download-btn:hover {
+      background: #059669;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+    }
+    .hero-meta {
+      margin-top: 24px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      font-size: 13px;
+      color: #94a3b8;
+      border-top: 1px solid #334155;
+      padding-top: 18px;
+      position: relative;
+      z-index: 2;
+    }
+    .hero-meta strong {
+      color: #f1f5f9;
+    }
+
+    /* 獨立下載專區卡片 */
+    .download-callout {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 14px;
+      padding: 20px 26px;
+      margin-bottom: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .download-callout-info {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .download-callout-icon {
+      width: 44px;
+      height: 44px;
+      background: #10b981;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .download-callout-title {
+      font-weight: 800;
+      font-size: 15.5px;
+      color: #166534;
+      margin-bottom: 2px;
+    }
+    .download-callout-desc {
+      font-size: 13.5px;
+      color: #15803d;
+      line-height: 1.5;
+    }
+    .download-callout-btn {
+      background: #10b981;
+      color: white;
+      padding: 9px 20px;
+      border-radius: 8px;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 13.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s, transform 0.1s;
+    }
+    .download-callout-btn:hover {
+      background: #059669;
+      transform: translateY(-1px);
+    }
+
+    /* 標題層級規範 */
+    h1 {
+      display: none; /* 由 Hero Banner 呈現首頁主標題 */
+    }
+    h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 48px 0 20px 0;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      page-break-after: avoid;
+      break-after: avoid;
+    }
+    h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #0369a1;
+      margin: 32px 0 14px 0;
+      page-break-after: avoid;
+      break-after: avoid;
+    }
+    h4 {
+      font-size: 15px;
+      font-weight: 700;
+      color: #334155;
+      margin: 22px 0 10px 0;
+      page-break-after: avoid;
+      break-after: avoid;
+    }
+
+    /* 正文段落 */
+    p {
+      margin-bottom: 16px;
+      color: #334155;
+      text-align: justify;
+      line-height: 1.85;
+    }
+
+    /* 分隔線 */
+    hr {
+      border: 0;
+      height: 1px;
+      background: #e2e8f0;
+      margin: 40px 0;
+    }
+
+    /* 條列與清單排版 */
+    ul, ol {
+      margin: 12px 0 20px 0;
+      padding-left: 28px;
+      color: #334155;
+    }
+    li {
+      margin-bottom: 9px;
+      line-height: 1.8;
+      padding-left: 4px;
+    }
+    ul ul, ol ul, ul ol, ol ol {
+      margin: 6px 0 10px 0;
+      padding-left: 24px;
+    }
+    ul ul li, ol ul li {
+      list-style-type: circle;
+    }
+
+    /* 表格排版 */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 22px 0 32px 0;
+      font-size: 14px;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    table th {
+      background: #f1f5f9;
+      color: #0f172a;
+      font-weight: 700;
+      padding: 12px 16px;
+      border: 1px solid #e2e8f0;
+      text-align: left;
+    }
+    table td {
+      padding: 11px 16px;
+      border: 1px solid #e2e8f0;
+      color: #334155;
+      vertical-align: middle;
+    }
+    table tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    table tr:hover {
+      background: #f0fdf4;
+    }
+
+    /* 程式碼與行內代碼 */
+    code {
+      font-family: 'JetBrains Mono', Consolas, Monaco, monospace;
+      background: #f1f5f9;
+      color: #0369a1;
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-size: 13px;
+      border: 1px solid #e2e8f0;
+    }
+    pre {
+      background: #0f172a;
+      color: #f1f5f9;
+      padding: 18px 22px;
+      border-radius: 12px;
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.65;
+      margin: 20px 0 26px 0;
+      overflow-x: auto;
+      border: 1px solid #334155;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      border: none;
+      font-size: 13px;
+    }
+
+    /* 引用塊 */
+    blockquote {
+      border-left: 4px solid #0284c7;
+      background: #f0f9ff;
+      padding: 14px 20px;
+      margin: 18px 0;
+      border-radius: 0 10px 10px 0;
+      color: #0369a1;
+      font-size: 14.5px;
+      page-break-inside: avoid;
+    }
+    blockquote strong {
+      color: #0c4a6e;
+    }
+
+    /* 流程圖外框 */
+    .mermaid {
+      text-align: center;
+      margin: 24px 0;
+      background: #f8fafc;
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* 頁尾 */
+    .footer {
+      margin-top: 60px;
+      padding-top: 28px;
+      border-top: 1px solid #e2e8f0;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 13px;
+    }
+
+    /* 列印最佳化樣式 */
+    @media print {
+      @page {
+        size: A4;
+        margin: 18mm 15mm;
+      }
+      .top-nav {
+        display: none !important;
+      }
+      .download-callout {
+        border: 1px solid #cbd5e1 !important;
+        background: #f8fafc !important;
+      }
+      body {
+        background: #fff !important;
+        font-size: 11pt !important;
+        line-height: 1.65 !important;
+        color: #1e293b !important;
+      }
+      .container {
+        box-shadow: none !important;
+        border: none !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .hero-banner {
+        background: #0f172a !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        padding: 32px 36px !important;
+        margin-bottom: 28px !important;
+      }
+      h2 {
+        margin-top: 32px !important;
+        padding-bottom: 8px !important;
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+      }
+      h3, h4 {
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+      }
+      table, pre, blockquote, .mermaid {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      table th, table td {
+        padding: 8px 12px !important;
+        font-size: 10pt !important;
+      }
+      pre {
+        background: #1e293b !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        padding: 12px 16px !important;
+        font-size: 9.5pt !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 頂部操作導航條 -->
+  <div class="top-nav">
+    <div class="logo">
+      <i class="fa-solid fa-shield-halved"></i>
+      <span>ClassNet Sentinel 班級網盾 — 官方使用手冊 (v2.4.0 繁體中文旗艦版)</span>
+    </div>
+    <div class="nav-actions">
+      <a href="https://drive.google.com/file/d/10Gv1SqcejiMJ-sxnZhCsUp3tXvmL3fqK/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="download-nav-btn">
+        <i class="fa-solid fa-cloud-arrow-down"></i>
+        <span>軟體下載</span>
+      </a>
+      <button class="print-btn" onclick="window.print()">
+        <i class="fa-solid fa-print"></i>
+        <span>列印 / 匯出 PDF</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- Hero Banner -->
+    <div class="hero-banner">
+      <div class="hero-badge">
+        <i class="fa-solid fa-award"></i>
+        <span>教育資安與智慧教室官方規範 ｜ v2.4.0 繁體中文旗艦正式版</span>
+      </div>
+      <h1>ClassNet Sentinel 班級網盾<br>教室 Wi-Fi 監控、防禦控制與資安維護白皮書</h1>
+      <p>專為現場授課教師設計的單一網段在線設備即時識別、ARP 雙模主動防禦、教師 PIN 碼雙軌驗證、一鍵專注模式與上網時限排程系統。</p>
+      
+      <div class="hero-btn-group">
+        <a href="https://drive.google.com/file/d/10Gv1SqcejiMJ-sxnZhCsUp3tXvmL3fqK/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="hero-download-btn">
+          <i class="fa-solid fa-cloud-arrow-down"></i>
+          <span>立即下載軟體安裝包 (Google 雲端硬碟)</span>
+        </a>
+      </div>
+
+      <div class="hero-meta">
+        <div>軟體版本：<strong>v2.4.0 Final</strong></div>
+        <div>支援環境：<strong>Windows 10 / 11 (64-bit)</strong></div>
+        <div>行動端支援：<strong>Android APK / iOS PWA</strong></div>
+        <div>資安規範：<strong>100% Local-First 本地離線運作</strong></div>
+        <div>下載載點：<a href="https://drive.google.com/file/d/10Gv1SqcejiMJ-sxnZhCsUp3tXvmL3fqK/view?usp=sharing" target="_blank" rel="noopener noreferrer" style="color: #38bdf8; text-decoration: underline; font-weight: 700;">Google 雲端硬碟官方連結</a></div>
+      </div>
+    </div>
+
+    <!-- 官方軟體下載卡片 -->
+    <div class="download-callout">
+      <div class="download-callout-info">
+        <div class="download-callout-icon">
+          <i class="fa-solid fa-cloud-arrow-down"></i>
+        </div>
+        <div>
+          <div class="download-callout-title">ClassNet Sentinel 官方軟體發布與下載專區</div>
+          <div class="download-callout-desc">提供主程式免安裝執行檔、行動端支援套件與相關部署檔案，免授權即刻下載。</div>
+        </div>
+      </div>
+      <a href="https://drive.google.com/file/d/10Gv1SqcejiMJ-sxnZhCsUp3tXvmL3fqK/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="download-callout-btn">
+        <i class="fa-solid fa-download"></i> 前往雲端硬碟下載
+      </a>
+    </div>
+
+    <!-- 主體內容 -->
+    <h1 id="classnet-sentinel-wi-fi">ClassNet Sentinel 班級網盾 — 教室 Wi-Fi 掃描監控與智慧防禦系統</h1>
+<h2 id="v240">完整使用說明手冊、資安防禦架構與系統設計白皮書 (v2.4.0 繁體中文旗艦正式版)</h2>
+<hr />
+<h3 id="table-of-contents">目錄 (Table of Contents)</h3>
+<ul>
+<li><a href="#一系統概述與核心價值">一、系統概述與核心價值</a></li>
+<li><a href="#二產品設計理念-design-philosophy">二、產品設計理念 (Design Philosophy)</a><ul>
+<li><a href="#21-教育現場痛點與時代挑戰">2.1 教育現場痛點與時代挑戰</a></li>
+<li><a href="#22-四大核心設計哲學">2.2 四大核心設計哲學</a></li>
+</ul>
+</li>
+<li><a href="#三核心技術深度解析網路阻斷原理與系統影響評估">三、核心技術深度解析：網路阻斷原理與系統影響評估</a><ul>
+<li><a href="#31-本軟體使用何種技術阻斷設備網路">3.1 本軟體使用何種技術阻斷設備網路？</a></li>
+<li><a href="#32-該技術對軟體硬體與作業系統是否有不良影響">3.2 該技術對軟體、硬體與作業系統是否有不良影響？</a></li>
+<li><a href="#33-阻斷解除與恢復機制-symmetric-cache-restoration">3.3 阻斷解除與恢復機制 (Symmetric Cache Restoration)</a></li>
+</ul>
+</li>
+<li><a href="#四系統身分安全防護機制教師-pin-碼與防未授權操控">四、系統身分安全防護機制：教師 PIN 碼與防未授權操控</a><ul>
+<li><a href="#41-為什麼需要身分驗證防範陌生人與學生越權操控">4.1 為什麼需要身分驗證？防範陌生人與學生越權操控</a></li>
+<li><a href="#42-本機免密特許與外網嚴格鎖定機制-localhost-exemption">4.2 本機免密特許與外網嚴格鎖定機制 (Localhost Exemption)</a></li>
+<li><a href="#43-後端-api-資安守門員非授權設備-403-forbidden-攔截與日誌稽核">4.3 後端 API 資安守門員：非授權設備 403 Forbidden 攔截與日誌稽核</a></li>
+<li><a href="#44-教師管理-pin-碼登入修改與手動鎖定指南">4.4 教師管理 PIN 碼登入、修改與手動鎖定指南</a></li>
+</ul>
+</li>
+<li><a href="#五課堂惡意干擾防治專章防堵學生私自安裝同類軟體">五、課堂惡意干擾防治專章：防堵學生私自安裝同類軟體</a><ul>
+<li><a href="#51-學生在課堂安裝同類軟體如-netcut-的潛在威脅">5.1 學生在課堂安裝同類軟體（如 NetCut）的潛在威脅</a></li>
+<li><a href="#52-第一道防線classnet-sentinel-內建廣播異常動態監控">5.2 第一道防線：ClassNet Sentinel 內建廣播異常動態監控</a></li>
+<li><a href="#53-第二道防線教室-wi-fi-ap-隔離-client-isolation">5.3 第二道防線：教室 Wi-Fi AP 隔離 (Client Isolation)</a></li>
+<li><a href="#54-第三道防線校園交換器動態-arp-檢測-dai-與-dhcp-snooping">5.4 第三道防線：校園交換器動態 ARP 檢測 (DAI) 與 DHCP Snooping</a></li>
+<li><a href="#55-第四道防線學生載具-mdm-鎖定與電腦權限控管">5.5 第四道防線：學生載具 MDM 鎖定與電腦權限控管</a></li>
+</ul>
+</li>
+<li><a href="#六功能全覽與操作指南-feature-walkthrough">六、功能全覽與操作指南 (Feature Walkthrough)</a><ul>
+<li><a href="#61-即時設備掃描與智慧識別-real-time-scanner--host-tracking">6.1 即時設備掃描與智慧識別 (Real-time Scanner &amp; Host Tracking)</a></li>
+<li><a href="#62-課堂主動防禦與自動封鎖-active-defense--autoblock">6.2 課堂主動防禦與自動封鎖 (Active Defense &amp; Autoblock)</a></li>
+<li><a href="#63-課堂專注模式-focus-mode-一鍵全體學生載具斷網">6.3 課堂專注模式 (Focus Mode 一鍵全體學生載具斷網)</a></li>
+<li><a href="#64-教師時限管控與定時斷網排程-time-limit--scheduling">6.4 教師時限管控與定時斷網排程 (Time Limit &amp; Scheduling)</a></li>
+<li><a href="#65-教室核心路由器安全弱點檢查-gateway-vulnerability-check">6.5 教室核心路由器安全弱點檢查 (Gateway Vulnerability Check &amp; 9-Port Matrix)</a></li>
+<li><a href="#66-課堂隱私與針孔攝影機偵測雷達-hidden-camera-radar">6.6 課堂隱私與針孔攝影機偵測雷達 (Hidden Camera Radar)</a></li>
+<li><a href="#67-專業網管診斷工具箱">6.7 專業網管診斷工具箱 (Ping, Traceroute, WoL 喚醒, Rogue DHCP 探測)</a></li>
+<li><a href="#68-完整事件時間軸與動態稽核-full-event-audit-timeline">6.8 完整事件時間軸與動態稽核 (Full Event Audit Timeline)</a></li>
+</ul>
+</li>
+<li><a href="#七教師行動端安裝與配對指南">七、教師行動端 (Android APK / Web App) 安裝與配對指南</a><ul>
+<li><a href="#71-方式一免安裝-web-app-pwa-模式--最推薦零門檻">7.1 方式一：免安裝 Web App (PWA 模式) —— 最推薦、零門檻</a></li>
+<li><a href="#72-方式二教師手機-1-秒安全白名單認領-pair">7.2 方式二：教師手機 1 秒安全白名單認領 (<code>/pair</code>)</a></li>
+<li><a href="#73-方式三android-原生-apk-直裝版下載與設定">7.3 方式三：Android 原生 APK 直裝版下載與設定</a></li>
+</ul>
+</li>
+<li><a href="#八多元教育實戰應用場景庫">八、多元教育實戰應用場景庫 (Operational Scenarios)</a><ul>
+<li><a href="#場景一公開授課與視導觀摩-demonstration-teaching">場景一：公開授課與視導觀摩 (Demonstration Teaching)</a></li>
+<li><a href="#場景二標準化數位測驗與段考防作弊-online-examination">場景二：標準化數位測驗與段考防作弊 (Online Examination)</a></li>
+<li><a href="#場景三分組協作與平板數位專題-group-collaborative-learning">場景三：分組協作與平板數位專題 (Group Collaborative Learning)</a></li>
+<li><a href="#場景四午休自習與放學清場-study-hall--sleep-routine">場景四：午休自習與放學清場 (Study Hall &amp; Sleep Routine)</a></li>
+<li><a href="#場景五校外教學與手機熱點露營-field-trips--mobile-hotspot">場景五：校外教學與手機熱點露營 (Field Trips &amp; Mobile Hotspot)</a></li>
+<li><a href="#場景六校園私接-ap-與流氓基地台清查-rogue-ap-hunting">場景六：校園私接 AP 與流氓基地台清查 (Rogue AP Hunting)</a></li>
+<li><a href="#場景七課堂防窺雷達巡檢-privacy--camera-sweep">場景七：課堂防窺雷達巡檢 (Privacy &amp; Camera Sweep)</a></li>
+</ul>
+</li>
+<li><a href="#九常見問題與疑難排解-faq">九、常見問題與疑難排解 (FAQ &amp; Troubleshooting)</a></li>
+<li><a href="#十技術規格與版本紀錄-specifications--changelog">十、技術規格與版本紀錄 (Specifications &amp; Changelog)</a></li>
+</ul>
+<hr />
+<h2 id="_1">一、系統概述與核心價值</h2>
+<p><strong>ClassNet Sentinel（班級網盾）v2.4.0</strong> 是一套專為現代智慧校園與數位教學環境量身打造的 <strong>Wi-Fi 網路掃描、在線設備監控、主動資安防禦與課堂秩序控制系統</strong>。</p>
+<p>在教育數位轉型政策下，「班班有大屏、生生用平板」已成為各級學校教學常態。然而，開放且普及的教室 Wi-Fi 環境隨之帶來了前所未有的管理挑戰：</p>
+<ol>
+<li><strong>分心失控</strong>：學生在課堂私自開啟非授權社群平台、影片或偷玩線上遊戲。</li>
+<li><strong>頻寬遭竊</strong>：鄰近班級、校外人士未經許可「盜連、蹭網」，癱瘓珍貴教學頻寬。</li>
+<li><strong>身分隱匿</strong>：學生自帶設備（BYOD）使用「隨機 MAC（私密 Wi-Fi 位址）」，導致傳統網管工具無法辨識目標。</li>
+<li><strong>校園資安威脅</strong>：學生若私自安裝駭客工具、私接家用無線分享器，或有心人士架設未經許可之網路攝影機，將嚴重威脅師生隱私。</li>
+<li><strong>控制權失衡</strong>：傳統校園網管工具繁複冗長，授課教師在課堂上「看得到卻管不到」，無法即時處置。</li>
+</ol>
+<p><strong>ClassNet Sentinel v2.4.0</strong> 透過現代化輕量主控台與教師隨身行動端，賦予現場授課教師最直覺、最精準的網路掌控力。它不僅讓網路狀態「100% 透明可視」，更能讓教師在發現異常時「立即出手控制」，真正實現數位科技輔助教學的秩序平衡。</p>
+<hr />
+<h2 id="design-philosophy">二、產品設計理念 (Design Philosophy)</h2>
+<p>ClassNet Sentinel 的核心設計根植於「<strong>以教學現場為核心，將網管主控權還給教師</strong>」的理念。</p>
+<h3 id="21">2.1 教育現場痛點與時代挑戰</h3>
+<ul>
+<li><strong>痛點一：傳統網管軟體過度複雜</strong><br />
+  現有專業網管軟體（如 Wireshark、PRTG、Cisco Dashboard）專為網路工程師設計，介面充滿封包協定代碼與十六進位資料，非資訊專業的授課老師難以上手。</li>
+<li><strong>痛點二：發現問題卻無能為力</strong><br />
+  市售大部分 WiFi 掃描器僅具備「被動顯示」功能，即便老師看到陌生裝置偷連或學生分心，也無法立即切斷連線，必須打電話請學校資訊組進後台黑名單封鎖，緩不濟急。</li>
+<li><strong>痛點三：模擬假資料失去實戰價值</strong><br />
+  許多工具為求展示華麗，充斥預設的虛擬假設備，無法在真正的區域網路中探測到剛開機的手機與設備。</li>
+<li><strong>痛點四：教師受限於講桌無法隨身走動</strong><br />
+  老師若必須坐在電腦前才能操作，便失去了巡堂互動的教學機動性。</li>
+</ul>
+<h3 id="22">2.2 四大核心設計哲學</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">核心設計哲學</th>
+<th style="text-align: left;">具體實現手段</th>
+<th style="text-align: left;">教學現場效益</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>1. 零門檻・無痛部署</strong></td>
+<td style="text-align: left;">單一獨立免安裝執行檔 (Single EXE)，無外部資料庫依賴</td>
+<td style="text-align: left;">雙擊即開即用，免請資訊組安裝環境，隨身隨插隨用</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>2. 主動防禦・精準控制</strong></td>
+<td style="text-align: left;">一鍵斷網、自動封鎖陌生載具、全班一鍵專注模式</td>
+<td style="text-align: left;">告別無力感，發現分心秒級處置，教學節奏完全掌控</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>3. 100% 真實資料原則</strong></td>
+<td style="text-align: left;">實體 RAW Socket ARP / ICMP 原生探測，嚴禁虛擬資料</td>
+<td style="text-align: left;">反映教室物理真實，隨機 MAC 智慧歸納，無誤導資訊</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>4. 雙端協同・教師自主</strong></td>
+<td style="text-align: left;">講桌大螢幕主控台 + 教師隨身手機行動端 (APK / PWA)</td>
+<td style="text-align: left;">老師自由在教室穿梭巡堂，口袋手機隨時一鍵控制</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1-zero-configuration-portability">1. 零門檻・無痛部署 (Zero Configuration &amp; Portability)</h4>
+<p>學校公務電腦通常具備嚴格的權限管制與軟體限制。ClassNet Sentinel 採用<strong>單一獨立免安裝執行檔（Single Portable EXE）</strong> 架構，雙擊即可啟動後台服務與現代化網頁儀表板，無須額外架設 Python、Node.js 或安裝繁雜的資料庫系統，隨插即用。</p>
+<h4 id="2-active-containment">2. 從「旁觀」到「控制」的主動防禦 (Active Containment)</h4>
+<p>不同於傳統掃描器「只看不動」，ClassNet Sentinel 核心價值在於具備主動防禦手段：
+- <strong>一鍵封鎖裝置 (Block Internet)</strong>：立即將目標切斷於區網之外。
+- <strong>新裝置自動封鎖 (Autoblock)</strong>：白名單外的陌生新設備一連上即被系統第一時間自動阻斷。
+- <strong>課堂專注模式 (Focus Mode)</strong>：老師講解時一鍵切斷全班學生平板，解除講解後一秒恢復。</p>
+<h4 id="3-100-zero-simulation">3. 100% 真實數據原則・拒絕虛擬模擬 (Zero Simulation)</h4>
+<p>本系統所有偵測到的 IP、MAC、製造商 OUI、活躍通訊埠、網路延遲與封包遺失率，均來自 <strong>Windows 原生系統 API、ARP 緩存矩陣與真實 TCP/ICMP 封包探測</strong>。系統內部絕不插入預設假設備，讓教師看到的每一個訊號皆反映當下教室的物理真實。</p>
+<h4 id="4-teacher-centric-dual-control">4. 雙端協同・以教師為中心的操控體驗 (Teacher-Centric Dual Control)</h4>
+<p>結合<strong>講桌大螢幕主控台</strong>與<strong>教師隨身行動端 (手機/平板)</strong>：
+- 桌面端提供宏觀視野：長期網速趨勢、全盤設備分類、路由弱點矩陣、專業網管診斷。
+- 行動端提供極速巡堂：教師拿著手機巡堂時，只要點一下即可精準封鎖分心學生的平板。</p>
+<hr />
+<h2 id="_2">三、核心技術深度解析：網路阻斷原理與系統影響評估</h2>
+<h3 id="31">3.1 本軟體使用何種技術阻斷設備網路？</h3>
+<p>ClassNet Sentinel 採用工業級的 <strong>「雙模動態路由阻斷技術（Dual-Mode Dynamic Containment Engine）」</strong>，依據系統底層驅動環境自動啟用最佳防禦架構：</p>
+<pre><code class="language-mermaid">flowchart TD
+    A[&quot;教師觸發【一鍵斷網】/【專注模式】&quot;] --&gt; B{&quot;系統底層驅動環境檢測&quot;}
+    B -- &quot;已安裝 Npcap 原生驅動 (推薦)&quot; --&gt; C[&quot;核心 L2 阻斷：雙向 ARP 閘道重定向&lt;br&gt;(ARP Gateway Redirection)&quot;]
+    B -- &quot;未安裝驅動 (標準相容環境)&quot; --&gt; D[&quot;相容 L4 阻斷：主動 TCP Reset 封包注入&lt;br&gt;(Active TCP RST Injection)&quot;]
+    C --&gt; E[&quot;目標設備 ARP 快取被導向無效黑洞&lt;br&gt;無法尋獲路由器真實 MAC&quot;]
+    D --&gt; E2[&quot;目標設備建立連線瞬間遭 RST 重置&lt;br&gt;所有 Web / 應用連線即時中斷&quot;]
+    E --&gt; F[&quot;設備完全失去網際網路存取能力&lt;br&gt;(封鎖生效)&quot;]
+    E2 --&gt; F
+</code></pre>
+<h4 id="1-l2-arp-arp-gateway-redirection">1. 核心 L2 阻斷技術：雙向 ARP 閘道重定向 (ARP Gateway Redirection)</h4>
+<ul>
+<li><strong>技術原理</strong>：<br />
+  在乙太網與 Wi-Fi（IEEE 802.11）區域網路中，設備要對外上網，必須透過 <strong>位址解析協定（ARP, Address Resolution Protocol）</strong> 查詢預設閘道（如 <code>192.168.1.1</code>）的實體 MAC 位址。<br />
+  當教師在主控台對目標學生載具（如 <code>192.168.1.50</code>）啟用「一鍵斷網」時，系統透過 <strong>Npcap 驅動程式</strong> 發送精準建構的 ARP 應答訊框，告訴目標載具「閘道的 MAC 是無效位址（或本機虛擬介面）」。</li>
+<li><strong>阻斷效果</strong>：<br />
+  目標設備所發出的所有網頁請求、影音串流封包，均會被傳送至無效黑洞，完全無法到達真正的 Wi-Fi 路由器，達成秒級、100% 徹底的連線阻斷。</li>
+</ul>
+<h4 id="2-l4-tcp-rst-active-tcp-reset-injection">2. 相容 L4 阻斷技術：主動 TCP RST 封包注入 (Active TCP Reset Injection)</h4>
+<ul>
+<li>若教師電腦尚未安裝 Npcap 驅動，系統自動切換至無驅動相容防禦模組。系統監聽目標 IP 之 TCP 握手交握，主動向目標設備注入 RST（連線重置）訊號，使其瀏覽器頁面無法完成載入。</li>
+</ul>
+<hr />
+<h3 id="32">3.2 該技術對軟體、硬體與作業系統是否有不良影響？</h3>
+<p>許多教師與網管人員非常關心：「這樣強制切斷學生設備的網路，會不會搞壞學生的平板？會不會弄壞教室的分享器？」<br />
+<strong>答案非常明確：100% 絕對安全！對任何硬體設備、作業系統與應用軟體皆無任何不良影響。</strong></p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">檢驗維度</th>
+<th style="text-align: center;">客觀安全性評估</th>
+<th style="text-align: left;">技術實現與影響說明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>1. 實體硬體層</strong></td>
+<td style="text-align: center;">🟢 <strong>100% 零損傷</strong></td>
+<td style="text-align: left;">純封包收發，無電壓/射頻修改，無快閃記憶體額外寫入，電池與零件壽命零折損。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>2. 作業系統核心層</strong></td>
+<td style="text-align: center;">🟢 <strong>完全無痕</strong></td>
+<td style="text-align: left;">運作於暫態記憶體快取 (RAM)，無核心檔案竄改、無登錄檔修改、無病毒後門。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>3. 應用程式層</strong></td>
+<td style="text-align: center;">🟢 <strong>零資料破壞</strong></td>
+<td style="text-align: left;">僅呈現常規網路逾時 (Timeout)，程式完全不會崩潰或檔案損壞。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>4. 復原機制</strong></td>
+<td style="text-align: center;">🟢 <strong>秒級還原</strong></td>
+<td style="text-align: left;">點擊恢復上網後，發送正向真實廣播，1~2 秒內無痛無痕自動復原。</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1">1. 對硬體層面（零磨損、零損傷）</h4>
+<ul>
+<li>本系統僅在無線空氣訊號與實體網卡間進行標準網路協定封包的收發。</li>
+<li><strong>不涉及</strong>任何硬體過載、電壓調整、頻率修改或射頻晶片超頻。</li>
+<li><strong>不涉及</strong>快閃記憶體（Flash / SSD）的額外抹寫，對手機、平板、電腦的電池壽命與電子零件完全<strong>零耗損</strong>。</li>
+</ul>
+<h4 id="2">2. 對軟體與作業系統層面（完全無痕、非入侵）</h4>
+<ul>
+<li><strong>不修改系統檔案</strong>：ARP 協定本質上運作於作業系統的暫態記憶體快取（RAM-based ARP Cache）中，重開機或快取過期即自動消失。</li>
+<li><strong>無後門、無植入</strong>：受控設備不需要安裝任何客戶端程式（Clientless Agentless），學生設備完全不需要越獄（Jailbreak）或取得 Root 權限。</li>
+<li><strong>使用者體驗</strong>：在學生端看來，其感受僅等同於「教室 Wi-Fi 暫時收不到外網訊號」或「網頁連線逾時」，不會引發系統崩潰（藍屏當機）或資料毀損。</li>
+</ul>
+<hr />
+<h3 id="33-symmetric-cache-restoration">3.3 阻斷解除與恢復機制 (Symmetric Cache Restoration)</h3>
+<p>當教師點擊 <strong>【恢復上網】</strong>、取消專注模式，或直接關閉 ClassNet Sentinel 程式時：</p>
+<ol>
+<li><strong>主動正向修復廣播</strong>：系統的守護進程會立即向目標設備及路由器雙向發送「<strong>正向標準真實 ARP 宣告（Gratuitous ARP）</strong>」，主動將真正的路由器 MAC 位址寫回目標設備的記憶體快取。</li>
+<li><strong>無痕秒級還原</strong>：目標設備的路由路徑在 0.5~2 秒內完全校正歸位，學生平板立刻無縫恢復上網，無需重新連線 Wi-Fi，亦無需重新開機。</li>
+</ol>
+<hr />
+<h2 id="pin">四、系統身分安全防護機制：教師 PIN 碼與防未授權操控</h2>
+<h3 id="41">4.1 為什麼需要身分驗證？防範陌生人與學生越權操控</h3>
+<p>ClassNet Sentinel 具備跨設備協同能力（手機可遠端控制講桌主機）。然而，這也引發了一個關鍵的資安風險：  </p>
+<blockquote>
+<p><strong>「如果有調皮的學生用手機連上教室 Wi-Fi，在瀏覽器輸入老師電腦的 IP（例如 <code>http://192.168.1.116:8000</code>），是否也能進入主控台把全班甚至老師的電腦斷網？」</strong></p>
+</blockquote>
+<p><strong>答案是：絕對不可能！</strong><br />
+ClassNet Sentinel v2.4.0 導入了銀行等級的 <strong>「雙軌多因子身分防禦體系（Two-Track Security Guard）」</strong>，將講桌實體主機與 Wi-Fi 外部連線嚴格隔離。</p>
+<hr />
+<h3 id="42-localhost-exemption">4.2 本機免密特許與外網嚴格鎖定機制 (Localhost Exemption)</h3>
+<p>系統自動辨識連線請求的來源網路身分：</p>
+<pre><code class="language-mermaid">flowchart TD
+    Req[&quot;存取請求到達系統 API / 網頁&quot;] --&gt; Check{&quot;連線來源 IP 判定&quot;}
+    Check -- &quot;來自本機 (127.0.0.1 / localhost)&quot; --&gt; Local[&quot;講桌本機電腦 (實體教師在場特許)&quot;]
+    Check -- &quot;來自區域網路 (192.168.x.x)&quot; --&gt; Ext[&quot;外部 Wi-Fi 設備 (學生載具 / 訪客)&quot;]
+    Local --&gt; Allow1[&quot;自動直接放行&lt;br&gt;教師無需繁瑣輸入密碼&quot;]
+    Ext --&gt; TokenCheck{&quot;是否持有合法 X-Admin-Token？&quot;}
+    TokenCheck -- &quot;已通過 PIN 驗證&quot; --&gt; Allow2[&quot;放行存取控制 API&quot;]
+    TokenCheck -- &quot;未認證 / 密碼錯誤&quot; --&gt; Deny[&quot;阻斷並回應 403 Forbidden&lt;br&gt;記錄資安警告日誌&quot;]
+</code></pre>
+<ol>
+<li><strong>講桌本機電腦（實體在場免密特許，Localhost Exemption）</strong>：<br />
+   當教師坐在講台電腦前操作本機儀表板時，連線 IP 為 <code>127.0.0.1</code> / <code>localhost</code>。系統判定教師具有物理實體存取權，自動給予完全信任與綠色特許，老師每次開機上課<strong>無須繁瑣重複輸入密碼</strong>，直接秒開即用。</li>
+<li><strong>外部 Wi-Fi 行動設備（嚴格 PIN 碼遮罩鎖定）</strong>：<br />
+   任何透過無線網路連入的設備（例如 <code>192.168.1.100</code> 的學生手機或筆電），一律強制阻擋於主介面之外，<strong>彈出全螢幕 PIN 碼解鎖遮罩</strong>，且遮蔽所有後端數據。未通過驗證前，畫面無法點擊、無法瀏覽設備清單。</li>
+</ol>
+<hr />
+<h3 id="43-api-403-forbidden">4.3 後端 API 資安守門員：非授權設備 403 Forbidden 攔截與日誌稽核</h3>
+<p>有些具備資訊專長或好奇心強的學生，可能會嘗試不透過瀏覽器網頁，而是利用終端機命令（<code>curl</code>、Postman 或 Python 腳本）直接向後端 API（如 <code>POST /api/block</code>、<code>POST /api/unblock</code>）發送偽造控制請求。</p>
+<p>ClassNet Sentinel 在後端 FastAPI 微核心上架設了 <strong>全域資安守門依賴項 <code>verify_admin_access()</code></strong>：
+- 凡是沒有攜帶合法密鑰 Token（<code>X-Admin-Token</code>）的外部請求，後端伺服器在執行任何業務邏輯前，<strong>直接以 403 Forbidden 徹底斬斷</strong>。
+- <strong>自動觸發資安警告日誌</strong>：系統立即向 <code>timeline_events</code> 資料庫寫入警告事件：<br />
+<code>[UNAUTHORIZED_ACCESS_BLOCKED] 資安攔截：來自 192.168.1.103 嘗試未授權呼叫 POST /api/unblock，已被系統阻斷！</code>
+- 老師在講桌主控台的【事件時間軸】上，可以清清楚楚抓出是哪一台設備在課堂上嘗試駭入或擅自操作系統！</p>
+<hr />
+<h3 id="44-pin">4.4 教師管理 PIN 碼登入、修改與手動鎖定指南</h3>
+<ul>
+<li><strong>預設教師 PIN 碼</strong>：系統初始出廠管理密碼為 <code>8888</code>。</li>
+<li><strong>教師手機初次解鎖</strong>：<br />
+  老師拿手機連上教室 Wi-Fi 掃碼開啟網頁後，畫面將呈現精美的暗黑鎖定介面。輸入 <code>8888</code> 並點擊【解鎖主控台】，系統驗證成功後將核發加密 Token 並存入手機，接下來 7 天內在該教室 Wi-Fi 均享有無感操控。</li>
+<li><strong>變更教師專屬 PIN 碼</strong>：<br />
+  1. 在主控台頂部導覽列，點擊安全狀態旁的 <strong>「🔑 鑰匙圖示」</strong>。
+  2. 彈出【變更教師管理 PIN 碼】視窗。
+  3. 輸入新密碼（至少 4 位數字或英數字，例如 <code>5678</code> 或 <code>teach99</code>）並再次確認。
+  4. 點擊【確認變更】，新密碼立即生效，舊 Token 全部作廢。</li>
+<li><strong>手動鎖定主控台</strong>：<br />
+  當老師準備離開教室、下課或暫時走開時，可點擊頂部 <strong>「🔒 鎖定圖示」</strong>，系統立即進入鎖定遮罩狀態，防止他人趁隙操作。</li>
+</ul>
+<hr />
+<h2 id="_3">五、課堂惡意干擾防治專章：防堵學生私自安裝同類軟體</h2>
+<h3 id="51-netcut">5.1 學生在課堂安裝同類軟體（如 NetCut）的潛在威脅</h3>
+<p>在資訊課堂或高年級教學現場，常有少數對網路技術好奇或調皮的學生，嘗試在自己的筆電、手機甚至教室電腦上安裝 NetCut（網路剪刀手）或同類 ARP 阻斷軟體，惡作劇切斷同學的連線，甚至嘗試切斷老師的講桌電腦。<br />
+面對這種情況，單靠教師一人肉眼很難即時抓出幕後黑手。學校與教師應採取以下 <strong>「四層縱深防禦體系（Defense-in-Depth）」</strong> 徹底杜絕：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">防護層級</th>
+<th style="text-align: left;">部署位置</th>
+<th style="text-align: left;">關鍵防禦機制</th>
+<th style="text-align: left;">抵禦成效</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>第一道防線</strong></td>
+<td style="text-align: left;">應用軟體層</td>
+<td style="text-align: left;">ClassNet Sentinel 內建廣播異常動態監控</td>
+<td style="text-align: left;">即時警報可疑主機，支援一鍵反制斷網</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>第二道防線</strong></td>
+<td style="text-align: left;">無線基地台 (AP)</td>
+<td style="text-align: left;">開啟 AP 隔離 (Client Isolation)</td>
+<td style="text-align: left;">徹底阻斷學生端橫向訊框，攻擊封包硬體直接拋棄</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>第三道防線</strong></td>
+<td style="text-align: left;">校園骨幹交換器</td>
+<td style="text-align: left;">動態 ARP 檢測 (DAI) 與 DHCP Snooping</td>
+<td style="text-align: left;">交換器埠口硬體級防護，偽造 ARP 直接阻斷</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>第四道防線</strong></td>
+<td style="text-align: left;">學生載具與終端</td>
+<td style="text-align: left;">學生標準權限 + MDM 白名單與除錯鎖定</td>
+<td style="text-align: left;">無管理員權限無法安裝驅動，工具根本打不開</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="52-classnet-sentinel">5.2 第一道防線：ClassNet Sentinel 內建廣播異常動態監控</h3>
+<ul>
+<li><strong>異常廣播探針</strong>：<br />
+  ClassNet Sentinel 的守護線程隨時監聽教室網段內的 ARP 與 DHCP 流量。如果有任何非閘道設備開始大量廣播偽造的 ARP 應答，系統會立即捕捉該訊框的來源 MAC 與 IP。</li>
+<li><strong>主控台即時警報</strong>：<br />
+  系統會在【事件時間軸】與頂部警示列立即彈出高危警告，標註「⚠️ 偵測到可疑主機 (IP: 192.168.1.120) 正在發送異常網路廣播！」，老師可直接對該 IP 執行【一鍵斷網】，使其軟體立即失效！</li>
+</ul>
+<hr />
+<h3 id="53-wi-fi-ap-client-isolation">5.3 第二道防線：教室 Wi-Fi AP 隔離 (Client Isolation) —— 最根本無敵的防禦</h3>
+<p>這是防範校園區網 ARP 攻擊<strong>最有效、最根本、一勞永逸</strong>的黃金法則：
+- <strong>原理</strong>：<br />
+  在教室的無線基地台（Wi-Fi AP）或路由器後台管理介面中，開啟 <strong>「AP 隔離（Client Isolation / AP Isolation / Station Separation）」</strong> 功能。
+- <strong>防禦成效</strong>：<br />
+  開啟後，所有連入 Wi-Fi 的學生平板與手機<strong>彼此之間被強制隔絕，只能單向連向外部網際網路，完全無法在無線網路內互相傳遞資料訊框</strong>。
+- <strong>結果</strong>：學生就算在其手機或平板上開啟 NetCut，其發出的 ARP 攻擊封包會直接在 AP 內部被硬體晶片丟棄，根本無法送達任何其他同學或老師的電腦，攻擊能力瞬間歸零！</p>
+<hr />
+<h3 id="54-arp-dai-dhcp-snooping">5.4 第三道防線：校園交換器動態 ARP 檢測 (DAI) 與 DHCP Snooping</h3>
+<p>若教室電腦採用實體網路線（乙太網路 RJ-45）連接至校園骨幹交換器，學校資訊組可於網管型交換器（Managed Switch）啟用以下兩項企業級安全功能：
+1. <strong>DHCP Snooping</strong>：交換器僅允許合法機房的 DHCP 伺服器發放 IP，並自動建立 IP 與 MAC 綁定信任表。
+2. <strong>動態 ARP 檢測 (Dynamic ARP Inspection, DAI)</strong>：交換器比對每一個經過埠口的 ARP 封包，若發現學生電腦宣稱自己是預設閘道，交換器在硬體線路上直接阻斷該埠口，學生軟體完全無計可施。</p>
+<hr />
+<h3 id="55-mdm">5.5 第四道防線：學生載具 MDM 鎖定與電腦權限控管</h3>
+<p>從載具終端徹底防範未經授權的軟體安裝：
+1. <strong>公用教室電腦帳號權限</strong>：<br />
+   學生上機使用的 Windows 帳號必須設定為「<strong>標準使用者（Standard User）</strong>」，嚴禁給予 Administrator 本機系統管理員權限。<br />
+   * <strong>關鍵要點</strong>：NetCut 等底層網路工具運行時，必須安裝 WinPcap / Npcap 驅動程式並取得管理員特權。沒有管理員權限的學生帳號，<strong>完全無法安裝驅動，軟體根本打不開！</strong>
+2. <strong>教育部生生用平板 (MDM 控管)</strong>：<br />
+   學校配發的 iPad 或 Android 平板均納入教育局行動載具管理系統（MDM，如 Jamf、Google Workspace for Education）。<br />
+   * 啟用 App 安裝白名單，阻擋非教學 App 的安裝。
+   * 關閉「開發者除錯模式（Developer Options）」，防止學生自行側載（Sideloading）APK 攻擊工具。</p>
+<hr />
+<h2 id="feature-walkthrough">六、功能全覽與操作指南 (Feature Walkthrough)</h2>
+<h3 id="61-real-time-scanner-host-tracking">6.1 即時設備掃描與智慧識別 (Real-time Scanner &amp; Host Tracking)</h3>
+<blockquote>
+<p><strong>操作路徑</strong>：主畫面頂部 ➔ 點擊【真實掃描】按鈕</p>
+</blockquote>
+<ol>
+<li><strong>一鍵全網探測</strong>：<br />
+   點擊後，系統會於 1~2 秒內向整條教室網段發出喚醒探測，並自動解析線上設備之真實 IP、實體 MAC、網卡製造商（如 Apple, Samsung, Google, Intel, TP-Link）。</li>
+<li><strong>智慧分類標籤體系</strong>：
+   - 🏫 <strong>導師機</strong>：教師本機電腦及已認領的教師手機，永遠置頂並享有免斷網白名單特權。
+   - 🌐 <strong>網路閘道/分享器</strong>：教室核心路由器（通常為 <code>192.168.1.1</code>）。
+   - 📱 <strong>智慧手機/平板</strong>：包含隨機私密 MAC 之行動裝置。
+   - 💻 <strong>學生平板</strong>：學校配發之教學載具。
+   - ⛔ <strong>可疑黑名單</strong>：被系統或手動封鎖的上網設備。</li>
+<li><strong>全景連線觀測面板 (Device Inspector)</strong>：<br />
+   點選任何一台在線設備，即可彈出完整連線觀測卡片：
+   - 檢視實體 MAC、製造商、連線介面（如 Wi-Fi 802.11 / 乙太網路）。
+   - 查看該設備目前開放的網路服務（如 AirPlay 投影、Web 伺服器等）。
+   - 檢視今日上網時限配額與剩餘時間。
+   - 查閱該設備專屬的上下線與封鎖時間軸歷史紀錄。</li>
+</ol>
+<hr />
+<h3 id="62-active-defense-autoblock">6.2 課堂主動防禦與自動封鎖 (Active Defense &amp; Autoblock)</h3>
+<blockquote>
+<p><strong>操作路徑</strong>：主畫面頂部功能列 ➔ 切換【新裝置自動封鎖】開關</p>
+</blockquote>
+<ul>
+<li><strong>手動一鍵斷網</strong>：<br />
+  在設備列表或詳情面板中，點擊紅色的 <strong>【一鍵切斷上網】</strong> 按鈕，系統會立即切斷該設備對外存取網際網路的權限；再次點擊 <strong>【恢復上網】</strong> 即可秒級還原。</li>
+<li><strong>新裝置自動封鎖 (Autoblock)</strong>：<br />
+  在開關切換為啟用狀態後，凡是有<strong>未曾登錄過的新裝置</strong>嘗試連入教室 Wi-Fi，系統會在第一時間自動將其阻斷上網並發出警報，徹底防範鄰班學生或路人蹭網。</li>
+</ul>
+<hr />
+<h3 id="63-focus-mode">6.3 課堂專注模式 (Focus Mode 一鍵全體學生載具斷網)</h3>
+<blockquote>
+<p><strong>操作路徑</strong>：主畫面頂部工具列 ➔ 點擊【全班專注模式 (學生斷網)】按鈕</p>
+</blockquote>
+<ul>
+<li><strong>使用時機</strong>：老師在講台上進行重要觀念解說、黑板板書、全班收心或課堂隨堂考時。</li>
+<li><strong>運作機制</strong>：<br />
+  點擊後，按鈕轉為紅色閃爍之「專注模式執行中」。系統會<strong>自動對所有標記為【學生平板】的設備執行一鍵切斷網路</strong>，而【導師機】與【網路閘道】則完全不受影響。</li>
+<li><strong>一秒恢復</strong>：老師講解完畢需要學生操作平板時，再次點擊按鈕，全班平板立即恢復上網能力。</li>
+</ul>
+<hr />
+<h3 id="64-time-limit-scheduling">6.4 教師時限管控與定時斷網排程 (Time Limit &amp; Scheduling)</h3>
+<blockquote>
+<p><strong>操作路徑</strong>：設備列表 ➔ 點選目標設備的【時限】按鈕</p>
+</blockquote>
+<ol>
+<li><strong>每日上網額度限制 (Time Quota)</strong>：<br />
+   - 可設定該載具每日允許上網的分鐘數（例如每節課自主學習 45 分鐘）。
+   - 系統會以秒級為單位精密計算該設備的實際活躍時間。當額度用盡時，系統自動將其切斷上網，並在備註註記「今日上網配額已用盡」。
+   - 面板提供 <strong>【+15分鐘】</strong>、<strong>【+30分鐘】</strong> 快捷加時按鈕，以及一鍵重置計時按鈕。</li>
+<li><strong>定時斷網排程 (Schedule Block)</strong>：<br />
+   - 勾選「啟用定時斷網」，設定開始時間（如 <code>12:00</code>）與結束時間（如 <code>13:15</code>）。
+   - 在指定的時間區間內（如午休時間或特定自習節次），系統會自動精準執行斷網；時間結束後自動無感恢復連線。</li>
+</ol>
+<hr />
+<h3 id="65-gateway-vulnerability-check">6.5 教室核心路由器安全弱點檢查 (Gateway Vulnerability Check)</h3>
+<blockquote>
+<p><strong>操作路徑</strong>：切換至【安全漏洞掃描】標籤頁 ➔ 點擊【立即檢查】</p>
+</blockquote>
+<p>針對教室網路的核心生命線 —— <strong>預設閘道 (Default Gateway, 通常為 192.168.1.1)</strong> 進行深度的資安通訊埠清查，具備旋轉探測動態反饋、百分制安全評分卡與 9 大關鍵通訊埠清查矩陣：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">通訊埠 (Port)</th>
+<th style="text-align: left;">服務名稱</th>
+<th style="text-align: center;">風險等級</th>
+<th style="text-align: left;">說明與加固建議</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>Port 23</strong></td>
+<td style="text-align: left;">Telnet</td>
+<td style="text-align: center;">🔴 極高危</td>
+<td style="text-align: left;">明文遠端傳輸協定，密碼容易遭側錄。強烈建議關閉！</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Port 7547</strong></td>
+<td style="text-align: left;">TR-069</td>
+<td style="text-align: center;">🔴 極高危</td>
+<td style="text-align: left;">電信商遠端管理後門，歷年多起重大勒索病毒入侵途徑。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Port 21</strong></td>
+<td style="text-align: left;">FTP</td>
+<td style="text-align: center;">🟠 中高危</td>
+<td style="text-align: left;">未加密檔案傳輸，易遭受暴力破解與勒索軟體攻擊。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Port 3389</strong></td>
+<td style="text-align: left;">RDP</td>
+<td style="text-align: center;">🟠 中危</td>
+<td style="text-align: left;">Windows 遠端桌面，若暴露在外網容易招致自動化暴力破解。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Port 22</strong></td>
+<td style="text-align: left;">SSH</td>
+<td style="text-align: center;">🟡 提示</td>
+<td style="text-align: left;">安全加密遠端管理通訊埠，若僅在內網維護使用則屬安全。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Port 53</strong></td>
+<td style="text-align: left;">DNS</td>
+<td style="text-align: center;">🟢 正常</td>
+<td style="text-align: left;">路由器本機網域名稱解析轉發服務，區網正常教學必備。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Port 80</strong></td>
+<td style="text-align: left;">HTTP</td>
+<td style="text-align: center;">🟡 提醒</td>
+<td style="text-align: left;">路由器未加密 Web 管理介面，建議切換為 HTTPS 登入。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Port 443</strong></td>
+<td style="text-align: left;">HTTPS</td>
+<td style="text-align: center;">🟢 安全</td>
+<td style="text-align: left;">現代路由器標準加密管理介面，連線安全無虞。</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>Port 8080</strong></td>
+<td style="text-align: left;">Web Proxy</td>
+<td style="text-align: center;">🟡 提醒</td>
+<td style="text-align: left;">備用 Web 管理介面或代理伺服器通訊埠。</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="66-hidden-camera-radar">6.6 課堂隱私與針孔攝影機偵測雷達 (Hidden Camera Radar)</h3>
+<blockquote>
+<p><strong>操作路徑</strong>：切換至【安全漏洞掃描】標籤頁 ➔ 點擊【即時偵測】</p>
+</blockquote>
+<p>專為校園教室、更衣室、會議室或戶外教學住宿環境設計：
+- <strong>深度探測 RTSP (Port 554)</strong>：偵測是否有各型 IP 網路攝影機正在傳送即時影像串流。
+- <strong>探測 ONVIF (Port 3702/8000)</strong>：偵測網路攝影機標準通用廣播協定。
+- <strong>可疑攝影機高亮警報</strong>：一旦發現疑似針孔或連線攝影機，立即在列表中標註 📷 警示圖示並發出資安警告，全力守護師生隱私。</p>
+<hr />
+<h3 id="67">6.7 專業網管診斷工具箱</h3>
+<blockquote>
+<p><strong>操作路徑</strong>：切換至【專業網管工具】標籤頁</p>
+</blockquote>
+<ol>
+<li><strong>LAN 喚醒 (Wake on LAN, WoL)</strong>：輸入教室公務電腦或大屏之 MAC 位址，發送標準魔術封包（Magic Packet），直接透過網路遠端開機。</li>
+<li><strong>私接 Rogue DHCP 分享器探測</strong>：探測教室內是否有學生或老師私自插上未報備的家用無線分享器，防止配發錯誤 IP 導致全班斷網。</li>
+<li><strong>原生 ICMP Ping 延遲診斷</strong>：調用系統原生底層 Socket 發送 4 次探測，精密測量往返時間（Min / Avg / Max）與封包遺失率。</li>
+<li><strong>Traceroute 路由節點追蹤</strong>：追蹤封包到達網際網路（如 <code>8.8.8.8</code>）途經的每一跳節點與各跳延遲，快速排查是學校機房斷線還是電信商線路故障。</li>
+</ol>
+<hr />
+<h3 id="68-full-event-audit-timeline">6.8 完整事件時間軸與動態稽核 (Full Event Audit Timeline)</h3>
+<blockquote>
+<p><strong>操作路徑</strong>：切換至【事件時間軸】標籤頁</p>
+</blockquote>
+<p>系統完整記錄教室網路中的所有歷史動態：
+- <strong>裝置首次發現</strong>：記錄某台新手機在幾點幾分首次連線。
+- <strong>自動防禦處置</strong>：記錄哪一台設備因為未經授權而被系統切斷網路。
+- <strong>資安攻擊攔截</strong>：記錄哪個外部 IP 嘗試非法呼叫 API 或輸入錯誤 PIN 碼。
+- <strong>教師手動操作</strong>：記錄老師手動啟動專注模式、調整時限、認領手機等事件。</p>
+<hr />
+<h2 id="_4">七、教師行動端安裝與配對指南</h2>
+<p>ClassNet Sentinel v2.4.0 提供 <strong>三種使用管道</strong>，滿足不同老師的偏好與操作習慣：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">行動端途徑</th>
+<th style="text-align: left;">部署方式</th>
+<th style="text-align: left;">適用載具</th>
+<th style="text-align: left;">核心優勢</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>途徑一：免安裝 Web App</strong></td>
+<td style="text-align: left;">掃碼加入主畫面 (PWA)</td>
+<td style="text-align: left;">iOS (Safari) / Android (Chrome)</td>
+<td style="text-align: left;">0 秒即開即用，免安裝任何 APK，跨平台通用 (最推薦)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>途徑二：/pair 安全認領</strong></td>
+<td style="text-align: left;">瀏覽器開啟 <code>/pair</code> + PIN 碼</td>
+<td style="text-align: left;">智慧型手機 / 平板電腦</td>
+<td style="text-align: left;">一鍵自動登記升級為【導師機】，享有永久免斷網白名單</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>途徑三：原生 APK 直裝版</strong></td>
+<td style="text-align: left;">下載安裝獨立 <code>.apk</code> 包</td>
+<td style="text-align: left;">Android 7.0 以上手機 / 平板</td>
+<td style="text-align: left;">獨立桌面圖示，斷線自動重連，支援手動指定主機 IP</td>
+</tr>
+</tbody>
+</table>
+<h3 id="71-web-app-pwa">7.1 方式一：免安裝 Web App (PWA 模式) —— 最推薦、零門檻</h3>
+<ol>
+<li>教師手機連上<strong>與教室電腦相同的 Wi-Fi 網路</strong>。</li>
+<li>在電腦主控台右上角點擊 <strong>「📱 教師手機 App」</strong> 按鈕，螢幕將彈出專屬連線 QR Code。</li>
+<li>打開手機相機掃描 QR Code（或在手機瀏覽器輸入 <code>http://教師電腦IP:8000</code>）。</li>
+<li>輸入教師管理 PIN 碼（預設 <code>8888</code>）完成驗證解鎖。</li>
+<li><strong>將網頁加入手機主畫面</strong>：
+   - <strong>iPhone (Safari)</strong>：點擊底部分享圖示 ➔ 選擇 <strong>「加入主畫面」</strong>。
+   - <strong>Android (Chrome)</strong>：點擊右上角「⋮」選單 ➔ 選擇 <strong>「加到主螢幕」</strong> 或 <strong>「安裝應用程式」</strong>。</li>
+<li>手機桌面上即會生成專屬的「ClassNet 班級網盾」圖示，點開即可全螢幕獨立運行！</li>
+</ol>
+<hr />
+<h3 id="72-1-pair">7.2 方式二：教師手機 1 秒安全白名單認領 (<code>/pair</code>)</h3>
+<ul>
+<li><strong>使用方式</strong>：手機連線 Wi-Fi 後，在手機瀏覽器開啟：<br />
+<code>http://教師電腦IP:8000/pair</code>  </li>
+<li><strong>資安防護設計</strong>：<br />
+  頁面會要求輸入教師管理 PIN 碼。輸入正確 PIN 碼後，系統會利用底層封包逆向捕捉該手機的真實 IP 與 MAC，自動將該裝置標籤升級為 <strong>【導師機】</strong> 並永久加入免斷網白名單，同時核發授權 Token，一鍵進入行動主控台！<br />
+<em>即使學生掃描或偷看該網址，沒有教師 PIN 碼也無法完成認領，徹底防止學生越權升級！</em></li>
+</ul>
+<hr />
+<h3 id="73-android-apk">7.3 方式三：Android 原生 APK 直裝版下載與設定</h3>
+<p>為習慣安裝獨立 App 安裝包的老師提供了已編譯簽署的原生 APK：</p>
+<ol>
+<li><strong>取得 APK 安裝包與軟體檔案</strong>：
+   - <strong>官方 Google 雲端硬碟載點</strong>：可直接透過 <a href="https://drive.google.com/file/d/10Gv1SqcejiMJ-sxnZhCsUp3tXvmL3fqK/view?usp=sharing" target="_blank" rel="noopener noreferrer" style="color: #0284c7; font-weight: 700; text-decoration: underline;">Google 雲端硬碟官方下載連結</a> 取得軟體安裝包與相關檔案。
+   - <strong>手機直連下載</strong>：手機連上教室 Wi-Fi 後，掃描彈窗內的 APK 下載 QR Code，或直接在手機瀏覽器訪問 <code>http://教師電腦IP:8000/download/apk</code>。
+   - <strong>電腦端傳送</strong>：由電腦端直接複製 <code>dist/ClassNet_Sentinel_教師端.apk</code> 安裝包至手機安裝（亦可自雲端硬碟下載後傳送）。</li>
+<li><strong>安裝與權限設定</strong>：點擊下載的 <code>.apk</code> 檔案，若系統提示「允許來自此來源的應用程式」，請勾選允許安裝。</li>
+<li><strong>App 內建特色</strong>：
+   - 打開 App 即自動載入教室主控台。
+   - 右上角提供 <strong>「⚙️ 主機設定」</strong> 按鈕，若教室主機更換或 IP 異動，隨時可一鍵輸入新 IP。
+   - 離線或 Wi-Fi 斷開時，介面會呈現友善的繁體中文引導與「🔄 重新連線」按鈕。</li>
+</ol>
+<hr />
+<h2 id="_5">八、多元教育實戰應用場景庫</h2>
+<p>本單元深入剖析現代校園與智慧教室中，ClassNet Sentinel v2.4.0 的 7 大經典實戰應用情境與標準作業程序（SOP）：</p>
+<pre><code class="language-mermaid">flowchart LR
+    subgraph Scenes [&quot;ClassNet Sentinel 7 大教育實戰場景庫&quot;]
+        S1[&quot;場景 1: 公開授課與視導觀摩&quot;]
+        S2[&quot;場景 2: 標準化線上段考防作弊&quot;]
+        S3[&quot;場景 3: 小組專題與加時激勵&quot;]
+        S4[&quot;場景 4: 午休自習定時斷網&quot;]
+        S5[&quot;場景 5: 戶外露營與熱點防窺&quot;]
+        S6[&quot;場景 6: 校園私接 Rogue AP 排查&quot;]
+        S7[&quot;場景 7: 宿舍與更衣室針孔防窺&quot;]
+    end
+</code></pre>
+<h3 id="demonstration-teaching">場景一：公開授課與視導觀摩 (Demonstration Teaching)</h3>
+<ul>
+<li><strong>教學情境</strong>：學校舉辦公開觀議課、校外專家視導或家長開放日。授課教師必須在 40 分鐘內流暢進行大螢幕電子白板講解、師生互動與學生平板答題，絕不容許網路延遲或學生在台下分心滑遊戲讓評委看見。</li>
+<li><strong>標準實戰 SOP</strong>：
+  1. <strong>課前 10 分鐘（白名單鎖定）</strong>：老師開啟班級網盾，點擊【真實掃描】，確認全班 30 台學生平板皆已在線，並點擊頂部【新裝置自動封鎖】（防止觀課家長或外人蹭網佔用頻寬）。
+  2. <strong>教師講解階段（專注收心）</strong>：老師登台開場解說本節目標，手機輕點【開啟專注模式】，全班平板瞬間斷網，所有學生目光強制聚焦於大螢幕與黑板。
+  3. <strong>互動答題階段（一秒還原）</strong>：進入分組答題時，老師手機點擊【解除專注模式】，全班平板秒級恢復網路連線，流暢進行互動測驗。
+  4. <strong>觀摩成果</strong>：全程教學緊湊有序，完全杜絕學生偷玩載具引發觀課評委質疑的窘境。</li>
+</ul>
+<hr />
+<h3 id="online-examination">場景二：標準化數位測驗與段考防作弊 (Online Examination)</h3>
+<ul>
+<li><strong>教學情境</strong>：全校進行英文聽力測驗、數位模擬考或線上期末考。學生使用平板登入校內測驗系統答題，為求公平，必須防範學生透過通訊軟體（LINE、Discord）互相通風報信或使用搜尋引擎查找答案。</li>
+<li><strong>標準實戰 SOP</strong>：
+  1. <strong>測驗前封閉通訊</strong>：利用班級網盾設定學生平板的上網排程，或在聽力講解階段維持全班專注模式斷網。
+  2. <strong>測驗進行中（嚴密監控）</strong>：將儀表板切換至【事件時間軸】，隨時關注是否有學生嘗試利用私密隨機 MAC 開啟個人手機熱點蹭網。
+  3. <strong>測驗鐘響結束（即時截斷）</strong>：測驗時間到，老師點擊【全班專注模式】，所有學生載具立即失去連線，無法再修改答案或傳送訊息，確保成績結算的公正客觀。</li>
+</ul>
+<hr />
+<h3 id="group-collaborative-learning">場景三：分組協作與平板數位專題 (Group Collaborative Learning)</h3>
+<ul>
+<li><strong>教學情境</strong>：自然科學或社會科專題探究課，學生進行 4 人一組分組討論，需要查閱網路文獻並製作簡報，但容易發生個別學生沉迷於觀看 YouTube 搞笑影片或打手遊的情形。</li>
+<li><strong>標準實戰 SOP</strong>：
+  1. <strong>分配課堂額度</strong>：老師針對各組平板，點擊【時限】按鈕，設定本節課「上網時限 35 分鐘」。
+  2. <strong>巡堂動態激勵</strong>：老師拿著手機在教室巡堂走動。若發現第 2 組討論熱烈、進度超前，老師在手機端直接點擊【+15分鐘】給予該組網路額度獎勵！
+  3. <strong>超時自動收心</strong>：若第 4 組學生偷看非學習影片導致額度耗盡，系統自動阻斷其網路並註記「今日上網配額已用盡」，提醒該組學生專注於口頭討論與紙本整理。</li>
+</ul>
+<hr />
+<h3 id="study-hall-sleep-routine">場景四：午休自習與放學清場 (Study Hall &amp; Sleep Routine)</h3>
+<ul>
+<li><strong>教學情境</strong>：中午 12:30 至 13:10 為全校午休睡眠時間，但常有住校生或留班學生在棉被底下偷滑平板、看小說；放學後亦有學生逗留在教室玩手遊不回家。</li>
+<li><strong>標準實戰 SOP</strong>：
+  1. <strong>設定定時排程</strong>：在各載具時限面板中，勾選「啟用定時斷網排程」，設定開始時間 <code>12:30</code>，結束時間 <code>13:10</code>。
+  2. <strong>全自動執行</strong>：時間一到，系統後台守護進程自動切斷所有學生平板的 Wi-Fi 連線，時間結束自動恢復，教師無需手動守在電腦前。
+  3. <strong>放學排程清場</strong>：另可設定每日 <code>17:30 ~ 07:30</code> 夜間斷網，徹底防範夜間偷連或校外人士夜間盜用校園 Wi-Fi。</li>
+</ul>
+<hr />
+<h3 id="field-trips-mobile-hotspot">場景五：校外教學與手機熱點露營 (Field Trips &amp; Mobile Hotspot)</h3>
+<ul>
+<li><strong>教學情境</strong>：學校舉辦畢業旅行、戶外隔宿露營或童軍活動。晚間就寢後，學生常私自連線遊覽車或營區的 Wi-Fi 熬夜打線上遊戲，影響隔日行程體力與安全。</li>
+<li><strong>標準實戰 SOP</strong>：
+  1. <strong>隨身筆電監控</strong>：教師將裝有 ClassNet Sentinel 執行檔的輕薄筆電連入營區或民宿 Wi-Fi（亦支援教師手機開啟的行動熱點網段）。
+  2. <strong>一鍵全網掃描</strong>：點擊【真實掃描】，瞬間收錄所有學生偷偷開機的手機與平板。
+  3. <strong>就寢全面防護</strong>：就寢時間一到，老師啟動【新裝置自動封鎖】與【全體學生斷網】，夜間任何新開機的手機均無法連線，確保全班學生安心就寢。</li>
+</ul>
+<hr />
+<h3 id="ap-rogue-ap-hunting">場景六：校園私接 AP 與流氓基地台清查 (Rogue AP Hunting)</h3>
+<ul>
+<li><strong>教學情境</strong>：教室網路經常發生「整排電腦突然斷線」或「取得奇怪的 192.168.0.x IP」，資訊組懷疑有學生私自從家裡帶來小型無線路由器插在教室網路壁孔上，引發 DHCP 衝突。</li>
+<li><strong>標準實戰 SOP</strong>：
+  1. <strong>開啟診斷工具</strong>：切換至【專業網管工具】標籤頁。
+  2. <strong>執行流氓 DHCP 探測</strong>：點擊【偵測私接 Rogue DHCP 分享器】按鈕。
+  3. <strong>揪出元兇</strong>：系統發送廣播發現兩個不同的 DHCP 回應，並精確列出私接分享器的 MAC 位址與品牌（例如 TP-Link, 小米）。資訊組老師循線順利找出私接設備並拔除，瞬間恢復全班網路穩定。</li>
+</ul>
+<hr />
+<h3 id="privacy-camera-sweep">場景七：課堂防窺雷達巡檢 (Privacy &amp; Camera Sweep)</h3>
+<ul>
+<li><strong>教學情境</strong>：學校舞蹈教室、游泳池更衣室、會議室或校外住宿飯店，必須嚴防非法有心人士安裝隱蔽式 Wi-Fi 針孔攝影機偷拍。</li>
+<li><strong>標準實戰 SOP</strong>：
+  1. <strong>入住或使用前檢驗</strong>：將筆電連上該環境之 Wi-Fi 網路。
+  2. <strong>啟動視訊協定雷達</strong>：切換至【安全漏洞掃描】標籤頁，點擊【即時偵測】針孔防窺雷達。
+  3. <strong>自動全網檢驗</strong>：系統在 1 秒內檢測網段內所有設備是否開放 RTSP 554 即時視訊串流或 ONVIF 3702 監視協定。
+  4. <strong>無死角守護</strong>：若結果顯示「未發現可疑攝影機」，即可向師生宣布環境安全，全力保障個人隱私尊嚴。</li>
+</ul>
+<hr />
+<h2 id="faq">九、常見問題與疑難排解 (FAQ)</h2>
+<h3 id="q1">Q1：為什麼點擊【一鍵斷網】後，部分設備依然能上網？</h3>
+<ul>
+<li><strong>解答</strong>：<br />
+  Windows 系統底層若未安裝封包擷取驅動，系統只能以常規 Socket 嘗試發送 TCP Reset 控制訊號。為達到 100% 完美的阻斷效果，<strong>強烈建議安裝 Npcap 驅動程式</strong>（微軟數位簽名、WinPcap 現代相容升級版）。</li>
+<li>若主控台頂部出現黃色提示「⚠️ 尚未檢測到 Npcap 核心驅動」，請直接點擊提示列中的連結下載安裝。</li>
+<li>安裝時請務必勾選 <strong>「Install Npcap in WinPcap API-compatible Mode」</strong>。安裝完成後重新啟動主控台，斷網阻斷即可達 100% 強制壓制效果。</li>
+</ul>
+<h3 id="q2-ip">Q2：學生知道老師電腦的 IP，會不會自己開啟瀏覽器登入系統給同學斷網？</h3>
+<ul>
+<li><strong>解答</strong>：<br />
+<strong>絕對不可能！</strong>  </li>
+<li>ClassNet Sentinel 具備本機特許與外網嚴格鎖定機制。</li>
+<li>任何外部 Wi-Fi 設備存取主機 IP 時，畫面會強制彈出全螢幕 PIN 碼鎖定遮罩，未輸入正確教師管理密碼前無法看見任何資料。</li>
+<li>若嘗試透過命令調用後端 API，一律被 403 Forbidden 攔截並在事件時間軸留下警告稽核紀錄。</li>
+</ul>
+<h3 id="q3-pin">Q3：忘記教師管理 PIN 碼該怎麼辦？</h3>
+<ul>
+<li><strong>解答</strong>：<br />
+  只要回到<strong>講台本機電腦前操作即可！</strong><br />
+  因為講台電腦為本機連線（<code>127.0.0.1</code>），享有實體在場免密特許權。老師只要坐在電腦前，點擊頂部的「🔑 鑰匙圖示」，即可直接設定一組全新的 PIN 碼，完全不用擔心被鎖在門外。</li>
+</ul>
+<h3 id="q4-iphone-android-mac">Q4：學生的 iPhone / Android 平板每次重連 MAC 位址都不一樣，如何管理？</h3>
+<ul>
+<li><strong>解答</strong>：<br />
+  這是行動裝置預設啟用的「私密 Wi-Fi 位址」功能。</li>
+<li>本系統會自動辨識並標記紫色 <strong>【私密MAC】</strong>。</li>
+<li>老師可請學生在平板的 Wi-Fi 設定中，將教室 Wi-Fi 的「專用位址 / 隨機 MAC」切換為「<strong>使用裝置 MAC</strong>」，即可永久固定實體 MAC 位址，方便精準命名為「第 1 組平板」、「第 2 組平板」。</li>
+</ul>
+<h3 id="q5-port-53-dns-port-443-https">Q5：路由器弱點檢查中 Port 53 (DNS) 與 Port 443 (HTTPS) 開放是否正常？</h3>
+<ul>
+<li><strong>解答</strong>：<br />
+<strong>這是完全正常的！</strong></li>
+<li><strong>Port 53 (DNS)</strong> 是路由器為全班電腦解析網址必備的服務。</li>
+<li><strong>Port 443 (HTTPS)</strong> 是路由器原廠的加密安全 Web 管理介面。</li>
+<li>只要 <strong>Port 23 (Telnet)</strong> 與 <strong>Port 7547 (TR-069)</strong> 呈現綠色「安全關閉」，您的教室路由器即具備優良的抗滲透安全強度。</li>
+</ul>
+<hr />
+<h2 id="specifications-changelog">十、技術規格與版本紀錄 (Specifications &amp; Changelog)</h2>
+<h3 id="101">10.1 系統技術規格表</h3>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">規格維度</th>
+<th style="text-align: left;">技術規範說明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><strong>軟體版本編號</strong></td>
+<td style="text-align: left;"><strong>v2.4.0 繁體中文旗艦正式版</strong> (全系統、後端與前端統一代號)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>作業系統相容性</strong></td>
+<td style="text-align: left;">Windows 10 (1809 以上) / Windows 11 (64-bit 全版本)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>行動端相容性</strong></td>
+<td style="text-align: left;">Android 7.0 以上 (APK 直裝) / iOS 13+ &amp; Android (PWA Web App)</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>後端微核心架構</strong></td>
+<td style="text-align: left;">High-performance Python 3.13 / FastAPI 異步核心 / SQLite WAL</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>前端設計語彙</strong></td>
+<td style="text-align: left;">Tailwind CSS / FontAwesome 6 / Glassmorphism 擬真毛玻璃質感</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>區域網路探測</strong></td>
+<td style="text-align: left;">RAW Socket ARP / ICMP Echo / mDNS (5353) / SSDP (1900) 喚醒廣播</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>存取防護體系</strong></td>
+<td style="text-align: left;">本機免密特許 (Localhost Exemption) / 4~6 位 PIN 碼鎖定 / 403 API 攔截</td>
+</tr>
+<tr>
+<td style="text-align: left;"><strong>安全性保證</strong></td>
+<td style="text-align: left;">100% Local-First 本地離線運作，零上傳、零外部雲端相依</td>
+</tr>
+</tbody>
+</table>
+<h3 id="102">10.2 版本修訂紀錄</h3>
+<ul>
+<li><strong>v2.4.0 (本次重大發布・全端版本統一)</strong>：<ul>
+<li><strong>全端版本號統一</strong>：徹底對齊後端 API（<code>2.4.0</code>）、前端主控台（<code>v2.4.0</code>）與官方手冊白皮書。</li>
+<li><strong>手冊排版極致翻新</strong>：徹底解決排版縮排混亂，移除破版 ASCII 方塊，全面改採標準 GFM 表格與卡片設計，引入 Python Markdown 專業排版引擎。</li>
+<li><strong>實裝教師管理 PIN 碼驗證系統</strong>：外網訪問強制 PIN 碼鎖定，支援自訂密碼與手動鎖定。</li>
+<li><strong>後端全面掛載 <code>verify_admin_access</code> 守門員</strong>：非授權設備禁止調用 API，未認證一律拋出 403 Forbidden 並記錄資安警告日誌。</li>
+<li><strong>手機安全認領升級 (<code>/pair</code>)</strong>：必須驗證教師 PIN 碼才能升級導師機，杜絕學生自我越權提升。</li>
+<li><strong>增編核心技術專章</strong>：深入解密 ARP 路由阻斷技術與硬體零磨損/無痕還原保證。</li>
+<li><strong>增編課堂防惡意干擾專章</strong>：提供 AP 隔離、DAI、MDM 等 4 道防範學生安裝同類軟體的完整方案。</li>
+<li><strong>建構 7 大多元教育實戰應用場景庫</strong>：涵蓋公開課、段考、專題、午休、露營、私接 AP 與防窺。</li>
+</ul>
+</li>
+<li><strong>v2.3.0</strong>：<ul>
+<li>修復手機配對 QR Code 智慧偵測真實主機 LAN IP，徹底排除 localhost 問題。</li>
+<li>正式編譯產出專屬 Android 原生 APK 安裝包，並於主控台建立 <code>/download/apk</code> 直接下載通道。</li>
+<li>升級路由器弱點檢查：實裝 9 大關鍵通訊埠清查矩陣與安全評分卡。</li>
+</ul>
+</li>
+<li><strong>v2.2.0</strong>：<ul>
+<li>支援免安裝單一執行檔打包，重構高精度 ICMP 延遲與抖動計算。</li>
+<li>實裝學生載具隨機私密 MAC 辨識演算法與 AirPlay / RTSP 活躍服務偵測。</li>
+</ul>
+</li>
+<li><strong>v2.0.0</strong>：<ul>
+<li>導入課堂專注模式（Focus Mode）全體學生平板一鍵斷網功能。</li>
+<li>實裝上網時限配額計時器與午休/上課定時斷網排程機制。</li>
+</ul>
+</li>
+</ul>
+<hr />
+<p><em>ClassNet Sentinel 研發團隊 敬製 ｜ 守護智慧課堂資安・還給教師專注教學</em></p>
+
+    <!-- 頁尾宣告 -->
+    <div class="footer">
+      <p>ClassNet Sentinel 班級網盾 研發團隊 敬製 ｜ 守護智慧課堂資安・還給教師專注教學</p>
+      <p style="margin-top: 6px;">版權所有 © 2026 ClassNet Sentinel. All rights reserved. 繁體中文官方正式版 v2.4.0</p>
+    </div>
+
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      if (window.mermaid) {
+        mermaid.initialize({
+          startOnLoad: true,
+          theme: 'neutral',
+          flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
