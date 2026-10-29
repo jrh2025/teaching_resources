@@ -394,6 +394,152 @@ window.APP_DATA = {
       "link": "TN_Guidelines_User_Manual.html",
       "icon": "FileSearch",
       "color": "rose"
+    },
+    {
+      "id": "item_1793238555146",
+      "title": "學生學習能力檢測-題庫與教學測驗系統",
+      "category": "測驗",
+      "description": "歷年學力檢測試卷轉化為數位化教學與自主練習工具。系統主打「開箱即用、離線流暢、保護隱私」，既支援教師在課堂上精準引導，也能讓學生課後針對弱點自主補強。(含115年題庫分享包)",
+      "link": "Learning_Ability_Assessmen_User_Guide.html",
+      "icon": "Atom",
+      "color": "blue",
+      "grade": "測驗"
+    },
+    {
+      "id": "item_1793238858480",
+      "title": "完整題庫-學生學習能力檢測-題庫與教學測驗系統",
+      "category": "其他",
+      "description": "【學生學習能力檢測-題庫與教學測驗系統】的106-115完整題庫，  選擇你需要的題本(題本均已重新切割好並加上完整記錄)，下載後解壓縮將整個資料夾放入系統資料夾的 data\\exams 底下，接下來就可以在網頁介面上的題庫大廳選擇剛才的題本進行本機安裝了。",
+      "link": "https://drive.google.com/drive/folders/1VlHFmqFcRLqMEce-U_qXO0g4qixNFXUb?fbclid=IwY2xjawVPhu1leHRuA2FlbQIxMABwZG9mBWJyaWQRMUVSQnhEWTU2dFIwbXJ4V0RzcnRjBmFwcF9pZBAyMjIwMzkxNzg4MjAwODkyAAEfFQCRolt276AWiwju93Inyp-e5HZoCps70eovYnGwbqzoMPFqO64e9m7tn_A_aem_DTCTakge0UTXyfCJyVOAGA",
+      "icon": "Database",
+      "color": "sky",
+      "grade": "其他"
+    },
+    {
+      "id": "item_1793239237293",
+      "title": "政府採購法個人知識庫",
+      "category": "校務",
+      "description": "政府採購法包含所有的授權子法(Gemini Notebook)，有採購上的問題直接點擊連結上去問就好了。\n建議選擇複製筆記本直接建立在自己的 Gemini Notebook，往後就可自行更新、維護，也可以好好使用工作室的各項功能，成為一個完全屬於個人的採購法知識庫。",
+      "link": "https://notebook.google.com/notebook/f9246d0e-dade-45ae-ba37-283a57c14d65",
+      "icon": "BookOpen",
+      "color": "indigo",
+      "grade": "校務"
+    },
+    {
+      "id": "item_1793239470995",
+      "title": "職業安全衛生法個人知識庫",
+      "category": "校務",
+      "description": "職業安全衛生法包含所有的授權子法(Gemini Notebook 版)，職安上的問題直接點擊連結上去問就好了。這對職安人員查詢法規、雇主與受雇者都很受用，可以了解自己的權利、義務和責任。\n建議選擇複製筆記本直接建立在自己的 Gemini Notebook，往後就可自行更新、維護，也可以好好使用工作室的各項功能，成為一個完全屬於個人的職安法知識庫。",
+      "link": "https://notebook.google.com/notebook/395ecbf5-8bca-479f-b187-50980b9d4d04",
+      "icon": "BookOpen",
+      "color": "green",
+      "grade": "校務"
+    },
+    {
+      "id": "item_1793239762225",
+      "title": "蟑螂大逃竄",
+      "category": "遊戲",
+      "description": "一款表面上看似休閒，實則是一場針對反應神經與心理恐懼的脫敏特訓：💦 克服恐懼的指尖抓蟑螂特訓💦 動態預判與極限攔截💦 激發勝負欲的通關戰績👉 想秒解無聊、瞬間提神，或是測測自己對蟑螂的心理耐受度與手速極限，隨開隨玩抓一局剛剛好。",
+      "link": "cockroach_run_mini_game.html",
+      "icon": "Gamepad2",
+      "color": "orange",
+      "grade": "遊戲"
+    },
+    {
+      "id": "item_1793239973016",
+      "title": "課堂互動 RPG 遊戲系統",
+      "category": "班級經營",
+      "description": "把嚴肅的課堂測驗變成了「全班一起組隊打怪」的冒險。孩子們在自己的平板上探索專屬的小迷宮，可以照著自己的步調慢慢讀題、思考，完全不用跟同學比手速；全班每一次答對或集火攻擊，都會化為大螢幕上討伐世界魔王的傷害，讓每個孩子都覺得自己不可或缺。為了不讓大家亂猜，題目答錯魔王甚至還會偷偷回血！",
+      "link": "Classroom_RPG_Manual.html",
+      "icon": "Medal",
+      "color": "rose"
+    },
+    {
+      "id": "item_1793240278702",
+      "title": "題庫-課堂互動 RPG 遊戲系統",
+      "category": "其他",
+      "description": "搭配課堂互動 RPG 系統專案的題庫。",
+      "link": "https://drive.google.com/drive/folders/1GINihBivSvHg9QDC_BQyc_MjiRYkB1w1",
+      "icon": "Database",
+      "color": "purple",
+      "grade": "其他"
+    },
+    {
+      "id": "item_1793240600124",
+      "title": "Raster2Vector Pro 專業點陣轉向量工作站",
+      "category": "小程式",
+      "description": "專業點陣轉向量工作站核心功能包含：\n1️⃣子像素向量重構：利用 Sobel 邊緣分析與弦長自適應 Bézier 擬合消除鋸齒，以最少節點輸出真實封閉的 SVG 向量路徑。\n2️⃣智慧分色與降噪：具備全自動、精靈導引及進階專業三種模式，支援雙邊濾波除噪與 sRGB 自動色彩聚類。\n3️⃣向量節點編輯器：內建選取、節點與貝茲桿微調、增刪節點、填色、路徑切割/連結、除雜點及一鍵去背。\n4️⃣精準可視化比對：提供即時滑桿對比（點陣 vs. 向量）、並排檢視、節點骨架顯示及子像素網格疊加。\n5️⃣檔案輸入與匯出：支援本地點陣圖上傳、內建邊界測試集（商標、線稿、風景），並可一鍵匯出標準向量檔。",
+      "link": "raster2vector.html",
+      "icon": "Images",
+      "color": "slate",
+      "grade": "小程式"
+    },
+    {
+      "id": "item_1793240831610",
+      "title": "ProPDF Studio 桌面版PDF編輯器",
+      "category": "小程式",
+      "description": "重新定義 PDF 處理體驗：更直覺、更強大、極致流暢。\n告別昂貴且臃腫的訂閱軟體！ProPDF Studio 具備所見即所得文字編輯、互動表單自由切換、手寫電子簽章、多頁面拆合旋轉，以及內建官方頂級 13MB 神經網絡離線 OCR 繁中識別引擎。",
+      "link": "ProPDF_Studio_Manual.html",
+      "icon": "FilePlus",
+      "color": "blue",
+      "grade": "小程式"
+    },
+    {
+      "id": "item_1793241050633",
+      "title": "EduCast-智慧教室投屏系統",
+      "category": "班級經營",
+      "description": "EduCast Pro 是一款專為中小學課堂互動教學、大學分組研討以及企業跨平台簡報展示量身打造的跨平台多端無線投屏與導播系統。傳統教學與會議投影方案常受限於專用硬體發射器（易故障遺失）、要求安裝專用 App、無法跨平台操作或依賴外網雲端伺服器導致延遲與資安隱患。 EduCast Pro 採用革命性的「純區域網路極速直連 + 零安裝 Web/Native 雙模架構」：學生與與會者無需安裝任何 App，只需用相機掃描 QR Code，即可在 1 秒內將白板筆跡、相機實物、課本作業、照片或系統桌面即時投屏至大螢幕！",
+      "link": "EduCast_Manual.html",
+      "icon": "MonitorSmartphone",
+      "color": "sky"
+    },
+    {
+      "id": "item_1793241311727",
+      "title": "教師資格考試智慧刷題與錯題系統",
+      "category": "測驗",
+      "description": "四大核心設計哲學：\n1️⃣零後端（Zero-Backend）與離線優先（Offline-First）：純前端單一檔案架構，題庫、高解析圖片、WebAssembly SQLite 與圖表引擎全數內嵌，下載單一 HTML 即可離線永久使用。\n2️⃣認知卸載（Cognitive Offloading）：排除多餘視覺雜訊，透過「🧘 極致專注模式」、題組長文摺疊與手機懸浮抽屜，將考生的注意力完全釋放至深度知識提取。\n3️⃣考科自主瘦身（Single-Category Optimization）：內建題庫管理員，一鍵剔除其餘無關考科，專為報考類科提供毫秒級的極速反應。\n4️⃣念稿與試教口說雙用（Speech-Ready Typography）：首創 4 段級距式字體縮放，提供專為朗讀訓練打造的 28px 巨字排版與 2.15 倍行距，無縫銜接教師甄試複試準備。",
+      "link": "Teacher_Certification.html",
+      "icon": "BookOpen",
+      "color": "indigo",
+      "grade": "測驗"
+    },
+    {
+      "id": "item_1793241526982",
+      "title": "ClassNet Sentinel 班級網盾",
+      "category": "班級經營",
+      "description": "一套專為現代智慧校園與數位教學環境量身打造的 Wi-Fi 網路掃描、在線設備監控、主動資安防禦與課堂秩序控制系統。",
+      "link": "classnet_sentinel_manual.html",
+      "icon": "Wifi",
+      "color": "green"
+    },
+    {
+      "id": "item_1793241799300",
+      "title": "HexaLearn 3D 微縮城市知識引擎",
+      "category": "班級經營",
+      "description": "一款將「桌遊策略資源調度 × 3D 島嶼角色漫遊 × 數位孿生城市建設 × 瀏覽器原生 SQLite 資料庫工坊」融為一體的互動式知識學習系統。除了內建的4個遊戲資料庫之外，你可以自行將任何領域的教材、白皮書或地方導覽，轉化為一座由 19 塊六角生態地形組成的 3D 立體微縮島嶼。",
+      "link": "lowpoly_catan_learning_game.html",
+      "icon": "Hexagon",
+      "color": "orange"
+    },
+    {
+      "id": "item_1793241956243",
+      "title": "自建資料庫技能-HexaLearn 3D 微縮城市知識引擎",
+      "category": "其他",
+      "description": "【HexaLearn 3D 微縮城市知識引擎】的自建遊戲資料庫的技能包(For Gemini 任務)，直接下載壓縮檔，上傳技能即可使用。建立技能後以任務執行 @hexalearn-database-generator ，告知你所要生成的遊戲題庫內容或提供相關文本即可幫你生成遊戲資料庫。",
+      "link": "https://drive.google.com/file/d/1aawX0Hsvk1hQBBAO_6I2ic8n6_nD8Ttl",
+      "icon": "Asterisk",
+      "color": "rose",
+      "grade": "其他"
+    },
+    {
+      "id": "item_1793242227753",
+      "title": "分享遊戲資料庫-HexaLearn 3D 微縮城市知識引擎",
+      "category": "其他",
+      "description": "分享現成的【HexaLearn 3D 微縮城市知識引擎】遊戲資料庫(可直接匯入使用)",
+      "link": "https://www.facebook.com/share/p/1CKtSenGHu/",
+      "icon": "Database",
+      "color": "purple",
+      "grade": "其他"
     }
   ]
 };
