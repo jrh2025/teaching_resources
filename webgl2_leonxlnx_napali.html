@@ -1,0 +1,3096 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>大北門程序化三維地景重構 — WebGL2 即時光線步進系統 (Leonxlnx/napali 在地化工程)</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-glass: rgba(12, 16, 23, 0.78);
+      --border-glass: rgba(251, 191, 36, 0.24);
+      --accent-amber: #f59e0b;
+      --accent-gold: #fbbf24;
+    }
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #070a0f;
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+      color: #f8fafc;
+    }
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .glass-panel {
+      background: var(--bg-glass);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border-glass);
+      box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.65);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.5);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(245, 158, 11, 0.45);
+      border-radius: 9999px;
+    }
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255, 255, 255, 0.14);
+      height: 5px;
+      border-radius: 999px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fbbf24;
+      cursor: pointer;
+      border: 2px solid #0f172a;
+      box-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
+    }
+    .zone-btn.active {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.9), rgba(217, 119, 6, 0.9));
+      color: #090d16;
+      border-color: #fde68a;
+      font-weight: 600;
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.45);
+    }
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.45; }
+    }
+    .animate-pulse-slow {
+      animation: pulse-slow 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    #hudContainer {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 10px 12px;
+      gap: 8px;
+      overflow: hidden;
+    }
+    #hudTop {
+      width: 100%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: nowrap;
+    }
+    #hudMiddle {
+      width: 100%;
+      flex: 1 1 0%;
+      min-height: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      overflow: hidden;
+    }
+    #hudLeft, #hudRight {
+      width: 280px;
+      max-height: 100%;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+      pointer-events: auto;
+    }
+    #hudBottom {
+      width: 100%;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #hudMiddle.hidden, #hudBottom.hidden, .hidden {
+      display: none !important;
+    }
+
+  </style>
+</head>
+<body class="relative w-full h-full select-none">
+
+  <!-- Main WebGL2 Viewport Canvas -->
+  <canvas id="glCanvas" class="block w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+
+  <!-- Progressive Accumulation Overlay Canvas (used when SPP Still Mode is active) -->
+  <div id="sppBanner" class="hidden pointer-events-none fixed top-20 left-1/2 -translate-x-1/2 z-30 glass-panel px-4 py-1.5 rounded-full flex items-center gap-2.5 text-xs text-amber-200 border border-amber-400/40">
+    <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+    <span id="sppStatusText" class="font-mono-code">高品質靜態超取樣模式 (mode=still) · SPP: 1 / 16</span>
+  </div>
+
+  <!-- Non-Overlapping Full-Viewport Flex HUD Shell -->
+  <div id="hudContainer" class="fixed inset-0 z-20 pointer-events-none flex flex-col justify-between p-2 sm:p-3 gap-2 overflow-hidden">
+
+    <!-- ROW 1: Top Telemetry & Pipeline Header Bar (Single Non-Wrapping Row) -->
+    <header id="hudTop" class="w-full shrink-0 flex items-center justify-between gap-2 pointer-events-none">
+      <!-- Left Brand & Architecture Badge -->
+      <div class="glass-panel rounded-xl px-3 py-1.5 pointer-events-auto flex items-center gap-2.5 shrink-0">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500/30 to-orange-600/20 border border-amber-400/40 flex items-center justify-center text-amber-300 font-mono-code font-bold text-xs shadow-inner">
+          SDF
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xs sm:text-sm font-bold tracking-tight text-white whitespace-nowrap">大北門程序化三維地景重構</h1>
+            <span class="hidden md:inline-block text-[10px] font-mono-code uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30 whitespace-nowrap">Zero-Asset WebGL2</span>
+          </div>
+          <p class="text-[10px] text-slate-300/90 flex items-center gap-1.5 truncate max-w-[240px] sm:max-w-[340px]">
+            <span id="activeZoneSubtitle" class="text-amber-300 font-medium truncate">階段一：晨光低掠（西港曾文溪曲流 → 佳里）</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Center Real-Time Shader Telemetry (Visible on large screens without wrapping) -->
+      <div class="hidden 2xl:flex glass-panel rounded-xl px-3.5 py-1.5 pointer-events-auto items-center gap-4 text-[11px] font-mono-code shrink-0">
+        <div>
+          <span class="text-slate-400 block text-[9px]">WORLD POS (X, Y, Z)</span>
+          <span id="telemetryPos" class="text-amber-200 font-semibold whitespace-nowrap">X: 21500m · Y: 15.0m · Z: -420m</span>
+        </div>
+        <div class="h-5 w-px bg-slate-700/70"></div>
+        <div>
+          <span class="text-slate-400 block text-[9px]">MACRO-ZONING WEIGHTS</span>
+          <span id="telemetryMasks" class="text-emerald-300 whitespace-nowrap">平原:0.98 魚塭:0.02 濱海:0.00 外海:0.00</span>
+        </div>
+        <div class="h-5 w-px bg-slate-700/70"></div>
+        <div>
+          <span class="text-slate-400 block text-[9px]">WATER &amp; RAYMARCH</span>
+          <span id="telemetryPerf" class="text-sky-300 whitespace-nowrap">60 FPS · Scale: 0.90x</span>
+        </div>
+      </div>
+
+      <!-- Right Action Toolbar (Compact, Non-Wrapping) -->
+      <div class="glass-panel rounded-xl p-1 pointer-events-auto flex items-center gap-1 shrink-0 overflow-x-auto">
+        <button id="btnPerfBoost" type="button" class="px-2 py-1 rounded-lg text-[11px] font-medium bg-emerald-500/25 hover:bg-emerald-500/35 text-emerald-200 border border-emerald-400/40 transition whitespace-nowrap" title="一鍵切換極速流暢降載模式">
+          ⚡ 極速省電
+        </button>
+        <button id="btnToggleCameraMode" type="button" class="px-2 py-1 rounded-lg text-[11px] font-medium bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/30 transition flex items-center gap-1 whitespace-nowrap" title="切換史詩航線自動運鏡 / 自由飛行視角">
+          <span id="camModeDot" class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse-slow"></span>
+          <span id="camModeLabel">史詩航線運鏡</span>
+        </button>
+        <button id="btnToggleStillMode" type="button" class="px-2 py-1 rounded-lg text-[11px] font-medium bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-600/50 transition whitespace-nowrap" title="切換 SPP=16 高品質靜態累積渲染模式">
+          SPP 靜態渲染
+        </button>
+        <button id="btnOpenShaderModal" type="button" class="px-2 py-1 rounded-lg text-[11px] font-medium bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-600/50 transition whitespace-nowrap" title="檢視 GLSL 著色器模組與 GIS-to-SDF 管線架構">
+          GLSL 管線剖析
+        </button>
+        <button id="btnToggleAudio" type="button" class="px-2 py-1 rounded-lg text-[11px] font-medium bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 border border-slate-600/50 transition whitespace-nowrap" title="啟動/靜音大北門自然海浪、溪流與濕地鳥鳴聲景">
+          🔇 聲景
+        </button>
+        <button id="btnOpenHelpModal" type="button" class="px-2 py-1 rounded-lg text-[11px] font-medium bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/40 transition whitespace-nowrap" title="開啟完整操作說明與快捷鍵指南 (快捷鍵 ?)">
+          ❓ 操作說明
+        </button>
+        <button id="btnToggleUI" type="button" class="px-2 py-1 rounded-lg text-[11px] font-medium bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 border border-slate-600/50 transition whitespace-nowrap" title="收合/展開控制面板 (快捷鍵 H)">
+          隱藏面板
+        </button>
+        <button id="btnFullscreen" type="button" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-sky-500/25 hover:bg-sky-500/35 text-sky-200 border border-sky-400/40 transition whitespace-nowrap" title="切換全螢幕檢視模式 (快捷鍵 F)">
+          ⛶ 全螢幕
+        </button>
+      </div>
+    </header>
+
+    <!-- ROW 2: Middle Workspace Area (Strictly bounded between Top Header and Bottom Timeline) -->
+    <div id="hudMiddle" class="w-full flex-1 min-h-0 flex items-start justify-between gap-2 overflow-hidden pointer-events-none">
+
+      <!-- Left Sidebar: 2D SDF Radar & Active Zone Info (Scrollable if window height is small) -->
+      <aside id="hudLeft" class="w-64 sm:w-72 max-h-full overflow-y-auto custom-scrollbar flex flex-col gap-2 pointer-events-auto shrink-0 pr-0.5">
+        <!-- 2D Coast & Hydrological SDF Radar -->
+        <div class="glass-panel rounded-xl p-2.5">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-[11px] font-semibold text-amber-300">2D 符號距離場與宏觀分區雷達</span>
+            <span class="text-[9px] font-mono-code text-slate-400">v2_coastsdf.txt</span>
+          </div>
+          <div class="relative w-full h-28 rounded-lg overflow-hidden border border-slate-700/80 bg-slate-950">
+            <canvas id="sdfRadarCanvas" width="300" height="144" class="w-full h-full block cursor-crosshair"></canvas>
+            <div class="absolute bottom-1 left-1.5 right-1.5 flex justify-between text-[9px] font-mono-code text-slate-300/90 pointer-events-none">
+              <span>← 西：台灣海峽 (-2km)</span>
+              <span>東：佳里/西港 (24km) →</span>
+            </div>
+          </div>
+          <p class="mt-1 text-[10px] text-slate-300 leading-snug">
+            點擊雷達圖任意座標可直接將無人機傳送至對應大北門海陸位置。
+          </p>
+        </div>
+
+        <!-- Current Active Zone Geological & Optical Card -->
+        <div class="glass-panel rounded-xl p-2.5">
+          <div class="flex items-center justify-between mb-1">
+            <span id="zoneCardBadge" class="text-[9px] font-mono-code uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/30">ZONE 05 · XIGANG</span>
+            <span id="zoneWaterBadge" class="text-[9px] font-mono-code text-sky-300">水體：曾文溪曲流水系</span>
+          </div>
+          <h2 id="zoneCardTitle" class="text-xs font-bold text-white mb-1">西港區：曾文溪大曲流 ＋ 甜根子草花海</h2>
+          <p id="zoneCardDesc" class="text-[11px] text-slate-300 leading-snug mb-2">
+            南界劃定蜿蜒曾文溪主河道與連續曲流沙洲，外緣建置防汛堤防；高灘地覆蓋隨風起伏的秋季銀白甜根子草與河岸芒草群落。
+          </p>
+          <div class="grid grid-cols-2 gap-1.5 text-[10px] font-mono-code bg-slate-900/75 p-1.5 rounded-lg border border-slate-800">
+            <div>
+              <span class="text-slate-400 block text-[8px]">幾何算子 (v3_geo)</span>
+              <span id="zoneGeoOp" class="text-amber-200">自然曲流 + 連續沙洲</span>
+            </div>
+            <div>
+              <span class="text-slate-400 block text-[8px]">材質光學 (v3_shade)</span>
+              <span id="zoneShadeOp" class="text-emerald-200">絲絨穗芒 + 逆光散射</span>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Right Sidebar: Shader Uniform & Optical Tuning Panel (Strictly inside Middle Row) -->
+      <aside id="hudRight" class="w-64 sm:w-72 max-h-full overflow-y-auto custom-scrollbar flex flex-col pointer-events-auto shrink-0 pl-0.5">
+        <div class="glass-panel rounded-xl p-3">
+          <div class="flex items-center justify-between mb-2">
+            <div>
+              <h3 class="text-[11px] font-bold text-amber-300 uppercase tracking-wider">即時光學與著色器調參面板</h3>
+              <p class="text-[9px] text-slate-400 font-mono-code">v4_sky · v4_water · v3_geo</p>
+            </div>
+            <button id="btnResetParams" type="button" class="text-[10px] px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600/50 transition">
+              重設預設值
+            </button>
+          </div>
+
+          <!-- Compact Sliders -->
+          <div class="space-y-2 text-[11px]">
+            <div>
+              <div class="flex justify-between mb-0.5">
+                <label for="sliderSunEl" class="text-slate-200 font-medium">太陽仰角 (Sun Elevation)</label>
+                <span id="valSunEl" class="font-mono-code text-amber-300">7.0°</span>
+              </div>
+              <input id="sliderSunEl" type="range" min="1.5" max="45.0" step="0.5" value="7.0" class="w-full" />
+            </div>
+
+            <div>
+              <div class="flex justify-between mb-0.5">
+                <label for="sliderSunAz" class="text-slate-200 font-medium">太陽方位角 (Sun Azimuth)</label>
+                <span id="valSunAz" class="font-mono-code text-amber-300">255°</span>
+              </div>
+              <input id="sliderSunAz" type="range" min="180" max="310" step="1" value="255" class="w-full" />
+            </div>
+
+            <div>
+              <div class="flex justify-between mb-0.5">
+                <label for="sliderHaze" class="text-slate-200 font-medium">大氣渾濁度 (Mie Turbidity)</label>
+                <span id="valHaze" class="font-mono-code text-amber-300">1.25</span>
+              </div>
+              <input id="sliderHaze" type="range" min="0.4" max="3.0" step="0.05" value="1.25" class="w-full" />
+            </div>
+
+            <div>
+              <div class="flex justify-between mb-0.5">
+                <label for="sliderCloud" class="text-slate-200 font-medium">體積積雲與卷雲密度 (Clouds)</label>
+                <span id="valCloud" class="font-mono-code text-amber-300">0.55</span>
+              </div>
+              <input id="sliderCloud" type="range" min="0.0" max="1.0" step="0.05" value="0.55" class="w-full" />
+            </div>
+
+            <div>
+              <div class="flex justify-between mb-0.5">
+                <label for="sliderWave" class="text-slate-200 font-medium">水體波浪與鹽田反光強度</label>
+                <span id="valWave" class="font-mono-code text-amber-300">1.00</span>
+              </div>
+              <input id="sliderWave" type="range" min="0.2" max="2.0" step="0.05" value="1.00" class="w-full" />
+            </div>
+
+            <div>
+              <div class="flex justify-between mb-0.5">
+                <label for="sliderRidge" class="text-slate-200 font-medium">田埂/鹽堆/沙丘浮雕高度</label>
+                <span id="valRidge" class="font-mono-code text-amber-300">1.00x</span>
+              </div>
+              <input id="sliderRidge" type="range" min="0.3" max="2.5" step="0.05" value="1.00" class="w-full" />
+            </div>
+
+            <div>
+              <div class="flex justify-between mb-0.5">
+                <label for="sliderQuality" class="text-slate-200 font-medium">動態步進品質 (LOD Step Scale)</label>
+                <span id="valQuality" class="font-mono-code text-emerald-300">標準 (0.009t)</span>
+              </div>
+              <input id="sliderQuality" type="range" min="1" max="3" step="1" value="2" class="w-full" />
+            </div>
+
+            <div>
+              <div class="flex justify-between mb-0.5">
+                <label for="sliderResScale" class="text-slate-200 font-medium">畫面解析度與銳利度 (Scale)</label>
+                <span id="valResScale" class="font-mono-code text-emerald-300">0.90x (高精細)</span>
+              </div>
+              <input id="sliderResScale" type="range" min="0.45" max="1.25" step="0.05" value="0.90" class="w-full" />
+            </div>
+          </div>
+
+          <!-- Feature Toggles -->
+          <div class="mt-2 pt-2 border-t border-slate-700/70 grid grid-cols-2 gap-1 text-[10px]">
+            <label class="flex items-center gap-1 cursor-pointer text-slate-200">
+              <input id="chkFastPlane" type="checkbox" checked class="accent-amber-400 rounded" />
+              <span>解析平面求交</span>
+            </label>
+            <label class="flex items-center gap-1 cursor-pointer text-slate-200">
+              <input id="chkOysterRacks" type="checkbox" checked class="accent-amber-400 rounded" />
+              <span>蚵棚與防風林</span>
+            </label>
+            <label class="col-span-2 flex items-center gap-1 cursor-pointer text-emerald-300 mt-0.5">
+              <input id="chkAutoPerf" type="checkbox" class="accent-emerald-400 rounded" />
+              <span>低於 35 FPS 自動降載保護</span>
+            </label>
+          </div>
+
+          <!-- URL Parameter Sync Readout -->
+          <div class="mt-2 pt-1.5 border-t border-slate-800 flex items-center justify-between gap-1.5">
+            <code id="urlQueryReadout" class="text-[9px] font-mono-code text-slate-400 truncate">?sun_el=7.0&amp;haze=1.25&amp;spp=1</code>
+            <button id="btnCopyUrl" type="button" class="shrink-0 text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 border border-amber-400/30 transition">
+              複製參數連結
+            </button>
+          </div>
+        </div>
+      </aside>
+
+    </div>
+
+    <!-- ROW 3: Bottom Epic 120s Flight Spline Scrubber & 5-Zone Jump Bar (Never Overlaps Sidebars) -->
+    <footer id="hudBottom" class="w-full shrink-0 pointer-events-none flex flex-col items-center gap-1.5">
+      <!-- Quick Interactive Operation Hint Pill -->
+      <div id="quickHintBanner" class="glass-panel rounded-full px-3.5 py-1 pointer-events-auto flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[11px] text-slate-200 border border-amber-400/30 shadow-lg">
+        <span class="text-amber-300 font-semibold flex items-center gap-1">💡 操作提示：</span>
+        <span>🖱️ <b>左鍵拖曳</b> 360°環視</span>
+        <span class="text-slate-500">·</span>
+        <span>⌨️ <b>WASD/方向鍵</b> 自由飛行 (<b>Q/E</b> 升降 · <b>Shift</b> 加速)</span>
+        <span class="text-slate-500">·</span>
+        <span>🗺️ <b>點擊雷達圖</b> 座標瞬移</span>
+        <span class="text-slate-500">·</span>
+        <span>快捷鍵 <b>[1-5]</b> 跳轉五區 · <b>[F]</b> 全螢幕 · <b>[H]</b> 隱藏介面</span>
+        <button id="btnOpenHelpInline" type="button" class="ml-1 px-2 py-0.5 rounded-full bg-amber-500/25 hover:bg-amber-500/40 text-amber-200 text-[10px] font-medium border border-amber-400/40 transition">
+          詳細說明
+        </button>
+        <button id="btnDismissHint" type="button" class="text-slate-400 hover:text-white px-1 text-xs leading-none" title="隱藏此提示列">
+          ✕
+        </button>
+      </div>
+      <div class="glass-panel rounded-2xl px-3.5 py-2 w-full max-w-4xl pointer-events-auto">
+        <!-- 5 Macro-Zone Quick Jump Buttons -->
+        <div class="flex flex-wrap items-center justify-between gap-1 mb-1.5">
+          <div class="flex flex-wrap items-center gap-1">
+            <button type="button" data-time="5" class="zone-btn active text-[11px] px-2 py-0.5 rounded-lg border border-slate-600/60 bg-slate-800/70 text-slate-200 hover:border-amber-400/60 transition">
+              ① 0s–25s 西港曾文溪 (高度15m)
+            </button>
+            <button type="button" data-time="30" class="zone-btn text-[11px] px-2 py-0.5 rounded-lg border border-slate-600/60 bg-slate-800/70 text-slate-200 hover:border-amber-400/60 transition">
+              ② 25s–50s 佳里棋盤平原 (高度40m)
+            </button>
+            <button type="button" data-time="50" class="zone-btn text-[11px] px-2 py-0.5 rounded-lg border border-slate-600/60 bg-slate-800/70 text-slate-200 hover:border-amber-400/60 transition">
+              ★ 42s–60s 學甲急水溪與蜀葵麥田 (58m)
+            </button>
+            <button type="button" data-time="71" class="zone-btn text-[11px] px-2 py-0.5 rounded-lg border border-slate-600/60 bg-slate-800/70 text-slate-200 hover:border-amber-400/60 transition">
+              ③ 50s–80s 將軍格狀魚塭 (高度80m)
+            </button>
+            <button type="button" data-time="93" class="zone-btn text-[11px] px-2 py-0.5 rounded-lg border border-slate-600/60 bg-slate-800/70 text-slate-200 hover:border-amber-400/60 transition">
+              ④ 80s–105s 北門瓦盤鹽田 (高度120m)
+            </button>
+            <button type="button" data-time="114" class="zone-btn text-[11px] px-2 py-0.5 rounded-lg border border-slate-600/60 bg-slate-800/70 text-slate-200 hover:border-amber-400/60 transition">
+              ⑤ 105s–120s 七股頂頭額沙洲夕照 (180m)
+            </button>
+          </div>
+
+          <div class="hidden md:flex items-center gap-2 text-[10px] text-slate-300 font-mono-code">
+            <span>拖曳畫面：環視</span>
+            <span>·</span>
+            <span>WASD：自由飛行</span>
+          </div>
+        </div>
+
+        <!-- Timeline Scrubber Controls -->
+        <div class="flex items-center gap-2.5">
+          <button id="btnPlayPause" type="button" class="w-7 h-7 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold flex items-center justify-center transition shadow shrink-0">
+            ❚❚
+          </button>
+          <div class="flex-1 flex flex-col">
+            <input id="sliderTimeline" type="range" min="0" max="120" step="0.1" value="8.0" class="w-full" />
+            <div class="flex justify-between text-[9px] font-mono-code text-slate-400 mt-0.5">
+              <span>0s [西港曾文溪]</span>
+              <span>24s [佳里大圳平原]</span>
+              <span>45s [學甲濕地蜀葵麥田]</span>
+              <span>68s [將軍扇形鹽田木棉]</span>
+              <span>90s [北門瓦盤鹽田水晶教堂]</span>
+              <span>120s [七股沙洲夕照]</span>
+            </div>
+          </div>
+          <div class="w-20 text-right font-mono-code text-[11px] text-amber-300 shrink-0">
+            <span id="valTimeline">008.0s</span> / 120s
+          </div>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+  <!-- GLSL Pipeline & Architecture Inspector Modal -->
+  <div id="shaderModal" class="hidden fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-panel rounded-2xl max-w-4xl w-full max-h-[85vh] flex flex-col overflow-hidden border border-amber-400/40">
+      <div class="px-5 py-3.5 border-b border-slate-700/80 flex items-center justify-between">
+        <div>
+          <h2 class="text-base font-bold text-white">大北門程序化三維地景重構 — GLSL 著色器模組與數學管線剖析</h2>
+          <p class="text-xs text-slate-300">基於 Leonxlnx/napali 零外部資產架構之台灣鹽分地帶五區地貌重構實作</p>
+        </div>
+        <button id="btnCloseShaderModal" type="button" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs border border-slate-600">
+          關閉視窗 (ESC)
+        </button>
+      </div>
+
+      <!-- Module Tabs -->
+      <div class="px-5 pt-3 flex flex-wrap gap-1.5 border-b border-slate-800 bg-slate-900/50">
+        <button type="button" data-mod="v3_geo" class="mod-tab px-3 py-1.5 rounded-t-lg text-xs font-mono-code bg-amber-500/20 text-amber-300 border-b-2 border-amber-400">
+          v3_geo.glsl (五區地形與最佳化)
+        </button>
+        <button type="button" data-mod="v4_water" class="mod-tab px-3 py-1.5 rounded-t-lg text-xs font-mono-code text-slate-400 hover:text-slate-200">
+          v4_water.glsl (四重水體光學)
+        </button>
+        <button type="button" data-mod="v4_sky" class="mod-tab px-3 py-1.5 rounded-t-lg text-xs font-mono-code text-slate-400 hover:text-slate-200">
+          v4_sky.glsl (嘉南夕色與體積雲)
+        </button>
+        <button type="button" data-mod="v3_shade" class="mod-tab px-3 py-1.5 rounded-t-lg text-xs font-mono-code text-slate-400 hover:text-slate-200">
+          v3_shade.glsl (作物拼貼與甜根子草)
+        </button>
+        <button type="button" data-mod="v2_flight" class="mod-tab px-3 py-1.5 rounded-t-lg text-xs font-mono-code text-slate-400 hover:text-slate-200">
+          v2_flight.js (120秒史詩航線樣條)
+        </button>
+      </div>
+
+      <!-- Code & Mathematical Commentary Body -->
+      <div class="p-5 overflow-y-auto custom-scrollbar flex-1 space-y-3 text-xs">
+        <div id="modDescription" class="p-3 rounded-xl bg-amber-500/10 border border-amber-400/25 text-amber-100 leading-relaxed"></div>
+        <pre class="p-4 rounded-xl bg-slate-950 border border-slate-800 text-emerald-300 font-mono-code text-[11px] leading-relaxed overflow-x-auto"><code id="modCodeBlock"></code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive Operation Guide & Shortcuts Modal (#helpModal) -->
+  <div id="helpModal" class="hidden fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="glass-panel rounded-2xl max-w-3xl w-full max-h-[86vh] flex flex-col overflow-hidden border border-amber-400/40 shadow-2xl">
+      <div class="px-5 py-3.5 border-b border-slate-700/80 flex items-center justify-between bg-slate-900/60">
+        <div class="flex items-center gap-2.5">
+          <span class="w-7 h-7 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-300 text-sm font-bold">❓</span>
+          <div>
+            <h2 class="text-base font-bold text-white">大北門三維地景重構系統 — 操作說明與互動指南</h2>
+            <p class="text-xs text-slate-300">支援無人機自動導覽、自由飛行探索、即時光學調參與高品質超取樣渲染</p>
+          </div>
+        </div>
+        <button id="btnCloseHelpModal" type="button" class="px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs border border-slate-600 transition">
+          關閉說明 (ESC)
+        </button>
+      </div>
+
+      <div class="p-5 overflow-y-auto custom-scrollbar flex-1 space-y-4 text-xs leading-relaxed text-slate-200">
+        <!-- Section 1: Camera & Flight Modes -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="p-3.5 rounded-xl bg-slate-900/75 border border-slate-800">
+            <h3 class="text-amber-300 font-bold text-sm mb-1.5 flex items-center gap-1.5">
+              <span>✈️</span> 1. 雙模式無人機運鏡控制
+            </h3>
+            <ul class="space-y-1.5 text-slate-300">
+              <li>• <b class="text-white">史詩航線自動運鏡（預設）</b>：沿 0s–120s 三維樣條曲線由內陸<b>西港曾文溪（高度 15m）</b>推進至<b>七股頂頭額沙洲（高度 180m）</b>，自動運鏡期間仍可<b>按住滑鼠左鍵拖曳</b> 360° 環視四周。</li>
+              <li>• <b class="text-white">自由飛行模式（Free Flight）</b>：點擊頂部「<b>史詩航線運鏡</b>」按鈕或直接按鍵盤 <code class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono-code">W A S D</code> / <code class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono-code">方向鍵</code> 即可接管無人機自由探索。</li>
+              <li>• <b class="text-white">垂直升降與加速</b>：自由飛行時按 <code class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono-code">E</code>（上升）、<code class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono-code">Q</code>（下降）調整高度，按住 <code class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono-code">Shift</code> 可開啟 2.3 倍高速巡航。</li>
+            </ul>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-slate-900/75 border border-slate-800">
+            <h3 class="text-emerald-300 font-bold text-sm mb-1.5 flex items-center gap-1.5">
+              <span>🗺️</span> 2. 五區快速跳轉與 2D 雷達瞬移
+            </h3>
+            <ul class="space-y-1.5 text-slate-300">
+              <li>• <b class="text-white">五大代表地景一鍵跳轉</b>：點擊底部 <b class="text-amber-300">① 西港曾文溪</b>、<b class="text-amber-300">② 佳里平原</b>、<b class="text-amber-300">③ 將軍魚塭</b>、<b class="text-amber-300">④ 北門鹽田</b>、<b class="text-amber-300">⑤ 七股沙洲</b> 按鈕（或按數字鍵 <code class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono-code">1</code>～<code class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono-code">5</code>）立即切換。</li>
+              <li>• <b class="text-white">2D 符號距離場雷達瞬移</b>：點擊左上角「<b>2D 符號距離場與宏觀分區雷達</b>」小地圖上的任意海陸位置，無人機將立即傳送至該世界座標（跨度 -2km 外海至 24km 內陸）。</li>
+              <li>• <b class="text-white">時間軸拖曳</b>：隨時拉動底部時間軸滑桿檢視 0s–120s 任意時刻的地貌過渡。</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Section 2: Optical Tuning, Still SPP Mode & Performance -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="p-3.5 rounded-xl bg-slate-900/75 border border-slate-800">
+            <h3 class="text-sky-300 font-bold text-sm mb-1.5 flex items-center gap-1.5">
+              <span>🌅</span> 3. 光學調參與 SPP=16 超取樣渲染
+            </h3>
+            <ul class="space-y-1.5 text-slate-300">
+              <li>• <b class="text-white">嘉南夕色光影實驗</b>：於右側面板調整<b>太陽仰角（1.5°～45°）</b>、<b>太陽方位角</b>與<b>大氣渾濁度（Mie 散射）</b>，觀察低角度斜陽在 35cm 田埂、圓錐鹽堆與沙丘稜線投射的修長陰影。</li>
+              <li>• <b class="text-white">SPP 靜態高品質渲染</b>：點擊頂部「<b>SPP 靜態渲染</b>」，系統將暫停動畫並透過 Halton 次像素抖動連續累積 <b>16 次取樣（16x Supersampling）</b>，消除所有邊緣鋸齒與噪訊，完成後即自動停止 GPU 運算。</li>
+            </ul>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-slate-900/75 border border-slate-800">
+            <h3 class="text-purple-300 font-bold text-sm mb-1.5 flex items-center gap-1.5">
+              <span>⚡</span> 4. 流暢度最佳化、全螢幕與自然聲景
+            </h3>
+            <ul class="space-y-1.5 text-slate-300">
+              <li>• <b class="text-white">全螢幕沉浸檢視</b>：點擊右上角「<b class="text-sky-300">⛶ 全螢幕</b>」（或按 <code class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono-code">F</code> 鍵）展開全螢幕，搭配 <code class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono-code">H</code> 鍵隱藏控制面板即可獲得純淨航拍畫面。</li>
+              <li>• <b class="text-white">GPU 流暢度調節</b>：若使用筆電內顯，可點擊頂部綠色「<b class="text-emerald-300">⚡ 極速省電</b>」或調降右側「<b>畫面解析度與銳利度</b>」；若使用獨立顯卡，可拉升至 <b>1.25x</b> 體驗極致銳利細節。</li>
+              <li>• <b class="text-white">四層動態自然聲景</b>：點擊「<b>🔇 聲景</b>」（或按 <code class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono-code">M</code> 鍵）開啟海浪潮汐、甜根子草微風與大北門濕地水鳥鳴叫。</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Section 3: Keyboard Shortcuts Table -->
+        <div class="p-3.5 rounded-xl bg-slate-900/90 border border-amber-400/25">
+          <h3 class="text-amber-300 font-bold text-xs uppercase tracking-wider mb-2">⌨️ 鍵盤快捷鍵速查表 (Keyboard Shortcuts)</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+            <div class="flex items-center justify-between bg-slate-950/80 px-2.5 py-1.5 rounded border border-slate-800">
+              <span class="text-slate-300">播放 / 暫停運鏡</span>
+              <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono-code text-[10px]">Space</kbd>
+            </div>
+            <div class="flex items-center justify-between bg-slate-950/80 px-2.5 py-1.5 rounded border border-slate-800">
+              <span class="text-slate-300">全螢幕切換</span>
+              <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-sky-300 font-mono-code text-[10px]">F</kbd>
+            </div>
+            <div class="flex items-center justify-between bg-slate-950/80 px-2.5 py-1.5 rounded border border-slate-800">
+              <span class="text-slate-300">隱藏 / 展開面板</span>
+              <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-emerald-300 font-mono-code text-[10px]">H</kbd>
+            </div>
+            <div class="flex items-center justify-between bg-slate-950/80 px-2.5 py-1.5 rounded border border-slate-800">
+              <span class="text-slate-300">開啟操作說明</span>
+              <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono-code text-[10px]">?</kbd>
+            </div>
+            <div class="flex items-center justify-between bg-slate-950/80 px-2.5 py-1.5 rounded border border-slate-800">
+              <span class="text-slate-300">自由飛行移動</span>
+              <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono-code text-[10px]">WASD</kbd>
+            </div>
+            <div class="flex items-center justify-between bg-slate-950/80 px-2.5 py-1.5 rounded border border-slate-800">
+              <span class="text-slate-300">高度上升 / 下降</span>
+              <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono-code text-[10px]">E / Q</kbd>
+            </div>
+            <div class="flex items-center justify-between bg-slate-950/80 px-2.5 py-1.5 rounded border border-slate-800">
+              <span class="text-slate-300">五區快速跳轉</span>
+              <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono-code text-[10px]">1 ~ 5</kbd>
+            </div>
+            <div class="flex items-center justify-between bg-slate-950/80 px-2.5 py-1.5 rounded border border-slate-800">
+              <span class="text-slate-300">聲景開關</span>
+              <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-amber-300 font-mono-code text-[10px]">M</kbd>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastMsg" class="hidden fixed bottom-28 left-1/2 -translate-x-1/2 z-50 glass-panel px-4 py-2 rounded-full text-xs text-amber-200 border border-amber-400/50"></div>
+
+  <script>
+    // ============================================================================
+    // 1. MODULE SOURCE ARCHIVE FOR IN-APP TECHNICAL INSPECTOR
+    // ============================================================================
+    const MODULE_DOCS = {
+      v3_geo: {
+        desc: "【大北門六區幾何地形與光線步進最佳化】建立由東向西跨度 26 公里的六區 Macro-Zoning 遮罩（西港曾文溪 -> 佳里嘉南大圳平原 -> 學甲急水溪濕地與蜀葵小麥田 -> 將軍青鯤鯓扇形鹽田與木棉道魚塭 -> 北門井仔腳瓦盤鹽田、大鹽山與水晶教堂 -> 七股頂頭額沙洲與台灣海峽）。內建解析平面求交與二分逼近法。",
+        code: `// 1. 大北門六區宏觀座標分區 (Macro-Zoning: X軸由西向東 -2km ~ 24km)
+// 外海 (<0) -> 七股沙洲潟湖 (0~4.2km) -> 北門瓦盤鹽田/水晶教堂/大鹽山 (4.2~7.8km)
+// -> 將軍青鯤鯓扇形鹽田/木棉道/魚塭 (7.8~11.8km) -> 學甲急水溪濕地/蜀葵花海/小麥田 (11.8~15.2km)
+// -> 佳里嘉南大圳棋盤平原 (15.2~18.5km) -> 西港曾文溪曲流與甜根子草 (18.5~23km)
+
+// 2. 將軍區極座標建模：青鯤鯓扇形鹽田 (Fan-Shaped Salt Pan) 與「生命之樹」雙扇白拱門 SDF
+vec2 fanRel = mp - vec2(9250.0, -40.0);
+float fanR = length(fanRel);
+float fanTheta = atan(fanRel.y, -fanRel.x); // 朝西展開之扇形放射角
+float spokeDike = smoothstep(0.035, 0.0, abs(fract(fanTheta * 8.5) - 0.5));
+float ringDike  = smoothstep(0.06, 0.0, abs(fract(fanR * 0.011) - 0.5));
+
+// 3. 北門區複合地標：井仔腳階梯式瓦盤結晶池 + 圓錐白鹽堆陣列 + 北門大鹽山主峰 SDF + 水晶教堂尖拱倒影池 + 紅樹林潮溝
+// 4. 學甲區複合地景：急水溪蜿蜒河道與潮間帶紅樹林濕地 + 蜀葵花海垂直花籬 + 黃金小麥/紅高粱旱作與虱目魚塭混作`
+      },
+      v4_water: {
+        desc: "【多重物理水體光學管線】依據大北門六區水文特性動態分流：(1) 台灣海峽外海多頻湧浪與碎浪白沫；(2) 七股/北門內海潟湖與紅樹林潮溝微波；(3) 將軍青鯤鯓扇形鹽田與養殖魚塭（優養化藻綠、水車打水白沫尾跡、夕陽強烈鏡面光斑）；(4) 北門井仔腳瓦盤鹽田靜態高鹽滷水（高鹽藻橘紅粉白與池底深紅褐甕片碎瓦拼貼折射）；(5) 學甲急水溪潮間帶泥灘水系與佳里嘉南大圳。",
+        code: `// 六區水體物理特性動態混合 (v4_water.glsl)
+// [1] 台灣海峽外海：多頻湧浪 + 海岸碎浪白沫 (Surf Foam) + 深藍墨綠長光徑吸收
+// [2] 七股/北門潟湖與蘆竹溝潮溝：倒映竹竿蚵棚、紅樹林與北門水晶教堂純白尖拱
+// [3] 將軍青鯤鯓扇形鹽田與高密度魚塭：扇骨水道折射琥珀滷水，魚塭增氧水車激起同心圓漣漪與白沫尾跡
+// [4] 北門井仔腳瓦盤鹽田：絕對靜態極薄滷水，折射池底 Voronoi 甕片碎瓦馬賽克與灰縫
+// [5] 學甲急水溪濕地與曾文溪曲流：富含礦物懸浮微粒之青褐溪流水色與潮間帶濕潤泥灘鏡面反射`
+      },
+      v4_sky: {
+        desc: "【大氣散射與嘉南黃金夕色】提高低空 Mie 散射渾濁度，重現台灣西海岸午後濕熱微霧。太陽仰角預設於地平線上 7°，方位角對準正西偏南台灣海峽入海處，投射修長地表陰影，並以 3D/2D 噪聲生成體積積雲（Cumulus）與高空卷雲（Cirrus）。",
+        code: `// 大氣散射與嘉南夕色 (v4_sky.glsl)
+vec3 sunDir = normalize(vec3(-cos(el)*sin(az-PI), sin(el), -cos(el)*cos(az-PI)));
+float miePhase = hgPhase(dot(rayDir, sunDir), 0.76);
+vec3 atmosphere = rayleighScattering + mieScattering * u_haze * miePhase;`
+      },
+      v3_shade: {
+        desc: "【全場景 BRDF 與六區專屬地表微結構】包含：西港甜根子草絲絨穗芒逆光散射、佳里不規則地籍甘蔗/稻作/翻土犁溝、學甲鮮紅粉紫蜀葵花海與黃金小麥田、將軍火紅木棉道花廊與青鯤鯓生命之樹純白拱門、北門井仔腳甕片碎瓦拼貼與結晶鹽粒閃光（Sparkle Glints）、七股沙洲風紋與濱刺麥植被。",
+        code: `// 六區專屬微觀法線與材質著色 (v3_shade.glsl)
+// • 學甲區 (Xuejia)：黃金小麥波浪 + 鮮紅/玫瑰粉蜀葵花海行列 (Hollyhock floral hedgerows) + 急水溪紅樹林泥灘
+// • 將軍區 (Jiangjun)：青鯤鯓扇形鹽田白色「生命之樹」拱門 + 苓子寮橙紅木棉道 + 胡蘿蔔翠綠農田
+// • 北門區 (Beimen)：井仔腳 Voronoi 甕片碎瓦池底 + 純白圓錐小鹽堆 + 20m 北門大鹽山主峰 + 水晶教堂尖拱`
+      },
+      v2_flight: {
+        desc: "【120 秒六區史詩航線樣條運鏡】由東向西完整飛越大北門六區：西港曾文溪（0s–22s, 15m）→ 佳里嘉南大圳平原（22s–42s, 38m）→ 學甲急水溪濕地與蜀葵小麥田（42s–60s, 55m）→ 將軍青鯤鯓扇形鹽田與木棉道魚塭（60s–82s, 82m）→ 北門井仔腳瓦盤鹽田、大鹽山與水晶教堂（82s–104s, 118m）→ 七股頂頭額沙洲與海峽沉日（104s–120s, 180m）。",
+        code: `// 大北門六區完整樣條控制點 (v2_flight.js)
+// 1. 西港區 (X: 21600 -> 18600) : 曾文溪曲流、凸岸沙洲與秋季甜根子草花海
+// 2. 佳里區 (X: 18600 -> 15200) : 嘉南大圳幹支線、不規則甘蔗稻作田與蕭壠老榕聚落
+// 3. 學甲區 (X: 15200 -> 11800) : 急水溪紅樹林濕地、蜀葵花海廊帶、黃金小麥高粱田與虱目魚塭
+// 4. 將軍區 (X: 11800 ->  7800) : 青鯤鯓扇形鹽田、生命之樹白拱門、苓子寮木棉道與水車魚塭
+// 5. 北門區 (X:  7800 ->  4200) : 井仔腳瓦盤鹽田、北門大鹽山、水晶教堂倒影池與蘆竹溝紅樹林潮溝
+// 6. 七股區 (X:  4200 ->  -500) : 七股內海潟湖竹竿蚵棚、頂頭額風成沙洲與台灣海峽碎浪夕照`
+      }
+    };
+
+    const ZONE_INFO = [
+      {
+        id: "XIGANG",
+        tMax: 22,
+        subtitle: "階段一：西港曾文溪曲流與甜根子草花海",
+        badge: "ZONE 06 · 西港區 (XIGANG)",
+        water: "水體：曾文溪大曲流水系",
+        title: "西港區：曾文溪曲流、凸岸沙洲與甜根子草",
+        desc: "貼近曾文溪河床疾行（高度 15m）。南界劃定非週期蜿蜒曾文溪主河道與連續平緩凸岸礫石沙洲，外緣建置梯形防汛高堤；寬闊高灘地覆蓋隨風起伏的秋季銀白甜根子草花浪。",
+        geoOp: "非週期曲流 + 梯形防汛堤",
+        shadeOp: "絲絨穗芒法線 + 逆光散射"
+      },
+      {
+        id: "JIALI",
+        tMax: 42,
+        subtitle: "階段二：佳里嘉南大圳與不規則沖積農田",
+        badge: "ZONE 05 · 佳里區 (JIALI)",
+        water: "水體：嘉南大圳支線與蓄水秧田",
+        title: "佳里區：不規則地籍農田、嘉南大圳與蕭壠聚落",
+        desc: "爬升至 38m 俯瞰佳里沖積平原。以非對稱地籍分割呈現長短不一的深綠甘蔗田、成熟金黃稻作、翻土期曾文溪灰黑壤土與插秧蓄水田，交錯蜿蜒的嘉南大圳與蕭壠老榕竹圍聚落。",
+        geoOp: "不規則地籍 + 大圳負向開槽",
+        shadeOp: "甘蔗犁溝微法線 + 榕樹竹圍"
+      },
+      {
+        id: "XUEJIA",
+        tMax: 60,
+        subtitle: "階段三：學甲急水溪濕地、蜀葵花海與黃金小麥田",
+        badge: "ZONE 04 · 學甲區 (XUEJIA)",
+        water: "水體：急水溪潮間帶濕地與生態虱目魚塭",
+        title: "學甲區：急水溪紅樹林濕地、蜀葵花海與小麥高粱田",
+        desc: "高度 58m 飛越北界急水溪曲流與學甲濕地生態園區（潮間帶泥灘與海茄冬紅樹林叢）。兩岸展現學甲著名的「農漁混作」地景：金黃小麥與紅高粱旱作波浪、鮮紅粉紫蜀葵花海廊帶，與深綠生態虱目魚塭交織。",
+        geoOp: "急水溪泥灘 + 蜀葵花籬SDF",
+        shadeOp: "黃金麥浪 + 蜀葵緋紅花叢"
+      },
+      {
+        id: "JIANGJUN",
+        tMax: 82,
+        subtitle: "階段四：將軍青鯤鯓扇形鹽田、生命之樹與木棉道魚塭",
+        badge: "ZONE 03 · 將軍區 (JIANGJUN)",
+        water: "水體：扇形鹽田水道 ＋ 增氧水車養殖魚塭",
+        title: "將軍區：青鯤鯓扇形鹽田、生命之樹、木棉道與魚塭港灣",
+        desc: "高度 82m 俯瞰將軍核心地標「青鯤鯓扇形鹽田」放射狀扇骨水道與中軸線純白「生命之樹」雙扇拱門步道；內陸側交織苓子寮火紅木棉道花廊、翠綠胡蘿蔔田，以及水車打水激起白沫尾跡的格狀養殖魚塭。",
+        geoOp: "極座標扇形鹽田 + 生命之樹SDF",
+        shadeOp: "火紅木棉道 + 水車同心圓白沫"
+      },
+      {
+        id: "BEIMEN",
+        tMax: 104,
+        subtitle: "階段五：北門井仔腳瓦盤鹽田、水晶教堂與大鹽山",
+        badge: "ZONE 02 · 北門區 (BEIMEN)",
+        water: "水體：靜態高折射瓦盤滷水 ＋ 蘆竹溝紅樹林潮溝",
+        title: "北門區：井仔腳瓦盤鹽田、北門大鹽山、水晶教堂與潮溝",
+        desc: "高度 118m 大弧度右旋，完整呈現北門四大鹽鄉地景：(1) 井仔腳階梯式蒸發池與甕片碎瓦結晶池、雙排圓錐白鹽堆與紅磚瞭望塔；(2) 倒映於淺水鏡池的純白尖拱「北門水晶教堂」；(3) 聳立水畔的雪白「北門大鹽山」主峰；(4) 蜿蜒入海的蘆竹溝紅樹林潮溝。",
+        geoOp: "瓦盤鹽堆 + 大鹽山/水晶教堂SDF",
+        shadeOp: "甕片碎瓦拼貼 + 結晶鹽粒閃光"
+      },
+      {
+        id: "QIGU",
+        tMax: 121,
+        subtitle: "階段六：七股內海潟湖蚵棚、頂頭額沙洲與海峽夕照",
+        badge: "ZONE 01 · 七股區 (QIGU)",
+        water: "水體：七股潟湖微波 ＋ 台灣海峽多頻碎浪",
+        title: "七股區：頂頭額外流沙洲、潟湖蚵棚矩陣與海峽沉日",
+        desc: "航機攀升至 180m 飛越布滿竹竿蚵棚與航道的七股內海潟湖，懸停於「頂頭額沙洲」新月形風成沙丘與濱刺麥草叢上方，凝視台灣海峽層疊碎浪白沫與緩緩沉入海平面的巨大夕陽。",
+        geoOp: "非對稱風成沙丘 + 潟湖蚵棚陣列",
+        shadeOp: "潮間帶濕沙鏡射 + 石英砂閃點"
+      }
+    ];
+
+    const FLIGHT_SPLINE = [
+      { t:   0.0, pos: [21600,  15.0, -520], look: [19200,  12.0, -220] },
+      { t:  12.0, pos: [19500,  20.0, -210], look: [17400,  14.0,   40] },
+      { t:  24.0, pos: [17400,  36.0,   80], look: [15200,  16.0,  180] },
+      { t:  36.0, pos: [15800,  44.0,  190], look: [13500,  18.0,  120] },
+      { t:  48.0, pos: [13800,  56.0,  140], look: [11600,  16.0,  -40] },
+      { t:  60.0, pos: [11800,  68.0,  -60], look: [ 9400,  14.0,  -80] },
+      { t:  72.0, pos: [ 9800,  84.0, -110], look: [ 7800,  12.0,  -20] },
+      { t:  84.0, pos: [ 7600, 104.0, -180], look: [ 5500,  12.0,  -60] },
+      { t:  94.0, pos: [ 6000, 118.0, -140], look: [ 4100,  14.0,   40] },
+      { t: 106.0, pos: [ 3200, 152.0,   80], look: [  600,  28.0,   20] },
+      { t: 120.0, pos: [  550, 180.0,   30], look: [-4500, 105.0, -180] }
+    ];
+    function catmullRom(p0, p1, p2, p3, u) {
+      const u2 = u * u;
+      const u3 = u2 * u;
+      return 0.5 * (
+        (2.0 * p1) +
+        (-p0 + p2) * u +
+        (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * u2 +
+        (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * u3
+      );
+    }
+
+    function evaluateFlightSpline(timeSec) {
+      const t = Math.max(0.0, Math.min(120.0, timeSec));
+      let idx = 0;
+      for (let i = 0; i < FLIGHT_SPLINE.length - 1; i++) {
+        if (t >= FLIGHT_SPLINE[i].t && t <= FLIGHT_SPLINE[i + 1].t) {
+          idx = i;
+          break;
+        }
+      }
+      const k0 = FLIGHT_SPLINE[Math.max(0, idx - 1)];
+      const k1 = FLIGHT_SPLINE[idx];
+      const k2 = FLIGHT_SPLINE[Math.min(FLIGHT_SPLINE.length - 1, idx + 1)];
+      const k3 = FLIGHT_SPLINE[Math.min(FLIGHT_SPLINE.length - 1, idx + 2)];
+
+      const span = Math.max(0.0001, k2.t - k1.t);
+      const u = (t - k1.t) / span;
+
+      const pos = [0, 0, 0];
+      const look = [0, 0, 0];
+      for (let c = 0; c < 3; c++) {
+        pos[c] = catmullRom(k0.pos[c], k1.pos[c], k2.pos[c], k3.pos[c], u);
+        look[c] = catmullRom(k0.look[c], k1.look[c], k2.look[c], k3.look[c], u);
+      }
+      return { pos, look };
+    }
+
+    // ============================================================================
+    // 4. WEBGL2 / WEBGL1 SHADER PIPELINE (v3_geo + v4_water + v4_sky + v3_shade)
+    // ============================================================================
+    const VERTEX_SHADER_300 = `#version 300 es
+    precision highp float;
+    layout(location = 0) in vec2 a_pos;
+    out vec2 v_uv;
+    void main() {
+      v_uv = a_pos * 0.5 + 0.5;
+      gl_Position = vec4(a_pos, 0.0, 1.0);
+    }`;
+
+    const FRAGMENT_SHADER_BODY = `
+    uniform vec2  u_resolution;
+    uniform float u_time;
+    uniform vec3  u_camPos;
+    uniform vec3  u_camForward;
+    uniform vec3  u_camRight;
+    uniform vec3  u_camUp;
+    uniform float u_sunEl;        // degrees (default 7.0)
+    uniform float u_sunAz;        // degrees (default 255.0)
+    uniform float u_haze;         // atmospheric turbidity (default 1.25)
+    uniform float u_cloudDensity; // cumulus & cirrus (default 0.55)
+    uniform float u_waveScale;    // wave & ripple intensity
+    uniform float u_ridgeScale;   // micro-relief & bump height multiplier
+    uniform float u_stepQuality;  // 1.0=fast, 2.0=std, 3.0=ultra
+    uniform float u_fastPlane;    // 1.0=enabled
+    uniform float u_oysterTrees;  // 1.0=enabled
+    uniform vec2  u_jitter;       // subpixel jitter for SPP still mode
+
+    // ------------------------------------------------------------------------
+    // Fast Hash, Analytical Gradient Noise & Aperiodic FBM
+    // ------------------------------------------------------------------------
+    float hash12(vec2 p) {
+      vec3 p3  = fract(vec3(p.xyx) * 0.1031);
+      p3 += dot(p3, p3.yzx + 33.33);
+      return fract((p3.x + p3.y) * p3.z);
+    }
+
+    vec2 hash22(vec2 p) {
+      vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
+      p3 += dot(p3, p3.yzx + 33.33);
+      return fract((p3.xx + p3.yz) * p3.zy);
+    }
+
+    vec3 noised(vec2 x) {
+      vec2 i = floor(x);
+      vec2 f = fract(x);
+      vec2 u = f * f * f * (f * (f * 6.0 - 15.0) + 10.0);
+      vec2 du = 30.0 * f * f * (f * (f - 2.0) + 1.0);
+
+      float a = hash12(i + vec2(0.0, 0.0));
+      float b = hash12(i + vec2(1.0, 0.0));
+      float c = hash12(i + vec2(0.0, 1.0));
+      float d = hash12(i + vec2(1.0, 1.0));
+
+      float k0 = a;
+      float k1 = b - a;
+      float k2 = c - a;
+      float k3 = a - b - c + d;
+
+      return vec3(
+        k0 + k1 * u.x + k2 * u.y + k3 * u.x * u.y,
+        du * (vec2(k1, k2) + k3 * u.yx)
+      );
+    }
+
+    float valueNoise(vec2 p) {
+      vec2 i = floor(p);
+      vec2 f = fract(p);
+      vec2 u = f * f * (3.0 - 2.0 * f);
+      float a = hash12(i + vec2(0.0, 0.0));
+      float b = hash12(i + vec2(1.0, 0.0));
+      float c = hash12(i + vec2(0.0, 1.0));
+      float d = hash12(i + vec2(1.0, 1.0));
+      return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+    }
+
+    float fbm3(vec2 p) {
+      float v = 0.0;
+      float a = 0.5;
+      mat2 rot = mat2(0.80, 0.60, -0.60, 0.80);
+      for (int i = 0; i < 3; i++) {
+        v += a * valueNoise(p);
+        p = rot * p * 2.07 + vec2(19.3, 47.1);
+        a *= 0.5;
+      }
+      return v;
+    }
+
+    vec2 fastDomainWarp(vec2 p, float amp) {
+      float wx = sin(p.y * 0.0043 + cos(p.x * 0.0029) * 1.7) + 0.5 * cos(p.y * 0.0091 - p.x * 0.0053);
+      float wy = cos(p.x * 0.0039 + sin(p.y * 0.0031) * 1.6) + 0.5 * sin(p.x * 0.0083 + p.y * 0.0061);
+      return p + vec2(wx, wy) * amp;
+    }
+
+    vec4 evalIrregularParcel(vec2 p, float baseScale, float warpAmp) {
+      vec2 wp = fastDomainWarp(p, warpAmp);
+      vec2 macroP = wp * (baseScale * 0.25);
+      vec2 macroID = floor(macroP);
+      vec2 macroUV = fract(macroP);
+      vec2 mRand = hash22(macroID);
+
+      vec2 subUV = (mRand.x > 0.52) ? macroUV.yx : macroUV;
+      float divX = floor(2.0 + mRand.y * 3.8);
+      float divY = floor(2.0 + fract(mRand.x * 7.13) * 4.5);
+
+      vec2 cellP = subUV * vec2(divX, divY);
+      vec2 cellID = floor(cellP);
+      vec2 cellUV = fract(cellP);
+
+      float mergeRight = step(0.65, hash12(macroID * 13.0 + cellID));
+      if (mergeRight > 0.5 && cellID.x < divX - 1.0) {
+        cellUV.x *= 0.5;
+      }
+
+      float parcelHash = hash12(macroID * 37.0 + cellID + vec2(mergeRight * 5.0, 0.0));
+      vec2 edgeD = min(cellUV, 1.0 - cellUV) / vec2(divX, divY) * 4.0;
+      vec2 macroEdgeD = min(macroUV, 1.0 - macroUV) * 2.2;
+      float borderDist = min(min(edgeD.x, edgeD.y), min(macroEdgeD.x, macroEdgeD.y));
+
+      return vec4(parcelHash, borderDist, cellUV.x, cellUV.y);
+    }
+
+    vec3 fastVoronoi2x2(vec2 x, float jitterAmt) {
+      vec2 n = floor(x);
+      vec2 f = fract(x);
+      float d1 = 8.0;
+      float d2 = 8.0;
+      float cHash = 0.0;
+      for (int j = 0; j <= 1; j++) {
+        for (int i = 0; i <= 1; i++) {
+          vec2 g = vec2(float(i), float(j));
+          vec2 o = hash22(n + g) * jitterAmt + (1.0 - jitterAmt) * 0.5;
+          vec2 r = g + o - f - 0.25;
+          float d = dot(r, r);
+          if (d < d1) {
+            d2 = d1;
+            d1 = d;
+            cHash = o.x;
+          } else if (d < d2) {
+            d2 = d;
+          }
+        }
+      }
+      float s1 = sqrt(max(0.0001, d1));
+      float s2 = sqrt(max(0.0001, d2));
+      return vec3(s1, max(0.0, (s2 - s1) * 0.5), cHash);
+    }
+
+    // ------------------------------------------------------------------------
+    // Greater Beimen 6-District Macro-Zoning Weights
+    // X < 0: Taiwan Strait Outer Sea
+    // 0 ~ 4200: [1] 七股區 (Qigu Sandbar & Inner Lagoon)
+    // 4200 ~ 7800: [2] 北門區 (Beimen Jingzaijiao Salt Pan, Crystal Church, Salt Mountain & Mangrove Creeks)
+    // 7800 ~ 11800: [3] 將軍區 (Jiangjun Qingkunshen Fan-Shaped Salt Pan, Tree of Life, Kapok Boulevards & Fish Ponds)
+    // 11800 ~ 15200: [4] 學甲區 (Xuejia Jishui River Wetland, Hollyhock Flower Fields, Golden Wheat & Milkfish Ponds)
+    // 15200 ~ 18500: [5] 佳里區 (Jiali Chianan Irrigation Canal, Irregular Sugarcane/Rice Plain & Soulangh Groves)
+    // 18500 ~ 23000: [6] 西港區 (Xigang Zengwen River Meander, Point-Bar Sandbank & Sweetcane Floodplain)
+    // ------------------------------------------------------------------------
+    struct ZoneMasks {
+      float sea;       // Taiwan Strait (< 0m)
+      float coastal;   // Qigu (0 ~ 4.2km)
+      float beimen;    // Beimen (4.2 ~ 7.8km)
+      float jiangjun;  // Jiangjun (7.8 ~ 11.8km)
+      float xuejia;    // Xuejia (11.8 ~ 15.2km)
+      float jiali;     // Jiali (15.2 ~ 18.5km)
+      float xigang;    // Xigang (18.5 ~ 23.5km)
+      float aquafarm;  // Combined Beimen + Jiangjun coastal salt/aquafarm belt
+      float inland;    // Combined Xuejia + Jiali + Xigang inland belt
+    };
+
+    ZoneMasks getZoneMasks(vec3 p) {
+      float coastWarp = (sin(p.z * 0.00073) * 280.0 + cos(p.z * 0.0019 + 1.4) * 150.0);
+      float wx = p.x + coastWarp;
+      ZoneMasks m;
+      m.sea      = 1.0 - smoothstep(-1400.0, 350.0, wx);
+      m.coastal  = smoothstep(-350.0, 1500.0, wx) * (1.0 - smoothstep(3500.0, 4600.0, wx));
+      m.beimen   = smoothstep(3600.0, 4700.0, wx) * (1.0 - smoothstep(7200.0, 8300.0, wx));
+      m.jiangjun = smoothstep(7300.0, 8400.0, wx) * (1.0 - smoothstep(11200.0, 12300.0, wx));
+      m.xuejia   = smoothstep(11300.0, 12400.0, wx) * (1.0 - smoothstep(14700.0, 15800.0, wx));
+      m.jiali    = smoothstep(14800.0, 15900.0, wx) * (1.0 - smoothstep(18000.0, 19200.0, wx));
+      m.xigang   = smoothstep(18100.0, 19400.0, wx);
+
+      m.aquafarm = clamp(m.beimen + m.jiangjun, 0.0, 1.0);
+      m.inland   = clamp(m.xuejia + m.jiali + m.xigang, 0.0, 1.0);
+      return m;
+    }
+
+    // Centerlines for Greater Beimen's 3 Major Rivers/Canals:
+    // 1. 曾文溪 (Zengwen River in Xigang)
+    float getZengwenRiverCenterZ(float x) {
+      return sin((x - 19500.0) * 0.00125) * 310.0
+           + cos((x - 18200.0) * 0.00051 + 0.8) * 240.0
+           + sin((x - 20100.0) * 0.0029) * 85.0
+           - 75.0;
+    }
+
+    // 2. 嘉南大圳幹支線 (Chianan Irrigation Canal in Jiali)
+    float getChiananCanalCenterZ(float x) {
+      return sin(x * 0.0011 + 1.2) * 165.0
+           + cos(x * 0.0024 - 0.7) * 75.0
+           + 65.0;
+    }
+
+    // 3. 急水溪與學甲濕地曲流 (Jishui River Meander in Xuejia)
+    float getJishuiRiverCenterZ(float x) {
+      return sin((x - 13500.0) * 0.0015 + 0.4) * 240.0
+           + cos((x - 12800.0) * 0.0008 - 1.1) * 160.0
+           - 45.0;
+    }
+
+    // ------------------------------------------------------------------------
+    // v3_geo.glsl: Complete 6-District Procedural Geomorphology SDF
+    // Material IDs (matID):
+    //   0.0 = Sea / Lagoon Bed
+    //   1.0 = 七股區 (Qigu Dingtou'e Sandbar & Spinifex Dunes)
+    //   2.0 = 北門區 (Beimen Jingzaijiao Tile Salt Pan, Salt Mounds, Big Salt Mountain & Crystal Church)
+    //   3.0 = 將軍區 (Jiangjun Qingkunshen Fan Salt Pan, Tree of Life Arch, Kapok Avenue & Carrot/Pond Dikes)
+    //   4.0 = 佳里區 (Jiali Irregular Sugarcane/Rice/Loam Farmland & Chianan Canal)
+    //   5.0 = 西港區 (Xigang Zengwen River Point-Bar Sandbank, Flood Levee & Silvery Sweetcane)
+    //   6.0 = Trees / Mangrove / Kapok / Bamboo Oyster Racks
+    //   7.0 = 學甲區 (Xuejia Jishui River Tidal Mudflat, Hollyhock Flower Strips, Golden Wheat & Sorghum)
+    // ------------------------------------------------------------------------
+    vec4 evaluateTerrain(vec3 p, bool includeMicro) {
+      ZoneMasks zm = getZoneMasks(p);
+      vec2 mp = p.xz;
+
+      float hInland = 0.0;
+      float inlandWater = -10.0;
+      float inlandMat = 4.0;
+      float inlandSub = 0.0;
+
+      // ======================================================================
+      // [INLAND BELT] 學甲區 (Xuejia) + 佳里區 (Jiali) + 西港區 (Xigang)
+      // ======================================================================
+      if (zm.inland > 0.001) {
+        // ---- [1] 學甲區 (Xuejia: X = 11800 ~ 15200) ----
+        // 急水溪紅樹林潮間帶濕地 + 鮮紅蜀葵花海廊帶 + 黃金小麥/紅高粱田 + 學甲生態虱目魚塭混作
+        float hXuejia = 0.0;
+        float wXuejia = -10.0;
+        float mXuejia = 7.0;
+        float sXuejia = 0.0;
+        if (zm.xuejia > 0.001) {
+          float jishuiZ = getJishuiRiverCenterZ(mp.x);
+          float jishuiDist = abs(mp.y - jishuiZ);
+          float chanW = 58.0 + sin(mp.x * 0.0021) * 16.0;
+
+          if (jishuiDist < chanW + 68.0) {
+            // 急水溪河道、潮間帶濕潤泥灘洲 (Xuejia Wetland Mudflats) 與防汛堤防
+            float bankSlope = smoothstep(chanW - 15.0, chanW + 25.0, jishuiDist);
+            float mudflatBar = sin(mp.x * 0.008 + cos(mp.y * 0.012) * 2.0) * 0.35;
+            float levee = clamp(1.0 - abs(jishuiDist - (chanW + 52.0)) * 0.11, 0.0, 1.0) * 3.2 * u_ridgeScale;
+            // 海茄冬紅樹林濕地叢 (Mangrove wetland belts along Jishui River mudflats)
+            float mangroveH = 0.0;
+            if (u_oysterTrees > 0.5 && p.y < 4.5 && jishuiDist > chanW - 8.0 && jishuiDist < chanW + 32.0) {
+              float mgPatch = sin(mp.x * 0.015 + cos(mp.y * 0.019) * 2.2);
+              if (mgPatch > 0.15) {
+                vec3 mVor = fastVoronoi2x2(mp * 0.12, 0.75);
+                float c = max(0.0, 1.0 - mVor.x * 1.55);
+                mangroveH = pow(c, 0.55) * 2.4 * smoothstep(0.15, 0.45, mgPatch) * u_ridgeScale;
+              }
+            }
+            hXuejia = mix(-1.4, 1.15, bankSlope) + mudflatBar * (1.0 - bankSlope) + levee + mangroveH;
+            wXuejia = 0.28;
+            if (mangroveH > 0.35) {
+              mXuejia = 6.0;
+              sXuejia = 3.2; // Mangrove dark emerald
+            } else {
+              mXuejia = 7.0;
+              sXuejia = -jishuiDist; // Negative subMask signals Jishui wetland mudflat/levee
+            }
+          } else {
+            // 學甲農漁混作平原：蜀葵花海廊帶 (Hollyhock floral hedgerows) + 黃金小麥/高粱田 + 生態虱目魚塭
+            vec4 xParcel = evalIrregularParcel(mp, 0.015, 36.0);
+            float pHash = xParcel.x;
+            float bDist = xParcel.y;
+            float ridge = 1.0 - smoothstep(0.0, 0.055, bDist);
+
+            if (pHash > 0.68) {
+              // 學甲大灣/中洲生態虱目魚塭 (~32% of parcels are inland milkfish ponds)
+              hXuejia = mix(-0.85, 1.25 * u_ridgeScale, ridge);
+              wXuejia = 0.25;
+              mXuejia = 3.0;
+              sXuejia = pHash;
+            } else {
+              // 蜀葵花海 (pHash < 0.24: 1.8m 高直立花序花籬!) vs 黃金小麥/高粱旱作 (0.24 ~ 0.68)
+              float cropH = 0.0;
+              if (ridge < 0.5) {
+                if (pHash < 0.24) {
+                  // 學甲蜀葵花海：高聳直立花穗行列 (Hollyhock vertical flower stalks up to 1.6m!)
+                  float stalkRow = sin((pHash > 0.12 ? mp.x : mp.y) * 3.6) * 0.5 + 0.5;
+                  cropH = (0.65 + stalkRow * 0.75) * u_ridgeScale;
+                } else {
+                  // 學甲黃金小麥與紅高粱波浪
+                  cropH = (0.38 + 0.25 * sin(mp.x * 0.8 + u_time * 1.4)) * u_ridgeScale;
+                }
+              }
+              hXuejia = 1.25 + ridge * 0.32 * u_ridgeScale + cropH;
+              wXuejia = -10.0;
+              mXuejia = 7.0;
+              sXuejia = pHash; // 0~0.24 = Hollyhock, 0.24~0.50 = Golden Wheat, 0.50~0.68 = Red Sorghum
+            }
+          }
+        }
+
+        // ---- [2] 佳里區 (Jiali: X = 15200 ~ 18500) ----
+        float hJiali = 0.0;
+        float wJiali = -10.0;
+        float mJiali = 4.0;
+        float sJiali = 0.0;
+        if (zm.jiali > 0.001) {
+          float baseElevation = 1.40 + sin(mp.x * 0.0008 + cos(mp.y * 0.0009)) * 0.35;
+          vec4 parcel = evalIrregularParcel(mp, 0.016, 42.0);
+          float jialiCropHash = parcel.x;
+          float borderD = parcel.y;
+
+          float ridgeMask = smoothstep(0.0, 0.055, borderD);
+          float ridgeHeight = mix(0.32 * u_ridgeScale, 0.0, ridgeMask);
+
+          float cropRelief = 0.0;
+          if (ridgeMask > 0.25 && jialiCropHash < 0.44) {
+            cropRelief = (0.42 + jialiCropHash * 0.68) * smoothstep(0.05, 0.20, borderD);
+          }
+
+          float canalZ = getChiananCanalCenterZ(mp.x);
+          float canalDist = abs(mp.y - canalZ);
+          float canalBank = smoothstep(18.0, 11.5, canalDist) * (1.0 - smoothstep(11.5, 8.0, canalDist)) * 0.65 * u_ridgeScale;
+          float canalDepth = smoothstep(8.5, 4.8, canalDist) * 1.80;
+
+          float treeHeightJiali = 0.0;
+          if (u_oysterTrees > 0.5 && p.y < 6.0 && canalDist > 16.0) {
+            float groveWave = sin(mp.x * 0.0045 + cos(mp.y * 0.0052) * 2.1) * cos(mp.y * 0.0038 - sin(mp.x * 0.0041));
+            if (groveWave > 0.32) {
+              vec3 treeVor = fastVoronoi2x2(mp * 0.075, 0.75);
+              float crown = max(0.0, 1.0 - treeVor.x * 1.55);
+              treeHeightJiali = pow(crown, 0.55) * (3.6 + treeVor.z * 2.8) * smoothstep(0.32, 0.52, groveWave) * u_ridgeScale;
+            }
+          }
+
+          float jialiPaddyDepth = (jialiCropHash > 0.78 && ridgeMask > 0.3) ? -0.32 : 0.0;
+          hJiali = baseElevation + ridgeHeight + cropRelief + canalBank - canalDepth + jialiPaddyDepth + treeHeightJiali;
+          wJiali = (canalDist < 11.5) ? 0.32 : ((jialiPaddyDepth < -0.1) ? 1.35 : -10.0);
+          if (treeHeightJiali > 0.45) {
+            mJiali = 6.0;
+            sJiali = 3.0;
+          } else {
+            mJiali = 4.0;
+            sJiali = jialiCropHash;
+          }
+        }
+
+        // ---- [3] 西港區 (Xigang: X = 18500 ~ 23000) ----
+        float hXigang = 0.0;
+        float wXigang = 0.25;
+        float mXigang = 5.0;
+        float sXigang = 0.0;
+        if (zm.xigang > 0.001) {
+          float riverCenterZ = getZengwenRiverCenterZ(mp.x);
+          float channelHalfWidth = 68.0 + sin(mp.x * 0.0017 + 1.3) * 18.0 + cos(mp.x * 0.0031) * 10.0;
+          float riverSignedDist = abs(mp.y - riverCenterZ);
+
+          float bankSlope = smoothstep(channelHalfWidth - 16.0, channelHalfWidth + 28.0, riverSignedDist);
+          float hRiverBed = mix(-1.8, 1.32, bankSlope);
+
+          float reedZone = smoothstep(channelHalfWidth + 6.0, channelHalfWidth + 26.0, riverSignedDist) *
+                           (1.0 - smoothstep(182.0, 212.0, riverSignedDist));
+          float reedBedHeight = 0.0;
+          if (reedZone > 0.01) {
+            float drift = sin(mp.x * 0.025 + cos(mp.y * 0.032) * 2.0) * 0.25 + 0.35;
+            float microWave = includeMicro ? (valueNoise(mp * 0.28 + vec2(u_time * 0.85, 0.0)) * 0.28) : 0.12;
+            reedBedHeight = reedZone * (0.38 + drift + microWave) * u_ridgeScale;
+          }
+
+          float dLevee = abs(riverSignedDist - 225.0);
+          float leveeProfile = clamp(1.0 - (dLevee - 5.0) * 0.075, 0.0, 1.0) * 4.2 * u_ridgeScale;
+
+          hXigang = hRiverBed + reedBedHeight + leveeProfile;
+          wXigang = 0.25;
+          mXigang = 5.0;
+          sXigang = riverSignedDist;
+        }
+
+        float wSumInland = max(0.0001, zm.xuejia + zm.jiali + zm.xigang);
+        hInland = (hXuejia * zm.xuejia + hJiali * zm.jiali + hXigang * zm.xigang) / wSumInland;
+
+        if (zm.xigang >= zm.jiali && zm.xigang >= zm.xuejia) {
+          inlandWater = wXigang; inlandMat = mXigang; inlandSub = sXigang;
+        } else if (zm.jiali >= zm.xuejia) {
+          inlandWater = wJiali; inlandMat = mJiali; inlandSub = sJiali;
+        } else {
+          inlandWater = wXuejia; inlandMat = mXuejia; inlandSub = sXuejia;
+        }
+      }
+
+      // ======================================================================
+      // [COASTAL SALT & AQUAFARM BELT] 將軍區 (Jiangjun) + 北門區 (Beimen)
+      // ======================================================================
+      float hAquaZone = 0.0;
+      float aquaWater = 0.25;
+      float aquaMat = 3.0;
+      float aquaSub = 0.0;
+
+      if (zm.aquafarm > 0.001) {
+        // ---- [4] 將軍區 (Jiangjun: X = 7800 ~ 11800) ----
+        // 核心地標：(A) 青鯤鯓扇形鹽田 (極座標放射狀扇骨水道 + 環狀鹽堤 + 「生命之樹」雙扇純白拱門 SDF)
+        //          (B) 苓子寮火紅木棉道花廊 + 將軍胡蘿蔔田 + 水車打水高密度養殖魚塭
+        float hJiangjun = 0.0;
+        float mJiangjun = 3.0;
+        float sJiangjun = 0.0;
+        if (zm.jiangjun > 0.001) {
+          // 青鯤鯓扇形鹽田圓心設於 (9350, -30)，向西展開半徑 160m ~ 1150m、扇角 +-68 度之壯麗扇形鹽田！
+          vec2 fanHub = vec2(9350.0, -30.0);
+          vec2 dFan = mp - fanHub;
+          float fanR = length(dFan);
+          // 扇形向西展開 (-X 方向為 0 度)
+          float fanAngle = atan(dFan.y, -dFan.x);
+          bool inFanSector = (fanR > 140.0 && fanR < 1180.0 && abs(fanAngle) < 1.18);
+
+          if (inFanSector) {
+            // 放射狀扇骨給水路/排水路 (12 道扇骨) 與 6 層同心圓弧鹽堤
+            float spokePhase = fract((fanAngle + 1.18) / (2.36 / 12.0));
+            float ringPhase  = fract((fanR - 140.0) / 165.0);
+            float spokeDike  = 1.0 - smoothstep(0.0, 0.075, min(spokePhase, 1.0 - spokePhase));
+            float ringDike   = 1.0 - smoothstep(0.0, 0.075, min(ringPhase, 1.0 - ringPhase));
+            // 中軸線棧道 (fanAngle ~ 0.0) 通往「生命之樹」純白雙扇拱門！
+            float centerCauseway = 1.0 - smoothstep(4.5, 9.5, abs(dFan.y));
+            float isDike = max(max(spokeDike, ringDike), centerCauseway);
+
+            // 「生命之樹 (Tree of Life)」地標 SDF：位於扇形中軸 (fanR = 540m, dFan.y = 0)
+            float treeOfLifeArch = 0.0;
+            if (p.y < 6.8 && abs(fanR - 540.0) < 42.0 && abs(dFan.y) < 38.0) {
+              // 雙扇白色鏤空拱門輪廓
+              float archRadius = length(vec2((fanR - 540.0) * 0.85, abs(dFan.y) - 6.0));
+              float archShell = exp(-pow((archRadius - 14.0) * 0.18, 2.0)) * smoothstep(2.0, 12.0, abs(dFan.y) + 4.0);
+              float ribSpokes = 0.75 + 0.25 * cos(atan(abs(dFan.y), fanR - 540.0) * 16.0);
+              treeOfLifeArch = archShell * ribSpokes * 5.6 * u_ridgeScale;
+            }
+
+            hJiangjun = mix(-0.65, 0.78 * u_ridgeScale, isDike) + treeOfLifeArch;
+            mJiangjun = 3.0;
+            // sJiangjun > 10.0 標記為「青鯤鯓扇形鹽田與生命之樹」專屬材質
+            sJiangjun = (treeOfLifeArch > 0.35) ? 25.0 : (12.0 + floor((fanR - 140.0) / 165.0) * 0.15 + spokePhase * 0.1);
+          } else {
+            // 扇形鹽田外圍：將軍不規則養殖魚塭矩陣 + 苓子寮火紅木棉道大道 + 胡蘿蔔翠綠農田
+            vec4 pondParcel = evalIrregularParcel(mp, 0.014, 28.0);
+            float pondBorder = pondParcel.y;
+            // 22% 為將軍著名「胡蘿蔔/牛蒡旱作田」，78% 為高密度養殖魚塭
+            bool isCarrotField = (pondParcel.x > 0.78);
+            float dikeMask = 1.0 - smoothstep(0.0, 0.068, pondBorder);
+            float hPond = isCarrotField ? (1.18 + 0.25 * sin(mp.x * 3.0) * (1.0 - dikeMask)) : mix(-1.05, 1.22 * u_ridgeScale, dikeMask);
+
+            // 將軍苓子寮木棉道 (Kapok Tree Boulevards)：沿東西向與南北向主幹道成排綻放的火紅木棉樹廊！
+            float kapokCrown = 0.0;
+            if (u_oysterTrees > 0.5 && p.y < 5.8 && dikeMask > 0.32) {
+              float boulevardMask = max(
+                1.0 - smoothstep(0.0, 18.0, abs(mod(mp.y + 160.0, 320.0) - 160.0)),
+                1.0 - smoothstep(0.0, 18.0, abs(mod(mp.x + 220.0, 440.0) - 220.0))
+              );
+              if (boulevardMask > 0.1) {
+                vec2 kGrid = fract(mp * 0.095) - 0.5;
+                float c = max(0.0, 1.0 - length(kGrid) * 2.5);
+                kapokCrown = pow(c, 0.55) * 3.8 * boulevardMask * u_ridgeScale;
+              }
+            }
+
+            hJiangjun = hPond + kapokCrown;
+            if (kapokCrown > 0.38) {
+              mJiangjun = 6.0;
+              sJiangjun = 2.0; // Blazing orange-red Kapok avenue
+            } else {
+              mJiangjun = 3.0;
+              sJiangjun = pondParcel.x; // >0.78 = Carrot field, <=0.78 = Fish pond dike
+            }
+          }
+        }
+
+        // ---- [5] 北門區 (Beimen: X = 4200 ~ 7800) ----
+        // 核心地標：(A) 井仔腳瓦盤鹽田（階梯式大蒸發池 + 甕片碎瓦結晶池 + 雙排圓錐白鹽山 + 紅磚瞭望塔）
+        //          (B) 北門大鹽山主峰 (20m 高雪白結晶鹽山群 SDF)
+        //          (C) 北門水晶教堂 (淺水鏡池中央純白尖拱教堂 SDF)
+        //          (D) 蘆竹溝紅樹林潮溝與北門潟湖水道
+        float hBeimen = 0.22;
+        float wBeimen = 0.22;
+        float mBeimen = 2.0;
+        float sBeimen = 0.0;
+        if (zm.beimen > 0.001) {
+          // (B) 北門大鹽山主峰群 (Main Salt Mountain at X=6450, Z=210)：高達 6.2m 之雪白結晶雙峰鹽山！
+          float dSaltMt1 = length((mp - vec2(6450.0, 210.0)) * vec2(1.0, 1.25));
+          float dSaltMt2 = length((mp - vec2(6540.0, 175.0)) * vec2(1.1, 1.0));
+          float bigSaltMt = (max(0.0, 1.0 - dSaltMt1 / 115.0) * 6.2 + max(0.0, 1.0 - dSaltMt2 / 85.0) * 4.5) * u_ridgeScale;
+
+          // (C) 北門水晶教堂倒影池與純白尖拱地標 (Crystal Church at X=6150, Z=-210)
+          float dChurch = length(mp - vec2(6150.0, -210.0));
+          float crystalChurchH = 0.0;
+          if (dChurch < 95.0) {
+            // 尖拱教堂底座與高聳純白尖拱肋架 SDF
+            vec2 cRel = mp - vec2(6150.0, -210.0);
+            float causeway = (1.0 - smoothstep(3.0, 6.0, abs(cRel.y))) * step(0.0, cRel.x) * 0.45;
+            if (abs(cRel.x) < 22.0 && abs(cRel.y) < 14.0) {
+              float archRib = 0.65 + 0.35 * cos(cRel.x * 0.85);
+              float gothicPeak = max(0.0, 1.0 - abs(cRel.y) / (13.0 - abs(cRel.x) * 0.35));
+              crystalChurchH = pow(gothicPeak, 0.7) * 5.2 * archRib * u_ridgeScale;
+            }
+            hBeimen = -0.35 + causeway + crystalChurchH;
+            wBeimen = 0.24;
+            mBeimen = 2.0;
+            sBeimen = (crystalChurchH > 0.3) ? 8.0 : 0.0;
+          } else if (bigSaltMt > 0.25) {
+            // 北門大鹽山雪白主峰與環山步道
+            float ridgeNoise = includeMicro ? (valueNoise(mp * 0.25) * 0.35) : 0.15;
+            hBeimen = 0.45 + bigSaltMt + ridgeNoise;
+            wBeimen = 0.22;
+            mBeimen = 2.0;
+            sBeimen = 5.0; // Large Salt Mountain pure crystalline white
+          } else {
+            // (D) 蘆竹溝蜿蜒紅樹林潮溝 (Mangrove Tidal Creek wrapping around Jingzaijiao peninsula)
+            float creekZ = sin((mp.x - 5200.0) * 0.0022) * 240.0 + cos(mp.x * 0.0041) * 85.0 - 40.0;
+            float creekDist = abs(mp.y - creekZ);
+            if (creekDist < 36.0) {
+              // 潮溝水道與兩岸海茄冬紅樹林帶
+              float bank = smoothstep(22.0, 34.0, creekDist);
+              float mgH = 0.0;
+              if (u_oysterTrees > 0.5 && p.y < 4.2 && creekDist > 18.0) {
+                vec3 mVor = fastVoronoi2x2(mp * 0.14, 0.75);
+                mgH = max(0.0, 1.0 - mVor.x * 1.6) * 2.2 * u_ridgeScale;
+              }
+              hBeimen = mix(-1.1, 0.65, bank) + mgH;
+              wBeimen = 0.24;
+              mBeimen = (mgH > 0.3) ? 6.0 : 2.0;
+              sBeimen = (mgH > 0.3) ? 3.2 : 0.0;
+            } else {
+              // (A) 井仔腳瓦盤鹽田核心區：階梯式結晶池 + 雙排整齊圓錐白鹽堆 + 紅磚水門與瞭望塔
+              vec2 panScale = vec2(0.048, 0.064);
+              vec2 panUV = fract(mp * panScale);
+              vec2 panID = floor(mp * panScale);
+              float panHash = hash12(panID);
+
+              // 結晶池木板/紅磚土埂與滷水溝渠
+              float dikeX = smoothstep(0.0, 0.06, panUV.x) * smoothstep(1.0, 0.94, panUV.x);
+              float dikeY = smoothstep(0.0, 0.06, panUV.y) * smoothstep(1.0, 0.94, panUV.y);
+              float saltDike = 1.0 - (dikeX * dikeY);
+
+              // 井仔腳招牌「雙排整齊圓錐白鹽山陣列」：在每個結晶池內排列 2x3 座雪白圓錐小鹽堆！
+              float saltCone = 0.0;
+              if (p.y < 2.6 && panHash > 0.24 && saltDike < 0.25) {
+                vec2 coneUV = fract(panUV * vec2(2.0, 3.0)) - 0.5;
+                vec2 cJit = (hash22(panID * 7.0 + floor(panUV * vec2(2.0, 3.0))) - 0.5) * 0.18;
+                float dCone = length(coneUV - cJit);
+                saltCone = max(0.0, 1.0 - dCone * 3.1) * (1.18 + 0.42 * panHash) * u_ridgeScale;
+              }
+
+              // 井仔腳鹽田紅磚瞭望塔 (Brick Observation Tower at X=5380, Z=35)
+              float towerH = 0.0;
+              if (abs(mp.x - 5380.0) < 7.5 && abs(mp.y - 35.0) < 7.5) {
+                towerH = 5.4 * u_ridgeScale;
+              }
+
+              hBeimen = 0.14 + saltDike * 0.36 * u_ridgeScale + saltCone + towerH;
+              wBeimen = 0.22;
+              mBeimen = 2.0;
+              sBeimen = (towerH > 0.5) ? -2.0 : saltCone;
+            }
+          }
+        }
+
+        float wSumAqua = max(0.0001, zm.beimen + zm.jiangjun);
+        hAquaZone = (hBeimen * zm.beimen + hJiangjun * zm.jiangjun) / wSumAqua;
+        if (zm.beimen >= zm.jiangjun) {
+          aquaWater = wBeimen; aquaMat = mBeimen; aquaSub = sBeimen;
+        } else {
+          aquaWater = 0.25; aquaMat = mJiangjun; aquaSub = sJiangjun;
+        }
+      }
+
+      // ======================================================================
+      // [COASTAL SANDBAR & LAGOON] 七股區 (Qigu: X = 0 ~ 4200)
+      // ======================================================================
+      float hCoastal = 0.0;
+      float oysterPost = 0.0;
+      if (zm.coastal > 0.001) {
+        float sandbarCenter = 1120.0 + sin(mp.y * 0.0014) * 240.0 + cos(mp.y * 0.0031 + 0.9) * 115.0;
+        float dxBar = (mp.x - sandbarCenter);
+        float barWidth = 420.0 + sin(mp.y * 0.0019 + 2.1) * 95.0;
+        float barEnvelope = (dxBar < 0.0)
+          ? exp(-pow(dxBar / (barWidth * 1.25), 2.0))
+          : exp(-pow(dxBar / (barWidth * 0.75), 2.0));
+
+        vec2 wpDune = fastDomainWarp(mp, 65.0);
+        float duneWave = sin(wpDune.x * 0.012 + cos(wpDune.y * 0.009) * 1.8) * 0.5 + 0.5;
+        float duneSub  = includeMicro ? (valueNoise(wpDune * 0.035) * 0.85) : 0.42;
+        float hSandbar = -1.35 + barEnvelope * (2.4 + (duneWave * 1.8 + duneSub) * u_ridgeScale);
+
+        if (u_oysterTrees > 0.5 && p.y < 2.2 && mp.x > sandbarCenter + 220.0 && mp.x < 4250.0 && hSandbar < 0.15) {
+          float navChannel = abs(sin(mp.y * 0.0032 + cos(mp.x * 0.0025) * 1.7));
+          if (navChannel > 0.26) {
+            vec4 raft = evalIrregularParcel(mp, 0.024, 20.0);
+            if (raft.x > 0.35 && raft.y > 0.08) {
+              vec2 poleGrid = fract(mp * 0.26) - 0.5;
+              float pole = smoothstep(0.18, 0.05, length(poleGrid));
+              float beam = smoothstep(0.08, 0.02, abs(poleGrid.y));
+              oysterPost = max(pole * 1.42, beam * 1.02) * u_ridgeScale;
+            }
+          }
+        }
+        hCoastal = hSandbar + oysterPost;
+      }
+
+      float hSea = -4.5;
+
+      float totalH =
+        hSea      * zm.sea +
+        hCoastal  * zm.coastal +
+        hAquaZone * zm.aquafarm +
+        hInland   * zm.inland;
+
+      float weightSum = max(0.0001, zm.sea + zm.coastal + zm.aquafarm + zm.inland);
+      totalH /= weightSum;
+
+      float waterLevel = 0.25;
+      float matID = 4.0;
+      float subMask = 0.0;
+
+      if (zm.sea > 0.5) {
+        matID = 0.0;
+        waterLevel = 0.25;
+      } else if (zm.coastal >= zm.aquafarm && zm.coastal >= zm.inland) {
+        if (oysterPost > 0.32) {
+          matID = 6.0;
+          subMask = 1.0;
+        } else {
+          matID = 1.0;
+        }
+        waterLevel = 0.25;
+      } else if (zm.aquafarm >= zm.inland) {
+        waterLevel = aquaWater;
+        matID = aquaMat;
+        subMask = aquaSub;
+      } else {
+        waterLevel = inlandWater;
+        matID = inlandMat;
+        subMask = inlandSub;
+      }
+
+      return vec4(totalH, waterLevel, matID, subMask);
+    }
+
+    vec3 calcTerrainNormal(vec3 p, float tDist) {
+      float eps = clamp(0.08 + tDist * 0.0005, 0.08, 0.90);
+      vec2 e = vec2(eps, 0.0);
+      float hc = evaluateTerrain(p, true).x;
+      float hx = evaluateTerrain(p + vec3(e.x, 0.0, 0.0), true).x;
+      float hz = evaluateTerrain(p + vec3(0.0, 0.0, e.x), true).x;
+      return normalize(vec3(hc - hx, eps, hc - hz));
+    }
+
+    // ------------------------------------------------------------------------
+    // v4_sky.glsl: Realistic West-Coast Golden Hour Atmosphere & Volumetric Clouds
+    // ------------------------------------------------------------------------
+    float hgPhase(float cosTheta, float g) {
+      float g2 = g * g;
+      return (1.0 - g2) / (4.0 * 3.14159265 * pow(max(0.001, 1.0 + g2 - 2.0 * g * cosTheta), 1.5));
+    }
+
+    vec3 computeSkyAndClouds(vec3 rayDir, vec3 sunDir, bool fullClouds) {
+      float cosTheta = dot(rayDir, sunDir);
+      float sunElFactor = clamp(sunDir.y * 4.5, 0.0, 1.0);
+
+      vec3 zenithCol  = mix(vec3(0.08, 0.15, 0.30), vec3(0.16, 0.33, 0.60), sunElFactor);
+      vec3 horizonCol = mix(vec3(0.90, 0.48, 0.22), vec3(0.84, 0.68, 0.50), sunElFactor);
+      vec3 glowCol    = vec3(1.02, 0.60, 0.24);
+
+      float horizonWeight = pow(1.0 - max(0.0, rayDir.y), 3.2);
+      vec3 sky = mix(zenithCol, horizonCol, horizonWeight);
+
+      float mie = hgPhase(cosTheta, 0.76) * u_haze;
+      sky += glowCol * mie * 0.34 * (0.35 + 0.65 * horizonWeight);
+
+      float sunDisc = smoothstep(0.99945, 0.99988, cosTheta);
+      float sunCore = pow(max(0.0, cosTheta), 220.0);
+      sky += vec3(1.38, 0.72, 0.32) * sunCore * 0.80 + vec3(2.8, 1.9, 1.1) * sunDisc;
+
+      if (fullClouds && rayDir.y > 0.012 && u_cloudDensity > 0.01) {
+        vec2 cloudUV = rayDir.xz / (rayDir.y + 0.11) * 1.65;
+        vec2 windOffset = vec2(u_time * 0.010, -u_time * 0.005);
+
+        float cumNoise = fbm3(cloudUV * 1.35 + windOffset);
+        float cumMask = smoothstep(1.0 - u_cloudDensity * 0.85, 1.02, cumNoise);
+
+        float cirNoise = valueNoise(cloudUV * 3.8 - windOffset * 0.6);
+        float cirMask = smoothstep(0.58, 0.88, cirNoise) * u_cloudDensity * 0.45;
+
+        float cloudGrad = valueNoise((cloudUV * 1.35 + windOffset + sunDir.xz * 0.14) * 2.1);
+        float litFactor = clamp((cumNoise - cloudGrad) * 2.8 + 0.55, 0.0, 1.0);
+
+        vec3 cloudDark   = mix(vec3(0.22, 0.19, 0.29), vec3(0.44, 0.48, 0.56), sunElFactor);
+        vec3 cloudBright = mix(vec3(1.04, 0.62, 0.30), vec3(0.98, 0.94, 0.88), sunElFactor * 0.7);
+        vec3 cumColor = mix(cloudDark, cloudBright, litFactor);
+
+        float distFade = exp(-max(0.0, (1.0 - rayDir.y * 3.8)) * 1.2);
+        sky = mix(sky, cumColor, clamp(cumMask * 0.80 * distFade, 0.0, 0.86));
+        sky = mix(sky, cloudBright * 1.05, clamp(cirMask * distFade, 0.0, 0.52));
+      }
+
+      return sky;
+    }
+
+    // ------------------------------------------------------------------------
+    // v4_water.glsl: 6-District Physical Water Optical Pipeline
+    // ------------------------------------------------------------------------
+    vec3 shadeWaterSurface(
+      vec3 hitPos,
+      vec3 rayDir,
+      vec3 sunDir,
+      float terrainH,
+      float matID,
+      float subMask,
+      float tDist
+    ) {
+      ZoneMasks zm = getZoneMasks(hitPos);
+      vec2 wp = hitPos.xz;
+      float waterDepth = max(0.015, hitPos.y - terrainH);
+      float detailFade = 1.0 - smoothstep(180.0, 2200.0, tDist);
+
+      // Wave amplitude: Beimen Jingzaijiao crystallization pans are mirror-static!
+      float waveAmp =
+        (zm.sea * 1.0 + zm.coastal * 0.30 + zm.jiangjun * 0.14 + zm.beimen * 0.04 + zm.inland * 0.16)
+        * u_waveScale;
+
+      vec3 wn1 = noised(wp * 0.18 + vec2(u_time * 0.75, -u_time * 0.45));
+      vec3 wn2 = noised(wp * 0.62 + vec2(-u_time * 1.15, u_time * 0.85));
+      vec2 dWave = (wn1.yz * 0.16 + wn2.yz * 0.10 * detailFade) * waveAmp;
+      float waveHeight = (wn1.x * 0.6 + wn2.x * 0.4 - 0.5) * waveAmp;
+
+      // Jiangjun & Xuejia Aquafarm Paddlewheel Aerator Foam Wakes (魚塭增氧水車白沫與同心圓波紋)
+      float aeratorFoam = 0.0;
+      if ((zm.jiangjun > 0.15 && subMask < 10.0) || (zm.xuejia > 0.15 && matID > 2.5 && matID < 3.5)) {
+        vec4 pondP = evalIrregularParcel(wp, 0.014, 28.0);
+        if (pondP.x > 0.25 && pondP.x < 0.76 && pondP.y > 0.14) {
+          vec2 dAero = (vec2(pondP.z, pondP.w) - vec2(0.32, 0.50)) * vec2(45.0, 32.0);
+          float wake = exp(-pow(dAero.y * 0.38, 2.0)) * smoothstep(0.0, 2.0, dAero.x) * exp(-max(0.0, dAero.x) * 0.15);
+          aeratorFoam = clamp(wake * (0.65 + 0.35 * wn2.x), 0.0, 0.92);
+        }
+      }
+
+      vec3 waterNormal = normalize(vec3(-dWave.x, 1.0, -dWave.y));
+      float NoV = max(0.001, dot(waterNormal, -rayDir));
+      float fresnel = 0.04 + 0.96 * pow(1.0 - NoV, 5.0);
+
+      vec3 reflDir = reflect(rayDir, waterNormal);
+      reflDir.y = abs(reflDir.y);
+      vec3 skyRefl = computeSkyAndClouds(reflDir, sunDir, false);
+
+      // [1] 台灣海峽外海
+      vec3 colSea = mix(vec3(0.06, 0.25, 0.29), vec3(0.01, 0.07, 0.13), clamp(waterDepth * 0.35, 0.0, 1.0));
+      // [2] 七股內海潟湖
+      vec3 colLagoon = mix(vec3(0.15, 0.27, 0.23), vec3(0.08, 0.19, 0.17), clamp(waterDepth * 0.45, 0.0, 1.0));
+
+      // [3] 將軍區水體：青鯤鯓扇形鹽田琥珀紅滷水 vs 養殖魚塭藻綠水色
+      vec3 colJiangjun = vec3(0.10, 0.20, 0.12);
+      if (zm.jiangjun > 0.01) {
+        vec2 dFan = wp - vec2(9350.0, -30.0);
+        float fanR = length(dFan);
+        float fanAngle = atan(dFan.y, -dFan.x);
+        if (fanR > 140.0 && fanR < 1180.0 && abs(fanAngle) < 1.18) {
+          // 青鯤鯓扇形鹽田結晶池：隨同心圓環呈現漸層之琥珀金、珊瑚紅與淺碧滷水色澤！
+          float ringIdx = fract((fanR - 140.0) / 330.0);
+          colJiangjun = mix(vec3(0.55, 0.26, 0.18), vec3(0.22, 0.32, 0.28), ringIdx);
+        } else {
+          vec4 pondP = evalIrregularParcel(wp, 0.014, 28.0);
+          colJiangjun = mix(vec3(0.07, 0.19, 0.12), vec3(0.20, 0.19, 0.09), pondP.x);
+        }
+      }
+
+      // [4] 北門區水體：井仔腳瓦盤鹽田（甕片碎瓦池底折射）+ 水晶教堂蒂芬妮藍鏡池 + 蘆竹溝潮溝
+      vec3 colBeimen = vec3(0.68, 0.34, 0.24);
+      if (zm.beimen > 0.01) {
+        float dChurch = length(wp - vec2(6150.0, -210.0));
+        if (dChurch < 95.0) {
+          // 北門水晶教堂倒影池：清澈碧藍鏡面水池
+          colBeimen = vec3(0.14, 0.38, 0.42);
+        } else if (waterDepth > 0.45) {
+          // 蘆竹溝紅樹林潮溝
+          colBeimen = colLagoon;
+        } else {
+          // 井仔腳瓦盤結晶池底：25cm 甕片碎瓦馬賽克與灰縫折射 + 高鹽藻橘紅粉白滷水
+          vec3 tileVor = fastVoronoi2x2(wp * 2.8, 0.78);
+          float grout = 1.0 - smoothstep(0.02, 0.07, tileVor.y);
+          vec3 shardCol = mix(vec3(0.34, 0.14, 0.09), vec3(0.48, 0.21, 0.13), tileVor.z);
+          vec3 tileMosaic = mix(shardCol, vec3(0.18, 0.15, 0.14), grout * detailFade);
+          vec3 brineTint = mix(vec3(0.80, 0.38, 0.25), vec3(0.95, 0.84, 0.80), smoothstep(0.25, 0.04, waterDepth));
+          colBeimen = mix(tileMosaic, brineTint, 0.46);
+        }
+      }
+
+      // [5] 內陸水體：學甲急水溪濕地、佳里嘉南大圳與西港曾文溪
+      vec3 colRiver = mix(vec3(0.16, 0.26, 0.21), vec3(0.09, 0.19, 0.17), clamp(waterDepth * 0.45, 0.0, 1.0));
+
+      vec3 waterBodyCol =
+        colSea      * zm.sea +
+        colLagoon   * zm.coastal +
+        colBeimen   * zm.beimen +
+        colJiangjun * zm.jiangjun +
+        colRiver    * zm.inland;
+      waterBodyCol /= max(0.0001, zm.sea + zm.coastal + zm.beimen + zm.jiangjun + zm.inland);
+
+      vec3 halfVec = normalize(sunDir - rayDir);
+      float NoH = max(0.0, dot(waterNormal, halfVec));
+      float specPow = mix(220.0, 680.0, zm.aquafarm);
+      float sunGlint = pow(NoH, specPow) * (2.0 + zm.aquafarm * 1.8);
+
+      float waveFoam = smoothstep(0.16, 0.34, waveHeight) * zm.sea;
+      float shoreSurf = smoothstep(0.42, 0.02, waterDepth) * (0.55 + 0.45 * sin(waterDepth * 18.0 - u_time * 3.8)) * (zm.sea + zm.coastal * 0.65);
+      float totalFoam = clamp((waveFoam * wn2.x + shoreSurf * 0.72 + aeratorFoam), 0.0, 0.94);
+
+      vec3 finalWater = mix(waterBodyCol, skyRefl, clamp(fresnel * (0.72 + 0.22 * zm.beimen), 0.0, 0.94));
+      finalWater += vec3(1.40, 0.80, 0.38) * sunGlint;
+      finalWater = mix(finalWater, vec3(0.95, 0.94, 0.91), totalFoam);
+
+      return finalWater;
+    }
+
+    // ------------------------------------------------------------------------
+    // v3_shade.glsl: Complete 6-District Surface BRDF & Micro-Detail Shader
+    // ------------------------------------------------------------------------
+    vec3 shadeTerrainSurface(
+      vec3 hitPos,
+      vec3 normal,
+      vec3 rayDir,
+      vec3 sunDir,
+      float matID,
+      float subMask,
+      float tDist
+    ) {
+      vec2 mp = hitPos.xz;
+      float detailFade = 1.0 - smoothstep(140.0, 1800.0, tDist);
+      vec3 albedo = vec3(0.22, 0.29, 0.16);
+      float roughness = 0.74;
+      float sssWeight = 0.0;
+      float sparkle = 0.0;
+
+      if (matID < 1.5) {
+        // [Zone 1: 七股區] 頂頭額沙洲風成沙丘、潮間帶濕沙灘與濱刺麥沙丘草叢
+        vec3 sandN = noised(mp * 0.85);
+        vec3 grainN = noised(mp * 9.5);
+        normal = normalize(normal + vec3(-sandN.y * 0.12 - grainN.y * 0.06, 0.0, -sandN.z * 0.12 - grainN.z * 0.06) * detailFade);
+
+        float wetMask = 1.0 - smoothstep(0.25, 0.68, hitPos.y);
+        float grassPatch = smoothstep(0.62, 0.78, fbm3(mp * 0.045)) * smoothstep(0.8, 2.2, hitPos.y);
+        vec3 drySand = mix(vec3(0.58, 0.50, 0.38), vec3(0.74, 0.65, 0.52), sandN.x);
+        vec3 wetSand = vec3(0.32, 0.27, 0.21);
+        albedo = mix(drySand, wetSand, wetMask);
+        albedo = mix(albedo, vec3(0.24, 0.33, 0.16), grassPatch * 0.85);
+        roughness = mix(0.52, 0.15, wetMask);
+        sssWeight = 0.42 * (1.0 - wetMask);
+        sparkle = pow(hash12(floor(mp * 16.0)), 14.0) * detailFade * (1.0 - wetMask) * 1.5;
+
+      } else if (matID < 2.5) {
+        // [Zone 2: 北門區] 井仔腳瓦盤鹽田、雙排圓錐白鹽山、北門大鹽山主峰、北門水晶教堂與紅磚瞭望塔
+        if (subMask > 7.0) {
+          // 北門水晶教堂純白尖拱與玻璃帷幕光澤
+          albedo = vec3(0.96, 0.97, 1.00);
+          roughness = 0.12;
+          sssWeight = 0.30;
+          sparkle = 0.8;
+        } else if (subMask < -1.0) {
+          // 井仔腳紅磚瞭望塔 (Traditional red-brick observation tower)
+          vec3 brickN = noised(mp * 6.0);
+          albedo = mix(vec3(0.52, 0.20, 0.13), vec3(0.64, 0.26, 0.16), brickN.x);
+          roughness = 0.72;
+        } else if (subMask > 0.08) {
+          // 井仔腳圓錐白鹽山 & 北門大鹽山雪白結晶鹽粒切面與閃光
+          vec3 crystalN = noised(mp * 14.0);
+          normal = normalize(normal + vec3(-crystalN.y, 0.0, -crystalN.z) * 0.22 * detailFade);
+          albedo = mix(vec3(0.90, 0.91, 0.94), vec3(0.99, 0.98, 1.00), crystalN.x);
+          roughness = 0.16;
+          sssWeight = 0.38;
+          sparkle = pow(hash12(floor(mp * 24.0)), 10.0) * detailFade * 2.5;
+        } else {
+          // 井仔腳瓦盤土埂與碎瓦紅磚步道
+          vec3 tileVor = fastVoronoi2x2(mp * 2.8, 0.78);
+          float seam = 1.0 - smoothstep(0.02, 0.08, tileVor.y);
+          normal = normalize(normal + vec3(seam * 0.16, 0.0, (tileVor.z - 0.5) * 0.14) * detailFade);
+          albedo = mix(vec3(0.38, 0.20, 0.14), vec3(0.24, 0.18, 0.15), seam);
+          roughness = 0.62;
+        }
+
+      } else if (matID < 3.5) {
+        // [Zone 3: 將軍區] 青鯤鯓扇形鹽田鹽堤、純白「生命之樹」雙扇拱門、胡蘿蔔旱作田與魚塭土堤
+        if (subMask > 20.0) {
+          // 青鯤鯓扇形鹽田地標：「生命之樹」純白雕塑拱門與中軸白步道
+          albedo = vec3(0.97, 0.96, 0.95);
+          roughness = 0.18;
+          sssWeight = 0.35;
+        } else if (subMask > 10.0) {
+          // 青鯤鯓扇形鹽田放射狀紅磚/鹽滷土堤與白色鹽霜邊緣
+          vec3 dikeN = noised(mp * 4.5);
+          normal = normalize(normal + vec3(-dikeN.y, 0.0, -dikeN.z) * 0.16 * detailFade);
+          float saltFrost = smoothstep(0.25, 0.45, hitPos.y) * (1.0 - smoothstep(0.45, 0.68, hitPos.y));
+          albedo = mix(vec3(0.38, 0.26, 0.20), vec3(0.90, 0.88, 0.86), saltFrost * 0.75);
+          roughness = 0.58;
+        } else if (subMask > 0.78) {
+          // 將軍「胡蘿蔔之鄉」翠綠羽狀胡蘿蔔田與紅土壟溝 (Carrot fields with reddish sandy loam furrows)
+          float furrow = sin(mp.x * 3.5) * 0.5 + 0.5;
+          vec3 leafN = noised(mp * 3.2);
+          normal = normalize(normal + vec3(-cos(mp.x * 3.5) * 0.22, 0.0, -leafN.z * 0.16) * detailFade);
+          albedo = mix(vec3(0.34, 0.20, 0.14), vec3(0.18, 0.42, 0.14), furrow) * (0.88 + 0.24 * leafN.x);
+          roughness = 0.64;
+        } else {
+          // 將軍養殖魚塭土堤與柏油巡池道路
+          vec3 grav = noised(mp * 3.2);
+          normal = normalize(normal + vec3(-grav.y, 0.0, -grav.z) * 0.14 * detailFade);
+          vec4 pondP = evalIrregularParcel(mp, 0.014, 28.0);
+          float roadCenter = 1.0 - smoothstep(0.01, 0.04, pondP.y);
+          albedo = mix(vec3(0.22, 0.31, 0.15), vec3(0.42, 0.40, 0.36), roadCenter) * (0.86 + 0.28 * grav.x);
+          roughness = 0.74;
+        }
+
+      } else if (matID < 4.5) {
+        // [Zone 5: 佳里區] 不規則地籍沖積農田（甘蔗、牛蒡、成熟稻作、翻土曾文溪黑壤土）
+        vec4 parcel = evalIrregularParcel(mp, 0.016, 42.0);
+        float borderD = parcel.y;
+        vec3 microN = noised(mp * 2.2);
+
+        if (borderD < 0.055) {
+          normal = normalize(normal + vec3(-microN.y, 0.0, -microN.z) * 0.12 * detailFade);
+          albedo = mix(vec3(0.38, 0.36, 0.33), vec3(0.23, 0.32, 0.15), smoothstep(0.015, 0.05, borderD));
+          roughness = 0.78;
+        } else if (subMask < 0.32) {
+          float rowDir = (subMask > 0.16) ? parcel.z : parcel.w;
+          float furrow = sin(rowDir * 68.0) * 0.5 + 0.5;
+          normal = normalize(normal + vec3(-microN.y * 0.22, 0.0, -microN.z * 0.22) * detailFade);
+          vec3 oliveGreen = mix(vec3(0.12, 0.26, 0.09), vec3(0.20, 0.35, 0.12), subMask * 3.0);
+          albedo = oliveGreen * (0.78 + 0.28 * furrow) * (0.88 + 0.24 * microN.x);
+          roughness = 0.62;
+          sssWeight = 0.24;
+        } else if (subMask < 0.56) {
+          normal = normalize(normal + vec3(-microN.y * 0.18, 0.0, -microN.z * 0.18) * detailFade);
+          vec3 warmCrop = mix(vec3(0.24, 0.33, 0.13), vec3(0.38, 0.36, 0.16), (subMask - 0.32) * 4.0);
+          albedo = warmCrop * (0.86 + 0.28 * microN.x);
+          roughness = 0.66;
+          sssWeight = 0.20;
+        } else {
+          vec3 clodN = noised(mp * 4.8);
+          normal = normalize(normal + vec3(-clodN.y * 0.20, 0.0, -clodN.z * 0.20) * detailFade);
+          vec3 soilDark = vec3(0.15, 0.13, 0.11);
+          vec3 soilBrown = vec3(0.25, 0.20, 0.15);
+          albedo = mix(soilDark, soilBrown, clamp((subMask - 0.56) * 3.5 + clodN.x * 0.3, 0.0, 1.0));
+          roughness = 0.84;
+        }
+
+      } else if (matID < 5.5) {
+        // [Zone 6: 西港區] 曾文溪凸岸濕潤礫石沙洲、秋季甜根子草銀白花浪與防汛堤防
+        float riverDist = subMask;
+        float channelHalfWidth = 68.0 + sin(mp.x * 0.0017 + 1.3) * 18.0 + cos(mp.x * 0.0031) * 10.0;
+
+        if (riverDist < channelHalfWidth + 12.0) {
+          vec3 bankN = noised(mp * 3.5);
+          normal = normalize(normal + vec3(-bankN.y * 0.14, 0.0, -bankN.z * 0.14) * detailFade);
+          float moisture = 1.0 - smoothstep(0.25, 0.85, hitPos.y);
+          vec3 dryGravel = mix(vec3(0.42, 0.39, 0.34), vec3(0.52, 0.48, 0.42), bankN.x);
+          albedo = mix(dryGravel, vec3(0.22, 0.20, 0.18), moisture);
+          roughness = mix(0.68, 0.22, moisture);
+        } else if (riverDist < 205.0) {
+          vec2 windFlow = mp * 0.065 + vec2(u_time * 0.35, sin(mp.y * 0.025) * 1.2);
+          float wavePatch = fbm3(windFlow);
+          vec3 plumeN = noised(mp * 1.8 + vec2(u_time * 1.6, 0.0));
+          normal = normalize(normal + vec3(-plumeN.y * 0.30, 0.0, -plumeN.z * 0.30) * detailFade);
+
+          float bloomDensity = smoothstep(0.26, 0.66, wavePatch) * smoothstep(channelHalfWidth + 8.0, channelHalfWidth + 28.0, riverDist);
+          vec3 foliageBase = mix(vec3(0.20, 0.29, 0.14), vec3(0.32, 0.36, 0.22), plumeN.x);
+          vec3 silverPlume = mix(vec3(0.84, 0.81, 0.76), vec3(0.96, 0.94, 0.90), plumeN.x);
+          albedo = mix(foliageBase, silverPlume, bloomDensity);
+          roughness = 0.40;
+          sssWeight = 0.65 * bloomDensity;
+        } else {
+          vec3 levN = noised(mp * 3.0);
+          normal = normalize(normal + vec3(-levN.y * 0.12, 0.0, -levN.z * 0.12) * detailFade);
+          float leveeCrown = 1.0 - smoothstep(2.0, 9.0, abs(riverDist - 225.0));
+          albedo = mix(vec3(0.21, 0.31, 0.14), vec3(0.45, 0.43, 0.40), leveeCrown);
+          roughness = 0.74;
+        }
+
+      } else if (matID < 6.5) {
+        // [Material 6] 竹竿蚵棚、將軍苓子寮火紅木棉道、蘆竹溝/急水溪海茄冬紅樹林與蕭壠老榕樹
+        vec3 folN = noised(mp * 3.8);
+        normal = normalize(normal + vec3(-folN.y, 0.0, -folN.z) * 0.24 * detailFade);
+        if (subMask < 1.5) {
+          float shellBand = smoothstep(0.65, 0.30, hitPos.y);
+          albedo = mix(vec3(0.46, 0.38, 0.27), vec3(0.75, 0.73, 0.69), shellBand);
+          roughness = 0.64;
+        } else if (subMask < 2.5) {
+          // 將軍苓子寮火紅木棉道 (Blazing orange-red Kapok tree blossom avenue!)
+          float blossom = smoothstep(0.32, 0.68, folN.x);
+          albedo = mix(vec3(0.14, 0.26, 0.09), vec3(0.92, 0.25, 0.08), blossom * 0.85);
+          roughness = 0.56;
+          sssWeight = 0.34;
+        } else {
+          // 急水溪/蘆竹溝紅樹林與蕭壠老榕竹林
+          albedo = mix(vec3(0.07, 0.20, 0.08), vec3(0.16, 0.33, 0.12), folN.x);
+          roughness = 0.65;
+          sssWeight = 0.22;
+        }
+
+      } else {
+        // [Material 7: 學甲區 (Xuejia)] 急水溪潮間帶濕地泥灘 + 蜀葵花海廊帶 + 黃金小麥與紅高粱旱作田
+        vec3 xNoise = noised(mp * 3.2);
+        if (subMask < 0.0) {
+          // 急水溪學甲濕地生態園區：潮間帶黑褐濕潤泥灘 (Wet tidal mudflat) 與蘆葦草洲
+          float jDist = -subMask;
+          float wetMud = 1.0 - smoothstep(0.28, 0.72, hitPos.y);
+          vec3 mudCol = mix(vec3(0.28, 0.25, 0.22), vec3(0.14, 0.13, 0.12), wetMud);
+          float reedBelt = smoothstep(0.45, 0.85, hitPos.y) * (1.0 - smoothstep(1.2, 2.2, hitPos.y));
+          albedo = mix(mudCol, vec3(0.24, 0.35, 0.16), reedBelt);
+          roughness = mix(0.68, 0.12, wetMud);
+        } else if (subMask < 0.24) {
+          // 學甲蜀葵花海 (Hollyhock Flower Fields)：高聳翠綠花莖與緋紅/玫瑰粉/象牙白垂直花穗行列！
+          float stalkRow = sin((subMask > 0.12 ? mp.x : mp.y) * 3.6);
+          normal = normalize(normal + vec3(-xNoise.y * 0.26, 0.0, -xNoise.z * 0.26) * detailFade);
+          vec3 crimsonFlower = mix(vec3(0.84, 0.14, 0.24), vec3(0.94, 0.42, 0.58), xNoise.x);
+          vec3 goldFlower    = vec3(0.95, 0.82, 0.38);
+          vec3 bloomCol = (subMask < 0.16) ? crimsonFlower : mix(crimsonFlower, goldFlower, 0.5);
+          float bloomMask = smoothstep(0.1, 0.65, stalkRow * 0.5 + 0.5) * smoothstep(1.45, 1.95, hitPos.y);
+          albedo = mix(vec3(0.14, 0.30, 0.11), bloomCol, bloomMask * 0.88);
+          roughness = 0.52;
+          sssWeight = 0.42;
+        } else if (subMask < 0.50) {
+          // 學甲黃金小麥田 (Golden Wheat Fields swaying in the coastal breeze)
+          vec3 wheatWave = noised(mp * 1.4 + vec2(u_time * 1.1, 0.0));
+          normal = normalize(normal + vec3(-wheatWave.y * 0.22, 0.0, -wheatWave.z * 0.22) * detailFade);
+          albedo = mix(vec3(0.58, 0.43, 0.16), vec3(0.82, 0.64, 0.24), wheatWave.x);
+          roughness = 0.54;
+          sssWeight = 0.38;
+        } else {
+          // 學甲紅高粱與紅藜旱作田 (Warm russet-amber Sorghum & Quinoa fields)
+          normal = normalize(normal + vec3(-xNoise.y * 0.20, 0.0, -xNoise.z * 0.20) * detailFade);
+          albedo = mix(vec3(0.46, 0.22, 0.13), vec3(0.68, 0.34, 0.18), xNoise.x);
+          roughness = 0.60;
+          sssWeight = 0.28;
+        }
+      }
+
+      float NoL = max(0.0, dot(normal, sunDir));
+      vec3 shadowProbe = hitPos + sunDir * 3.2;
+      float probeTerrainH = evaluateTerrain(shadowProbe, false).x;
+      float shadow = smoothstep(-0.25, 0.20, shadowProbe.y - probeTerrainH);
+
+      float cavityAO = clamp(0.65 + 0.35 * normal.y, 0.48, 1.0);
+      vec3 sunColor = vec3(1.36, 0.79, 0.42);
+      vec3 skyAmbient = vec3(0.22, 0.29, 0.40) * cavityAO;
+
+      float backLight = max(0.0, dot(-rayDir, sunDir));
+      vec3 sss = vec3(1.18, 0.70, 0.34) * pow(backLight, 2.6) * sssWeight * (0.4 + 0.6 * shadow);
+
+      vec3 halfV = normalize(sunDir - rayDir);
+      float spec = pow(max(0.0, dot(normal, halfV)), mix(68.0, 10.0, roughness)) * (1.0 - roughness) * 0.70;
+
+      vec3 color =
+        albedo * (skyAmbient + sunColor * NoL * shadow) +
+        sss +
+        sunColor * (spec + sparkle) * shadow;
+
+      return color;
+    }
+
+    vec3 acesToneMap(vec3 x) {
+      const float a = 2.51;
+      const float b = 0.03;
+      const float c = 2.43;
+      const float d = 0.59;
+      const float e = 0.14;
+      return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+    }
+
+    vec4 renderPixel(vec2 fragCoord) {
+      vec2 uv = ((fragCoord + u_jitter) - 0.5 * u_resolution) / u_resolution.y;
+      vec3 rayOrigin = u_camPos;
+      vec3 rayDir = normalize(u_camForward + uv.x * u_camRight + uv.y * u_camUp);
+
+      float elRad = radians(u_sunEl);
+      float azRad = radians(u_sunAz);
+      vec3 sunDir = normalize(vec3(
+        -cos(elRad) * sin(azRad - radians(180.0)),
+         sin(elRad),
+        -cos(elRad) * cos(azRad - radians(180.0))
+      ));
+
+      float maxTerrainCeiling = 7.5;
+      if (rayDir.y >= 0.0 && rayOrigin.y > maxTerrainCeiling) {
+        vec3 skyColor = computeSkyAndClouds(rayDir, sunDir, true);
+        return vec4(pow(acesToneMap(skyColor), vec3(1.0 / 2.2)), 1.0);
+      }
+
+      float tStart = 0.5;
+      if (u_fastPlane > 0.5 && rayOrigin.y > maxTerrainCeiling && rayDir.y < -0.0005) {
+        float tCeiling = (maxTerrainCeiling - rayOrigin.y) / rayDir.y;
+        tStart = max(0.5, tCeiling);
+      }
+
+      float stepMult = (u_stepQuality > 2.5) ? 0.007 : ((u_stepQuality < 1.5) ? 0.015 : 0.010);
+      float minStep  = (u_stepQuality > 2.5) ? 0.28  : ((u_stepQuality < 1.5) ? 0.60  : 0.40);
+      int maxSteps   = (u_stepQuality > 2.5) ? 68    : ((u_stepQuality < 1.5) ? 36    : 50);
+      float maxDist  = 13500.0;
+
+      float t = tStart;
+      float tPrev = tStart;
+      bool hit = false;
+      bool hitWater = false;
+      vec4 terrData = vec4(0.0);
+
+      for (int i = 0; i < 68; i++) {
+        if (i >= maxSteps || t > maxDist) break;
+        vec3 p = rayOrigin + rayDir * t;
+        if (p.y > maxTerrainCeiling + 1.5 && rayDir.y > 0.0) break;
+
+        terrData = evaluateTerrain(p, false);
+        float surfH = max(terrData.x, terrData.y);
+        float hDiff = p.y - surfH;
+
+        if (hDiff < 0.03 + t * 0.0011) {
+          float tA = tPrev;
+          float tB = t;
+          for (int b = 0; b < 2; b++) {
+            float tMid = 0.5 * (tA + tB);
+            vec3 pMid = rayOrigin + rayDir * tMid;
+            vec4 dMid = evaluateTerrain(pMid, true);
+            if (pMid.y < max(dMid.x, dMid.y)) {
+              tB = tMid;
+            } else {
+              tA = tMid;
+            }
+          }
+          t = 0.5 * (tA + tB);
+          vec3 pRef = rayOrigin + rayDir * t;
+          terrData = evaluateTerrain(pRef, true);
+          hitWater = (terrData.y > terrData.x + 0.01);
+          hit = true;
+          break;
+        }
+
+        tPrev = t;
+        float stepSize = max(minStep, max(hDiff * 0.68, t * stepMult));
+        t += stepSize;
+      }
+
+      if (!hit) {
+        vec3 skyColor = computeSkyAndClouds(rayDir, sunDir, true);
+        return vec4(pow(acesToneMap(skyColor), vec3(1.0 / 2.2)), 1.0);
+      }
+
+      vec3 hitPos = rayOrigin + rayDir * t;
+      vec3 surfaceColor;
+
+      if (hitWater) {
+        vec3 waterPos = vec3(hitPos.x, terrData.y, hitPos.z);
+        surfaceColor = shadeWaterSurface(waterPos, rayDir, sunDir, terrData.x, terrData.z, terrData.w, t);
+      } else {
+        vec3 normal = calcTerrainNormal(hitPos, t);
+        surfaceColor = shadeTerrainSurface(hitPos, normal, rayDir, sunDir, terrData.z, terrData.w, t);
+      }
+
+      float fogDensity = 0.000040 * u_haze;
+      float fogFactor = 1.0 - exp(-max(0.0, t - 140.0) * fogDensity);
+      vec3 horizonFogColor = computeSkyAndClouds(normalize(vec3(rayDir.x, 0.02, rayDir.z)), sunDir, false);
+      vec3 finalLinear = mix(surfaceColor, horizonFogColor, clamp(fogFactor, 0.0, 0.90));
+
+      vec3 mapped = acesToneMap(finalLinear * 1.04);
+      mapped = pow(mapped, vec3(1.0 / 2.2));
+      return vec4(mapped, 1.0);
+    }
+    `;
+    const FRAGMENT_SHADER_300 = `#version 300 es
+    precision highp float;
+    in vec2 v_uv;
+    out vec4 outColor;
+    ${FRAGMENT_SHADER_BODY}
+    void main() {
+      outColor = renderPixel(gl_FragCoord.xy);
+    }`;
+
+    const VERTEX_SHADER_100 = `
+    attribute vec2 a_pos;
+    varying vec2 v_uv;
+    void main() {
+      v_uv = a_pos * 0.5 + 0.5;
+      gl_Position = vec4(a_pos, 0.0, 1.0);
+    }`;
+
+    const FRAGMENT_SHADER_100 = `
+    precision highp float;
+    varying vec2 v_uv;
+    ${FRAGMENT_SHADER_BODY}
+    void main() {
+      gl_FragColor = renderPixel(gl_FragCoord.xy);
+    }`;
+
+    // ============================================================================
+    // 5. APPLICATION STATE, URL PARAMS & WEBGL INITIALIZATION
+    // ============================================================================
+    const state = {
+      timeSec: 8.0,
+      playing: true,
+      cameraMode: "spline", // "spline" | "free"
+      stillMode: false,
+      sppTarget: 16,
+      sppCount: 0,
+      sunEl: 7.0,
+      sunAz: 255.0,
+      haze: 1.25,
+      cloudDensity: 0.55,
+      waveScale: 1.00,
+      ridgeScale: 1.00,
+      stepQuality: 2.0,
+      resScale: 0.90,
+      autoPerf: false,
+      lowPowerMode: false,
+      fastPlane: 1.0,
+      oysterTrees: 1.0,
+      uiVisible: true,
+      // Camera orientation & position
+      camPos: [21000, 16.0, -450],
+      camYaw: Math.PI, // Facing West (-X)
+      camPitch: -0.06,
+      yawOffset: 0.0,
+      pitchOffset: 0.0,
+      isDragging: false,
+      lastMouseX: 0,
+      lastMouseY: 0,
+      keys: {},
+      audioActive: false,
+      audioCtx: null,
+      audioGain: null
+    };
+
+    // Parse URL parameters (?mode=still&spp=16&sun_el=7&haze=1.4) per Section 7.1
+    function parseUrlParameters() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        if (params.has("sun_el")) {
+          const v = parseFloat(params.get("sun_el"));
+          if (!isNaN(v)) state.sunEl = Math.max(1.5, Math.min(45.0, v));
+        }
+        if (params.has("sun_az")) {
+          const v = parseFloat(params.get("sun_az"));
+          if (!isNaN(v)) state.sunAz = Math.max(180.0, Math.min(310.0, v));
+        }
+        if (params.has("haze")) {
+          const v = parseFloat(params.get("haze"));
+          if (!isNaN(v)) state.haze = Math.max(0.4, Math.min(3.0, v));
+        }
+        if (params.has("spp")) {
+          const v = parseInt(params.get("spp"), 10);
+          if (!isNaN(v) && v >= 1) state.sppTarget = Math.min(64, v);
+        }
+        if (params.get("mode") === "still") {
+          state.stillMode = true;
+          state.playing = false;
+        }
+        if (params.has("t")) {
+          const v = parseFloat(params.get("t"));
+          if (!isNaN(v)) state.timeSec = Math.max(0.0, Math.min(120.0, v));
+        }
+      } catch (err) {
+        // Ignore in restricted iframe contexts
+      }
+    }
+
+    function updateUrlQueryDisplay() {
+      const modeStr = state.stillMode ? `mode=still&spp=${state.sppTarget}&` : "";
+      const query = `?${modeStr}sun_el=${state.sunEl.toFixed(1)}&haze=${state.haze.toFixed(2)}&t=${state.timeSec.toFixed(0)}`;
+      const el = document.getElementById("urlQueryReadout");
+      if (el) el.textContent = query;
+    }
+
+    // Initialize WebGL2 (with seamless WebGL1 fallback)
+    const canvas = document.getElementById("glCanvas");
+    let gl = canvas.getContext("webgl2", { antialias: false, preserveDrawingBuffer: true });
+    let isWebGL2 = true;
+    if (!gl) {
+      gl = canvas.getContext("webgl", { antialias: false, preserveDrawingBuffer: true });
+      isWebGL2 = false;
+    }
+
+    function compileShader(type, source) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, source);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        console.error("Shader compile error:", gl.getShaderInfoLog(s));
+        return null;
+      }
+      return s;
+    }
+
+    const vsSource = isWebGL2 ? VERTEX_SHADER_300 : VERTEX_SHADER_100;
+    const fsSource = isWebGL2 ? FRAGMENT_SHADER_300 : FRAGMENT_SHADER_100;
+    const vs = compileShader(gl.VERTEX_SHADER, vsSource);
+    const fs = compileShader(gl.FRAGMENT_SHADER, fsSource);
+    const program = gl.createProgram();
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+
+    const posBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+    gl.bufferData(
+      gl.ARRAY_BUFFER,
+      new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]),
+      gl.STATIC_DRAW
+    );
+
+    const aPosLoc = gl.getAttribLocation(program, "a_pos");
+    gl.enableVertexAttribArray(aPosLoc);
+    gl.vertexAttribPointer(aPosLoc, 2, gl.FLOAT, false, 0, 0);
+
+    const uniforms = {
+      u_resolution: gl.getUniformLocation(program, "u_resolution"),
+      u_time: gl.getUniformLocation(program, "u_time"),
+      u_camPos: gl.getUniformLocation(program, "u_camPos"),
+      u_camForward: gl.getUniformLocation(program, "u_camForward"),
+      u_camRight: gl.getUniformLocation(program, "u_camRight"),
+      u_camUp: gl.getUniformLocation(program, "u_camUp"),
+      u_sunEl: gl.getUniformLocation(program, "u_sunEl"),
+      u_sunAz: gl.getUniformLocation(program, "u_sunAz"),
+      u_haze: gl.getUniformLocation(program, "u_haze"),
+      u_cloudDensity: gl.getUniformLocation(program, "u_cloudDensity"),
+      u_waveScale: gl.getUniformLocation(program, "u_waveScale"),
+      u_ridgeScale: gl.getUniformLocation(program, "u_ridgeScale"),
+      u_stepQuality: gl.getUniformLocation(program, "u_stepQuality"),
+      u_fastPlane: gl.getUniformLocation(program, "u_fastPlane"),
+      u_oysterTrees: gl.getUniformLocation(program, "u_oysterTrees"),
+      u_jitter: gl.getUniformLocation(program, "u_jitter")
+    };
+
+    // ============================================================================
+    // 6. 2D COASTLINE & HYDROLOGICAL SDF RADAR MINI-MAP (v2_coastsdf.txt)
+    // ============================================================================
+    const radarCanvas = document.getElementById("sdfRadarCanvas");
+    const radarCtx = radarCanvas.getContext("2d");
+    const radarBgBuffer = document.createElement("canvas");
+    radarBgBuffer.width = 300;
+    radarBgBuffer.height = 144;
+
+    function precompute2DSDFRadar() {
+      const ctx = radarBgBuffer.getContext("2d");
+      const w = radarBgBuffer.width;
+      const h = radarBgBuffer.height;
+      const img = ctx.createImageData(w, h);
+      const data = img.data;
+
+      // World X: -2000m (left) to 24000m (right) across all 6 districts of Greater Beimen
+      for (let py = 0; py < h; py++) {
+        const wz = ((py / h) - 0.5) * 2000.0;
+        for (let px = 0; px < w; px++) {
+          const wx = -2000.0 + (px / w) * 26000.0;
+          const idx = (py * w + px) * 4;
+
+          let r = 15, g = 32, b = 52;
+          const sandbarCenter = 1120.0 + Math.sin(wz * 0.0014) * 240.0;
+          const distBar = Math.abs(wx - sandbarCenter);
+
+          if (wx < sandbarCenter - 320) {
+            // [0] 台灣海峽外海
+            r = 12; g = 45; b = 72;
+          } else if (distBar < 340) {
+            // [1] 七股頂頭額沙洲
+            r = 214; g = 182; b = 120;
+          } else if (wx < 4200) {
+            // [1] 七股內海潟湖與蚵棚
+            r = 26; g = 78; b = 76;
+          } else if (wx < 7800) {
+            // [2] 北門區：井仔腳瓦盤鹽田、北門大鹽山(白點)、水晶教堂與蘆竹溝潮溝
+            const dSaltMt = Math.hypot(wx - 6450, wz - 210);
+            const dChurch = Math.hypot(wx - 6150, wz + 210);
+            if (dSaltMt < 260) {
+              r = 245; g = 245; b = 250; // 北門大鹽山
+            } else if (dChurch < 220) {
+              r = 95; g = 195; b = 225;  // 北門水晶教堂鏡池
+            } else {
+              r = 188; g = 110; b = 98;  // 井仔腳瓦盤鹽田
+            }
+          } else if (wx < 11800) {
+            // [3] 將軍區：青鯤鯓扇形鹽田 (放射狀扇形!) + 木棉道 + 格狀魚塭
+            const dxF = wx - 9350.0;
+            const dzF = wz + 30.0;
+            const rFan = Math.hypot(dxF, dzF);
+            const angFan = Math.atan2(dzF, -dxF);
+            if (rFan > 140 && rFan < 1180 && Math.abs(angFan) < 1.18) {
+              // 青鯤鯓扇形鹽田與中軸生命之樹
+              if (Math.abs(dzF) < 60 && rFan < 700) {
+                r = 248; g = 246; b = 240; // 生命之樹中軸
+              } else {
+                r = 215; g = 142; b = 105; // 扇形鹽田
+              }
+            } else {
+              const gx = Math.abs((wx * 0.01) % 1);
+              const gz = Math.abs((wz * 0.015) % 1);
+              if (gx < 0.14 || gz < 0.14) {
+                r = 195; g = 78; b = 45; // 將軍木棉道與魚塭堤岸
+              } else {
+                r = 32; g = 74; b = 58;
+              }
+            }
+          } else if (wx < 15200) {
+            // [4] 學甲區：急水溪曲流濕地 + 黃金小麥田 + 蜀葵花海
+            const jishuiZ = Math.sin((wx - 13500.0) * 0.0015 + 0.4) * 240.0 - 45.0;
+            if (Math.abs(wz - jishuiZ) < 75.0) {
+              r = 45; g = 132; b = 152; // 急水溪與學甲濕地
+            } else if (((Math.floor(wx * 0.006) + Math.floor(wz * 0.008)) % 3) === 0) {
+              r = 198; g = 64; b = 92;  // 學甲蜀葵花海
+            } else {
+              r = 186; g = 152; b = 62; // 學甲黃金小麥與高粱旱作
+            }
+          } else if (wx < 18500) {
+            // [5] 佳里區：嘉南大圳與沖積平原農田
+            const canalZ = Math.sin(wx * 0.0011 + 1.2) * 165.0 + 65.0;
+            if (Math.abs(wz - canalZ) < 40.0) {
+              r = 56; g = 156; b = 210;
+            } else {
+              r = 46; g = 92; b = 45;
+            }
+          } else {
+            // [6] 西港區：曾文溪大曲流與甜根子草花海
+            const riverZ = Math.sin((wx - 19500.0) * 0.00125) * 310.0 - 75.0;
+            const dRiv = Math.abs(wz - riverZ);
+            if (dRiv < 85.0) {
+              r = 42; g = 122; b = 165;
+            } else if (dRiv < 205.0) {
+              r = 220; g = 216; b = 208; // 甜根子草銀白花海
+            } else {
+              r = 58; g = 88; b = 48;
+            }
+          }
+
+          data[idx] = r;
+          data[idx + 1] = g;
+          data[idx + 2] = b;
+          data[idx + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+
+      // Draw spline trajectory path overlay
+      ctx.strokeStyle = "rgba(251, 191, 36, 0.72)";
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      for (let t = 0; t <= 120; t += 2) {
+        const pt = evaluateFlightSpline(t).pos;
+        const sx = ((pt[0] + 2000.0) / 26000.0) * w;
+        const sy = ((pt[2] / 2000.0) + 0.5) * h;
+        if (t === 0) ctx.moveTo(sx, sy);
+        else ctx.lineTo(sx, sy);
+      }
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    function renderRadarOverlay(forwardVec) {
+      const w = radarCanvas.width;
+      const h = radarCanvas.height;
+      radarCtx.drawImage(radarBgBuffer, 0, 0);
+
+      const cx = ((state.camPos[0] + 2000.0) / 26000.0) * w;
+      const cy = ((state.camPos[2] / 2000.0) + 0.5) * h;
+
+      // View cone
+      const angle = Math.atan2(forwardVec[2], forwardVec[0]);
+      radarCtx.fillStyle = "rgba(251, 191, 36, 0.25)";
+      radarCtx.beginPath();
+      radarCtx.moveTo(cx, cy);
+      radarCtx.arc(cx, cy, 26, angle - 0.45, angle + 0.45);
+      radarCtx.closePath();
+      radarCtx.fill();
+
+      // Drone marker
+      radarCtx.fillStyle = "#fbbf24";
+      radarCtx.strokeStyle = "#090d16";
+      radarCtx.lineWidth = 2;
+      radarCtx.beginPath();
+      radarCtx.arc(cx, cy, 4.5, 0, Math.PI * 2);
+      radarCtx.fill();
+      radarCtx.stroke();
+    }
+
+    // ============================================================================
+    // 7. PROCEDURAL SOUNDSCAPE (Multi-Layer Spatial Nature Audio Engine)
+    //    1. 台灣海峽與七股沙洲潮汐浪濤聲 (LFO-Modulated Ocean Surf & Foam Wash)
+    //    2. 曾文溪流水與甜根子草/防風林微風沙沙聲 (Soft Reed Breeze & Stream)
+    //    3. 大北門濕地黃昏自然鳥鳴 (Procedural Wetland Birdsong Synthesizer)
+    //    4. 鹽分地帶夕照溫暖環境和弦 (Warm Acoustic Sunset Pad)
+    // ============================================================================
+    function playWetlandBirdCall(ctx, masterGain) {
+      if (!state.audioActive || !ctx) return;
+      const now = ctx.currentTime;
+      // Pentatonic wetland bird frequencies (e.g., Kentish Plover / Black-winged Stilt / Prinia)
+      const notes = [1760, 2093, 2349, 2637, 3136];
+      const baseFreq = notes[Math.floor(Math.random() * notes.length)];
+      const callCount = 2 + Math.floor(Math.random() * 2);
+
+      for (let i = 0; i < callCount; i++) {
+        const startT = now + i * (0.16 + Math.random() * 0.08);
+        const dur = 0.11 + Math.random() * 0.06;
+
+        const osc = ctx.createOscillator();
+        const env = ctx.createGain();
+        const panner = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(baseFreq * (1.0 + i * 0.06), startT);
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.22, startT + dur * 0.45);
+        osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.94, startT + dur);
+
+        env.gain.setValueAtTime(0.0001, startT);
+        env.gain.linearRampToValueAtTime(0.035, startT + 0.02);
+        env.gain.exponentialRampToValueAtTime(0.0001, startT + dur);
+
+        if (panner) {
+          panner.pan.setValueAtTime((Math.random() - 0.5) * 1.4, startT);
+          osc.connect(env);
+          env.connect(panner);
+          panner.connect(masterGain);
+        } else {
+          osc.connect(env);
+          env.connect(masterGain);
+        }
+
+        osc.start(startT);
+        osc.stop(startT + dur + 0.02);
+      }
+    }
+
+    function updateSpatialSoundscape(px) {
+      if (!state.audioActive || !state.audioNodes) return;
+      const now = state.audioCtx.currentTime;
+      const coastalFactor = 1.0 - smoothstepJS(2500.0, 11000.0, px); // High near Qigu/Beimen
+      const inlandFactor = smoothstepJS(6000.0, 16000.0, px);        // High near Jiali/Xigang
+
+      // Modulate surf wave filter & gain based on coastal proximity
+      const waveCycle = Math.sin(now * 0.75) * 0.5 + 0.5; // ~8.3s ocean wave period
+      const surfFreq = 150 + waveCycle * (420 * coastalFactor + 160);
+      state.audioNodes.surfFilter.frequency.setTargetAtTime(surfFreq, now, 0.25);
+      state.audioNodes.surfGain.gain.setTargetAtTime(
+        0.025 + coastalFactor * (0.045 + waveCycle * 0.055),
+        now,
+        0.25
+      );
+
+      // Modulate reed breeze & stream murmur in inland zones
+      const breezeCycle = Math.sin(now * 0.42 + 1.7) * 0.5 + 0.5;
+      state.audioNodes.breezeFilter.frequency.setTargetAtTime(520 + breezeCycle * 480, now, 0.3);
+      state.audioNodes.breezeGain.gain.setTargetAtTime(
+        0.015 + inlandFactor * (0.025 + breezeCycle * 0.025),
+        now,
+        0.3
+      );
+    }
+
+    function toggleProceduralSoundscape() {
+      const btn = document.getElementById("btnToggleAudio");
+      if (!state.audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        const ctx = new AudioContextClass();
+
+        const masterGain = ctx.createGain();
+        masterGain.gain.value = 0.85;
+        masterGain.connect(ctx.destination);
+
+        // Generate 4-second Pink Noise buffer (much warmer and more natural than white/brown noise)
+        const bufferSize = ctx.sampleRate * 4;
+        const pinkBuffer = ctx.createBuffer(2, bufferSize, ctx.sampleRate);
+        for (let ch = 0; ch < 2; ch++) {
+          const out = pinkBuffer.getChannelData(ch);
+          let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+          for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
+            b0 = 0.99886 * b0 + white * 0.0555179;
+            b1 = 0.99332 * b1 + white * 0.0750759;
+            b2 = 0.96900 * b2 + white * 0.1538520;
+            b3 = 0.86650 * b3 + white * 0.3104856;
+            b4 = 0.55000 * b4 + white * 0.5329522;
+            b5 = -0.7616 * b5 - white * 0.0168980;
+            out[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.035;
+            b6 = white * 0.115926;
+          }
+        }
+
+        // Layer 1: Rhythmic Ocean Surf & Sandbar Waves
+        const surfSource = ctx.createBufferSource();
+        surfSource.buffer = pinkBuffer;
+        surfSource.loop = true;
+        const surfFilter = ctx.createBiquadFilter();
+        surfFilter.type = "lowpass";
+        surfFilter.frequency.value = 260;
+        const surfGain = ctx.createGain();
+        surfGain.gain.value = 0.05;
+        surfSource.connect(surfFilter);
+        surfFilter.connect(surfGain);
+        surfGain.connect(masterGain);
+        surfSource.start(0);
+
+        // Layer 2: Soft Reed Breeze & Flowing Water
+        const breezeSource = ctx.createBufferSource();
+        breezeSource.buffer = pinkBuffer;
+        breezeSource.loop = true;
+        const breezeFilter = ctx.createBiquadFilter();
+        breezeFilter.type = "bandpass";
+        breezeFilter.frequency.value = 720;
+        breezeFilter.Q.value = 1.8;
+        const breezeGain = ctx.createGain();
+        breezeGain.gain.value = 0.025;
+        breezeSource.connect(breezeFilter);
+        breezeFilter.connect(breezeGain);
+        breezeGain.connect(masterGain);
+        breezeSource.start(0);
+
+        // Layer 3: Warm Sunset Harmonic Pad (F3 - C4 - G4 - A4 subtle ambient chord)
+        const padNotes = [174.61, 261.63, 392.00, 440.00];
+        const padFilter = ctx.createBiquadFilter();
+        padFilter.type = "lowpass";
+        padFilter.frequency.value = 340;
+        const padGain = ctx.createGain();
+        padGain.gain.value = 0.018;
+        padFilter.connect(padGain);
+        padGain.connect(masterGain);
+
+        padNotes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          osc.type = idx % 2 === 0 ? "sine" : "triangle";
+          osc.frequency.value = freq;
+          osc.detune.value = (idx - 1.5) * 4;
+          osc.connect(padFilter);
+          osc.start(0);
+        });
+
+        // Layer 4: Periodic Wetland Bird Calls
+        state.birdTimer = setInterval(() => {
+          if (state.audioActive && Math.random() < 0.72) {
+            playWetlandBirdCall(ctx, masterGain);
+          }
+        }, 3800);
+        setTimeout(() => playWetlandBirdCall(ctx, masterGain), 600);
+
+        state.audioCtx = ctx;
+        state.audioGain = masterGain;
+        state.audioNodes = { surfFilter, surfGain, breezeFilter, breezeGain };
+        state.audioActive = true;
+        btn.textContent = "🔊 聲景";
+        showToast("已啟動大北門動態自然聲景（海浪潮汐 · 甜根子草微風 · 濕地夕陽鳥鳴）");
+        return;
+      }
+
+      if (state.audioActive) {
+        state.audioGain.gain.setTargetAtTime(0.0, state.audioCtx.currentTime, 0.2);
+        state.audioActive = false;
+        btn.textContent = "🔇 聲景";
+      } else {
+        state.audioCtx.resume();
+        state.audioGain.gain.setTargetAtTime(0.85, state.audioCtx.currentTime, 0.2);
+        state.audioActive = true;
+        btn.textContent = "🔊 聲景";
+        playWetlandBirdCall(state.audioCtx, state.audioGain);
+      }
+    }
+    // ============================================================================
+    // 8. UI CONTROLS, EVENT LISTENERS & TELEMETRY SYNC
+    // ============================================================================
+    function showToast(msg) {
+      const el = document.getElementById("toastMsg");
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.remove("hidden");
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => {
+        el.classList.add("hidden");
+      }, 2600);
+    }
+
+    function resetStillAccumulation() {
+      state.sppCount = 0;
+    }
+
+    function syncControlsFromState() {
+      document.getElementById("sliderSunEl").value = state.sunEl;
+      document.getElementById("valSunEl").textContent = `${state.sunEl.toFixed(1)}°`;
+      document.getElementById("sliderSunAz").value = state.sunAz;
+      document.getElementById("valSunAz").textContent = `${state.sunAz.toFixed(0)}°`;
+      document.getElementById("sliderHaze").value = state.haze;
+      document.getElementById("valHaze").textContent = state.haze.toFixed(2);
+      document.getElementById("sliderCloud").value = state.cloudDensity;
+      document.getElementById("valCloud").textContent = state.cloudDensity.toFixed(2);
+      document.getElementById("sliderWave").value = state.waveScale;
+      document.getElementById("valWave").textContent = state.waveScale.toFixed(2);
+      document.getElementById("sliderRidge").value = state.ridgeScale;
+      document.getElementById("valRidge").textContent = `${state.ridgeScale.toFixed(2)}x`;
+      document.getElementById("sliderQuality").value = state.stepQuality;
+      const qLabels = { 1: "高速 (0.015t)", 2: "標準 (0.010t)", 3: "極致 (0.007t)" };
+      document.getElementById("valQuality").textContent = qLabels[state.stepQuality] || "標準 (0.010t)";
+      document.getElementById("sliderResScale").value = state.resScale;
+      const scaleTag = state.resScale <= 0.55 ? "省電" : (state.resScale <= 0.80 ? "流暢" : "高精細");
+      document.getElementById("valResScale").textContent = `${state.resScale.toFixed(2)}x (${scaleTag})`;
+      document.getElementById("chkFastPlane").checked = state.fastPlane > 0.5;
+      document.getElementById("chkOysterRacks").checked = state.oysterTrees > 0.5;
+      document.getElementById("chkAutoPerf").checked = state.autoPerf;
+      document.getElementById("btnPlayPause").textContent = state.playing ? "❚❚" : "▶";
+      document.getElementById("sppBanner").classList.toggle("hidden", !state.stillMode);
+      updateUrlQueryDisplay();
+    }
+
+    function updateZoneCardAndButtons(xPos, timeSec) {
+      // Determine current zone from world X or spline time
+      let activeIdx = 0;
+      if (state.cameraMode === "spline") {
+        for (let i = 0; i < ZONE_INFO.length; i++) {
+          if (timeSec <= ZONE_INFO[i].tMax) {
+            activeIdx = i;
+            break;
+          }
+        }
+      } else {
+        if (xPos > 18500) activeIdx = 0;      // 西港區
+        else if (xPos > 15200) activeIdx = 1; // 佳里區
+        else if (xPos > 11800) activeIdx = 2; // 學甲區
+        else if (xPos > 7800) activeIdx = 3;  // 將軍區
+        else if (xPos > 4200) activeIdx = 4;  // 北門區
+        else activeIdx = 5;                   // 七股區
+      }
+
+      const info = ZONE_INFO[activeIdx];
+      document.getElementById("activeZoneSubtitle").textContent = info.subtitle;
+      document.getElementById("zoneCardBadge").textContent = info.badge;
+      document.getElementById("zoneWaterBadge").textContent = info.water;
+      document.getElementById("zoneCardTitle").textContent = info.title;
+      document.getElementById("zoneCardDesc").textContent = info.desc;
+      document.getElementById("zoneGeoOp").textContent = info.geoOp;
+      document.getElementById("zoneShadeOp").textContent = info.shadeOp;
+
+      const btns = document.querySelectorAll(".zone-btn");
+      btns.forEach((btn, i) => {
+        btn.classList.toggle("active", i === activeIdx);
+      });
+    }
+
+    function attachEventListeners() {
+      // Sliders
+      const bindSlider = (id, key, fmt) => {
+        const el = document.getElementById(id);
+        el.addEventListener("input", () => {
+          state[key] = parseFloat(el.value);
+          resetStillAccumulation();
+          syncControlsFromState();
+        });
+      };
+      bindSlider("sliderSunEl", "sunEl");
+      bindSlider("sliderSunAz", "sunAz");
+      bindSlider("sliderHaze", "haze");
+      bindSlider("sliderCloud", "cloudDensity");
+      bindSlider("sliderWave", "waveScale");
+      bindSlider("sliderRidge", "ridgeScale");
+      bindSlider("sliderQuality", "stepQuality");
+
+      document.getElementById("sliderResScale").addEventListener("input", (e) => {
+        state.resScale = parseFloat(e.target.value);
+        state.autoPerf = false;
+        resizeViewport();
+        syncControlsFromState();
+      });
+
+      document.getElementById("chkAutoPerf").addEventListener("change", (e) => {
+        state.autoPerf = e.target.checked;
+      });
+
+      document.getElementById("btnPerfBoost").addEventListener("click", () => {
+        state.lowPowerMode = !state.lowPowerMode;
+        const btn = document.getElementById("btnPerfBoost");
+        if (state.lowPowerMode) {
+          state.resScale = 0.45;
+          state.stepQuality = 1.0;
+          btn.textContent = "🚀 已開極速";
+          showToast("已啟用 GPU 極速省電模式（解析度 0.45x + 高速步進）");
+        } else {
+          state.resScale = 0.65;
+          state.stepQuality = 2.0;
+          btn.textContent = "⚡ 極速省電";
+          showToast("已恢復平衡畫質模式（解析度 0.65x）");
+        }
+        resizeViewport();
+        syncControlsFromState();
+      });
+
+      document.getElementById("chkFastPlane").addEventListener("change", (e) => {
+        state.fastPlane = e.target.checked ? 1.0 : 0.0;
+        resetStillAccumulation();
+      });
+      document.getElementById("chkOysterRacks").addEventListener("change", (e) => {
+        state.oysterTrees = e.target.checked ? 1.0 : 0.0;
+        resetStillAccumulation();
+      });
+
+      document.getElementById("btnResetParams").addEventListener("click", () => {
+        state.sunEl = 7.0;
+        state.sunAz = 255.0;
+        state.haze = 1.40;
+        state.cloudDensity = 0.55;
+        state.waveScale = 1.00;
+        state.ridgeScale = 1.00;
+        state.stepQuality = 2.0;
+        state.resScale = 0.95;
+        state.autoPerf = false;
+        state.fastPlane = 1.0;
+        resizeViewport();
+        state.oysterTrees = 1.0;
+        state.yawOffset = 0.0;
+        state.pitchOffset = 0.0;
+        resetStillAccumulation();
+        syncControlsFromState();
+        showToast("已還原嘉南黃金夕照與大北門標準幾何參數");
+      });
+
+      // Timeline scrubber & Play/Pause
+      const sliderTimeline = document.getElementById("sliderTimeline");
+      sliderTimeline.addEventListener("input", () => {
+        state.timeSec = parseFloat(sliderTimeline.value);
+        state.cameraMode = "spline";
+        updateCameraModeUI();
+        resetStillAccumulation();
+        updateUrlQueryDisplay();
+      });
+
+      document.getElementById("btnPlayPause").addEventListener("click", () => {
+        state.playing = !state.playing;
+        if (state.playing && state.stillMode) {
+          state.stillMode = false;
+        }
+        syncControlsFromState();
+      });
+
+      // 5-Zone Quick Jump Buttons
+      document.querySelectorAll(".zone-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const targetT = parseFloat(btn.getAttribute("data-time"));
+          state.timeSec = targetT;
+          state.cameraMode = "spline";
+          state.yawOffset = 0.0;
+          state.pitchOffset = 0.0;
+          sliderTimeline.value = targetT;
+          updateCameraModeUI();
+          resetStillAccumulation();
+          updateUrlQueryDisplay();
+        });
+      });
+
+      // Camera Mode Toggle (Spline vs Free Flight)
+      document.getElementById("btnToggleCameraMode").addEventListener("click", () => {
+        state.cameraMode = state.cameraMode === "spline" ? "free" : "spline";
+        if (state.cameraMode === "spline") {
+          state.yawOffset = 0.0;
+          state.pitchOffset = 0.0;
+        }
+        updateCameraModeUI();
+        resetStillAccumulation();
+      });
+
+      // SPP=16 Still Mode Toggle
+      document.getElementById("btnToggleStillMode").addEventListener("click", () => {
+        state.stillMode = !state.stillMode;
+        if (state.stillMode) {
+          state.playing = false;
+          resetStillAccumulation();
+          showToast(`已進入高品質靜態超取樣模式 (?mode=still&spp=${state.sppTarget})`);
+        } else {
+          state.playing = true;
+          showToast("已切換回 60 FPS 即時光線步進運鏡模式");
+        }
+        syncControlsFromState();
+      });
+
+      // GLSL Inspector Modal
+      const modal = document.getElementById("shaderModal");
+      const helpModal = document.getElementById("helpModal");
+      document.getElementById("btnOpenShaderModal").addEventListener("click", () => {
+        helpModal.classList.add("hidden");
+        modal.classList.remove("hidden");
+        selectModuleTab("v3_geo");
+      });
+      document.getElementById("btnCloseShaderModal").addEventListener("click", () => {
+        modal.classList.add("hidden");
+      });
+
+      // Operation Help Modal & Quick Hint Banner
+      const openHelp = () => {
+        modal.classList.add("hidden");
+        helpModal.classList.remove("hidden");
+      };
+      document.getElementById("btnOpenHelpModal").addEventListener("click", openHelp);
+      document.getElementById("btnOpenHelpInline").addEventListener("click", openHelp);
+      document.getElementById("btnCloseHelpModal").addEventListener("click", () => {
+        helpModal.classList.add("hidden");
+      });
+      document.getElementById("btnDismissHint").addEventListener("click", () => {
+        document.getElementById("quickHintBanner").classList.add("hidden");
+      });
+
+      // Fullscreen Button & Event Sync
+      document.getElementById("btnFullscreen").addEventListener("click", toggleFullscreenMode);
+      const onFsChange = () => {
+        const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+        const btn = document.getElementById("btnFullscreen");
+        if (btn) {
+          btn.textContent = isFs ? "🗗 退出全螢幕" : "⛶ 全螢幕";
+        }
+        resizeViewport();
+      };
+      document.addEventListener("fullscreenchange", onFsChange);
+      document.addEventListener("webkitfullscreenchange", onFsChange);
+      document.querySelectorAll(".mod-tab").forEach((tab) => {
+        tab.addEventListener("click", () => {
+          selectModuleTab(tab.getAttribute("data-mod"));
+        });
+      });
+
+      // Copy URL parameters
+      document.getElementById("btnCopyUrl").addEventListener("click", () => {
+        const text = document.getElementById("urlQueryReadout").textContent;
+        const tempInput = document.createElement("textarea");
+        tempInput.value = text;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        try {
+          document.execCommand("copy");
+          showToast(`已複製參數：${text}`);
+        } catch (err) {
+          showToast("參數已更新於面板");
+        }
+        document.body.removeChild(tempInput);
+      });
+
+      // Audio toggle
+      document.getElementById("btnToggleAudio").addEventListener("click", toggleProceduralSoundscape);
+
+      // Hide/Show HUD panels
+      document.getElementById("btnToggleUI").addEventListener("click", toggleHUDVisibility);
+
+      // Radar click to teleport
+      radarCanvas.addEventListener("click", (e) => {
+        const rect = radarCanvas.getBoundingClientRect();
+        const nx = (e.clientX - rect.left) / rect.width;
+        const nz = (e.clientY - rect.top) / rect.height;
+        const worldX = -2000.0 + nx * 26000.0;
+        const worldZ = (nz - 0.5) * 2000.0;
+        state.cameraMode = "free";
+        state.camPos[0] = worldX;
+        state.camPos[1] = Math.max(28.0, state.camPos[1]);
+        state.camPos[2] = worldZ;
+        updateCameraModeUI();
+        resetStillAccumulation();
+        showToast(`已傳送無人機至世界座標 X: ${worldX.toFixed(0)}m, Z: ${worldZ.toFixed(0)}m`);
+      });
+
+      // Pointer drag on main canvas to look around
+      canvas.addEventListener("pointerdown", (e) => {
+        state.isDragging = true;
+        state.lastMouseX = e.clientX;
+        state.lastMouseY = e.clientY;
+        canvas.setPointerCapture(e.pointerId);
+      });
+      canvas.addEventListener("pointermove", (e) => {
+        if (!state.isDragging) return;
+        const dx = e.clientX - state.lastMouseX;
+        const dy = e.clientY - state.lastMouseY;
+        state.lastMouseX = e.clientX;
+        state.lastMouseY = e.clientY;
+        if (state.cameraMode === "spline") {
+          state.yawOffset -= dx * 0.0045;
+          state.pitchOffset = Math.max(-0.65, Math.min(0.65, state.pitchOffset - dy * 0.0045));
+        } else {
+          state.camYaw -= dx * 0.0045;
+          state.camPitch = Math.max(-1.2, Math.min(1.2, state.camPitch - dy * 0.0045));
+        }
+        resetStillAccumulation();
+      });
+      canvas.addEventListener("pointerup", () => {
+        state.isDragging = false;
+      });
+
+      // Keyboard controls
+      window.addEventListener("keydown", (e) => {
+        state.keys[e.code] = true;
+        if (e.code === "KeyH") toggleHUDVisibility();
+        if (e.code === "KeyF") toggleFullscreenMode();
+        if (e.code === "KeyM") toggleProceduralSoundscape();
+        if (e.key === "?" || (e.code === "Slash" && e.shiftKey) || e.code === "F1") {
+          e.preventDefault();
+          helpModal.classList.toggle("hidden");
+        }
+        if (e.code === "Escape") {
+          modal.classList.add("hidden");
+          helpModal.classList.add("hidden");
+        }
+        if (e.code === "Space" && document.activeElement === document.body) {
+          e.preventDefault();
+          state.playing = !state.playing;
+          syncControlsFromState();
+        }
+        // Number keys 1-6 jump to all 6 Greater Beimen districts
+        const zoneTimes = { Digit1: 5, Digit2: 30, Digit3: 50, Digit4: 71, Digit5: 93, Digit6: 114 };
+        if (zoneTimes[e.code] !== undefined) {
+          state.timeSec = zoneTimes[e.code];
+          state.cameraMode = "spline";
+          state.yawOffset = 0.0;
+          state.pitchOffset = 0.0;
+          document.getElementById("sliderTimeline").value = state.timeSec;
+          updateCameraModeUI();
+          resetStillAccumulation();
+          updateUrlQueryDisplay();
+        }
+      });
+      window.addEventListener("keyup", (e) => {
+        state.keys[e.code] = false;
+      });
+    }
+
+    function updateCameraModeUI() {
+      const dot = document.getElementById("camModeDot");
+      const label = document.getElementById("camModeLabel");
+      if (state.cameraMode === "spline") {
+        dot.className = "w-2 h-2 rounded-full bg-emerald-400 animate-pulse-slow";
+        label.textContent = "史詩航線運鏡";
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-sky-400";
+        label.textContent = "自由飛行模式";
+      }
+    }
+
+    function toggleFullscreenMode() {
+      const docEl = document.documentElement;
+      const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      const btn = document.getElementById("btnFullscreen");
+      if (!isFs) {
+        const req = docEl.requestFullscreen || docEl.webkitRequestFullscreen;
+        if (req) {
+          Promise.resolve(req.call(docEl)).then(() => {
+            if (btn) btn.textContent = "🗗 退出全螢幕";
+            showToast("已進入全螢幕檢視模式（按 H 可隱藏控制面板，按 ESC 或 F 退出）");
+          }).catch(() => {
+            // Fallback for sandboxed iframe where browser blocks native Fullscreen API
+            state.uiVisible = true;
+            toggleHUDVisibility();
+            if (btn) btn.textContent = "🗗 退出全幅";
+            showToast("已切換至全幅沉浸檢視（已自動收合側邊面板，按 H 或再點一次可還原）");
+          });
+        } else {
+          toggleHUDVisibility();
+        }
+      } else {
+        const exit = document.exitFullscreen || document.webkitExitFullscreen;
+        if (exit) {
+          Promise.resolve(exit.call(document)).catch(() => {});
+        }
+        if (btn) btn.textContent = "⛶ 全螢幕";
+      }
+    }
+
+    function toggleHUDVisibility() {
+      state.uiVisible = !state.uiVisible;
+      const middle = document.getElementById("hudMiddle");
+      const bottom = document.getElementById("hudBottom");
+      const btn = document.getElementById("btnToggleUI");
+      middle.classList.toggle("hidden", !state.uiVisible);
+      bottom.classList.toggle("hidden", !state.uiVisible);
+      btn.textContent = state.uiVisible ? "隱藏面板" : "展開面板";
+    }
+
+    function selectModuleTab(modKey) {
+      const doc = MODULE_DOCS[modKey];
+      if (!doc) return;
+      document.getElementById("modDescription").textContent = doc.desc;
+      document.getElementById("modCodeBlock").textContent = doc.code;
+      document.querySelectorAll(".mod-tab").forEach((t) => {
+        const active = t.getAttribute("data-mod") === modKey;
+        t.className = active
+          ? "mod-tab px-3 py-1.5 rounded-t-lg text-xs font-mono-code bg-amber-500/20 text-amber-300 border-b-2 border-amber-400"
+          : "mod-tab px-3 py-1.5 rounded-t-lg text-xs font-mono-code text-slate-400 hover:text-slate-200";
+      });
+    }
+
+    // ============================================================================
+    // 9. RESIZE & MAIN ANIMATION LOOP
+    // ============================================================================
+    function resizeViewport() {
+      const effectiveScale = state.stillMode ? 1.0 : state.resScale;
+      const w = Math.max(320, Math.floor(window.innerWidth * effectiveScale));
+      const h = Math.max(180, Math.floor(window.innerHeight * effectiveScale));
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+        gl.viewport(0, 0, w, h);
+        resetStillAccumulation();
+      }
+    }
+    window.addEventListener("resize", resizeViewport);
+
+    // Halton sequence for subpixel jitter in SPP still mode
+    function halton(index, base) {
+      let result = 0.0;
+      let f = 1.0 / base;
+      let i = index;
+      while (i > 0) {
+        result += f * (i % base);
+        i = Math.floor(i / base);
+        f /= base;
+      }
+      return result - 0.5;
+    }
+
+    let lastFrameTime = performance.now();
+    let fpsSmooth = 60.0;
+
+    function normalize3(v) {
+      const len = Math.hypot(v[0], v[1], v[2]) || 1.0;
+      return [v[0] / len, v[1] / len, v[2] / len];
+    }
+
+    function cross3(a, b) {
+      return [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0]
+      ];
+    }
+
+    function smoothstepJS(edge0, edge1, x) {
+      const t = Math.max(0.0, Math.min(1.0, (x - edge0) / (edge1 - edge0)));
+      return t * t * (3.0 - 2.0 * t);
+    }
+
+    function renderLoop(now) {
+      const dt = Math.min(0.1, (now - lastFrameTime) * 0.001);
+      lastFrameTime = now;
+      if (dt > 0.0001) {
+        fpsSmooth = fpsSmooth * 0.92 + (1.0 / dt) * 0.08;
+      }
+
+      resizeViewport();
+
+      // Check WASD free-flight input
+      const moveKeys =
+        state.keys["KeyW"] || state.keys["KeyS"] || state.keys["KeyA"] || state.keys["KeyD"] ||
+        state.keys["KeyQ"] || state.keys["KeyE"] ||
+        state.keys["ArrowUp"] || state.keys["ArrowDown"] || state.keys["ArrowLeft"] || state.keys["ArrowRight"];
+      if (moveKeys && state.cameraMode === "spline") {
+        state.cameraMode = "free";
+        updateCameraModeUI();
+      }
+
+      let forward = [-1, 0, 0];
+      if (state.cameraMode === "spline") {
+        if (state.playing && !state.stillMode) {
+          state.timeSec += dt;
+          if (state.timeSec > 120.0) state.timeSec = 0.0;
+          document.getElementById("sliderTimeline").value = state.timeSec;
+        }
+        const evalCam = evaluateFlightSpline(state.timeSec);
+        state.camPos = evalCam.pos;
+        const rawDir = normalize3([
+          evalCam.look[0] - evalCam.pos[0],
+          evalCam.look[1] - evalCam.pos[1],
+          evalCam.look[2] - evalCam.pos[2]
+        ]);
+        const baseYaw = Math.atan2(rawDir[2], rawDir[0]);
+        const basePitch = Math.asin(Math.max(-0.98, Math.min(0.98, rawDir[1])));
+        state.camYaw = baseYaw + state.yawOffset;
+        state.camPitch = Math.max(-1.2, Math.min(1.2, basePitch + state.pitchOffset));
+      } else {
+        // Free-flight WASD movement
+        const speed = (state.keys["ShiftLeft"] || state.keys["ShiftRight"]) ? 420.0 : 180.0;
+        const fw = [
+          Math.cos(state.camPitch) * Math.cos(state.camYaw),
+          Math.sin(state.camPitch),
+          Math.cos(state.camPitch) * Math.sin(state.camYaw)
+        ];
+        const rt = normalize3(cross3(fw, [0, 1, 0]));
+        if (state.keys["KeyW"] || state.keys["ArrowUp"]) {
+          state.camPos[0] += fw[0] * speed * dt;
+          state.camPos[1] += fw[1] * speed * dt;
+          state.camPos[2] += fw[2] * speed * dt;
+          resetStillAccumulation();
+        }
+        if (state.keys["KeyS"] || state.keys["ArrowDown"]) {
+          state.camPos[0] -= fw[0] * speed * dt;
+          state.camPos[1] -= fw[1] * speed * dt;
+          state.camPos[2] -= fw[2] * speed * dt;
+          resetStillAccumulation();
+        }
+        if (state.keys["KeyD"] || state.keys["ArrowRight"]) {
+          state.camPos[0] += rt[0] * speed * dt;
+          state.camPos[2] += rt[2] * speed * dt;
+          resetStillAccumulation();
+        }
+        if (state.keys["KeyA"] || state.keys["ArrowLeft"]) {
+          state.camPos[0] -= rt[0] * speed * dt;
+          state.camPos[2] -= rt[2] * speed * dt;
+          resetStillAccumulation();
+        }
+        if (state.keys["KeyE"]) {
+          state.camPos[1] += speed * 0.45 * dt;
+          resetStillAccumulation();
+        }
+        if (state.keys["KeyQ"]) {
+          state.camPos[1] -= speed * 0.45 * dt;
+          resetStillAccumulation();
+        }
+        state.camPos[1] = Math.max(4.5, Math.min(600.0, state.camPos[1]));
+      }
+
+      forward = normalize3([
+        Math.cos(state.camPitch) * Math.cos(state.camYaw),
+        Math.sin(state.camPitch),
+        Math.cos(state.camPitch) * Math.sin(state.camYaw)
+      ]);
+      const right = normalize3(cross3(forward, [0.0, 1.0, 0.0]));
+      const up = normalize3(cross3(right, forward));
+
+      // Handle SPP Still Mode Accumulation vs Real-time Render
+      let jitterX = 0.0;
+      let jitterY = 0.0;
+      let shouldDraw = true;
+
+      if (state.stillMode) {
+        if (state.sppCount < state.sppTarget) {
+          state.sppCount++;
+          jitterX = halton(state.sppCount, 2);
+          jitterY = halton(state.sppCount, 3);
+          document.getElementById("sppStatusText").textContent =
+            `高品質靜態超取樣模式 (mode=still) · SPP: ${state.sppCount} / ${state.sppTarget}`;
+          if (state.sppCount === 1) {
+            gl.disable(gl.BLEND);
+          } else {
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.CONSTANT_ALPHA, gl.ONE_MINUS_CONSTANT_ALPHA);
+            gl.blendColor(0, 0, 0, 1.0 / state.sppCount);
+          }
+        } else {
+          shouldDraw = false;
+        }
+      } else {
+        gl.disable(gl.BLEND);
+      }
+
+      if (shouldDraw) {
+        gl.useProgram(program);
+        gl.uniform2f(uniforms.u_resolution, canvas.width, canvas.height);
+        gl.uniform1f(uniforms.u_time, state.timeSec);
+        gl.uniform3f(uniforms.u_camPos, state.camPos[0], state.camPos[1], state.camPos[2]);
+        gl.uniform3f(uniforms.u_camForward, forward[0], forward[1], forward[2]);
+        gl.uniform3f(uniforms.u_camRight, right[0], right[1], right[2]);
+        gl.uniform3f(uniforms.u_camUp, up[0], up[1], up[2]);
+        gl.uniform1f(uniforms.u_sunEl, state.sunEl);
+        gl.uniform1f(uniforms.u_sunAz, state.sunAz);
+        gl.uniform1f(uniforms.u_haze, state.haze);
+        gl.uniform1f(uniforms.u_cloudDensity, state.cloudDensity);
+        gl.uniform1f(uniforms.u_waveScale, state.waveScale);
+        gl.uniform1f(uniforms.u_ridgeScale, state.ridgeScale);
+        gl.uniform1f(uniforms.u_stepQuality, state.stepQuality);
+        gl.uniform1f(uniforms.u_fastPlane, state.fastPlane);
+        gl.uniform1f(uniforms.u_oysterTrees, state.oysterTrees);
+        gl.uniform2f(uniforms.u_jitter, jitterX, jitterY);
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+      }
+
+      // Auto-FPS Governor: dynamically protect browser responsiveness if FPS < 42
+      renderLoop._frameCount = (renderLoop._frameCount || 0) + 1;
+      if (state.autoPerf && !state.stillMode && renderLoop._frameCount % 45 === 0) {
+        if (fpsSmooth < 42.0 && state.resScale > 0.40) {
+          state.resScale = Math.max(0.40, +(state.resScale - 0.10).toFixed(2));
+          if (fpsSmooth < 28.0) state.stepQuality = 1.0;
+          resizeViewport();
+          syncControlsFromState();
+        }
+      }
+
+      // Throttle DOM & 2D Radar redraw to every 4th frame (~15Hz) to avoid browser UI layout overhead
+      if (renderLoop._frameCount % 4 === 0) {
+        const px = state.camPos[0];
+        const py = state.camPos[1];
+        const pz = state.camPos[2];
+        document.getElementById("valTimeline").textContent = `${state.timeSec.toFixed(1).padStart(5, "0")}s`;
+        document.getElementById("telemetryPos").textContent =
+          `X: ${px.toFixed(0)}m · Y: ${py.toFixed(1)}m · Z: ${pz.toFixed(0)}m`;
+
+        const mSea = 1.0 - smoothstepJS(-1800.0, 200.0, px);
+        const mCoast = smoothstepJS(-400.0, 2200.0, px) * (1.0 - smoothstepJS(3800.0, 6200.0, px));
+        const mAqua = smoothstepJS(4200.0, 7200.0, px) * (1.0 - smoothstepJS(12500.0, 15500.0, px));
+        const mInland = smoothstepJS(13000.0, 17500.0, px);
+        document.getElementById("telemetryMasks").textContent =
+          `平原:${mInland.toFixed(2)} 魚塭:${mAqua.toFixed(2)} 濱海:${mCoast.toFixed(2)} 外海:${mSea.toFixed(2)}`;
+        document.getElementById("telemetryPerf").textContent =
+          `${Math.round(fpsSmooth)} FPS · Scale: ${state.resScale.toFixed(2)}x`;
+
+        updateZoneCardAndButtons(px, state.timeSec);
+        renderRadarOverlay(forward);
+        updateSpatialSoundscape(px);
+      }
+
+      requestAnimationFrame(renderLoop);
+    }
+
+    // Boot Application
+    window.onload = () => {
+      parseUrlParameters();
+      precompute2DSDFRadar();
+      attachEventListeners();
+      syncControlsFromState();
+      resizeViewport();
+      requestAnimationFrame(renderLoop);
+    };
+  </script>
+</body>
+</html>
