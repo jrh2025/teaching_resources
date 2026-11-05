@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebGL2 程序化三維地景在地化重構技能包 — 完整導覽指南</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+      background-color: #0b0f19;
+      color: #e2e8f0;
+      scroll-behavior: smooth;
+    }
+    code, pre {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .glass-card {
+      background: rgba(17, 24, 39, 0.75);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card-hover {
+      transition: all 0.25s ease;
+    }
+    .glass-card-hover:hover {
+      border-color: rgba(245, 158, 11, 0.4);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 30px -10px rgba(245, 158, 11, 0.15);
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .gradient-cyan {
+      background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  </style>
+</head>
+<body class="selection:bg-amber-500/30 selection:text-amber-200 antialiased">
+
+  <!-- Top Sticky Navigation Bar -->
+  <nav class="sticky top-0 z-50 bg-[#0b0f19]/80 backdrop-blur-md border-b border-slate-800 px-6 py-3.5">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="inline-block w-3 h-3 rounded-full bg-amber-400 animate-pulse"></span>
+        <span class="font-bold tracking-wide text-slate-100 text-sm md:text-base">webgl2-terrain-reconstructor</span>
+        <span class="hidden md:inline-block px-2 py-0.5 text-[11px] rounded font-medium bg-amber-500/10 text-amber-300 border border-amber-500/30">Zero-Asset Architecture</span>
+      </div>
+      <div class="flex items-center space-x-4 text-xs md:text-sm font-medium text-slate-400">
+        <a href="#concept" class="hover:text-amber-400 transition-colors">核心概念</a>
+        <a href="#contents" class="hover:text-amber-400 transition-colors">技能包架構</a>
+        <a href="#workflow" class="hover:text-amber-400 transition-colors">執行工作流</a>
+        <a href="#case-jinshan" class="hover:text-amber-400 transition-colors">金山實踐案例</a>
+        <a href="#rules" class="hover:text-amber-400 transition-colors">十二大鐵律</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="relative overflow-hidden py-16 md:py-24 border-b border-slate-800 bg-gradient-to-b from-[#111827] to-[#0b0f19]">
+    <div class="max-w-6xl mx-auto px-6 relative z-10">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-slate-800/80 border border-slate-700 text-slate-300 mb-6">
+        <span>台灣在地化程序化三維地景系統</span>
+        <span class="w-1 h-1 rounded-full bg-slate-500"></span>
+        <span class="text-amber-400">零外部模型與貼圖</span>
+      </div>
+      <h1 class="text-3xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-tight mb-6">
+        用純粹的數學與著色器，<br>
+        在瀏覽器中雕刻<span class="gradient-text">台灣山海數位孿生</span>
+      </h1>
+      <p class="text-base md:text-lg text-slate-300 max-w-3xl leading-relaxed mb-8">
+        基於 <code class="text-amber-300 bg-slate-800 px-1.5 py-0.5 rounded">Leonxlnx/napali</code> 的純數學光線步進（Raymarching）管線，將台灣在地的農田水圳、紅磚老街、廟宇燕尾、火山錐體、海蝕奇岩與雙色海灣，提煉成一套輕量、獨立、開箱即用的現代 WebGL2 技能包。
+      </p>
+      
+      <div class="flex flex-wrap gap-4 pt-2">
+        <div class="flex items-center gap-2 bg-slate-800/60 border border-slate-700/80 rounded-lg px-4 py-2.5">
+          <span class="text-amber-400 font-bold">100% Zero-Asset</span>
+          <span class="text-xs text-slate-400">無任何外部 3D 模型與圖檔請求</span>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-800/60 border border-slate-700/80 rounded-lg px-4 py-2.5">
+          <span class="text-cyan-400 font-bold">60 FPS 順暢體驗</span>
+          <span class="text-xs text-slate-400">ANGLE D3D11 快速編譯與直線算子</span>
+        </div>
+        <div class="flex items-center gap-2 bg-slate-800/60 border border-slate-700/80 rounded-lg px-4 py-2.5">
+          <span class="text-emerald-400 font-bold">單一 HTML 封裝</span>
+          <span class="text-xs text-slate-400">僅約 100~160 KB，離線點開即飛</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-16 space-y-20">
+
+    <!-- Section 1: Core Concept -->
+    <section id="concept" class="space-y-6">
+      <div class="border-l-4 border-amber-500 pl-4">
+        <h2 class="text-2xl md:text-3xl font-bold text-white">一、核心概念：什麼是程序化三維地景重構？</h2>
+        <p class="text-sm text-slate-400 mt-1">從夏威夷納帕利海岸到台灣鄉鎮的在地化進化歷程</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+        <div class="glass-card rounded-xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-rose-400">傳統 3D 地景架構的痛點</h3>
+            <span class="text-xs px-2 py-0.5 rounded bg-rose-500/10 text-rose-300 border border-rose-500/20">高依賴性</span>
+          </div>
+          <ul class="text-sm text-slate-300 space-y-2.5 list-disc list-inside">
+            <li><strong>龐大資產包袱</strong>：動輒需要載入數十至數百 MB 的 <code class="text-slate-200">.obj / .glb</code> 網格模型與高解析衛星貼圖。</li>
+            <li><strong>外部連線依賴</strong>：一旦網路不穩或圖床伺服器掛掉，畫面便破碎、白屏或變成灰階低解析方塊。</li>
+            <li><strong>難以快速分享</strong>：檔案分散於多個資料夾，無法用一個輕便的單檔直接寄送或離線展示。</li>
+          </ul>
+        </div>
+
+        <div class="glass-card rounded-xl p-6 space-y-4 border-amber-500/30 bg-amber-500/[0.02]">
+          <div class="flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-amber-300">本技能包的 Zero-Asset 革命</h3>
+            <span class="text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">自給自足</span>
+          </div>
+          <ul class="text-sm text-slate-300 space-y-2.5 list-disc list-inside">
+            <li><strong>純數學光線步進</strong>：所有的山脈起伏、老街聚落、海蝕奇岩，全部由 GLSL 符號距離場（SDF）實時推算。</li>
+            <li><strong>單一 HTML 自洽封裝</strong>：GLSL 著色器、玻璃擬態 HUD、2D 地圖雷達、Web Audio 空間音效全寫在同一個檔案內。</li>
+            <li><strong>極致在地化靈魂</strong>：不只畫山海，更能雕刻出紅磚拱廊、廟宇燕尾、水田犁溝、漁港防波堤與雙色陰陽海。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 2: Package Architecture -->
+    <section id="contents" class="space-y-6">
+      <div class="border-l-4 border-sky-500 pl-4">
+        <h2 class="text-2xl md:text-3xl font-bold text-white">二、技能包架構與資源清單</h2>
+        <p class="text-sm text-slate-400 mt-1">完整遵循規範，包含規範文件、圖鑑手冊、測試腳本與黃金實作</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+        <div class="glass-card glass-card-hover rounded-xl p-5 space-y-3">
+          <div class="text-amber-400 font-bold text-sm tracking-wide flex items-center gap-2">
+            <span>核心規範與指令指南</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            <strong class="text-slate-100">SKILL.md</strong> 是技能的行動綱領，定義了視覺寫實度「十二大鐵律」、標準四階段執行工作流，以及 ANGLE D3D11 秒級編譯的優化準則。
+          </p>
+        </div>
+
+        <div class="glass-card glass-card-hover rounded-xl p-5 space-y-3">
+          <div class="text-sky-400 font-bold text-sm tracking-wide flex items-center gap-2">
+            <span>三部深度參考手冊</span>
+          </div>
+          <ul class="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
+            <li><strong>geomorphology_sdf_atlas.md</strong>：老街、廟宇、拱橋、火山錐 3D 數學圖鑑。</li>
+            <li><strong>water_sky_optics_guide.md</strong>：浪花泡沫、陰陽海水質與夕陽大氣散射。</li>
+            <li><strong>ui_hud_and_soundscape_spec.md</strong>：三列式 HUD、2D 雷達與 4 層聲景。</li>
+          </ul>
+        </div>
+
+        <div class="glass-card glass-card-hover rounded-xl p-5 space-y-3">
+          <div class="text-emerald-400 font-bold text-sm tracking-wide flex items-center gap-2">
+            <span>品管與自動化驗證工具</span>
+          </div>
+          <ul class="text-xs text-slate-300 space-y-1.5 list-disc list-inside">
+            <li><strong>validate_terrain_html.py</strong>：靜態檢查 28 項著色器、算子與 HUD 規範。</li>
+            <li><strong>inspect_render.js / .mjs</strong>：無頭 Chrome 自動航巡六大分區並擷取驗證圖。</li>
+            <li><strong>webgl2_jinshan_coast_reference.html</strong>：黃金標竿示範程式碼。</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 3: Standard Workflow -->
+    <section id="workflow" class="space-y-6">
+      <div class="border-l-4 border-amber-500 pl-4">
+        <h2 class="text-2xl md:text-3xl font-bold text-white">三、標準四階段重構工作流</h2>
+        <p class="text-sm text-slate-400 mt-1">使用者提出需求後，AI 是如何有條不紊地產出高畫質地景的？</p>
+      </div>
+
+      <div class="space-y-4 pt-2">
+        <!-- Step 1 -->
+        <div class="glass-card rounded-xl p-6 flex flex-col md:flex-row gap-6 items-start">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500/20 text-amber-400 font-black flex items-center justify-center text-lg border border-amber-500/30">
+            01
+          </div>
+          <div class="space-y-2 flex-1">
+            <h3 class="text-lg font-bold text-slate-100">階段 1：地理考證與 Google Maps 多航點解析</h3>
+            <p class="text-sm text-slate-300 leading-relaxed">
+              使用者只要提供地名或 Google Maps 路線網址（如 <code class="text-amber-300 bg-slate-800 px-1 rounded">https://maps.app.goo.gl/...</code>），AI 立即自動解析經緯度與途經景點，將整段 120 秒巡航航線劃分為 <strong>六大宏觀分區（Zone 1 ～ Zone 6）</strong>，並精確計算攝影機前向視角（Camera-to-Landmark Framing），確保地標永遠在攝影機正前方 100m~300m 的最佳黃金構圖區。
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="glass-card rounded-xl p-6 flex flex-col md:flex-row gap-6 items-start">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-sky-500/20 text-sky-400 font-black flex items-center justify-center text-lg border border-sky-500/30">
+            02
+          </div>
+          <div class="space-y-2 flex-1">
+            <h3 class="text-lg font-bold text-slate-100">階段 2：五大微著色器管線工程設計</h3>
+            <p class="text-sm text-slate-300 leading-relaxed">
+              分別設計並無縫組合五大核心模組：大氣與雲層（<code class="text-sky-300">v2_sky</code>）、地貌高度場與 3D 地標 SDF（<code class="text-sky-300">v3_geo</code>）、材質與次表面散射著色（<code class="text-sky-300">v3_shade</code>）、多區水體波浪與泡沫（<code class="text-sky-300">v3_water</code>），以及電影級 ACES Filmic 色調映射（<code class="text-sky-300">v1_post</code>）。
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="glass-card rounded-xl p-6 flex flex-col md:flex-row gap-6 items-start">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-400 font-black flex items-center justify-center text-lg border border-emerald-500/30">
+            03
+          </div>
+          <div class="space-y-2 flex-1">
+            <h3 class="text-lg font-bold text-slate-100">階段 3：玻璃擬態 HUD、2D 雷達與空間自然聲景組裝</h3>
+            <p class="text-sm text-slate-300 leading-relaxed">
+              整合不擋視線的三列式 HUD 介面、支援點擊瞬移的 2D 符號距離場地圖雷達、即時光學調參滑桿、SPP=16 超取樣按鈕，並以純 Web Audio API 振盪器即時合成山谷微風、海浪拍岸與立體聲隨機鳥鳴。
+            </p>
+          </div>
+        </div>
+
+        <!-- Step 4 -->
+        <div class="glass-card rounded-xl p-6 flex flex-col md:flex-row gap-6 items-start">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-purple-500/20 text-purple-400 font-black flex items-center justify-center text-lg border border-purple-500/30">
+            04
+          </div>
+          <div class="space-y-2 flex-1">
+            <h3 class="text-lg font-bold text-slate-100">階段 4：28 項靜態規範檢查與無頭 Chrome 視覺巡檢</h3>
+            <p class="text-sm text-slate-300 leading-relaxed">
+              產出 HTML 檔案後，自動執行 <code class="text-purple-300 bg-slate-800 px-1 rounded">validate_terrain_html.py</code> 確認 28 項檢查全數通過；接著啟動無頭瀏覽器巡檢腳本，擷取 6 大分區截圖，AI 親自以多模態視覺檢視每一區地標是否清晰、光影是否逼真。
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Jinshan Case Study -->
+    <section id="case-jinshan" class="space-y-6">
+      <div class="border-l-4 border-amber-500 pl-4">
+        <h2 class="text-2xl md:text-3xl font-bold text-white">四、深度實戰拆解：金山山海環狀線是如何實踐的？</h2>
+        <p class="text-sm text-slate-400 mt-1">剖析黃金範例檔 webgl2_jinshan_coast_reference.html 的真實誕生過程</p>
+      </div>
+
+      <div class="glass-card rounded-xl p-6 md:p-8 space-y-6">
+        <div class="border-b border-slate-700/80 pb-4">
+          <h3 class="text-xl font-bold text-amber-300">金山 24km × 2km 空間藍圖與六大特色分區</h3>
+          <p class="text-sm text-slate-300 mt-1">無人機以 120 秒平滑樣條曲線，貫穿金山海陸交錯的六大地貌精華：</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <!-- Zone 1 -->
+          <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700/60 space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-amber-400">Zone 1 (0~14s)</span>
+              <span class="text-slate-400">起點老街</span>
+            </div>
+            <h4 class="text-sm font-bold text-slate-100">金山國小操場與老街聚落</h4>
+            <p class="text-xs text-slate-300">紅藍 PU 操場跑道、閩南紅磚拱廊街屋、金山慈護宮燕尾翹脊屋頂。</p>
+          </div>
+
+          <!-- Zone 2 -->
+          <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700/60 space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-amber-400">Zone 2 (14~32s)</span>
+              <span class="text-slate-400">溪口出海</span>
+            </div>
+            <h4 class="text-sm font-bold text-slate-100">金包里溪與水尾漁港</h4>
+            <p class="text-xs text-slate-300">負向幾何開槽切出水流河道、水尾防波堤、導航燈塔與隨浪起伏的「蹦火仔」漁船。</p>
+          </div>
+
+          <!-- Zone 3 -->
+          <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700/60 space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-amber-400">Zone 3 (32~52s)</span>
+              <span class="text-slate-400">外海海蝕</span>
+            </div>
+            <h4 class="text-sm font-bold text-slate-100">獅頭山海岬與燭台雙嶼</h4>
+            <p class="text-xs text-slate-300">自斷崖外海側掠飛取景，兩座獨立玄武岩海蝕柱立於碧海，根部激起繞射同心圓碎浪環。</p>
+          </div>
+
+          <!-- Zone 4 -->
+          <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700/60 space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-amber-400">Zone 4 (52~72s)</span>
+              <span class="text-slate-400">黃金溫泉</span>
+            </div>
+            <h4 class="text-sm font-bold text-slate-100">磺港溫泉與噴泉公園</h4>
+            <p class="text-xs text-slate-300">日式斜頂足湯木造涼亭、富鐵酸性礦泉湧入海灣形成的黃褐色溫泉熱羽流。</p>
+          </div>
+
+          <!-- Zone 5 -->
+          <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700/60 space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-amber-400">Zone 5 (72~92s)</span>
+              <span class="text-slate-400">水稻梯田</span>
+            </div>
+            <h4 class="text-sm font-bold text-slate-100">磺溪沖積扇與水稻梯田</h4>
+            <p class="text-xs text-slate-300">非週期空間扭曲破除棋盤格，生成歪斜帶弧角的水田拼布、18cm 犁溝紋理與倒影。</p>
+          </div>
+
+          <!-- Zone 6 -->
+          <div class="bg-slate-800/50 rounded-lg p-4 border border-slate-700/60 space-y-2">
+            <div class="flex justify-between items-center text-xs">
+              <span class="font-bold text-amber-400">Zone 6 (92~120s)</span>
+              <span class="text-slate-400">火山遠景</span>
+            </div>
+            <h4 class="text-sm font-bold text-slate-100">大屯火山群背景</h4>
+            <p class="text-xs text-slate-300">240m 火山錐體拔地而起，平滑過渡關閉農田與房舍，切換為安山岩崩壁與芒草坡。</p>
+          </div>
+        </div>
+
+        <!-- Technical Breakthrough Highlights -->
+        <div class="pt-4 border-t border-slate-700/80 space-y-3">
+          <h4 class="text-sm font-bold text-slate-200">關鍵光影與物理突破：</h4>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-300">
+            <div class="bg-slate-900/60 p-3 rounded border border-slate-800">
+              <span class="text-amber-300 font-semibold">午後黃金斜射光 (17.5°)：</span>
+              嚴禁正午直射死白光，斜射光讓老街山牆、田埂與燭台石在海面上拉出修長的立體投影。
+            </div>
+            <div class="bg-slate-900/60 p-3 rounded border border-slate-800">
+              <span class="text-cyan-300 font-semibold">真實水體動態分區：</span>
+              外海為非對稱湧浪與碎形泡沫網；淺灘（深度 &lt; 0.32m）自動長出拍岸白沫；出海口動態混合礦物濁流。
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 5: Mandatory Rules -->
+    <section id="rules" class="space-y-6">
+      <div class="border-l-4 border-rose-500 pl-4">
+        <h2 class="text-2xl md:text-3xl font-bold text-white">五、寫實度「十二大鐵律」（摘錄）</h2>
+        <p class="text-sm text-slate-400 mt-1">確保產出絕非「塑膠平地或方塊水泥」的嚴格工程準則</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+        <div class="glass-card p-4 rounded-lg space-y-1.5 text-xs text-slate-300">
+          <span class="font-bold text-amber-400 text-sm">鐵律一：破除笛卡兒棋盤格</span>
+          <p>禁止直接使用正交 <code class="text-slate-200">mod()</code>，強制使用非週期空間扭曲與 2x2 Voronoi 晶胞，呈現真實自然農田拼布。</p>
+        </div>
+        <div class="glass-card p-4 rounded-lg space-y-1.5 text-xs text-slate-300">
+          <span class="font-bold text-amber-400 text-sm">鐵律二：真實水系負向開槽</span>
+          <p>河流溪谷嚴禁只塗藍色，必須以中心線函數切穿地表至水面以下，刻出非對稱沙洲與防汛堤防。</p>
+        </div>
+        <div class="glass-card p-4 rounded-lg space-y-1.5 text-xs text-slate-300">
+          <span class="font-bold text-amber-400 text-sm">鐵律三：微觀高度場與雙尺度法線</span>
+          <p>宏觀地形疊加 18cm 耕地犁溝與岩石節理；主光線步進大步推進，命中後執行 3 步二元搜尋消除偽影。</p>
+        </div>
+        <div class="glass-card p-4 rounded-lg space-y-1.5 text-xs text-slate-300">
+          <span class="font-bold text-amber-400 text-sm">鐵律四：每區至少 3 個真實地標</span>
+          <p>絕不只靠噪聲山丘充數，每個分區必須考證並實作至少 3 個具備獨立材質的真實建築或特色地貌。</p>
+        </div>
+        <div class="glass-card p-4 rounded-lg space-y-1.5 text-xs text-slate-300">
+          <span class="font-bold text-amber-400 text-sm">鐵律五：黃金斜陽與延遲大氣透視</span>
+          <p>太陽仰角設在 7°~19°，搭配延遲啟動的大氣霧化係數，確保近景老街植被濃郁、遠景山脈陰影鮮明。</p>
+        </div>
+        <div class="glass-card p-4 rounded-lg space-y-1.5 text-xs text-slate-300">
+          <span class="font-bold text-amber-400 text-sm">鐵律六：直線無迴圈秒級編譯</span>
+          <p>噪聲與樹冠算子徹底展開為直線算式，杜絕 Windows ANGLE D3D11 編譯卡頓，開檔即 60 FPS 順暢航行。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 6: Shortcuts & Interactive Controls -->
+    <section class="glass-card rounded-xl p-8 space-y-6">
+      <h3 class="text-xl font-bold text-white flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+        瀏覽器即時互動與快捷鍵操作
+      </h3>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+        <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/60">
+          <div class="font-bold text-amber-300 text-sm mb-1">Space (空白鍵)</div>
+          <div class="text-slate-400">暫停 / 繼續自動巡航</div>
+        </div>
+        <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/60">
+          <div class="font-bold text-amber-300 text-sm mb-1">數字鍵 1 ~ 6</div>
+          <div class="text-slate-400">即時瞬移至六大核心景點</div>
+        </div>
+        <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/60">
+          <div class="font-bold text-amber-300 text-sm mb-1">W / A / S / D</div>
+          <div class="text-slate-400">切換自由飛行模式隨意穿梭</div>
+        </div>
+        <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/60">
+          <div class="font-bold text-amber-300 text-sm mb-1">H 鍵 / M 鍵</div>
+          <div class="text-slate-400">隱藏 HUD / 切換自然聲景</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 bg-[#090d16] py-8 text-center text-xs text-slate-500">
+    <div class="max-w-6xl mx-auto px-6 space-y-2">
+      <p>WebGL2 Procedural Landscape Localized Reconstructor Skill Package</p>
+      <p class="text-slate-600">本系統遵循 Zero-Asset 純程序化架構 · 適用於 Antigravity AI Agent 系統</p>
+    </div>
+  </footer>
+
+</body>
+</html>
