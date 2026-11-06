@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GIGABYTE GA-Z77P-D3 主機板 WebGL2 3D 穿梭微縮導覽系統</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+TC:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body, html {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      overflow: hidden; background-color: #050811;
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+      color: #f8fafc; user-select: none;
+    }
+    canvas { display: block; }
+    code, .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Cyber Glassmorphism */
+    .cyber-glass {
+      background: rgba(8, 18, 38, 0.82);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(56, 189, 248, 0.22);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.75), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+    }
+    .cyber-glass-active {
+      background: rgba(14, 116, 144, 0.38);
+      border-color: rgba(56, 189, 248, 0.85);
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.4);
+    }
+
+    /* Floating Bubble Callout */
+    #floatingBubble {
+      position: absolute; z-index: 40; pointer-events: auto;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      transform-origin: top left;
+    }
+    .bubble-tail {
+      position: absolute; width: 14px; height: 14px;
+      background: rgba(8, 18, 38, 0.94);
+      border-left: 1px solid rgba(56, 189, 248, 0.6);
+      border-bottom: 1px solid rgba(56, 189, 248, 0.6);
+      transform: rotate(45deg);
+    }
+    .reticle-ring {
+      position: absolute; width: 34px; height: 34px;
+      border: 2px solid rgba(56, 189, 248, 0.85);
+      border-radius: 50%; pointer-events: none;
+      animation: pulseReticle 2s infinite ease-in-out;
+    }
+    .reticle-dot {
+      position: absolute; width: 8px; height: 8px;
+      background: #38bdf8; border-radius: 50%;
+      top: 13px; left: 13px; box-shadow: 0 0 12px #38bdf8;
+    }
+    @keyframes pulseReticle {
+      0%, 100% { transform: scale(1); opacity: 0.95; }
+      50% { transform: scale(1.4); opacity: 0.35; }
+    }
+
+    /* Custom Scrollbar & Inputs */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.6); }
+    ::-webkit-scrollbar-thumb { background: rgba(56, 189, 248, 0.4); border-radius: 2px; }
+
+    input[type=range] {
+      -webkit-appearance: none; background: rgba(30, 41, 59, 0.8);
+      height: 4px; border-radius: 2px; outline: none;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+      background: #38bdf8; cursor: pointer;
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.8); border: 1px solid #ffffff;
+      transition: transform 0.1s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+    .pulse-glow { animation: textPulse 2.5s infinite ease-in-out; }
+    @keyframes textPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+    /* Modal Backdrop */
+    .modal-backdrop {
+      background: rgba(3, 7, 18, 0.85);
+      backdrop-filter: blur(12px);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fullscreen WebGL2 Raymarching Canvas -->
+  <canvas id="glCanvas" class="absolute inset-0 w-full h-full block cursor-grab active:cursor-grabbing"></canvas>
+
+  <!-- 3D Target Reticle on Screen -->
+  <div id="targetReticle" class="absolute z-30 pointer-events-none transition-transform duration-75" style="display:none; transform: translate(-50%, -50%);">
+    <div class="reticle-ring"></div>
+    <div class="reticle-dot"></div>
+  </div>
+
+  <!-- Dynamic Floating Bubble Callout -->
+  <div id="floatingBubble" class="cyber-glass rounded-2xl p-5 w-80 md:w-96 shadow-2xl border border-sky-400/40 text-slate-100" style="display:none; left:0px; top:0px;">
+    <div class="bubble-tail -left-2 top-6"></div>
+    
+    <!-- Bubble Header -->
+    <div class="flex items-start justify-between gap-3 border-b border-slate-700/60 pb-3 mb-3">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <span id="bubbleTag" class="px-2 py-0.5 text-[10px] font-bold rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 mono tracking-wider">ZONE 01</span>
+          <span id="bubbleType" class="text-[11px] text-slate-400 font-medium">LGA 1155 SOCKET</span>
+        </div>
+        <h3 id="bubbleTitle" class="text-base md:text-lg font-extrabold text-white leading-tight">Intel LGA 1155 處理器核心座</h3>
+      </div>
+      <button id="btnPinBubble" title="鎖定此視角" class="text-slate-400 hover:text-cyan-400 p-1 rounded hover:bg-slate-800/60 transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+      </button>
+    </div>
+
+    <!-- Technical Specs Matrix -->
+    <div id="bubbleSpecs" class="grid grid-cols-2 gap-2 text-xs mb-3 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+      <div><span class="text-slate-400">腳位架構：</span><span class="text-slate-200 font-medium mono">LGA 1155 (H2)</span></div>
+      <div><span class="text-slate-400">處理器支援：</span><span class="text-slate-200 font-medium mono">22nm / 32nm</span></div>
+      <div><span class="text-slate-400">總線頻寬：</span><span class="text-slate-200 font-medium mono">DMI 2.0 (5GT/s)</span></div>
+      <div><span class="text-slate-400">最高功耗：</span><span class="text-slate-200 font-medium mono">95W TDP</span></div>
+    </div>
+
+    <!-- Educational & Engineering Description -->
+    <p id="bubbleDesc" class="text-xs text-slate-300 leading-relaxed mb-4">
+      配備高耐久鍍金彈性針腳陣列與鍍鉻金屬加壓拉桿，承受散熱器扣具高磅數下壓力，確保 1155 點極低接觸電阻與純淨超頻供電傳輸。
+    </p>
+
+    <!-- Interactive Actions -->
+    <div class="flex items-center justify-between pt-2 border-t border-slate-800/80 text-[11px]">
+      <div class="flex items-center gap-1.5 text-cyan-400">
+        <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+        <span id="bubbleStatusText" class="mono font-semibold">SIGNAL: BUS ACTIVE</span>
+      </div>
+      <button id="btnNextZone" class="px-2.5 py-1 rounded bg-sky-500/20 text-sky-300 hover:bg-sky-500/30 border border-sky-500/40 font-medium transition-colors flex items-center gap-1">
+        <span>下一站導覽</span>
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Three-Tier HUD Container -->
+  <div id="hudContainer" class="absolute inset-0 pointer-events-none flex flex-col justify-between p-3 md:p-5 z-20">
+
+    <!-- Top Navigation & Telemetry (#hudTop) -->
+    <div class="flex items-start justify-between gap-4 pointer-events-auto">
+      <!-- Brand & Mode -->
+      <div class="cyber-glass rounded-xl px-4 py-2.5 flex items-center gap-3">
+        <div class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_8px_#38bdf8] pulse-glow"></div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-extrabold text-sm md:text-base tracking-wide text-white">GIGABYTE GA-Z77P-D3</span>
+            <span id="modeBadge" class="text-[10px] px-1.5 py-0.2 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-semibold mono">3D 航線巡航</span>
+          </div>
+          <p class="text-[11px] text-slate-400">Intel Z77 · Ultra Durable 4 · Zero-Asset WebGL2</p>
+        </div>
+      </div>
+
+      <!-- Live Telemetry Pill -->
+      <div class="hidden lg:flex items-center gap-3 cyber-glass rounded-xl px-4 py-2 text-xs mono">
+        <div><span class="text-slate-400">POS:</span> <span id="telemetryPos" class="text-cyan-300">X:0 Y:45 Z:-80</span></div>
+        <div class="w-px h-3 bg-slate-700"></div>
+        <div><span class="text-slate-400">ZOOM:</span> <span id="telemetryZoom" class="text-amber-300 font-bold">1.00x (45mm)</span></div>
+        <div class="w-px h-3 bg-slate-700"></div>
+        <div><span class="text-slate-400">FPS / SCALE:</span> <span id="telemetryPerf" class="text-emerald-400 font-bold">60 FPS (1.0x)</span></div>
+      </div>
+
+      <!-- Action Buttons Toolbar -->
+      <div class="flex items-center gap-1.5 md:gap-2">
+        <button id="btnLowPowerMode" class="cyber-glass hover:bg-slate-800/80 px-2.5 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-cyan-300 transition-colors flex items-center gap-1" title="切換極省電 30 FPS 模式">
+          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+          <span class="hidden md:inline">節能 30 FPS</span>
+        </button>
+
+        <button id="btnStillSPP" class="cyber-glass hover:bg-slate-800/80 px-2.5 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-amber-300 transition-colors flex items-center gap-1" title="開啟 SPP=16 超取樣靜態超高畫質合成">
+          <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+          <span class="hidden md:inline">SPP 靜態渲染</span>
+        </button>
+
+        <button id="btnOpenShaderModal" class="cyber-glass hover:bg-slate-800/80 p-2.5 rounded-xl text-slate-300 hover:text-cyan-400 transition-colors" title="GLSL 著色器管線剖析視窗">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+        </button>
+
+        <button id="btnOpenHelpModal" class="cyber-glass hover:bg-slate-800/80 p-2.5 rounded-xl text-slate-300 hover:text-cyan-400 transition-colors" title="操作說明與快捷鍵 (鍵盤 ?)">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        </button>
+
+        <button id="btnAudioToggle" class="cyber-glass hover:bg-slate-800/80 p-2.5 rounded-xl text-slate-300 hover:text-cyan-400 transition-colors" title="音效切換 (M)">
+          <svg id="audioIconOn" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
+          <svg id="audioIconOff" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"></path></svg>
+        </button>
+
+        <button id="btnToggleHUD" class="cyber-glass hover:bg-slate-800/80 p-2.5 rounded-xl text-slate-300 hover:text-cyan-400 transition-colors" title="隱藏介面 (H)">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path></svg>
+        </button>
+
+        <button id="btnFullscreen" class="cyber-glass hover:bg-slate-800/80 p-2.5 rounded-xl text-slate-300 hover:text-cyan-400 transition-colors" title="全螢幕 (F)">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Middle: 2D Radar & Optics/Performance Panel -->
+    <div class="flex items-center justify-between gap-4 pointer-events-none">
+      
+      <!-- 2D Motherboard Schematic Radar (Left) -->
+      <div class="pointer-events-auto cyber-glass rounded-xl p-3 flex flex-col items-center">
+        <div class="flex items-center justify-between w-full text-[11px] font-bold text-slate-300 mb-2">
+          <span class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+            <span>2D 拓撲雷達</span>
+          </span>
+          <span class="text-[10px] text-cyan-400 mono">ATX 305×244mm</span>
+        </div>
+        <canvas id="pcbRadarCanvas" width="130" height="162" class="rounded border border-slate-700/80 cursor-crosshair bg-slate-950/80"></canvas>
+        <span class="text-[9px] text-slate-400 mt-1">點擊地圖任意區域瞬移巡航</span>
+      </div>
+
+      <!-- Quick Optics & Scalability Panel (Right) -->
+      <div id="tuningPanel" class="pointer-events-auto cyber-glass rounded-xl p-3.5 space-y-3 w-64 max-h-[75vh] overflow-y-auto hidden md:block">
+        <div class="text-[11px] font-bold text-slate-200 flex justify-between items-center border-b border-slate-700/60 pb-1.5">
+          <span>巡航高度與效能調參</span>
+          <button id="btnResetTuning" class="text-[10px] text-cyan-400 hover:underline">重置預設</button>
+        </div>
+
+        <!-- 1. Cruise Altitude / Zoom (User Request #1) -->
+        <div class="bg-slate-900/50 p-2.5 rounded-lg border border-slate-800 space-y-1.5">
+          <div class="flex justify-between text-[11px] font-semibold text-amber-300">
+            <span>巡航高度縮放 (Zoom)</span>
+            <span id="valAltitudeScale" class="mono">1.00x</span>
+          </div>
+          <input type="range" id="sliderAltitudeScale" min="35" max="250" value="100" class="w-full">
+          <div class="flex items-center justify-between text-[10px] text-slate-400 pt-0.5">
+            <button id="btnZoomIn" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">+ 貼近 (Zoom In)</button>
+            <button id="btnZoomOut" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300">- 拉遠 (Zoom Out)</button>
+          </div>
+        </div>
+
+        <!-- 2. Scalability: Resolution Scale (User Request #3) -->
+        <div>
+          <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+            <span>畫面渲染解析度 (降低負載)</span>
+            <span id="valResScale" class="text-cyan-300 mono">1.00x</span>
+          </div>
+          <input type="range" id="sliderResScale" min="50" max="100" value="100" step="5" class="w-full">
+        </div>
+
+        <!-- 3. Scalability: Raymarching Steps (User Request #3) -->
+        <div>
+          <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+            <span>光線步進品質 (階梯數)</span>
+            <span id="valStepQuality" class="text-cyan-300 mono">標準 (58 步)</span>
+          </div>
+          <select id="selectStepQuality" class="w-full bg-slate-800/90 border border-slate-700 text-xs rounded px-2 py-1 text-slate-200 outline-none">
+            <option value="1">節能省電模式 (36 步 · 內顯推薦)</option>
+            <option value="2" selected>標準平衡模式 (58 步 · 順暢 60FPS)</option>
+            <option value="3">極致細膩模式 (90 步 · 獨顯旗艦)</option>
+          </select>
+        </div>
+
+        <!-- 4. Scalability: 30 FPS Cap & Auto Throttle (User Request #3) -->
+        <div class="space-y-1.5 pt-1 border-t border-slate-800 text-[10px] text-slate-300">
+          <label class="flex items-center justify-between cursor-pointer">
+            <span>限制 30 FPS 節能模式</span>
+            <input type="checkbox" id="checkCap30" class="rounded accent-cyan-500 cursor-pointer">
+          </label>
+          <label class="flex items-center justify-between cursor-pointer">
+            <span>自動負載調節 (FPS &lt; 28 時降載)</span>
+            <input type="checkbox" id="checkAutoPerf" checked class="rounded accent-cyan-500 cursor-pointer">
+          </label>
+        </div>
+
+        <!-- 5. Lighting & Circuit Pulse Tuning -->
+        <div class="space-y-2 pt-2 border-t border-slate-800">
+          <div>
+            <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+              <span>主照明入射角</span>
+              <span id="valLightHeight" class="text-cyan-300 mono">48°</span>
+            </div>
+            <input type="range" id="sliderLightHeight" min="15" max="85" value="48" class="w-full">
+          </div>
+          <div>
+            <div class="flex justify-between text-[10px] text-slate-400 mb-1">
+              <span>電路信號流速</span>
+              <span id="valPulseSpeed" class="text-cyan-300 mono">1.5x</span>
+            </div>
+            <input type="range" id="sliderPulseSpeed" min="0" max="30" value="15" class="w-full">
+          </div>
+          <label class="flex items-center justify-between text-[10px] text-slate-300 cursor-pointer">
+            <span>電路數據脈衝流光</span>
+            <input type="checkbox" id="checkGlow" checked class="rounded accent-cyan-500 cursor-pointer">
+          </label>
+        </div>
+
+        <!-- Share URL -->
+        <div class="pt-2 border-t border-slate-800">
+          <button id="btnCopyStateUrl" class="w-full py-1.5 rounded bg-cyan-500/20 text-cyan-300 hover:bg-cyan-500/30 border border-cyan-500/40 text-[11px] font-semibold transition-colors flex items-center justify-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+            <span>複製目前視角與調參網址</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Controls: Timeline & Station Buttons (#hudBottom) -->
+    <div class="pointer-events-auto flex flex-col gap-2.5 max-w-4xl mx-auto w-full">
+      
+      <!-- 6 Key Component Navigation Pills -->
+      <div class="flex items-center justify-center gap-1.5 md:gap-2 overflow-x-auto py-1 px-2 no-scrollbar">
+        <button class="station-btn cyber-glass cyber-glass-active px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-200 transition-all flex items-center gap-1.5" data-station="1" data-t="5">
+          <span class="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
+          <span>1. CPU 插座</span>
+        </button>
+        <button class="station-btn cyber-glass px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1.5" data-station="2" data-t="28">
+          <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+          <span>2. VRM 供電</span>
+        </button>
+        <button class="station-btn cyber-glass px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1.5" data-station="3" data-t="50">
+          <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+          <span>3. DDR3 記憶體</span>
+        </button>
+        <button class="station-btn cyber-glass px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1.5" data-station="4" data-t="70">
+          <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+          <span>4. PCIe 3.0 擴充槽</span>
+        </button>
+        <button class="station-btn cyber-glass px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1.5" data-station="5" data-t="90">
+          <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+          <span>5. Z77 散熱裝甲</span>
+        </button>
+        <button class="station-btn cyber-glass px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-300 hover:text-white transition-all flex items-center gap-1.5" data-station="6" data-t="110">
+          <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+          <span>6. DualBIOS & mSATA</span>
+        </button>
+      </div>
+
+      <!-- Playbar & Timeline Slider with Altitude Quick-Control -->
+      <div class="cyber-glass rounded-xl px-4 py-2.5 flex items-center gap-3">
+        <button id="btnPlayPause" class="text-cyan-400 hover:text-cyan-300 p-1.5 rounded hover:bg-slate-800 transition-colors">
+          <svg id="playIcon" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+          <svg id="pauseIcon" class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+        </button>
+
+        <span id="timeDisplay" class="text-xs mono text-cyan-300 w-12 font-semibold">00:05</span>
+
+        <input type="range" id="sliderTimeline" min="0" max="120" step="0.1" value="5" class="flex-1 accent-cyan-400 cursor-pointer">
+
+        <span class="text-xs mono text-slate-400 w-12 text-right">02:00</span>
+
+        <!-- Quick Zoom In / Zoom Out on Bottom Bar -->
+        <div class="flex items-center gap-1 pl-2 border-l border-slate-700">
+          <button id="btnQuickZoomOut" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-mono" title="拉高視角 / 縮小">-</button>
+          <span id="quickZoomLabel" class="text-xs mono text-amber-300 px-1 font-semibold">1.0x</span>
+          <button id="btnQuickZoomIn" class="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-mono" title="降低高度 / 放大">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GLSL Shader Pipeline Inspection Modal (#shaderModal) -->
+  <div id="shaderModal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
+    <div class="cyber-glass rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col overflow-hidden border border-cyan-500/40 shadow-2xl">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-700/80 bg-slate-900/60">
+        <div class="flex items-center gap-3">
+          <span class="w-3 h-3 rounded-full bg-cyan-400"></span>
+          <h3 class="font-bold text-lg text-white">GLSL 程序化主機板著色器管線剖析</h3>
+        </div>
+        <button id="btnCloseShaderModal" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Tab Buttons -->
+      <div class="flex items-center gap-2 px-6 py-2.5 border-b border-slate-800 bg-slate-950/40 text-xs overflow-x-auto">
+        <button class="shader-tab active px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-semibold" data-tab="v3_geo">v3_geo (3D 元件 SDF)</button>
+        <button class="shader-tab px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200" data-tab="v3_shade">v3_shade (材質與 PBR)</button>
+        <button class="shader-tab px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200" data-tab="v3_bus">v3_bus (電路數據流光)</button>
+        <button class="shader-tab px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200" data-tab="v1_post">v1_post (ACES 色調映射)</button>
+      </div>
+
+      <!-- Code Box -->
+      <div class="flex-1 overflow-y-auto p-6 bg-slate-950/90 mono text-xs text-slate-300 leading-relaxed">
+        <pre><code id="shaderCodeBlock"></code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Operation & Help Modal (#helpModal) -->
+  <div id="helpModal" class="fixed inset-0 z-50 modal-backdrop hidden items-center justify-center p-4">
+    <div class="cyber-glass rounded-2xl w-full max-w-xl p-6 border border-cyan-500/40 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-700 pb-3">
+        <h3 class="font-bold text-lg text-white flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+          主機板 3D 穿梭導覽系統操作指南
+        </h3>
+        <button id="btnCloseHelpModal" class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-300">
+        <div>
+          <h4 class="font-bold text-cyan-300 text-sm mb-1">高度調整與縮放 (Zoom In / Zoom Out)</h4>
+          <p>滾動滑鼠滾輪，或點擊底部/右側面板的 <code class="text-amber-300">[+] [-]</code> 按鈕，即可平滑升降無人機巡航高度，近看鍍金針腳與晶片紋理，或拉遠俯瞰整張主機板。</p>
+        </div>
+        <div>
+          <h4 class="font-bold text-cyan-300 text-sm mb-1">鍵盤快捷鍵</h4>
+          <ul class="grid grid-cols-2 gap-2 text-slate-300">
+            <li><span class="mono bg-slate-800 px-1 rounded">Space</span>：暫停 / 繼續自動巡航</li>
+            <li><span class="mono bg-slate-800 px-1 rounded">數字 1~6</span>：快速瞬移至六大元件</li>
+            <li><span class="mono bg-slate-800 px-1 rounded">W / A / S / D</span>：切換自由飛行探索</li>
+            <li><span class="mono bg-slate-800 px-1 rounded">Q / E</span>：自由模式下升降高度</li>
+            <li><span class="mono bg-slate-800 px-1 rounded">M</span>：開啟 / 靜音純程式碼電子聲景</li>
+            <li><span class="mono bg-slate-800 px-1 rounded">H</span>：隱藏 / 顯示 HUD 與氣泡導覽</li>
+            <li><span class="mono bg-slate-800 px-1 rounded">F</span>：全螢幕切換</li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-bold text-emerald-400 text-sm mb-1">無獨立顯卡 / 筆電節能優化技巧</h4>
+          <p>若在無獨顯或內顯筆電上感到卡頓，可點擊頂部<strong>「節能 30 FPS」</strong>按鈕，或在右側面板將「畫面解析度」調為 0.75x、光線步進設為「節能 36 步」，系統亦內建智慧自動負載調節，保障流暢體驗。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Interactive JavaScript Engine -->
+  <script>
+    // Component Station Data (X, Y, Z in mm on PCB)
+    const STATIONS = [
+      {
+        id: 1, time: 5,
+        targetPos: [0, 4.0, -70], // CPU Socket Center
+        tag: "ZONE 01", type: "CPU SOCKET",
+        title: "Intel LGA 1155 處理器核心座 (Socket H2)",
+        specs: [
+          { k: "插槽架構", v: "LGA 1155 (Socket H2)" },
+          { k: "處理器支援", v: "22nm Ivy Bridge / 32nm Sandy Bridge" },
+          { k: "系統總線", v: "DMI 2.0 (5GT/s 雙向頻寬)" },
+          { k: "核心功耗", v: "最高支援 95W TDP (含 i7-3770K)" }
+        ],
+        desc: "配備 1155 根鍍金高彈性接點陣列，搭配全金屬加壓拉桿與不鏽鋼強化承載板，提供高磅數均勻扣壓力，確保極致低阻抗接點與純淨電壓傳輸。",
+        status: "SOCKET: 1155 PINS ACTIVE"
+      },
+      {
+        id: 2, time: 28,
+        targetPos: [-18, 5.5, -100], // VRM Power Delivery Area
+        tag: "ZONE 02", type: "VRM 4-PHASE POWER",
+        title: "超耐久 4 代 (Ultra Durable 4) 供電模組",
+        specs: [
+          { k: "供電相數", v: "3+1+1 相核心數位供電" },
+          { k: "電感元件", v: "全封閉式亞鐵鹽核心 (Ferrite Choke)" },
+          { k: "電容技術", v: "50,000小時 日系全固態電容" },
+          { k: "MOSFET", v: "超低電阻晶體 (Lower RDS(on))" }
+        ],
+        desc: "採用抗高溫全固態電容與防潮開纖布 PCB，電感發熱量降低 16%，並能在高達 105°C 極限高溫環境下穩定輸出數萬小時平滑直流電壓。",
+        status: "VRM: 1.18V CLEAN DC STABLE"
+      },
+      {
+        id: 3, time: 50,
+        targetPos: [65, 6.0, -58], // DDR3 Memory Slots
+        tag: "ZONE 03", type: "MEMORY SLOTS",
+        title: "雙通道 DDR3 記憶體插槽陣列 (4-DIMM)",
+        specs: [
+          { k: "插槽規格", v: "4 條 240-pin DDR3 DIMM" },
+          { k: "最高容量", v: "最高支援 32 GB (4×8GB)" },
+          { k: "超頻時脈", v: "支援 DDR3 2800(OC)/1600/1333" },
+          { k: "技術支援", v: "Intel XMP 記憶體規格認證" }
+        ],
+        desc: "採用技嘉經典土耳其藍與白色雙通道防呆卡榫配置，PCB 內部佈線經精密蛇形等長處理，消除高頻信號相位延遲，釋放超頻最大頻寬潛能。",
+        status: "BUS: DUAL-CHANNEL 128-BIT"
+      },
+      {
+        id: 4, time: 70,
+        targetPos: [-30, 5.0, 25], // PCIe 3.0 x16 Slot
+        tag: "ZONE 04", type: "EXPANSION SLOTS",
+        title: "PCI Express 3.0 ×16 高速擴充槽峽谷",
+        specs: [
+          { k: "總線規格", v: "PCI Express 3.0 (相容 Gen2)" },
+          { k: "插槽頻寬", v: "32 GB/s 雙向總線傳輸率" },
+          { k: "擴充配置", v: "1× PCIe x16, 2× PCIe x1, 2× PCI" },
+          { k: "防護機制", v: "重裝強化固定尾翼防插扣" }
+        ],
+        desc: "高速顯卡插槽直接與 CPU 內建 PCIe 控制器對接，下方保留經典 PCI 32-bit 插槽，滿足專業錄音卡、數據採集卡與老設備的無縫升級相容性。",
+        status: "BANDWIDTH: 8 GT/s GEN3"
+      },
+      {
+        id: 5, time: 90,
+        targetPos: [50, 7.5, 60], // Intel Z77 Heatsink
+        tag: "ZONE 05", type: "CHIPSET HEATSINK",
+        title: "Intel Z77 高階晶片組與藍鋁散熱裝甲",
+        specs: [
+          { k: "核心晶片", v: "Intel Z77 Express Chipset" },
+          { k: "散熱材質", v: "高純度陽極氧化深藍鋁合金" },
+          { k: "硬碟介面", v: "2× SATA 6Gb/s + 3× SATA 3Gb/s" },
+          { k: "原生技術", v: "Intel Rapid Start & Smart Connect" }
+        ],
+        desc: "深切縱向風道鋁合金散熱片，以立體流線雕刻出 GIGABYTE 經典商標，有效冷卻高階 Z77 晶片組，掌控高速 I/O 與磁碟陣列的龐大運算數據交換。",
+        status: "PCH TEMP: 38.5°C STABLE"
+      },
+      {
+        id: 6, time: 110,
+        targetPos: [8, 3.5, -5], // DualBIOS & mSATA
+        tag: "ZONE 06", type: "SECURITY & STORAGE",
+        title: "專利 DualBIOS™ 雙安全晶片與 mSATA 槽",
+        specs: [
+          { k: "韌體晶片", v: "2 × 64 Mbit Flash ROM" },
+          { k: "安全架構", v: "主 BIOS + 備用 BIOS 自動救援" },
+          { k: "板載擴充", v: "內建 mSATA 固態硬碟介面" },
+          { k: "快取加速", v: "Intel Smart Response Technology" }
+        ],
+        desc: "技嘉獨創雙實體 BIOS 架構，當主晶片遇超頻死當或病毒破壞時自動重寫修復；板載 mSATA 插座更可直裝固態硬碟，為機械硬碟提供混合快取狂飆速度。",
+        status: "DUAL-BIOS: HARDWARE SECURED"
+      }
+    ];
+
+    // Spline Waypoint Coordinates for 120s Cinematic Flight
+    const CAM_SPLINE = [
+      { t: 0,   pos: [-15, 62, -145], look: [0, 4, -70] },
+      { t: 10,  pos: [-5, 26, -95],   look: [0, 4, -70] },
+      { t: 20,  pos: [-55, 34, -120], look: [-18, 5, -95] },
+      { t: 30,  pos: [-35, 18, -100], look: [-18, 5, -80] },
+      { t: 40,  pos: [35, 45, -110],  look: [65, 6, -58] },
+      { t: 50,  pos: [58, 20, -75],   look: [65, 6, -20] },
+      { t: 60,  pos: [10, 48, -15],   look: [-30, 5, 25] },
+      { t: 70,  pos: [-45, 22, 10],   look: [-20, 5, 45] },
+      { t: 80,  pos: [10, 42, 35],    look: [50, 7, 60] },
+      { t: 90,  pos: [42, 22, 45],    look: [50, 7, 65] },
+      { t: 100, pos: [-10, 30, 10],   look: [8, 3, -5] },
+      { t: 110, pos: [2, 16, -10],    look: [8, 3, 0] },
+      { t: 120, pos: [0, 95, 20],     look: [0, 0, 0] }
+    ];
+
+    // Global State
+    const state = window.state = {
+      timeSec: 5.0,
+      playing: true,
+      cameraMode: "spline", // "spline" or "free"
+      camPos: [0, 45, -110],
+      camYaw: 0.0,
+      camPitch: -0.4,
+      altitudeScale: 1.0, // Zoom In / Out factor (User Request #1)
+      resScale: 1.0,      // Dynamic resolution scaling (User Request #3)
+      stepQuality: 2.0,   // Raymarching steps (1: 36, 2: 58, 3: 90)
+      cap30FPS: false,    // 30 FPS throttle cap (User Request #3)
+      autoPerf: true,     // Auto-downgrade when FPS < 28
+      lowPowerMode: false,
+      stillMode: false,
+      sppCount: 0,
+      sppTarget: 16,
+      lightHeight: 48.0,
+      pulseSpeed: 1.5,
+      metallicScale: 1.2,
+      enableGlow: true,
+      isDragging: false,
+      lastMouseX: 0,
+      lastMouseY: 0,
+      keys: {},
+      audioCtx: null,
+      audioActive: false,
+      oscHum: null,
+      oscClock: null
+    };
+
+    // Spline Interpolation with Altitude Zoom Scaling
+    function evaluateSpline(t, altScale) {
+      const tc = Math.max(0.0, Math.min(120.0, t));
+      let seg = 0;
+      for (let i = 0; i < CAM_SPLINE.length - 1; i++) {
+        if (tc >= CAM_SPLINE[i].t && tc <= CAM_SPLINE[i+1].t) {
+          seg = i; break;
+        }
+      }
+      const p0 = CAM_SPLINE[seg];
+      const p1 = CAM_SPLINE[seg + 1];
+      const span = p1.t - p0.t || 1.0;
+      const u = (tc - p0.t) / span;
+      const su = u * u * (3.0 - 2.0 * u);
+
+      const basePos = [
+        p0.pos[0] + (p1.pos[0] - p0.pos[0]) * su,
+        p0.pos[1] + (p1.pos[1] - p0.pos[1]) * su,
+        p0.pos[2] + (p1.pos[2] - p0.pos[2]) * su
+      ];
+      const lookPos = [
+        p0.look[0] + (p1.look[0] - p0.look[0]) * su,
+        p0.look[1] + (p1.look[1] - p0.look[1]) * su,
+        p0.look[2] + (p1.look[2] - p0.look[2]) * su
+      ];
+
+      // Scale distance between camera and look target to achieve Zoom In / Zoom Out!
+      const toCam = [
+        basePos[0] - lookPos[0],
+        basePos[1] - lookPos[1],
+        basePos[2] - lookPos[2]
+      ];
+      const scaledPos = [
+        lookPos[0] + toCam[0] * altScale,
+        Math.max(3.5, lookPos[1] + toCam[1] * altScale), // Never clip below PCB
+        lookPos[2] + toCam[2] * altScale
+      ];
+
+      return { pos: scaledPos, look: lookPos };
+    }
+
+    // ========================================================================
+    // GLSL SHADER PIPELINE (Raymarching Motherboard Cyber-City)
+    // ========================================================================
+    const VS_SOURCE = `#version 300 es
+    in vec2 a_pos;
+    out vec2 v_uv;
+    void main() {
+      v_uv = a_pos * 0.5 + 0.5;
+      gl_Position = vec4(a_pos, 0.0, 1.0);
+    }`;
+
+    const FS_SOURCE = `#version 300 es
+    precision highp float;
+    in vec2 v_uv;
+    out vec4 outColor;
+
+    uniform vec2 u_resolution;
+    uniform float u_time;
+    uniform vec3 u_camPos;
+    uniform vec3 u_camForward;
+    uniform vec3 u_camRight;
+    uniform vec3 u_camUp;
+    uniform float u_lightHeight;
+    uniform float u_pulseSpeed;
+    uniform float u_metallicScale;
+    uniform float u_enableGlow;
+    uniform float u_stepQuality;
+    uniform vec2 u_jitter;
+
+    // Primitives SDF
+    float sdBox(vec3 p, vec3 b) {
+      vec3 q = abs(p) - b;
+      return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
+    }
+    float sdCylinder(vec3 p, float r, float h) {
+      vec2 d = abs(vec2(length(p.xz), p.y)) - vec2(r, h);
+      return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));
+    }
+
+    // Procedural Motherboard Scene Distance Function
+    vec4 mapScene(vec3 p) {
+      // 1. Sapphire Blue PCB Base (305mm x 244mm -> scale radius 105 x 138)
+      float dPCB = sdBox(p - vec3(0.0, -1.0, 0.0), vec3(105.0, 1.0, 138.0));
+      vec4 res = vec4(dPCB, 1.0, 0.0, 0.0);
+
+      // 2. CPU Socket LGA 1155 (X: -22~22, Z: -92~-48)
+      vec3 pSocket = p - vec3(0.0, 2.0, -70.0);
+      float dSocketBody = sdBox(pSocket, vec3(22.0, 2.0, 22.0));
+      if (dSocketBody < res.x) {
+        res = vec4(dSocketBody, 2.0, 1.0, 0.0); // Stainless bracket
+      }
+      float dSocketCavity = sdBox(pSocket - vec3(0.0, 0.8, 0.0), vec3(16.0, 1.5, 16.0));
+      if (dSocketCavity < res.x && pSocket.y > 0.0) {
+        res = vec4(dSocketCavity, 8.0, 1.0, 0.0); // Gold pins
+      }
+      float dLever = sdCylinder(pSocket.xzy - vec3(22.5, -20.0, 1.8), 1.2, 22.0);
+      if (dLever < res.x) res = vec4(dLever, 2.0, 2.0, 0.0);
+
+      // 3. VRM Power Chokes (R60 Ferrite) & Solid Capacitors
+      for (int i = 0; i < 4; i++) {
+        float cx = -22.0 + float(i) * 14.0;
+        vec3 pChoke = p - vec3(cx, 3.0, -102.0);
+        float dChoke = sdBox(pChoke, vec3(4.8, 3.0, 4.8));
+        if (dChoke < res.x) res = vec4(dChoke, 7.0, 0.0, 0.0);
+
+        vec3 pCap1 = p - vec3(cx - 3.0, 4.5, -114.0);
+        float dCap1 = sdCylinder(pCap1, 3.2, 4.5);
+        if (dCap1 < res.x) res = vec4(dCap1, 6.0, 0.0, 0.0);
+      }
+      for (int j = 0; j < 2; j++) {
+        float cz = -82.0 + float(j) * 16.0;
+        vec3 pChoke2 = p - vec3(-32.0, 3.0, cz);
+        float dChoke2 = sdBox(pChoke2, vec3(4.8, 3.0, 4.8));
+        if (dChoke2 < res.x) res = vec4(dChoke2, 7.0, 0.0, 0.0);
+
+        vec3 pCap2 = p - vec3(-42.0, 4.5, cz);
+        float dCap2 = sdCylinder(pCap2, 3.2, 4.5);
+        if (dCap2 < res.x) res = vec4(dCap2, 6.0, 0.0, 0.0);
+      }
+
+      // 4. DDR3 Memory Slots (4 DIMMs at X: 48~78, Z: -120~5)
+      for (int k = 0; k < 4; k++) {
+        float dx = 48.0 + float(k) * 10.0;
+        vec3 pSlot = p - vec3(dx, 4.0, -58.0);
+        float dSlot = sdBox(pSlot, vec3(2.6, 4.0, 62.0));
+        if (dSlot < res.x) {
+          float isTurquoise = (k == 0 || k == 2) ? 4.0 : 5.0;
+          res = vec4(dSlot, isTurquoise, float(k), 0.0);
+        }
+        vec3 pLatch1 = p - vec3(dx, 5.0, -121.0);
+        vec3 pLatch2 = p - vec3(dx, 5.0, 5.0);
+        float dLatches = min(sdBox(pLatch1, vec3(2.8, 3.0, 2.5)), sdBox(pLatch2, vec3(2.8, 3.0, 2.5)));
+        if (dLatches < res.x) res = vec4(dLatches, 5.0, 9.0, 0.0);
+      }
+
+      // 5. Intel Z77 Chipset Anodized Heatsink (X: 28~72, Z: 36~84)
+      vec3 pSink = p - vec3(50.0, 6.0, 60.0);
+      float dSinkBase = sdBox(pSink, vec3(20.0, 6.0, 22.0));
+      float finCut = abs(fract(pSink.x * 0.28) - 0.5) * 4.0;
+      dSinkBase += finCut * step(0.0, pSink.y);
+      if (dSinkBase < res.x) res = vec4(dSinkBase, 3.0, 0.0, 0.0);
+
+      // 6. PCIe 3.0 x16 & Expansion Slots (X: -75~15, Z: 18~120)
+      vec3 pPCIe1 = p - vec3(-30.0, 3.5, 25.0);
+      float dPCIe1 = sdBox(pPCIe1, vec3(44.0, 3.5, 3.5));
+      if (dPCIe1 < res.x) res = vec4(dPCIe1, 4.0, 1.0, 0.0);
+
+      vec3 pPCIeX1_a = p - vec3(-48.0, 3.5, 42.0);
+      vec3 pPCIeX1_b = p - vec3(-48.0, 3.5, 58.0);
+      float dPCIeX1 = min(sdBox(pPCIeX1_a, vec3(14.0, 3.5, 3.5)), sdBox(pPCIeX1_b, vec3(14.0, 3.5, 3.5)));
+      if (dPCIeX1 < res.x) res = vec4(dPCIeX1, 5.0, 2.0, 0.0);
+
+      vec3 pPCIe2 = p - vec3(-30.0, 3.5, 75.0);
+      float dPCIe2 = sdBox(pPCIe2, vec3(44.0, 3.5, 3.5));
+      if (dPCIe2 < res.x) res = vec4(dPCIe2, 4.0, 3.0, 0.0);
+
+      vec3 pPCI_a = p - vec3(-28.0, 3.5, 96.0);
+      vec3 pPCI_b = p - vec3(-28.0, 3.5, 116.0);
+      float dPCI = min(sdBox(pPCI_a, vec3(46.0, 3.5, 3.5)), sdBox(pPCI_b, vec3(46.0, 3.5, 3.5)));
+      if (dPCI < res.x) res = vec4(dPCI, 5.0, 4.0, 0.0);
+
+      // 7. Onboard mSATA & DualBIOS Chips
+      vec3 pmSATA = p - vec3(8.0, 2.2, -5.0);
+      float dmSATA = sdBox(pmSATA, vec3(8.0, 2.2, 14.0));
+      if (dmSATA < res.x) res = vec4(dmSATA, 5.0, 5.0, 0.0);
+
+      vec3 pBIOS_m = p - vec3(76.0, 1.2, 32.0);
+      vec3 pBIOS_b = p - vec3(76.0, 1.2, 42.0);
+      float dBIOS = min(sdBox(pBIOS_m, vec3(3.0, 1.2, 3.0)), sdBox(pBIOS_b, vec3(3.0, 1.2, 3.0)));
+      if (dBIOS < res.x) res = vec4(dBIOS, 9.0, 1.0, 0.0);
+
+      // 8. CR2032 CMOS Battery (X: 45, Z: 105)
+      vec3 pBat = p - vec3(45.0, 2.0, 105.0);
+      float dBat = sdCylinder(pBat, 10.0, 1.8);
+      if (dBat < res.x) res = vec4(dBat, 2.0, 3.0, 0.0);
+
+      // 9. Rear I/O Metal Towers
+      vec3 pIO1 = p - vec3(-92.0, 8.0, -115.0);
+      vec3 pIO2 = p - vec3(-92.0, 8.0, -65.0);
+      vec3 pIO3 = p - vec3(-92.0, 9.0, -15.0);
+      float dIO = min(sdBox(pIO1, vec3(8.0, 8.0, 12.0)), min(sdBox(pIO2, vec3(8.0, 8.0, 14.0)), sdBox(pIO3, vec3(8.0, 9.0, 14.0))));
+      if (dIO < res.x) res = vec4(dIO, 2.0, 5.0, 0.0);
+
+      // 10. SATA Connectors
+      for (int s = 0; s < 5; s++) {
+        float sz = 75.0 + float(s) * 11.0;
+        vec3 pSata = p - vec3(95.0, 3.5, sz);
+        float dSata = sdBox(pSata, vec3(5.5, 3.5, 4.0));
+        if (dSata < res.x) {
+          float sataCol = (s >= 3) ? 5.0 : 4.0;
+          res = vec4(dSata, sataCol, 8.0, 0.0);
+        }
+      }
+
+      return res;
+    }
+
+    vec3 calcNormal(vec3 p) {
+      float eps = 0.08;
+      vec2 h = vec2(eps, 0.0);
+      return normalize(vec3(
+        mapScene(p + h.xyy).x - mapScene(p - h.xyy).x,
+        mapScene(p + h.yxy).x - mapScene(p - h.yxy).x,
+        mapScene(p + h.yyx).x - mapScene(p - h.yyx).x
+      ));
+    }
+
+    // Material Shading & Signal Pulse Engine
+    vec3 shadeSurface(vec3 p, vec3 rayDir, vec3 normal, vec4 hitData) {
+      float matID = hitData.y;
+      float subID = hitData.z;
+
+      float lightRad = radians(u_lightHeight);
+      vec3 lightDir = normalize(vec3(cos(lightRad) * 0.6, sin(lightRad), cos(lightRad) * 0.8));
+      vec3 viewDir = -rayDir;
+      vec3 halfDir = normalize(lightDir + viewDir);
+
+      float NdotL = max(0.0, dot(normal, lightDir));
+      float NdotH = max(0.0, dot(normal, halfDir));
+      float NdotV = max(0.0, dot(normal, viewDir));
+
+      vec3 albedo = vec3(0.0);
+      float roughness = 0.4;
+      float metallic = 0.1;
+      vec3 pulseGlow = vec3(0.0);
+
+      // Mat 1: Sapphire Blue PCB Substrate
+      if (matID < 1.5) {
+        albedo = vec3(0.04, 0.18, 0.38);
+        roughness = 0.35;
+        metallic = 0.2;
+
+        vec2 pcbUV = p.xz * 0.35;
+        float tracePattern = abs(sin(pcbUV.x * 6.28 + cos(pcbUV.y * 3.14) * 2.0));
+        float isTrace = step(0.72, tracePattern);
+        vec3 copperColor = vec3(0.75, 0.45, 0.18);
+        albedo = mix(albedo, copperColor, isTrace * 0.55);
+
+        float dHole = length(mod(p.xz + 95.0, 190.0) - 95.0);
+        if (dHole < 5.0) albedo = vec3(0.85, 0.72, 0.25);
+
+        // Animated Circuit Signal Pulses
+        if (u_enableGlow > 0.5) {
+          float pulsePhase = u_time * u_pulseSpeed;
+          float ramBus = smoothstep(15.0, 48.0, p.x) * step(-85.0, p.z) * step(p.z, -40.0);
+          float photon1 = exp(-pow(fract((p.x - p.z * 0.5) * 0.15 - pulsePhase * 0.8) * 6.0, 2.0));
+          pulseGlow += vec3(0.2, 0.85, 1.0) * photon1 * ramBus * 1.8;
+
+          float pcieBus = step(-60.0, p.x) * step(p.x, 0.0) * smoothstep(-45.0, 20.0, p.z);
+          float photon2 = exp(-pow(fract((p.z - p.x * 0.3) * 0.12 - pulsePhase * 0.9) * 6.0, 2.0));
+          pulseGlow += vec3(0.1, 0.6, 1.2) * photon2 * pcieBus * 1.6;
+
+          float sataBus = step(60.0, p.x) * step(30.0, p.z) * step(p.z, 95.0);
+          float photon3 = exp(-pow(fract(p.z * 0.18 - pulsePhase * 1.1) * 6.0, 2.0));
+          pulseGlow += vec3(1.0, 0.7, 0.15) * photon3 * sataBus * 1.5;
+        }
+      }
+      else if (matID < 2.5) { // Stainless Steel
+        albedo = vec3(0.82, 0.85, 0.90);
+        roughness = 0.15;
+        metallic = 0.95 * u_metallicScale;
+      }
+      else if (matID < 3.5) { // Anodized Sapphire Blue Heatsink
+        albedo = vec3(0.02, 0.25, 0.65);
+        roughness = 0.22;
+        metallic = 0.90 * u_metallicScale;
+        if (p.y > 11.5) albedo = vec3(0.92, 0.94, 0.98);
+      }
+      else if (matID < 4.5) { // Turquoise Blue Plastic
+        albedo = vec3(0.08, 0.52, 0.68);
+        roughness = 0.32;
+        metallic = 0.08;
+      }
+      else if (matID < 5.5) { // Off-White Plastic
+        albedo = vec3(0.88, 0.88, 0.86);
+        roughness = 0.40;
+        metallic = 0.05;
+      }
+      else if (matID < 6.5) { // Solid Aluminum Capacitors
+        albedo = vec3(0.85, 0.88, 0.92);
+        roughness = 0.18;
+        metallic = 0.92 * u_metallicScale;
+        if (p.y > 8.7 && normal.y > 0.8) {
+          albedo = (p.z > -105.0) ? vec3(0.06, 0.28, 0.65) : vec3(0.85, 0.88, 0.92);
+        }
+      }
+      else if (matID < 7.5) { // Ferrite Chokes (R60)
+        albedo = vec3(0.14, 0.15, 0.17);
+        roughness = 0.55;
+        metallic = 0.45;
+        if (p.y > 5.8 && abs(p.x) < 2.0) albedo = vec3(0.85);
+      }
+      else if (matID < 8.5) { // 24K Gold Contact Pins
+        albedo = vec3(0.95, 0.78, 0.28);
+        roughness = 0.20;
+        metallic = 0.95 * u_metallicScale;
+      }
+      else { // Black Molded Epoxy IC Chips
+        albedo = vec3(0.08, 0.08, 0.09);
+        roughness = 0.48;
+        metallic = 0.15;
+      }
+
+      float specPower = mix(128.0, 8.0, roughness);
+      float spec = pow(NdotH, specPower) * (metallic * 0.8 + 0.2);
+
+      vec3 ambient = vec3(0.03, 0.06, 0.12) * albedo;
+      vec3 diffuse = albedo * NdotL * 1.1;
+      vec3 specular = vec3(1.0, 0.98, 0.92) * spec * (0.8 + 0.2 * NdotL);
+
+      return ambient + diffuse + specular + pulseGlow;
+    }
+
+    void main() {
+      vec2 uv = (gl_FragCoord.xy + u_jitter - 0.5 * u_resolution) / u_resolution.y;
+      vec3 rayDir = normalize(u_camForward + uv.x * u_camRight + uv.y * u_camUp);
+
+      vec3 bgCol = mix(vec3(0.04, 0.08, 0.16), vec3(0.015, 0.03, 0.06), length(uv) * 0.85);
+
+      // Adaptive Raymarching Steps (Integrated Graphics Scalability)
+      int maxSteps = (u_stepQuality > 2.5) ? 90 : ((u_stepQuality > 1.5) ? 58 : 36);
+      float stepRelax = (u_stepQuality > 2.5) ? 0.82 : ((u_stepQuality > 1.5) ? 0.88 : 0.95);
+
+      float t = 0.5;
+      float tMax = 380.0;
+      bool hit = false;
+      vec4 hitData = vec4(0.0);
+
+      for (int i = 0; i < 90; i++) {
+        if (i >= maxSteps || t > tMax) break;
+        vec3 p = u_camPos + rayDir * t;
+        vec4 d = mapScene(p);
+        if (d.x < 0.08) {
+          hit = true;
+          hitData = d;
+          break;
+        }
+        t += d.x * stepRelax + 0.02;
+      }
+
+      if (!hit) {
+        outColor = vec4(bgCol, 1.0);
+        return;
+      }
+
+      vec3 hitPos = u_camPos + rayDir * t;
+      vec3 normal = calcNormal(hitPos);
+      vec3 color = shadeSurface(hitPos, rayDir, normal, hitData);
+
+      float fog = 1.0 - exp(-t * 0.0035);
+      color = mix(color, bgCol, clamp(fog, 0.0, 0.85));
+
+      // ACES Film Tone Mapping & Gamma Correction
+      color = (color * (2.51 * color + 0.03)) / (color * (2.43 * color + 0.59) + 0.14);
+      color = pow(color, vec3(1.0 / 2.2));
+
+      outColor = vec4(color, 1.0);
+    }
+    `;
+
+    // ========================================================================
+    // ENGINE INITIALIZATION & HUD BINDINGS
+    // ========================================================================
+    window.addEventListener("DOMContentLoaded", () => {
+      const canvas = document.getElementById("glCanvas");
+      const gl = canvas.getContext("webgl2", { antialias: true, preserveDrawingBuffer: true });
+      if (!gl) {
+        alert("您的瀏覽器不支援 WebGL2，請啟用硬體加速。");
+        return;
+      }
+
+      // Compile Shaders
+      function createShader(type, src) {
+        const s = gl.createShader(type);
+        gl.shaderSource(s, src);
+        gl.compileShader(s);
+        if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+          console.error(gl.getShaderInfoLog(s));
+          return null;
+        }
+        return s;
+      }
+      const vs = createShader(gl.VERTEX_SHADER, VS_SOURCE);
+      const fs = createShader(gl.FRAGMENT_SHADER, FS_SOURCE);
+      const prog = gl.createProgram();
+      gl.attachShader(prog, vs);
+      gl.attachShader(prog, fs);
+      gl.linkProgram(prog);
+
+      // Quad Buffer
+      const buf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+      const aPos = gl.getAttribLocation(prog, "a_pos");
+      gl.enableVertexAttribArray(aPos);
+      gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+      // Uniform Locations
+      const uLoc = {
+        res: gl.getUniformLocation(prog, "u_resolution"),
+        time: gl.getUniformLocation(prog, "u_time"),
+        camPos: gl.getUniformLocation(prog, "u_camPos"),
+        camForward: gl.getUniformLocation(prog, "u_camForward"),
+        camRight: gl.getUniformLocation(prog, "u_camRight"),
+        camUp: gl.getUniformLocation(prog, "u_camUp"),
+        lightHeight: gl.getUniformLocation(prog, "u_lightHeight"),
+        pulseSpeed: gl.getUniformLocation(prog, "u_pulseSpeed"),
+        metallicScale: gl.getUniformLocation(prog, "u_metallicScale"),
+        enableGlow: gl.getUniformLocation(prog, "u_enableGlow"),
+        stepQuality: gl.getUniformLocation(prog, "u_stepQuality"),
+        jitter: gl.getUniformLocation(prog, "u_jitter")
+      };
+
+      // Vector Helpers
+      function normalize(v) {
+        const len = Math.hypot(v[0], v[1], v[2]) || 1;
+        return [v[0]/len, v[1]/len, v[2]/len];
+      }
+      function cross(a, b) {
+        return [
+          a[1]*b[2] - a[2]*b[1],
+          a[2]*b[0] - a[0]*b[2],
+          a[0]*b[1] - a[1]*b[0]
+        ];
+      }
+      function halton(index, base) {
+        let f = 1.0, result = 0.0, i = index;
+        while (i > 0) {
+          f /= base;
+          result += f * (i % base);
+          i = Math.floor(i / base);
+        }
+        return result - 0.5;
+      }
+
+      // 3D Point to 2D Screen Projection
+      function project3DtoScreen(p3, camPos, fw, rt, up, width, height) {
+        const toPt = [p3[0] - camPos[0], p3[1] - camPos[1], p3[2] - camPos[2]];
+        const zDepth = toPt[0]*fw[0] + toPt[1]*fw[1] + toPt[2]*fw[2];
+        if (zDepth <= 1.0) return null;
+
+        const xVal = toPt[0]*rt[0] + toPt[1]*rt[1] + toPt[2]*rt[2];
+        const yVal = toPt[0]*up[0] + toPt[1]*up[1] + toPt[2]*up[2];
+
+        const normX = xVal / zDepth;
+        const normY = yVal / zDepth;
+
+        const screenX = (normX * height) + 0.5 * width;
+        const screenY = 0.5 * height - (normY * height);
+
+        return { x: screenX, y: screenY, z: zDepth };
+      }
+
+      // Update Floating Bubble Callout Content
+      let currentActiveStation = 1;
+      function updateBubbleContent(station) {
+        currentActiveStation = station.id;
+        document.getElementById("bubbleTag").textContent = station.tag;
+        document.getElementById("bubbleType").textContent = station.type;
+        document.getElementById("bubbleTitle").textContent = station.title;
+        document.getElementById("bubbleDesc").textContent = station.desc;
+        document.getElementById("bubbleStatusText").textContent = station.status;
+
+        const specContainer = document.getElementById("bubbleSpecs");
+        specContainer.innerHTML = station.specs.map(s => 
+          `<div><span class="text-slate-400">${s.k}：</span><span class="text-slate-200 font-medium mono">${s.v}</span></div>`
+        ).join("");
+
+        // Sync Station Nav Pills
+        document.querySelectorAll(".station-btn").forEach((btn, i) => {
+          if (i + 1 === station.id) {
+            btn.classList.add("cyber-glass-active", "text-white");
+            btn.querySelector("span").classList.replace("bg-slate-500", "bg-cyan-400");
+          } else {
+            btn.classList.remove("cyber-glass-active", "text-white");
+            btn.querySelector("span").classList.replace("bg-cyan-400", "bg-slate-500");
+          }
+        });
+      }
+
+      // Reset Still SPP Accumulation
+      function resetStillAccumulation() {
+        if (state.stillMode) {
+          state.sppCount = 0;
+        }
+      }
+
+      // Altitude Zoom Helper Functions (User Request #1)
+      function setAltitudeScale(scaleVal) {
+        state.altitudeScale = Math.max(0.35, Math.min(2.5, scaleVal));
+        document.getElementById("sliderAltitudeScale").value = Math.round(state.altitudeScale * 100);
+        document.getElementById("valAltitudeScale").textContent = `${state.altitudeScale.toFixed(2)}x`;
+        document.getElementById("quickZoomLabel").textContent = `${state.altitudeScale.toFixed(1)}x`;
+        const estAlt = Math.round(45 * state.altitudeScale);
+        document.getElementById("telemetryZoom").textContent = `${state.altitudeScale.toFixed(2)}x (${estAlt}mm)`;
+        resetStillAccumulation();
+      }
+
+      // Mouse Wheel Zoom Binding (Zoom In / Zoom Out)
+      window.addEventListener("wheel", (e) => {
+        if (e.target.closest("#tuningPanel, #shaderModal, #helpModal")) return;
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? -0.08 : 0.08;
+        setAltitudeScale(state.altitudeScale + delta);
+      }, { passive: false });
+
+      document.getElementById("sliderAltitudeScale").addEventListener("input", (e) => {
+        setAltitudeScale(parseFloat(e.target.value) * 0.01);
+      });
+      document.getElementById("btnZoomIn").addEventListener("click", () => setAltitudeScale(state.altitudeScale - 0.15));
+      document.getElementById("btnZoomOut").addEventListener("click", () => setAltitudeScale(state.altitudeScale + 0.15));
+      document.getElementById("btnQuickZoomIn").addEventListener("click", () => setAltitudeScale(state.altitudeScale - 0.15));
+      document.getElementById("btnQuickZoomOut").addEventListener("click", () => setAltitudeScale(state.altitudeScale + 0.15));
+
+      // 2D PCB Radar Drawing
+      const radarCanvas = document.getElementById("pcbRadarCanvas");
+      const rCtx = radarCanvas.getContext("2d");
+      function drawRadar(camPos, fw) {
+        const w = radarCanvas.width;
+        const h = radarCanvas.height;
+        rCtx.clearRect(0, 0, w, h);
+
+        rCtx.fillStyle = "#0c284e";
+        rCtx.strokeStyle = "#38bdf8";
+        rCtx.lineWidth = 1.5;
+        rCtx.fillRect(6, 6, w - 12, h - 12);
+        rCtx.strokeRect(6, 6, w - 12, h - 12);
+
+        const toRx = x => ((x + 105.0) / 210.0) * (w - 16) + 8;
+        const toRy = z => ((z + 138.0) / 276.0) * (h - 16) + 8;
+
+        // CPU Socket
+        rCtx.fillStyle = "#cbd5e1";
+        rCtx.fillRect(toRx(-22), toRy(-92), toRx(22) - toRx(-22), toRy(-48) - toRy(-92));
+
+        // DDR3 Slots
+        for (let k = 0; k < 4; k++) {
+          const sx = 48 + k * 10;
+          rCtx.fillStyle = (k % 2 === 0) ? "#14b8a6" : "#f1f5f9";
+          rCtx.fillRect(toRx(sx - 2), toRy(-120), toRx(sx + 2) - toRx(sx - 2), toRy(5) - toRy(-120));
+        }
+
+        // Z77 Heatsink
+        rCtx.fillStyle = "#0284c7";
+        rCtx.fillRect(toRx(28), toRy(36), toRx(72) - toRx(28), toRy(84) - toRy(36));
+
+        // PCIe Slots
+        rCtx.fillStyle = "#06b6d4";
+        rCtx.fillRect(toRx(-75), toRy(22), toRx(15) - toRx(-75), 4);
+        rCtx.fillStyle = "#cbd5e1";
+        rCtx.fillRect(toRx(-65), toRy(40), toRx(-35) - toRx(-65), 3);
+        rCtx.fillRect(toRx(-65), toRy(56), toRx(-35) - toRx(-65), 3);
+        rCtx.fillStyle = "#06b6d4";
+        rCtx.fillRect(toRx(-75), toRy(73), toRx(15) - toRx(-75), 4);
+        rCtx.fillStyle = "#e2e8f0";
+        rCtx.fillRect(toRx(-75), toRy(94), toRx(18) - toRx(-75), 4);
+        rCtx.fillRect(toRx(-75), toRy(114), toRx(18) - toRx(-75), 4);
+
+        // Drone Camera Marker & FOV Cone
+        const cx = toRx(camPos[0]);
+        const cy = toRy(camPos[2]);
+
+        rCtx.fillStyle = "rgba(56, 189, 248, 0.25)";
+        rCtx.beginPath();
+        rCtx.moveTo(cx, cy);
+        const ang = Math.atan2(fw[2], fw[0]);
+        rCtx.arc(cx, cy, 26, ang - 0.45, ang + 0.45);
+        rCtx.closePath();
+        rCtx.fill();
+
+        rCtx.fillStyle = "#facc15";
+        rCtx.beginPath();
+        rCtx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+        rCtx.fill();
+      }
+
+      // Radar Click Teleport
+      radarCanvas.addEventListener("click", (e) => {
+        const rect = radarCanvas.getBoundingClientRect();
+        const rx = e.clientX - rect.left;
+        const ry = e.clientY - rect.top;
+        const w = radarCanvas.width;
+        const h = radarCanvas.height;
+
+        const worldX = ((rx - 8) / (w - 16)) * 210.0 - 105.0;
+        const worldZ = ((ry - 8) / (h - 16)) * 276.0 - 138.0;
+
+        let nearest = STATIONS[0];
+        let minDist = 999999;
+        for (const s of STATIONS) {
+          const dist = Math.hypot(s.targetPos[0] - worldX, s.targetPos[2] - worldZ);
+          if (dist < minDist) { minDist = dist; nearest = s; }
+        }
+        state.timeSec = nearest.time;
+        state.cameraMode = "spline";
+        updateBubbleContent(nearest);
+        resetStillAccumulation();
+      });
+
+      // Sound Engine via Web Audio API
+      function initAudio() {
+        if (state.audioCtx) return;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        state.audioCtx = new AudioContext();
+
+        // 1. Power Phase Ambient Hum (60Hz clean ripple)
+        state.oscHum = state.audioCtx.createOscillator();
+        const gainHum = state.audioCtx.createGain();
+        state.oscHum.type = "sine";
+        state.oscHum.frequency.setValueAtTime(60.0, state.audioCtx.currentTime);
+        gainHum.gain.setValueAtTime(0.04, state.audioCtx.currentTime);
+        state.oscHum.connect(gainHum);
+        gainHum.connect(state.audioCtx.destination);
+        state.oscHum.start();
+
+        // 2. High-speed Clock Oscillator (1600Hz harmonic)
+        state.oscClock = state.audioCtx.createOscillator();
+        const gainClock = state.audioCtx.createGain();
+        state.oscClock.type = "triangle";
+        state.oscClock.frequency.setValueAtTime(1600.0, state.audioCtx.currentTime);
+        gainClock.gain.setValueAtTime(0.005, state.audioCtx.currentTime);
+        state.oscClock.connect(gainClock);
+        gainClock.connect(state.audioCtx.destination);
+        state.oscClock.start();
+
+        state.audioActive = true;
+        document.getElementById("audioIconOn").classList.remove("hidden");
+        document.getElementById("audioIconOff").classList.add("hidden");
+      }
+
+      function toggleAudio() {
+        if (!state.audioCtx) {
+          initAudio();
+        } else if (state.audioCtx.state === "running") {
+          state.audioCtx.suspend();
+          state.audioActive = false;
+          document.getElementById("audioIconOn").classList.add("hidden");
+          document.getElementById("audioIconOff").classList.remove("hidden");
+        } else {
+          state.audioCtx.resume();
+          state.audioActive = true;
+          document.getElementById("audioIconOn").classList.remove("hidden");
+          document.getElementById("audioIconOff").classList.add("hidden");
+        }
+      }
+
+      function playJumpChirp() {
+        if (!state.audioCtx || !state.audioActive) return;
+        const now = state.audioCtx.currentTime;
+        const osc = state.audioCtx.createOscillator();
+        const gain = state.audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(880, now);
+        osc.frequency.exponentialRampToValueAtTime(1760, now + 0.12);
+        gain.gain.setValueAtTime(0.08, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        osc.connect(gain);
+        gain.connect(state.audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.15);
+      }
+
+      // UI Controls Binding
+      document.getElementById("btnAudioToggle").addEventListener("click", toggleAudio);
+      document.getElementById("btnPlayPause").addEventListener("click", () => {
+        state.playing = !state.playing;
+        document.getElementById("playIcon").classList.toggle("hidden", state.playing);
+        document.getElementById("pauseIcon").classList.toggle("hidden", !state.playing);
+      });
+
+      document.getElementById("sliderTimeline").addEventListener("input", (e) => {
+        state.timeSec = parseFloat(e.target.value);
+        state.cameraMode = "spline";
+        resetStillAccumulation();
+      });
+
+      document.querySelectorAll(".station-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const sId = parseInt(btn.getAttribute("data-station"));
+          const targetSt = STATIONS.find(s => s.id === sId);
+          if (targetSt) {
+            state.timeSec = targetSt.time;
+            state.cameraMode = "spline";
+            updateBubbleContent(targetSt);
+            playJumpChirp();
+            resetStillAccumulation();
+          }
+        });
+      });
+
+      document.getElementById("btnNextZone").addEventListener("click", () => {
+        let nextId = currentActiveStation + 1;
+        if (nextId > STATIONS.length) nextId = 1;
+        const nextSt = STATIONS.find(s => s.id === nextId);
+        if (nextSt) {
+          state.timeSec = nextSt.time;
+          state.cameraMode = "spline";
+          updateBubbleContent(nextSt);
+          playJumpChirp();
+          resetStillAccumulation();
+        }
+      });
+
+      document.getElementById("btnToggleHUD").addEventListener("click", () => {
+        const hud = document.getElementById("hudContainer");
+        const bubble = document.getElementById("floatingBubble");
+        const reticle = document.getElementById("targetReticle");
+        const isHidden = hud.style.display === "none";
+        hud.style.display = isHidden ? "flex" : "none";
+        bubble.style.display = isHidden ? "block" : "none";
+        reticle.style.display = isHidden ? "block" : "none";
+      });
+
+      document.getElementById("btnFullscreen").addEventListener("click", () => {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+      });
+
+      // Scalability: Resolution Scale Slider (User Request #3)
+      document.getElementById("sliderResScale").addEventListener("input", (e) => {
+        state.resScale = parseFloat(e.target.value) * 0.01;
+        document.getElementById("valResScale").textContent = `${state.resScale.toFixed(2)}x`;
+        resize();
+        resetStillAccumulation();
+      });
+
+      // Scalability: Step Quality Select (User Request #3)
+      document.getElementById("selectStepQuality").addEventListener("change", (e) => {
+        state.stepQuality = parseFloat(e.target.value);
+        const label = state.stepQuality === 1 ? "節能 (36 步)" : (state.stepQuality === 3 ? "極致 (90 步)" : "標準 (58 步)");
+        document.getElementById("valStepQuality").textContent = label;
+        resetStillAccumulation();
+      });
+
+      // Scalability: 30 FPS Cap Checkbox & Low Power Mode (User Request #3)
+      document.getElementById("checkCap30").addEventListener("change", (e) => {
+        state.cap30FPS = e.target.checked;
+      });
+      document.getElementById("btnLowPowerMode").addEventListener("click", () => {
+        state.lowPowerMode = !state.lowPowerMode;
+        if (state.lowPowerMode) {
+          state.cap30FPS = true;
+          state.resScale = 0.75;
+          state.stepQuality = 1.0;
+          document.getElementById("checkCap30").checked = true;
+          document.getElementById("sliderResScale").value = 75;
+          document.getElementById("valResScale").textContent = "0.75x";
+          document.getElementById("selectStepQuality").value = "1";
+          document.getElementById("valStepQuality").textContent = "節能 (36 步)";
+          document.getElementById("btnLowPowerMode").classList.add("cyber-glass-active", "text-emerald-300");
+        } else {
+          state.cap30FPS = false;
+          state.resScale = 1.0;
+          state.stepQuality = 2.0;
+          document.getElementById("checkCap30").checked = false;
+          document.getElementById("sliderResScale").value = 100;
+          document.getElementById("valResScale").textContent = "1.00x";
+          document.getElementById("selectStepQuality").value = "2";
+          document.getElementById("valStepQuality").textContent = "標準 (58 步)";
+          document.getElementById("btnLowPowerMode").classList.remove("cyber-glass-active", "text-emerald-300");
+        }
+        resize();
+      });
+
+      document.getElementById("checkAutoPerf").addEventListener("change", (e) => {
+        state.autoPerf = e.target.checked;
+      });
+
+      // SPP=16 Super-Sampling Toggle
+      document.getElementById("btnStillSPP").addEventListener("click", () => {
+        state.stillMode = !state.stillMode;
+        state.sppCount = 0;
+        document.getElementById("btnStillSPP").classList.toggle("cyber-glass-active", state.stillMode);
+      });
+
+      // Lighting & Pulse Sliders
+      document.getElementById("sliderLightHeight").addEventListener("input", (e) => {
+        state.lightHeight = parseFloat(e.target.value);
+        document.getElementById("valLightHeight").textContent = `${state.lightHeight}°`;
+        resetStillAccumulation();
+      });
+      document.getElementById("sliderPulseSpeed").addEventListener("input", (e) => {
+        state.pulseSpeed = parseFloat(e.target.value) * 0.1;
+        document.getElementById("valPulseSpeed").textContent = `${(state.pulseSpeed).toFixed(1)}x`;
+      });
+      document.getElementById("checkGlow").addEventListener("change", (e) => {
+        state.enableGlow = e.target.checked;
+        resetStillAccumulation();
+      });
+
+      document.getElementById("btnResetTuning").addEventListener("click", () => {
+        setAltitudeScale(1.0);
+        state.resScale = 1.0;
+        state.stepQuality = 2.0;
+        state.cap30FPS = false;
+        state.lightHeight = 48.0;
+        state.pulseSpeed = 1.5;
+        state.enableGlow = true;
+
+        document.getElementById("sliderResScale").value = 100;
+        document.getElementById("valResScale").textContent = "1.00x";
+        document.getElementById("selectStepQuality").value = "2";
+        document.getElementById("valStepQuality").textContent = "標準 (58 步)";
+        document.getElementById("checkCap30").checked = false;
+        document.getElementById("sliderLightHeight").value = 48;
+        document.getElementById("valLightHeight").textContent = "48°";
+        document.getElementById("sliderPulseSpeed").value = 15;
+        document.getElementById("valPulseSpeed").textContent = "1.5x";
+        document.getElementById("checkGlow").checked = true;
+        resize();
+        resetStillAccumulation();
+      });
+
+      // Copy URL Query
+      document.getElementById("btnCopyStateUrl").addEventListener("click", () => {
+        const url = new URL(window.location.href);
+        url.searchParams.set("t", state.timeSec.toFixed(1));
+        url.searchParams.set("zoom", state.altitudeScale.toFixed(2));
+        url.searchParams.set("res", state.resScale.toFixed(2));
+        url.searchParams.set("steps", state.stepQuality.toString());
+        url.searchParams.set("fps_cap", state.cap30FPS ? "30" : "0");
+        navigator.clipboard.writeText(url.toString()).then(() => {
+          alert("已複製目前視角與調參網址至剪貼簿！");
+        });
+      });
+
+      // Parse Initial URL Parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.has("t")) state.timeSec = parseFloat(urlParams.get("t"));
+      if (urlParams.has("zoom")) setAltitudeScale(parseFloat(urlParams.get("zoom")));
+      if (urlParams.has("res")) {
+        state.resScale = parseFloat(urlParams.get("res"));
+        document.getElementById("sliderResScale").value = Math.round(state.resScale * 100);
+        document.getElementById("valResScale").textContent = `${state.resScale.toFixed(2)}x`;
+      }
+      if (urlParams.has("fps_cap") && urlParams.get("fps_cap") === "30") {
+        state.cap30FPS = true;
+        document.getElementById("checkCap30").checked = true;
+      }
+      if (urlParams.has("steps")) {
+        state.stepQuality = parseFloat(urlParams.get("steps"));
+        document.getElementById("selectStepQuality").value = state.stepQuality.toString();
+      }
+
+      // Modals Logic
+      const SHADER_DATA = {
+        v3_geo: `// 3D Procedural Motherboard SDF Geometry
+vec4 mapScene(vec3 p) {
+  // Sapphire Blue PCB Substrate
+  float dPCB = sdBox(p - vec3(0.0, -1.0, 0.0), vec3(105.0, 1.0, 138.0));
+  // LGA 1155 Socket Body & Gold Pin Cavity
+  vec3 pSocket = p - vec3(0.0, 2.0, -70.0);
+  float dSocket = sdBox(pSocket, vec3(22.0, 2.0, 22.0));
+  // VRM Chokes & Solid Caps
+  // 4x DDR3 Slots & Retention Latches
+  // Z77 Heatsink with Extruded Fins
+  // PCIe 3.0 x16 & PCI Slots
+  return vec4(d, matID, subID, glowMask);
+}`,
+        v3_shade: `// Material Classification & Micro-relief Shading
+vec3 shadeSurface(vec3 p, vec3 rayDir, vec3 normal, vec4 hitData) {
+  // Copper Bus Traces & Ground Solder Rings
+  vec2 pcbUV = p.xz * 0.35;
+  float isTrace = step(0.72, abs(sin(pcbUV.x * 6.28 + cos(pcbUV.y * 3.14) * 2.0)));
+  // Specular Reflection (Cook-Torrance Model)
+  float spec = pow(NdotH, mix(128.0, 8.0, roughness)) * metallic;
+  return ambient + diffuse + specular + pulseGlow;
+}`,
+        v3_bus: `// Real-Time Animated Circuit Photon Pulses
+float pulsePhase = u_time * u_pulseSpeed;
+// CPU to DDR3 RAM Bus stream
+float photon1 = exp(-pow(fract((p.x - p.z * 0.5) * 0.15 - pulsePhase * 0.8) * 6.0, 2.0));
+pulseGlow += vec3(0.2, 0.85, 1.0) * photon1 * ramBus * 1.8;
+// CPU to PCIe x16 Bus stream
+float photon2 = exp(-pow(fract((p.z - p.x * 0.3) * 0.12 - pulsePhase * 0.9) * 6.0, 2.0));
+pulseGlow += vec3(0.1, 0.6, 1.2) * photon2 * pcieBus * 1.6;`,
+        v1_post: `// ACES Film Tone Mapping & Gamma Correction
+color = (color * (2.51 * color + 0.03)) / (color * (2.43 * color + 0.59) + 0.14);
+color = pow(color, vec3(1.0 / 2.2));
+outColor = vec4(color, 1.0);`
+      };
+
+      document.getElementById("btnOpenShaderModal").addEventListener("click", () => {
+        document.getElementById("shaderCodeBlock").textContent = SHADER_DATA["v3_geo"];
+        document.getElementById("shaderModal").classList.remove("hidden");
+        document.getElementById("shaderModal").classList.add("flex");
+      });
+      document.getElementById("btnCloseShaderModal").addEventListener("click", () => {
+        document.getElementById("shaderModal").classList.add("hidden");
+        document.getElementById("shaderModal").classList.remove("flex");
+      });
+      document.querySelectorAll(".shader-tab").forEach(tab => {
+        tab.addEventListener("click", () => {
+          document.querySelectorAll(".shader-tab").forEach(t => {
+            t.classList.remove("active", "bg-cyan-500/20", "text-cyan-300", "border", "border-cyan-500/40");
+            t.classList.add("text-slate-400");
+          });
+          tab.classList.add("active", "bg-cyan-500/20", "text-cyan-300", "border", "border-cyan-500/40");
+          tab.classList.remove("text-slate-400");
+          const tabKey = tab.getAttribute("data-tab");
+          document.getElementById("shaderCodeBlock").textContent = SHADER_DATA[tabKey] || "// No code";
+        });
+      });
+
+      document.getElementById("btnOpenHelpModal").addEventListener("click", () => {
+        document.getElementById("helpModal").classList.remove("hidden");
+        document.getElementById("helpModal").classList.add("flex");
+      });
+      document.getElementById("btnCloseHelpModal").addEventListener("click", () => {
+        document.getElementById("helpModal").classList.add("hidden");
+        document.getElementById("helpModal").classList.remove("flex");
+      });
+
+      // Mouse Drag Camera Interaction
+      window.addEventListener("mousedown", (e) => {
+        if (e.target.closest("#hudContainer, #floatingBubble, #shaderModal, #helpModal")) return;
+        state.isDragging = true;
+        state.lastMouseX = e.clientX;
+        state.lastMouseY = e.clientY;
+      });
+      window.addEventListener("mousemove", (e) => {
+        if (!state.isDragging) return;
+        const dx = e.clientX - state.lastMouseX;
+        const dy = e.clientY - state.lastMouseY;
+        state.lastMouseX = e.clientX;
+        state.lastMouseY = e.clientY;
+
+        state.camYaw -= dx * 0.005;
+        state.camPitch = Math.max(-1.45, Math.min(1.45, state.camPitch - dy * 0.005));
+        state.cameraMode = "free";
+        document.getElementById("modeBadge").textContent = "3D 自由探索";
+        document.getElementById("modeBadge").classList.replace("text-cyan-300", "text-amber-300");
+        resetStillAccumulation();
+      });
+      window.addEventListener("mouseup", () => state.isDragging = false);
+
+      // Keyboard Controls
+      window.addEventListener("keydown", (e) => {
+        state.keys[e.code] = true;
+        if (e.code === "Space") {
+          e.preventDefault();
+          document.getElementById("btnPlayPause").click();
+        }
+        if (e.code === "KeyM") toggleAudio();
+        if (e.code === "KeyH") document.getElementById("btnToggleHUD").click();
+        if (e.code === "KeyF") document.getElementById("btnFullscreen").click();
+        if (e.key === "?" || e.key === "/") document.getElementById("btnOpenHelpModal").click();
+        if (e.key >= "1" && e.key <= "6") {
+          const btn = document.querySelector(`.station-btn[data-station="${e.key}"]`);
+          if (btn) btn.click();
+        }
+        if (e.code === "KeyQ") state.camPos[1] += 2.5;
+        if (e.code === "KeyE") state.camPos[1] = Math.max(3.5, state.camPos[1] - 2.5);
+      });
+      window.addEventListener("keyup", (e) => {
+        state.keys[e.code] = false;
+      });
+
+      // Resize with Resolution Scale (Integrated Graphics Scalability)
+      function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        canvas.width = Math.round(window.innerWidth * dpr * state.resScale);
+        canvas.height = Math.round(window.innerHeight * dpr * state.resScale);
+        gl.viewport(0, 0, canvas.width, canvas.height);
+      }
+      window.addEventListener("resize", resize);
+      resize();
+
+      // Main Render Loop with Adaptive 30/60 FPS Throttling
+      let lastTime = performance.now();
+      let lastRenderTime = lastTime;
+      let lastFpsCheck = lastTime;
+      let frameCount = 0;
+      let lowFpsStreak = 0;
+
+      function render(now) {
+        // 30 FPS Cap Check (User Request #3)
+        if (state.cap30FPS) {
+          const elapsed = now - lastRenderTime;
+          if (elapsed < 1000 / 32) {
+            requestAnimationFrame(render);
+            return;
+          }
+        }
+        lastRenderTime = now;
+
+        const dt = Math.min(0.1, (now - lastTime) * 0.001);
+        lastTime = now;
+
+        // FPS Calculation & Auto Performance Downgrade (User Request #3)
+        frameCount++;
+        if (now - lastFpsCheck > 1000) {
+          const fps = Math.round((frameCount * 1000) / (now - lastFpsCheck));
+          document.getElementById("telemetryPerf").textContent = `${fps} FPS (${state.resScale.toFixed(2)}x)`;
+          
+          if (state.autoPerf && !state.cap30FPS && fps < 26) {
+            lowFpsStreak++;
+            if (lowFpsStreak >= 2 && state.resScale > 0.6) {
+              state.resScale = Math.max(0.6, state.resScale - 0.15);
+              state.stepQuality = 1.0;
+              document.getElementById("sliderResScale").value = Math.round(state.resScale * 100);
+              document.getElementById("valResScale").textContent = `${state.resScale.toFixed(2)}x`;
+              document.getElementById("selectStepQuality").value = "1";
+              document.getElementById("valStepQuality").textContent = "節能 (36 步)";
+              resize();
+              lowFpsStreak = 0;
+            }
+          } else {
+            lowFpsStreak = 0;
+          }
+
+          frameCount = 0;
+          lastFpsCheck = now;
+        }
+
+        // Timeline Progression
+        if (state.playing && state.cameraMode === "spline") {
+          state.timeSec += dt;
+          if (state.timeSec > 120.0) state.timeSec = 0.0;
+          document.getElementById("sliderTimeline").value = state.timeSec;
+        }
+
+        // Format MM:SS
+        const minStr = Math.floor(state.timeSec / 60).toString().padStart(2, "0");
+        const secStr = Math.floor(state.timeSec % 60).toString().padStart(2, "0");
+        document.getElementById("timeDisplay").textContent = `${minStr}:${secStr}`;
+
+        // Compute Camera Vectors with Altitude Zoom (User Request #1)
+        let forward, right, up;
+        if (state.cameraMode === "spline") {
+          const evalCam = evaluateSpline(state.timeSec, state.altitudeScale);
+          state.camPos = evalCam.pos;
+          forward = normalize([
+            evalCam.look[0] - evalCam.pos[0],
+            evalCam.look[1] - evalCam.pos[1],
+            evalCam.look[2] - evalCam.pos[2]
+          ]);
+          right = normalize(cross(forward, [0, 1, 0]));
+          up = normalize(cross(right, forward));
+        } else {
+          const moveSpeed = (state.keys["ShiftLeft"] || state.keys["ShiftRight"]) ? 75.0 : 35.0;
+          forward = [
+            Math.sin(state.camYaw) * Math.cos(state.camPitch),
+            Math.sin(state.camPitch),
+            Math.cos(state.camYaw) * Math.cos(state.camPitch)
+          ];
+          right = normalize(cross(forward, [0, 1, 0]));
+          up = normalize(cross(right, forward));
+
+          if (state.keys["KeyW"]) {
+            state.camPos[0] += forward[0] * moveSpeed * dt;
+            state.camPos[1] += forward[1] * moveSpeed * dt;
+            state.camPos[2] += forward[2] * moveSpeed * dt;
+          }
+          if (state.keys["KeyS"]) {
+            state.camPos[0] -= forward[0] * moveSpeed * dt;
+            state.camPos[1] -= forward[1] * moveSpeed * dt;
+            state.camPos[2] -= forward[2] * moveSpeed * dt;
+          }
+          if (state.keys["KeyA"]) {
+            state.camPos[0] -= right[0] * moveSpeed * dt;
+            state.camPos[2] -= right[2] * moveSpeed * dt;
+          }
+          if (state.keys["KeyD"]) {
+            state.camPos[0] += right[0] * moveSpeed * dt;
+            state.camPos[2] += right[2] * moveSpeed * dt;
+          }
+        }
+
+        // SPP Jitter
+        let jX = 0.0, jY = 0.0;
+        let shouldDraw = true;
+        if (state.stillMode) {
+          if (state.sppCount < state.sppTarget) {
+            state.sppCount++;
+            jX = halton(state.sppCount, 2);
+            jY = halton(state.sppCount, 3);
+            if (state.sppCount === 1) {
+              gl.disable(gl.BLEND);
+            } else {
+              gl.enable(gl.BLEND);
+              gl.blendFunc(gl.CONSTANT_ALPHA, gl.ONE_MINUS_CONSTANT_ALPHA);
+              gl.blendColor(0, 0, 0, 1.0 / state.sppCount);
+            }
+          } else {
+            shouldDraw = false;
+          }
+        } else {
+          gl.disable(gl.BLEND);
+        }
+
+        // Draw WebGL2 Frame
+        if (shouldDraw) {
+          gl.useProgram(prog);
+          gl.uniform2f(uLoc.res, canvas.width, canvas.height);
+          gl.uniform1f(uLoc.time, now * 0.001);
+          gl.uniform3f(uLoc.camPos, state.camPos[0], state.camPos[1], state.camPos[2]);
+          gl.uniform3f(uLoc.camForward, forward[0], forward[1], forward[2]);
+          gl.uniform3f(uLoc.camRight, right[0], right[1], right[2]);
+          gl.uniform3f(uLoc.camUp, up[0], up[1], up[2]);
+          gl.uniform1f(uLoc.lightHeight, state.lightHeight);
+          gl.uniform1f(uLoc.pulseSpeed, state.pulseSpeed);
+          gl.uniform1f(uLoc.metallicScale, state.metallicScale);
+          gl.uniform1f(uLoc.enableGlow, state.enableGlow ? 1.0 : 0.0);
+          gl.uniform1f(uLoc.stepQuality, state.stepQuality);
+          gl.uniform2f(uLoc.jitter, jX, jY);
+
+          gl.drawArrays(gl.TRIANGLES, 0, 6);
+        }
+
+        // Update HUD Telemetry
+        document.getElementById("telemetryPos").textContent = 
+          `X:${state.camPos[0].toFixed(0)} Y:${state.camPos[1].toFixed(0)} Z:${state.camPos[2].toFixed(0)}`;
+
+        // Update Active Station based on current time
+        let activeSt = STATIONS[0];
+        for (let i = STATIONS.length - 1; i >= 0; i--) {
+          if (state.timeSec >= STATIONS[i].time - 5.0) {
+            activeSt = STATIONS[i];
+            break;
+          }
+        }
+        if (activeSt.id !== currentActiveStation) {
+          updateBubbleContent(activeSt);
+        }
+
+        // Project Current Target Component to Screen for Floating Bubble & Reticle
+        const proj = project3DtoScreen(activeSt.targetPos, state.camPos, forward, right, up, window.innerWidth, window.innerHeight);
+        const reticle = document.getElementById("targetReticle");
+        const bubble = document.getElementById("floatingBubble");
+
+        if (proj && proj.z > 2.0) {
+          reticle.style.display = "block";
+          reticle.style.left = `${proj.x}px`;
+          reticle.style.top = `${proj.y}px`;
+
+          bubble.style.display = "block";
+          let bX = proj.x + 35;
+          let bY = proj.y - 45;
+          const bW = bubble.offsetWidth || 340;
+          const bH = bubble.offsetHeight || 260;
+
+          if (bX + bW > window.innerWidth - 20) bX = proj.x - bW - 25;
+          if (bY + bH > window.innerHeight - 80) bY = window.innerHeight - bH - 85;
+          if (bY < 65) bY = 70;
+
+          bubble.style.left = `${bX}px`;
+          bubble.style.top = `${bY}px`;
+        } else {
+          reticle.style.display = "none";
+          bubble.style.display = "none";
+        }
+
+        // Draw 2D PCB Radar
+        drawRadar(state.camPos, forward);
+
+        requestAnimationFrame(render);
+      }
+
+      // Initial Callout Load
+      updateBubbleContent(STATIONS[0]);
+      requestAnimationFrame(render);
+    });
+  </script>
+</body>
+</html>
