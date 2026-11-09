@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>個人電腦防駭自我健檢與安全管理系統 | 產品完整介紹與使用指南</title>
+    <style>
+        :root {
+            --bg-main: #0b1120;
+            --bg-card: #131d33;
+            --bg-card-hover: #1e293b;
+            --bg-sub: #0f172a;
+            --border-color: #334155;
+            --border-highlight: #38bdf8;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --text-muted: #64748b;
+            --primary: #0284c7;
+            --primary-light: #38bdf8;
+            --accent-green: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #ef4444;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", "PingFang TC", sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            line-height: 1.6;
+            padding-bottom: 80px;
+        }
+
+        /* 導覽列 */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(11, 17, 32, 0.85);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary-light);
+            text-decoration: none;
+        }
+
+        .logo-badge {
+            background: #1e3a8a;
+            color: #93c5fd;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            border: 1px solid #3b82f6;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: var(--text-sub);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary-light);
+        }
+
+        .nav-download-btn {
+            background: rgba(2, 132, 199, 0.25);
+            color: var(--primary-light) !important;
+            border: 1px solid var(--primary-light);
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.85rem !important;
+            font-weight: 600 !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-download-btn:hover {
+            background: var(--primary);
+            color: #ffffff !important;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+            transform: translateY(-1px);
+        }
+
+        /* 容器 */
+        .container {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Hero 橫幅 */
+        .hero {
+            padding: 64px 0 48px;
+            text-align: center;
+        }
+
+        .hero-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(2, 132, 199, 0.15);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: var(--primary-light);
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .hero h1 {
+            font-size: 2.75rem;
+            font-weight: 800;
+            line-height: 1.25;
+            letter-spacing: -0.025em;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff 30%, #38bdf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-sub);
+            max-width: 780px;
+            margin: 0 auto 28px;
+        }
+
+        /* Hero CTA 下載按鈕 */
+        .hero-actions {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+            color: #ffffff;
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 14px 32px;
+            border-radius: 10px;
+            text-decoration: none;
+            box-shadow: 0 4px 18px rgba(2, 132, 199, 0.45);
+            transition: all 0.25s ease;
+            border: 1px solid rgba(56, 189, 248, 0.5);
+        }
+
+        .btn-primary-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(56, 189, 248, 0.6);
+            background: linear-gradient(135deg, #0369a1 0%, #1d4ed8 100%);
+            color: #ffffff;
+        }
+
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        .badge-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-align: left;
+        }
+
+        .badge-icon {
+            font-size: 1.75rem;
+        }
+
+        .badge-text h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .badge-text p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        /* 區塊通用樣式 */
+        section {
+            padding: 56px 0;
+            border-top: 1px solid rgba(51, 65, 85, 0.5);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .section-header .sub-title {
+            color: var(--primary-light);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.02em;
+        }
+
+        .section-header p {
+            color: var(--text-sub);
+            font-size: 1.05rem;
+            max-width: 680px;
+            margin: 12px auto 0;
+        }
+
+        /* 威脅成因流程卡片 */
+        .threat-chain {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            position: relative;
+        }
+
+        @media (max-width: 900px) {
+            .threat-chain { grid-template-columns: 1fr; }
+        }
+
+        .threat-step {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px 20px;
+            position: relative;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .threat-step:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-rose);
+        }
+
+        .step-num {
+            display: inline-block;
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--accent-rose);
+            font-weight: 800;
+            font-size: 0.8rem;
+            padding: 2px 10px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .threat-step h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #fca5a5;
+        }
+
+        .threat-step p {
+            font-size: 0.88rem;
+            color: var(--text-sub);
+            line-height: 1.5;
+        }
+
+        /* 動作矩陣表 */
+        .matrix-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .matrix-grid { grid-template-columns: 1fr; }
+        }
+
+        .matrix-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .matrix-card.scan {
+            border-top: 4px solid var(--primary-light);
+        }
+
+        .matrix-card.remediate {
+            border-top: 4px solid var(--accent-green);
+        }
+
+        .matrix-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .matrix-list {
+            list-style: none;
+        }
+
+        .matrix-item {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+        }
+
+        .matrix-item:last-child {
+            border-bottom: none;
+        }
+
+        .matrix-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .matrix-desc {
+            font-size: 0.85rem;
+            color: var(--text-sub);
+            margin-top: 4px;
+            padding-left: 24px;
+        }
+
+        /* 介面導覽與標籤頁 */
+        .tabs-preview {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .tabs-header-bar {
+            background: #090e1a;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 8px;
+        }
+
+        .tab-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-sub);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: #ffffff;
+            border-color: var(--primary-light);
+        }
+
+        .tab-content {
+            padding: 28px;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        .ui-mock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .stat-grid-preview {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 768px) {
+            .stat-grid-preview { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .stat-box {
+            background: #0b1120;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+        }
+
+        .stat-box.high { border-color: var(--accent-rose); }
+        .stat-box.med { border-color: var(--accent-amber); }
+        .stat-box.blue { border-color: var(--primary-light); }
+        .stat-box.green { border-color: var(--accent-green); }
+
+        .stat-box h5 {
+            font-size: 0.75rem;
+            color: var(--text-sub);
+            margin-bottom: 4px;
+        }
+
+        .stat-box .stat-val {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .mock-card {
+            background: #0b1120;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .mock-card-left {
+            flex: 1;
+        }
+
+        .mock-badge {
+            display: inline-block;
+            background: var(--accent-rose);
+            color: #ffffff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-right: 8px;
+        }
+
+        .mock-card-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        .mock-card-desc {
+            font-size: 0.82rem;
+            color: #cbd5e1;
+            margin-top: 4px;
+        }
+
+        .mock-card-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-tag {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid transparent;
+            cursor: default;
+        }
+
+        .btn-tag.view { background: #1e293b; color: #38bdf8; border-color: #38bdf8; }
+        .btn-tag.quar { background: #0284c7; color: #ffffff; }
+        .btn-tag.del { background: #b91c1c; color: #ffffff; }
+        .btn-tag.rest { background: #1e293b; color: #10b981; border-color: #10b981; }
+
+        /* 雲端防盜刷 Checklist */
+        .checklist-box {
+            background: var(--bg-card);
+            border: 1px solid var(--accent-rose);
+            border-radius: 12px;
+            padding: 28px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            margin-top: 4px;
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .checklist-text h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--primary-light);
+        }
+
+        .checklist-text p {
+            font-size: 0.88rem;
+            color: var(--text-sub);
+            margin-top: 4px;
+        }
+
+        /* 快速開始步驟 */
+        .start-steps {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .start-steps { grid-template-columns: 1fr; }
+        }
+
+        .start-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 28px 24px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .start-icon {
+            width: 56px;
+            height: 56px;
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--primary-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin: 0 auto 16px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+        }
+
+        .start-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .start-card p {
+            font-size: 0.88rem;
+            color: var(--text-sub);
+            margin-bottom: 12px;
+        }
+
+        .download-pill-btn {
+            display: inline-block;
+            background: rgba(2, 132, 199, 0.2);
+            color: var(--primary-light);
+            border: 1px solid var(--primary-light);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+            margin-bottom: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .download-pill-btn:hover {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+
+        .code-snippet {
+            display: block;
+            background: #030712;
+            border: 1px solid #1e293b;
+            padding: 6px 10px;
+            border-radius: 6px;
+            color: #38bdf8;
+            font-family: Consolas, monospace;
+            font-size: 0.8rem;
+            margin-top: 6px;
+        }
+
+        /* FAQ 手風琴 */
+        .faq-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .faq-question {
+            padding: 16px 20px;
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .faq-question:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .faq-answer {
+            padding: 0 20px 16px;
+            font-size: 0.9rem;
+            color: var(--text-sub);
+            line-height: 1.6;
+        }
+
+        /* 頁尾 */
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 60px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 頂部導覽列 -->
+    <header>
+        <a href="#" class="logo">
+            <span>🛡️ 個人電腦防駭自我健檢與安全管理系統</span>
+            <span class="logo-badge">v3.2 綠色旗艦版</span>
+        </a>
+        <nav class="nav-links">
+            <a href="#why">威脅成因</a>
+            <a href="#actions">動作矩陣</a>
+            <a href="#walkthrough">介面導覽</a>
+            <a href="#emergency">防盜刷SOP</a>
+            <a href="#quickstart">快速啟動</a>
+            <a href="#faq">常見問答</a>
+            <a href="https://drive.google.com/file/d/1r2v2URIwbiu0VnQfeQbRzRq7hlmDTnSK/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="nav-download-btn">⬇️ 立即下載</a>
+        </nav>
+    </header>
+
+    <main class="container">
+
+        <!-- Hero 橫幅 -->
+        <section class="hero">
+            <div class="hero-tag">
+                <span>⚡ 專為個人電腦與 AI 開發者打造之端點自衛利器</span>
+            </div>
+            <h1>全面掃描端點威脅 • 抹除明文金鑰<br>守護您的個人隱私與雲端帳單</h1>
+            <p>
+                針對當前高發的「偽造 AI 工具與竊密木馬 (Infostealer)」威脅鏈量身訂製。100% 本地離線運行、零網路傳輸、支援雙向無損隔離與原位復原，為您的電腦建立堅不可摧的安全防線。
+            </p>
+
+            <!-- 主要下載行動呼籲按鈕 -->
+            <div class="hero-actions">
+                <a href="https://drive.google.com/file/d/1r2v2URIwbiu0VnQfeQbRzRq7hlmDTnSK/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn-primary-cta">
+                    <span>⬇️ 立即免費下載工具包 (Google 雲端硬碟)</span>
+                </a>
+            </div>
+
+            <div class="badges-grid">
+                <div class="badge-card">
+                    <div class="badge-icon">🔒</div>
+                    <div class="badge-text">
+                        <h4>100% 本地離線運算</h4>
+                        <p>純本地 PowerShell，絕不上傳任何數據</p>
+                    </div>
+                </div>
+                <div class="badge-card">
+                    <div class="badge-icon">📦</div>
+                    <div class="badge-text">
+                        <h4>免安裝綠色便攜</h4>
+                        <p>解壓即用，支援任意資料夾與隨身碟</p>
+                    </div>
+                </div>
+                <div class="badge-card">
+                    <div class="badge-icon">🛡️</div>
+                    <div class="badge-text">
+                        <h4>無損隔離與還原</h4>
+                        <p>處置前必先備份快照，隨時原位復原</p>
+                    </div>
+                </div>
+                <div class="badge-card">
+                    <div class="badge-icon">🖥️</div>
+                    <div class="badge-text">
+                        <h4>現代深色科技 GUI</h4>
+                        <p>.NET WPF 視窗介面，操作直覺流暢</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 威脅全景分析 -->
+        <section id="why">
+            <div class="section-header">
+                <div class="sub-title">Threat Landscape</div>
+                <h2>為什麼您的電腦需要自我健檢？</h2>
+                <p>揭秘當代「偽造 AI 軟體與竊密木馬」的四階段高危攻擊鏈</p>
+            </div>
+
+            <div class="threat-chain">
+                <div class="threat-step">
+                    <span class="step-num">STAGE 01</span>
+                    <h3>偽冒搜尋廣告誘捕</h3>
+                    <p>駭客於搜尋引擎購買「熱門 AI 桌面工具」關鍵字贊助廣告，引導使用者下載未具備有效數位簽章的二次打包偽造安裝包。</p>
+                </div>
+                <div class="threat-step">
+                    <span class="step-num">STAGE 02</span>
+                    <h3>背景隱蔽釋放常駐</h3>
+                    <p>安裝過程表面看似正常，實則在背景將惡意守護進程釋放至 <code>Temp</code> 暫存區，並在註冊表寫入開機自動執行（Autorun）。</p>
+                </div>
+                <div class="threat-step">
+                    <span class="step-num">STAGE 03</span>
+                    <h3>遍歷瀏覽器 LevelDB</h3>
+                    <p>竊密木馬針對 Chrome 與 Edge 的 <code>Local Storage\leveldb</code> 進行掃描，竊取滯留在本地的 Google、OpenAI、Claude 等明文 API Key。</p>
+                </div>
+                <div class="threat-step">
+                    <span class="step-num">STAGE 04</span>
+                    <h3>雲端高頻併發盜刷</h3>
+                    <p>外洩金鑰數分鐘內流入黑市，自動化腳本調用昂貴的 AI 模型服務，導致受害者在不知情下收到數萬至數十萬元的天價帳單！</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 本程式執行的所有動作矩陣 -->
+        <section id="actions">
+            <div class="section-header">
+                <div class="sub-title">Action Matrix</div>
+                <h2>本程式會進行那些動作？（完全透明安全公開）</h2>
+                <p>嚴格在授權白名單內運作，絕無任何未公開的系統更動或網路連線行為</p>
+            </div>
+
+            <div class="matrix-grid">
+                <!-- 掃描動作 -->
+                <div class="matrix-card scan">
+                    <h3><span>🔍</span> 5 大全維度健檢掃描動作 (純讀取)</h3>
+                    <ul class="matrix-list">
+                        <li class="matrix-item">
+                            <div class="matrix-title"><span>🛡️</span> 端點即時防護狀態檢測</div>
+                            <div class="matrix-desc">調用 Windows Defender 核心查詢即時防護啟用狀態，並計算特徵碼更新時間。</div>
+                        </li>
+                        <li class="matrix-item">
+                            <div class="matrix-title"><span>🔑</span> Chrome / Edge LocalStorage 明文金鑰掃描</div>
+                            <div class="matrix-desc">深度掃描瀏覽器 LevelDB 資料庫，透過正則比對 Google/Gemini (<code>AIza...</code>)、OpenAI (<code>sk-...</code>)、Anthropic (<code>sk-ant-...</code>) 金鑰殘留。</div>
+                        </li>
+                        <li class="matrix-item">
+                            <div class="matrix-title"><span>🚀</span> 開機常駐項異常檢測 (Autoruns)</div>
+                            <div class="matrix-desc">檢查 HKCU / HKLM 啟動註冊表，識別指向 <code>Temp</code> 或 <code>Public</code> 目錄之異常惡意開機後門。</div>
+                        </li>
+                        <li class="matrix-item">
+                            <div class="matrix-title"><span>📥</span> 下載資料夾未簽名安裝檔檢測</div>
+                            <div class="matrix-desc">驗證 Downloads 目錄中近 30 天下載的 <code>.exe</code>/<code>.msi</code> 之 Authenticode 數位簽章，抓出仿冒安裝程式。</div>
+                        </li>
+                        <li class="matrix-item">
+                            <div class="matrix-title"><span>📂</span> 系統 Temp 隱蔽守護進程檢測</div>
+                            <div class="matrix-desc">探測 LocalAppData\Temp 中是否存在偽裝為系統服務的常駐守護目錄。</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 處置動作 -->
+                <div class="matrix-card remediate">
+                    <h3><span>🛠️</span> 4 大項目級處置與防護動作 (精確控制)</h3>
+                    <ul class="matrix-list">
+                        <li class="matrix-item">
+                            <div class="matrix-title"><span>🔍</span> 【查看細節】</div>
+                            <div class="matrix-desc">顯示風險等級、現況診斷、遮罩金鑰技術細節與專案加固建議。</div>
+                        </li>
+                        <li class="matrix-item">
+                            <div class="matrix-title"><span>📦</span> 【安全隔離】</div>
+                            <div class="matrix-desc">將可疑檔案、異常註冊表項、或 LocalStorage 移動封存至 <code>Quarantine_隔離區</code>，阻斷威脅執行。</div>
+                        </li>
+                        <li class="matrix-item">
+                            <div class="matrix-title"><span>🗑️</span> 【清除 / 抹除】</div>
+                            <div class="matrix-desc">自動建立隔離快照後，徹底粉碎抹除瀏覽器本地明文 LevelDB，或強制粉碎刪除惡意檔案（解除屬性鎖定並調用核心強制命令）。</div>
+                        </li>
+                        <li class="matrix-item">
+                            <div class="matrix-title"><span>🔄</span> 【原位復原】與【🧹 清空隔離區】</div>
+                            <div class="matrix-desc">可隨時從隔離存檔點 100% 倒退復原至原始目錄；亦支援一鍵清空粉碎隔離區檔案，不留任何惡意殘留。</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 介面導覽與三大頁籤 -->
+        <section id="walkthrough">
+            <div class="section-header">
+                <div class="sub-title">Interface Walkthrough</div>
+                <h2>現代科技視窗介面導覽</h2>
+                <p>直覺流暢的 WPF 儀表板，支援即時統計、分類篩選與雙向還原中心</p>
+            </div>
+
+            <div class="tabs-preview">
+                <div class="tabs-header-bar">
+                    <button class="tab-btn active" onclick="switchTab(0)">🛡️ 全方位安全健檢與處置</button>
+                    <button class="tab-btn" onclick="switchTab(1)">📦 隔離保護區與復原中心 (Rollback)</button>
+                    <button class="tab-btn" onclick="switchTab(2)">💡 雲端防盜刷指引與緊急止血 SOP</button>
+                </div>
+
+                <div class="tab-content">
+                    <!-- Tab 1 -->
+                    <div class="tab-pane active" id="tab0">
+                        <div class="stat-grid-preview">
+                            <div class="stat-box high">
+                                <h5>🔴 待處置高危威脅</h5>
+                                <div class="stat-val" style="color: #ef4444;">4</div>
+                            </div>
+                            <div class="stat-box med">
+                                <h5>🟡 潛在風險項目</h5>
+                                <div class="stat-val" style="color: #f59e0b;">2</div>
+                            </div>
+                            <div class="stat-box blue">
+                                <h5>📦 隔離保護存檔點</h5>
+                                <div class="stat-val" style="color: #38bdf8;">1</div>
+                            </div>
+                            <div class="stat-box green">
+                                <h5>🛡️ 即時端點防衛</h5>
+                                <div class="stat-val" style="font-size: 1.1rem; color: #10b981; margin-top: 4px;">防護運作中</div>
+                            </div>
+                        </div>
+
+                        <!-- 模擬卡片 1 -->
+                        <div class="mock-card">
+                            <div class="mock-card-left">
+                                <div>
+                                    <span class="mock-badge">高危險</span>
+                                    <span style="color:#38bdf8; font-weight:bold;">[瀏覽器資安]</span>
+                                    <span class="mock-card-title">Chrome - Profile 8 LocalStorage 殘留 API Key</span>
+                                </div>
+                                <div class="mock-card-desc">現況評估: 在該瀏覽器本地資料庫中偵測到 5 筆明文 AI API 金鑰！</div>
+                                <div class="mock-card-desc" style="color:#38bdf8;">建議作為: 強烈建議立即【抹除】並至雲端主控台撤銷重設金鑰。</div>
+                            </div>
+                            <div class="mock-card-btns">
+                                <span class="btn-tag view">🔍 查看</span>
+                                <span class="btn-tag quar">📦 隔離</span>
+                                <span class="btn-tag del">🗑️ 清除/抹除</span>
+                                <span class="btn-tag rest">🔄 復原</span>
+                            </div>
+                        </div>
+
+                        <!-- 模擬卡片 2 -->
+                        <div class="mock-card">
+                            <div class="mock-card-left">
+                                <div>
+                                    <span class="mock-badge">高危險</span>
+                                    <span style="color:#38bdf8; font-weight:bold;">[開機常駐]</span>
+                                    <span class="mock-card-title">可疑開機項目: BingWallpaperDaemon</span>
+                                </div>
+                                <div class="mock-card-desc">現況評估: 常駐項目指向臨時目錄 (AppData\Local\Temp)，極可能是偽裝後門。</div>
+                                <div class="mock-card-desc" style="color:#38bdf8;">建議作為: 建議立即【隔離】或自開機註冊表中移除。</div>
+                            </div>
+                            <div class="mock-card-btns">
+                                <span class="btn-tag view">🔍 查看</span>
+                                <span class="btn-tag quar">📦 隔離</span>
+                                <span class="btn-tag del">🗑️ 清除/抹除</span>
+                                <span class="btn-tag rest">🔄 復原</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2 -->
+                    <div class="tab-pane" id="tab1">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+                            <div>
+                                <h4 style="font-size:1.1rem; color:var(--primary-light);">📦 歷史備份存檔點管理</h4>
+                                <p style="font-size:0.85rem; color:var(--text-sub);">所有已隔離或抹除之項目皆安全封存於此，支援原位全數復原或個別檔案粉碎刪除。</p>
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <span class="btn-tag view">📂 開啟隔離資料夾</span>
+                                <span class="btn-tag rest">🔄 重新整理</span>
+                                <span class="btn-tag del" style="background:#7f1d1d; border-color:#ef4444;">🧹 清空所有隔離區檔案</span>
+                            </div>
+                        </div>
+
+                        <div class="mock-card" style="flex-direction:column; align-items:stretch;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <div>
+                                    <span style="font-weight:bold; color:#38bdf8;">📁 存檔點: Backup_20261106_154907</span>
+                                    <div style="font-size:0.8rem; color:#94a3b8; margin-top:2px;">建立時間: 2026-11-06 15:49:07 | 包含檔案: ProPDF Studio Setup 1.0.0.exe, UnInstDaemon.exe 等</div>
+                                </div>
+                                <div style="display:flex; gap:6px;">
+                                    <span class="btn-tag view">📂 開啟目錄</span>
+                                    <span class="btn-tag quar" style="background:#047857;">🔄 一鍵全數復原</span>
+                                    <span class="btn-tag del">❌ 徹底粉碎刪除此存檔點</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3 -->
+                    <div class="tab-pane" id="tab2">
+                        <div class="checklist-box">
+                            <h3 style="color:#f87171; margin-bottom:12px; font-size:1.2rem;">🚨 雲端帳號疑似外洩時的【黃金止血 3 步驟】</h3>
+                            <div class="checklist-item">
+                                <input type="checkbox" id="c1">
+                                <label for="c1" class="checklist-text">
+                                    <h4>步驟 1. 立即登入雲端主控台廢止 (Revoke) 外洩金鑰</h4>
+                                    <p>• Google Cloud Console -> APIs & Services -> Credentials -> 刪除對應的 API Key。<br>• OpenAI Platform / Anthropic Console -> API Keys -> 立即 Revoke 舊 Key 並重新建立。</p>
+                                </label>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" id="c2">
+                                <label for="c2" class="checklist-text">
+                                    <h4>步驟 2. 設定預算上限警示 (Budget Alert) 與配額封頂 (Quota Limit)</h4>
+                                    <p>• 在 Billing 頁面設定例如 10 USD / 500 TWD 的每日/每月硬上限與警示通知。<br>• 在 Quotas 頁面將 Vertex AI 或模型每分鐘調用次數設為日常合理值，杜絕併發盜刷。</p>
+                                </label>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" id="c3">
+                                <label for="c3" class="checklist-text">
+                                    <h4>步驟 3. 啟用 API 限制 (API Restrictions) 與來源白名單</h4>
+                                    <p>• 拒絕「無限制 (Unrestricted)」金鑰！僅勾選該專案真正需要的 API 服務。<br>• 開發環境推薦使用 OAuth 2.0 或服務帳戶短效 Token，金鑰絕對不硬編碼在本地網頁環境。</p>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 快速開始指南 -->
+        <section id="quickstart">
+            <div class="section-header">
+                <div class="sub-title">Quick Start</div>
+                <h2>3 秒開箱即用與分享指南</h2>
+                <p>免安裝、免設定環境，傳給親友一秒上手</p>
+            </div>
+
+            <div class="start-steps">
+                <div class="start-card">
+                    <div>
+                        <div class="start-icon">📦</div>
+                        <h3>1. 下載並解壓縮</h3>
+                        <p>點擊下方按鈕或從雲端硬碟下載壓縮包，並解壓至任意磁碟（例如 D:\ 或桌面）。</p>
+                    </div>
+                    <div>
+                        <a href="https://drive.google.com/file/d/1r2v2URIwbiu0VnQfeQbRzRq7hlmDTnSK/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="download-pill-btn">⬇️ 點此前往 Google Drive 下載</a>
+                        <span class="code-snippet">個人電腦防駭健檢工具包_v3.2.zip</span>
+                    </div>
+                </div>
+                <div class="start-card">
+                    <div>
+                        <div class="start-icon">🚀</div>
+                        <h3>2. 雙擊立即啟動</h3>
+                        <p>直接滑鼠連按兩下資料夾內的 <code>.bat</code> 批次檔，秒開深色科技儀表板。</p>
+                    </div>
+                    <div>
+                        <span class="code-snippet">雙擊啟動防駭管理中心.bat</span>
+                    </div>
+                </div>
+                <div class="start-card">
+                    <div>
+                        <div class="start-icon">🖥️</div>
+                        <h3>3. 建立桌面藍色盾牌捷徑</h3>
+                        <p>雙擊捷徑腳本，自動在 Windows 桌面上建立漂亮的官方安全盾牌圖示！</p>
+                    </div>
+                    <div>
+                        <span class="code-snippet">建立桌面捷徑.bat</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 常見問答集 -->
+        <section id="faq">
+            <div class="section-header">
+                <div class="sub-title">FAQ</div>
+                <h2>常見問題解答</h2>
+                <p>關於安全性、隱私與操作的常見疑慮說明</p>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>Q1：點擊「抹除 LocalStorage」會影響我的書籤或已存密碼嗎？</span>
+                    <span>▼</span>
+                </div>
+                <div class="faq-answer">
+                    <strong>完全不會。</strong> LocalStorage 是專門供前端網頁儲存臨時變數（如外觀主題、網頁版快取的 API 金鑰）的獨立資料庫。您的瀏覽器書籤（Bookmarks）、瀏覽歷史（History）以及 Google 帳號儲存的帳密（Login Data）存放在完全不同的獨立檔案中，抹除 LocalStorage 絕不會遺失書籤或密碼。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>Q2：啟動時若 Windows Defender SmartScreen 出現警示怎麼辦？</span>
+                    <span>▼</span>
+                </div>
+                <div class="faq-answer">
+                    這是正常現象。因為本工具為純本地開源 PowerShell 腳本，未向商業機構購買數萬元的企業程式簽章憑證。若彈出 Windows 保護提示，請點擊 <strong>「其他資訊」</strong> -> 點擊 <strong>「仍要執行」</strong> 即可放心使用。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>Q3：如果不小心誤刪了檔案，還能復原嗎？</span>
+                    <span>▼</span>
+                </div>
+                <div class="faq-answer">
+                    <strong>可以。</strong> 系統在執行抹除或隔離時，第一時間均會自動在 <code>Quarantine_隔離區</code> 建立還原存檔點。您只需切換至「隔離保護區與復原中心 (Rollback)」頁籤，點擊 <strong>【🔄 一鍵全數復原】</strong> 即可將所有檔案原位還原。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>Q4：本工具會不會把我的電腦資料或金鑰上傳到網路上？</span>
+                    <span>▼</span>
+                </div>
+                <div class="faq-answer">
+                    <strong>絕對不會。</strong> 本工具採用 100% 離線本地運算架構，腳本原始碼完全開放透明，沒有包含任何對外連線的程式碼（無 Telemetry、無分析回傳），即使您將電腦網路斷開，所有健檢與清除功能依然能 100% 正常運作。
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>🛡️ 個人電腦防駭自我健檢與安全管理系統 | 綠色便攜旗艦版 (Portable Edition)</p>
+            <p style="margin-top: 6px; font-size: 0.8rem;">100% 本地開源 • 零網路傳輸 • 雙向安全隔離存檔 • 守護您的數位資產</p>
+        </div>
+    </footer>
+
+    <script>
+        function switchTab(index) {
+            const btns = document.querySelectorAll('.tab-btn');
+            const panes = document.querySelectorAll('.tab-pane');
+            btns.forEach((btn, i) => {
+                if (i === index) {
+                    btn.classList.add('active');
+                    panes[i].classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                    panes[i].classList.remove('active');
+                }
+            });
+        }
+
+        function toggleFaq(el) {
+            const ans = el.nextElementSibling;
+            if (ans.style.display === 'none' || !ans.style.display) {
+                ans.style.display = 'block';
+                el.querySelector('span:last-child').textContent = '▲';
+            } else {
+                ans.style.display = 'none';
+                el.querySelector('span:last-child').textContent = '▼';
+            }
+        }
+    </script>
+</body>
+</html>
