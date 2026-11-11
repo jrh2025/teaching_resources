@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>設計理念與使用手冊 ｜ 互動導覽圖製作大師</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;500;600;700;900&family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ==========================================================================
+       和風意匠・日本傳統色系與極致排版 (Japanese Minimalist Editorial Design)
+       ========================================================================== */
+    :root {
+      /* 日本傳統色 (Traditional Japanese Colors) */
+      --washi-bg: #faf8f5;            /* 生成色 / 和紙白底 */
+      --washi-subtle: #f2eee5;        /* 鳥の子色 / 淡米紙質 */
+      --washi-card: #ffffff;          /* 白練 / 潔淨卡片底色 */
+      --washi-card-border: #e8e3d8;   /* 枯木色細線 */
+      --sumi-deep: #1f2022;           /* 濃墨 / 標題深度黑 */
+      --sumi-main: #363638;           /* 中墨 / 內文黑 */
+      --sumi-light: #6e6b66;          /* 薄墨 / 說明字 */
+      --sumi-whisper: #9e9a93;        /* 灰白墨 / 註釋 */
+      
+      /* 點綴色 (Accents) */
+      --akane-red: #c83c23;           /* 茜色 / 朱紅印鑑落款 */
+      --akane-light: rgba(200, 60, 35, 0.08);
+      --akane-hover: #b0321c;
+      --ainezumi: #334e68;            /* 藍鼠 / 典雅青深藍 */
+      --ainezumi-light: rgba(51, 78, 104, 0.08);
+      --matcha: #5b7052;              /* 抹茶苔色 / 自然綠 */
+      --matcha-light: rgba(91, 112, 82, 0.09);
+      --yamabuki: #d97706;            /* 山吹金黃 / 重點琥珀 */
+      
+      /* 版面規範 */
+      --content-max-w: 980px;
+      --font-serif: 'Noto Serif TC', 'Songti TC', 'Yu Mincho', 'Hiragino Mincho ProN', serif;
+      --font-sans: 'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Microsoft JhengHei', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--washi-bg);
+      color: var(--sumi-main);
+      font-family: var(--font-sans);
+      line-height: 1.85;
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      /* 和紙微妙顆粒背景紋理 */
+      background-image: radial-gradient(var(--washi-subtle) 1px, transparent 1px);
+      background-size: 24px 24px;
+      overflow-x: hidden;
+    }
+
+    /* 頂部和風裝飾條與印章導覽 */
+    .zen-topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(250, 248, 245, 0.94);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--washi-card-border);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all 0.3s ease;
+    }
+
+    .zen-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: var(--sumi-deep);
+    }
+
+    /* 朱紅落款印章 */
+    .hanko-stamp {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: var(--akane-red);
+      color: #fff;
+      font-family: var(--font-serif);
+      font-weight: 900;
+      font-size: 15px;
+      border-radius: 4px;
+      box-shadow: 0 2px 6px rgba(200, 60, 35, 0.35);
+      border: 1px dashed rgba(255, 255, 255, 0.5);
+      letter-spacing: 0;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .hanko-stamp:hover {
+      transform: scale(1.08) rotate(-3deg);
+    }
+
+    .zen-title {
+      font-family: var(--font-serif);
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .zen-sub {
+      font-size: 12px;
+      color: var(--sumi-light);
+      margin-left: 6px;
+      font-weight: 400;
+    }
+
+    .zen-nav-links {
+      display: flex;
+      gap: 18px;
+      list-style: none;
+    }
+
+    .zen-nav-links a {
+      color: var(--sumi-light);
+      text-decoration: none;
+      font-size: 14px;
+      font-family: var(--font-serif);
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .zen-nav-links a:hover {
+      color: var(--akane-red);
+      background: var(--akane-light);
+    }
+
+    .zen-topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .zen-btn-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--akane-red);
+      border: 1px solid var(--akane-red);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      text-decoration: none;
+      box-shadow: 0 2px 6px rgba(200, 60, 35, 0.25);
+      transition: all 0.2s;
+    }
+    .zen-btn-download:hover {
+      background: var(--akane-hover);
+      border-color: var(--akane-hover);
+      box-shadow: 0 3px 10px rgba(200, 60, 35, 0.35);
+      transform: translateY(-1px);
+    }
+
+    .zen-btn-print {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff;
+      border: 1px solid var(--washi-card-border);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      color: var(--sumi-main);
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+      transition: all 0.2s;
+    }
+    .zen-btn-print:hover {
+      border-color: var(--akane-red);
+      color: var(--akane-red);
+      box-shadow: 0 3px 8px rgba(200,60,35,0.15);
+    }
+
+    /* 容器架構 */
+    .page-wrap {
+      max-width: var(--content-max-w);
+      margin: 0 auto;
+      padding: 48px 24px 96px;
+    }
+
+    /* 卷首題字 (Hero Header) */
+    .hero-section {
+      text-align: center;
+      padding: 48px 0 64px;
+      position: relative;
+    }
+
+    .hero-seal-badge {
+      display: inline-block;
+      margin-bottom: 20px;
+      padding: 4px 16px;
+      border: 1px solid var(--akane-red);
+      color: var(--akane-red);
+      font-family: var(--font-serif);
+      font-size: 13px;
+      letter-spacing: 2.5px;
+      border-radius: 2px;
+      background: var(--akane-light);
+      font-weight: 600;
+    }
+
+    .hero-main-title {
+      font-family: var(--font-serif);
+      font-size: 42px;
+      font-weight: 900;
+      color: var(--sumi-deep);
+      letter-spacing: 2px;
+      line-height: 1.35;
+      margin-bottom: 18px;
+    }
+
+    .hero-subtitle {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      color: var(--sumi-light);
+      max-width: 720px;
+      margin: 0 auto 26px;
+      font-weight: 400;
+      line-height: 1.75;
+    }
+
+    /* 卷首下載與動作區域 */
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin: 28px 0 36px;
+      flex-wrap: wrap;
+    }
+
+    .hero-btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--akane-red);
+      color: #fff;
+      font-family: var(--font-serif);
+      font-size: 15.5px;
+      font-weight: 600;
+      padding: 11px 26px;
+      border-radius: 30px;
+      text-decoration: none;
+      box-shadow: 0 4px 14px rgba(200, 60, 35, 0.28);
+      transition: all 0.25s ease;
+      letter-spacing: 0.5px;
+    }
+    .hero-btn-primary:hover {
+      background: var(--akane-hover);
+      box-shadow: 0 6px 20px rgba(200, 60, 35, 0.38);
+      transform: translateY(-2px);
+    }
+
+    .hero-btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--washi-card);
+      color: var(--sumi-deep);
+      border: 1px solid var(--washi-card-border);
+      font-family: var(--font-serif);
+      font-size: 15px;
+      padding: 10px 22px;
+      border-radius: 30px;
+      text-decoration: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .hero-btn-secondary:hover {
+      border-color: var(--ainezumi);
+      color: var(--ainezumi);
+      transform: translateY(-2px);
+    }
+
+    .hero-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin: 36px 0;
+    }
+    .hero-divider::before,
+    .hero-divider::after {
+      content: "";
+      display: block;
+      width: 100px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--washi-card-border), transparent);
+    }
+    .hero-divider-symbol {
+      color: var(--akane-red);
+      font-size: 14px;
+      opacity: 0.8;
+    }
+
+    /* 卷章大標題 */
+    .chapter-header {
+      margin: 64px 0 32px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid var(--washi-card-border);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      position: relative;
+    }
+    .chapter-header::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -2px;
+      width: 68px;
+      height: 2px;
+      background: var(--akane-red);
+    }
+
+    .chapter-title-group {
+      display: flex;
+      align-items: baseline;
+      gap: 14px;
+    }
+
+    .chapter-number {
+      font-family: var(--font-serif);
+      font-size: 15px;
+      color: var(--akane-red);
+      font-weight: 700;
+      letter-spacing: 2px;
+    }
+
+    .chapter-title {
+      font-family: var(--font-serif);
+      font-size: 26px;
+      color: var(--sumi-deep);
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .chapter-tag {
+      font-size: 13px;
+      color: var(--sumi-whisper);
+      font-family: var(--font-serif);
+      letter-spacing: 1px;
+    }
+
+    /* 和風卡片網格 */
+    .zen-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 22px;
+      margin: 24px 0 36px;
+    }
+
+    .zen-card {
+      background: var(--washi-card);
+      border: 1px solid var(--washi-card-border);
+      border-radius: 12px;
+      padding: 26px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.025);
+      position: relative;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+      overflow: hidden;
+    }
+
+    .zen-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+      border-color: #d1c9b8;
+    }
+
+    .zen-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: transparent;
+      transition: background 0.25s;
+    }
+
+    .zen-card.card-akane:hover::before { background: var(--akane-red); }
+    .zen-card.card-ainezumi:hover::before { background: var(--ainezumi); }
+    .zen-card.card-matcha:hover::before { background: var(--matcha); }
+    .zen-card.card-yamabuki:hover::before { background: var(--yamabuki); }
+
+    .card-kanji-watermark {
+      position: absolute;
+      right: 14px;
+      bottom: 8px;
+      font-family: var(--font-serif);
+      font-size: 78px;
+      font-weight: 900;
+      color: rgba(0, 0, 0, 0.03);
+      user-select: none;
+      pointer-events: none;
+      line-height: 1;
+    }
+
+    .card-icon-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      font-size: 20px;
+      margin-bottom: 16px;
+      background: var(--washi-subtle);
+      border: 1px solid rgba(0, 0, 0, 0.04);
+    }
+
+    .card-title {
+      font-family: var(--font-serif);
+      font-size: 19px;
+      color: var(--sumi-deep);
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    .card-body {
+      color: var(--sumi-main);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .card-quote {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px dashed var(--washi-card-border);
+      font-size: 13px;
+      color: var(--sumi-light);
+      font-style: normal;
+      font-family: var(--font-serif);
+    }
+
+    /* 深度設計理念長文排版 */
+    .prose-block {
+      background: var(--washi-card);
+      border: 1px solid var(--washi-card-border);
+      border-radius: 12px;
+      padding: 34px 38px;
+      margin-bottom: 28px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.02);
+    }
+
+    .prose-block h3 {
+      font-family: var(--font-serif);
+      font-size: 21px;
+      color: var(--sumi-deep);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .prose-block h3::before {
+      content: "◆";
+      font-size: 12px;
+      color: var(--akane-red);
+    }
+
+    .prose-block p {
+      margin-bottom: 14px;
+      color: var(--sumi-main);
+      font-size: 15.5px;
+      text-align: justify;
+    }
+    .prose-block p:last-child {
+      margin-bottom: 0;
+    }
+
+    .highlight-pill {
+      background: var(--akane-light);
+      color: var(--akane-red);
+      padding: 1px 7px;
+      border-radius: 3px;
+      font-weight: 600;
+      font-size: 14.5px;
+    }
+
+    .key-quote-callout {
+      background: #fbf7ee;
+      border-left: 4px solid var(--yamabuki);
+      padding: 18px 22px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+      font-family: var(--font-serif);
+      font-size: 15px;
+      color: var(--sumi-deep);
+      line-height: 1.8;
+    }
+
+    /* 步驟指南編排 (User Guide Steps) */
+    .steps-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin: 28px 0;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 20px;
+      background: var(--washi-card);
+      border: 1px solid var(--washi-card-border);
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .step-item:hover {
+      border-color: #d8d0c0;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.04);
+    }
+
+    .step-ordinal {
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--sumi-deep);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 700;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.18);
+    }
+    .step-item:nth-child(1) .step-ordinal { background: var(--akane-red); }
+    .step-item:nth-child(2) .step-ordinal { background: var(--ainezumi); }
+    .step-item:nth-child(3) .step-ordinal { background: var(--matcha); }
+    .step-item:nth-child(4) .step-ordinal { background: var(--yamabuki); }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-title {
+      font-family: var(--font-serif);
+      font-size: 19px;
+      color: var(--sumi-deep);
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .step-desc {
+      color: var(--sumi-main);
+      font-size: 15px;
+      line-height: 1.8;
+      margin-bottom: 12px;
+    }
+
+    .step-tips-box {
+      background: var(--washi-subtle);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 14px;
+      color: var(--sumi-light);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      border: 1px solid rgba(0,0,0,0.04);
+    }
+    .step-tips-box strong {
+      color: var(--sumi-deep);
+    }
+
+    /* 內嵌下載卡片按鈕 */
+    .download-card-cta {
+      margin-top: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-step-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--ainezumi);
+      color: #fff;
+      padding: 8px 18px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+      box-shadow: 0 2px 6px rgba(51, 78, 104, 0.25);
+    }
+    .btn-step-download:hover {
+      background: #24384a;
+      box-shadow: 0 4px 10px rgba(51, 78, 104, 0.35);
+      transform: translateY(-1px);
+    }
+
+    /* 互動式配色切換展示盤 (Interactive Theme Swatch) */
+    .interactive-swatch-box {
+      background: #0f172a;
+      color: #f8fafc;
+      border-radius: 14px;
+      padding: 28px;
+      margin: 30px 0;
+      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .swatch-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .swatch-title {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      color: #fbbf24;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .theme-selector-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .theme-chip {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: #e2e8f0;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .theme-chip:hover,
+    .theme-chip.active {
+      background: #fbbf24;
+      color: #090d16;
+      border-color: #fbbf24;
+      font-weight: 600;
+    }
+
+    .swatch-preview-canvas {
+      height: 180px;
+      border-radius: 10px;
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 10px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* 對比表格 (Comparison Table) */
+    .zen-table-wrap {
+      overflow-x: auto;
+      margin: 24px 0 32px;
+      border: 1px solid var(--washi-card-border);
+      border-radius: 10px;
+      background: var(--washi-card);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    .zen-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14.5px;
+      text-align: left;
+    }
+
+    .zen-table th {
+      background: var(--washi-subtle);
+      color: var(--sumi-deep);
+      font-family: var(--font-serif);
+      font-weight: 700;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--washi-card-border);
+      white-space: nowrap;
+    }
+
+    .zen-table td {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--washi-card-border);
+      color: var(--sumi-main);
+      line-height: 1.6;
+    }
+
+    .zen-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .zen-table tr:hover td {
+      background: rgba(250, 248, 245, 0.7);
+    }
+
+    .tag-green {
+      color: #15803d;
+      font-weight: 600;
+    }
+    .tag-red {
+      color: #b91c1c;
+      text-decoration: line-through;
+      opacity: 0.75;
+    }
+
+    /* 快捷鍵速查卡 (Keyboard Shortcuts) */
+    .shortcut-kbd {
+      display: inline-block;
+      padding: 2px 7px;
+      font-family: monospace;
+      font-size: 12.5px;
+      background: #f1ede4;
+      border: 1px solid #dcd5c7;
+      border-bottom: 2px solid #c9c0ae;
+      border-radius: 4px;
+      color: var(--sumi-deep);
+      margin: 0 2px;
+    }
+
+    /* 卷尾落款與作者章 (Colophon Footer) */
+    .zen-colophon {
+      margin-top: 80px;
+      padding-top: 40px;
+      border-top: 1px dashed var(--washi-card-border);
+      text-align: center;
+      position: relative;
+    }
+
+    .colophon-seals {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .square-seal {
+      width: 48px;
+      height: 48px;
+      border: 2px solid var(--akane-red);
+      color: var(--akane-red);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-serif);
+      font-weight: 900;
+      font-size: 16px;
+      letter-spacing: 0;
+      line-height: 1.1;
+      padding: 4px;
+      border-radius: 4px;
+      user-select: none;
+      background: rgba(200, 60, 35, 0.04);
+      box-shadow: 0 2px 6px rgba(200, 60, 35, 0.15);
+    }
+
+    .colophon-text {
+      font-family: var(--font-serif);
+      color: var(--sumi-light);
+      font-size: 14px;
+      line-height: 1.8;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .colophon-sub {
+      font-size: 12px;
+      color: var(--sumi-whisper);
+      margin-top: 12px;
+      letter-spacing: 1px;
+    }
+
+    /* 列印專用樣式 (@media print) */
+    @media print {
+      body {
+        background: #fff !important;
+        color: #000 !important;
+        font-size: 13pt;
+      }
+      .zen-topbar, .theme-selector-chips, .zen-btn-print, .zen-btn-download, .hero-actions, .download-card-cta {
+        display: none !important;
+      }
+      .page-wrap {
+        padding: 0 !important;
+        max-width: 100% !important;
+      }
+      .zen-card, .prose-block, .step-item {
+        box-shadow: none !important;
+        border: 1px solid #ccc !important;
+        break-inside: avoid;
+        margin-bottom: 16pt !important;
+      }
+      .interactive-swatch-box {
+        background: #f5f5f5 !important;
+        color: #000 !important;
+        border: 1px solid #aaa !important;
+      }
+    }
+
+    /* 響應式優化 (Mobile & Tablet) */
+    @media (max-width: 768px) {
+      .hero-main-title {
+        font-size: 30px;
+      }
+      .hero-subtitle {
+        font-size: 16px;
+      }
+      .zen-topbar {
+        padding: 8px 14px;
+      }
+      .zen-nav-links {
+        display: none;
+      }
+      .step-item {
+        flex-direction: column;
+        gap: 12px;
+      }
+      .prose-block {
+        padding: 22px;
+      }
+      .hero-actions {
+        flex-direction: column;
+        width: 100%;
+      }
+      .hero-btn-primary, .hero-btn-secondary {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 頂部和風極簡導覽列 -->
+  <header class="zen-topbar">
+    <a href="#" class="zen-brand">
+      <div class="hanko-stamp" title="點擊聆聽和風頌缽清音" id="hankoStamp">導</div>
+      <div>
+        <span class="zen-title">互動導覽圖製作大師</span>
+        <span class="zen-sub">設計理念與使用指南</span>
+      </div>
+    </a>
+    <nav>
+      <ul class="zen-nav-links">
+        <li><a href="#philosophy">理念・認知美學</a></li>
+        <li><a href="#features">機能・核心重構</a></li>
+        <li><a href="#manual">手引・操作指南</a></li>
+        <li><a href="#themes">意匠・六景配色</a></li>
+        <li><a href="#faq">錦囊・跨界實踐</a></li>
+      </ul>
+    </nav>
+    <div class="zen-topbar-actions">
+      <a href="https://drive.google.com/file/d/1Y0V_D4vfZv1RKdqDFzwLdFsMFzBPu2c9/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="zen-btn-download" title="下載專案檔案與軟體套件">
+        <span>📥</span> 檔案下載
+      </a>
+      <button class="zen-btn-print" onclick="window.print()" title="列印或另存為精美手冊 PDF">
+        <span>🖨️</span> 列印手冊
+      </button>
+    </div>
+  </header>
+
+  <!-- 頁面主體 -->
+  <main class="page-wrap">
+
+    <!-- 卷首・題詞與序言 -->
+    <section class="hero-section">
+      <div class="hero-seal-badge">和風・極簡意匠 ｜ 設計哲思與操作全書</div>
+      <h1 class="hero-main-title">以一圖・載萬千事物之美</h1>
+      <p class="hero-subtitle">
+        專為各級教師、場館策展人、景區導航者與知識傳播者打造。<br>
+        化繁為簡，讓滑鼠的每一次駐足與輕觸，都成為一場沉浸心靈的空間探索。
+      </p>
+
+      <!-- 卷首重點下載行動列 -->
+      <div class="hero-actions">
+        <a href="https://drive.google.com/file/d/1Y0V_D4vfZv1RKdqDFzwLdFsMFzBPu2c9/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="hero-btn-primary" title="前往 Google Drive 下載完整套件">
+          <span>📥</span> 前往下載本專案檔案 (Google Drive)
+        </a>
+        <button class="hero-btn-secondary" onclick="window.print()" title="列印或另存為 PDF">
+          <span>🖨️</span> 列印 / 另存手冊 PDF
+        </button>
+      </div>
+
+      <div class="hero-divider">
+        <span class="hero-divider-symbol">❖</span>
+      </div>
+    </section>
+
+    <!-- 卷一：設計理念與認知美學 -->
+    <section id="philosophy">
+      <header class="chapter-header">
+        <div class="chapter-title-group">
+          <span class="chapter-number">第一卷</span>
+          <h2 class="chapter-title">設計哲思與認知美學</h2>
+        </div>
+        <span class="chapter-tag">PHILOSOPHY & PEDAGOGY</span>
+      </header>
+
+      <div class="prose-block">
+        <h3>認知卸載：減去一切喧囂，回歸圖像本身（余白之美）</h3>
+        <p>
+          在傳統的數位地圖與教材軟體中，畫面往往充斥著密密麻麻的按鈕、側邊圖例表格以及底部晶片導覽條。這些看似提供引導的介面元素，在認知心理學上卻造成了嚴重的<strong>「認知超載（Cognitive Overload）」</strong>——學習者尚未看清地圖的地理肌理或藝術筆觸，視線就已被周遭冗餘的邊框與列表切割支離。
+        </p>
+        <p>
+          本軟體奉行日式美學核心的<strong>「余白（よはく，Yohaku）」</strong>精神。我們在最新版本中<strong>徹底移除了底圖右側的圖例面板</strong>與<strong>中央下方的底部導覽條</strong>，將完整的 100% 畫面主控權歸還於圖像。畫面開闊大氣，只有在滑鼠自然移入感興趣的地理特徵或景物標記時，標記才會輕柔浮動並散發溫潤微光；點擊時，一葉精緻的指向性氣泡視窗優雅彈出，帶出精準解說與清朗語音。
+        </p>
+        <div class="key-quote-callout">
+          「最好的介面，是在你需要它時恰如其分地浮現，不需要它時則如空氣般靜默消融。」
+        </div>
+      </div>
+
+      <div class="zen-grid">
+        <div class="zen-card card-akane">
+          <div class="card-kanji-watermark">空</div>
+          <div class="card-icon-badge">📍</div>
+          <h4 class="card-title">空間記憶與錨定效應</h4>
+          <p class="card-body">
+            人類大腦對「空間位置」的記憶力遠高於條列文字。透過在真實圖像上框選區域，將抽象知識「錨定」於具體地標之上，促使學習者建立直觀的心智地圖（Mental Map）。
+          </p>
+          <div class="card-quote">「知其所自，明其所處」</div>
+        </div>
+
+        <div class="zen-card card-ainezumi">
+          <div class="card-kanji-watermark">聲</div>
+          <div class="card-icon-badge">🗣️</div>
+          <h4 class="card-title">世代權杖多感官通感</h4>
+          <p class="card-body">
+            視覺、聽覺與指尖互動的通感融合。內建「世代權杖（Tokenized）分句語音引擎」，無論文章多長，皆能以自然的斷句呼吸流暢朗讀，打破閱讀障礙，長者與學童皆能自在聆聽。
+          </p>
+          <div class="card-quote">「視之以形，聆之以音」</div>
+        </div>
+
+        <div class="zen-card card-matcha">
+          <div class="card-kanji-watermark">嚴</div>
+          <div class="card-icon-badge">📐</div>
+          <h4 class="card-title">原生長寬比幾何忠實</h4>
+          <p class="card-body">
+            嚴格恪守原圖之真實比例（100% Native Aspect Ratio）。無論是 21:9 超寬全景、4:3 古地圖、1:1 方形切片或直式立式海報，絕不容許任何擠壓或扭曲變形。
+          </p>
+          <div class="card-quote">「方正相稱，各得其宜」</div>
+        </div>
+
+        <div class="zen-card card-yamabuki">
+          <div class="card-kanji-watermark">通</div>
+          <div class="card-icon-badge">🌐</div>
+          <h4 class="card-title">普適通用：無界限的傳遞</h4>
+          <p class="card-body">
+            摒棄繁複狹隘的專用測驗格式，回歸最通用的「標題、標籤、摘要、解說、照片、外鏈」。從國小地理到景區漫遊、從校園地圖到產品拆解圖，百業萬象皆能信手拈來。
+          </p>
+          <div class="card-quote">「萬象包羅，大道至簡」</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 卷二：機能革新・新舊對比 -->
+    <section id="features">
+      <header class="chapter-header">
+        <div class="chapter-title-group">
+          <span class="chapter-number">第二卷</span>
+          <h2 class="chapter-title">機能革新・新舊對比</h2>
+        </div>
+        <span class="chapter-tag">EVOLUTION & ARCHITECTURE</span>
+      </header>
+
+      <div class="zen-table-wrap">
+        <table class="zen-table">
+          <thead>
+            <tr>
+              <th style="width: 22%;">設計構面</th>
+              <th style="width: 39%;">早期傳統樣板模式</th>
+              <th style="width: 39%;">本軟體・現代和風極致模式</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>版面與視覺重心</strong></td>
+              <td><span class="tag-red">右側強佔寬度圖例面板、下方繁雜晶片條</span>，圖片僅剩 50% 狹小視野。</td>
+              <td><span class="tag-green">100% 全幅滿版純粹視野</span>，多餘圖例與底部導覽條完全移除，專注於圖像肌理。</td>
+            </tr>
+            <tr>
+              <td><strong>底圖長寬比適應</strong></td>
+              <td><span class="tag-red">強制擠壓或拉伸至固定的寬高比</span>，直式海報或正方形圖嚴重變形。</td>
+              <td><span class="tag-green">原生長寬比自動適配引擎</span>，16:9、4:3、1:1、9:16 直式海報等全無變形，標註點位百分比永久鎖定。</td>
+            </tr>
+            <tr>
+              <td><strong>工具列操作體驗</strong></td>
+              <td><span class="tag-red">固定在左側佔據大量寬度</span>，圖示缺乏即時回饋，修改外觀需重複點開編輯表單。</td>
+              <td><span class="tag-green">即時外觀套用＋隨時一鍵隱藏</span>，點選標註後點左側圖示立即變身，並附 ✕ / 🛠️ 自由收展。</td>
+            </tr>
+            <tr>
+              <td><strong>內建示範地圖品質</strong></td>
+              <td><span class="tag-red">粗糙的幾何方塊或缺乏細節的輪廓</span>，無法作為正式示範教材。</td>
+              <td><span class="tag-green">內建官方精美「世界國家地圖」與「台灣縣市區域圖（含台澎金馬）」</span>，完全收錄全球主要國家、各大洋洲（包含特別特大標記之「台灣」）與全台 22 縣市、三大離島、四大海域，共 55 處深度解析標註。</td>
+            </tr>
+            <tr>
+              <td><strong>布景風格與氣質</strong></td>
+              <td><span class="tag-red">單一暗黑冷硬色系</span>，缺乏情境彈性與親和力。</td>
+              <td><span class="tag-green">6 種調和情境配色</span>（蔚藍海洋、暖陽活力、翠綠自然、櫻花粉彩、復古羊皮卷、星際極光）。</td>
+            </tr>
+            <tr>
+              <td><strong>語音朗讀穩定度</strong></td>
+              <td><span class="tag-red">長文本朗讀容易卡頓或破音</span>，缺乏分段自然呼吸感。</td>
+              <td><span class="tag-green">世代權杖標籤分句演算法</span>，以標點符號自然換氣，支援音調速率微調與試聽。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 卷三：操作手引・極速上手 -->
+    <section id="manual">
+      <header class="chapter-header">
+        <div class="chapter-title-group">
+          <span class="chapter-number">第三卷</span>
+          <h2 class="chapter-title">極速操作完全手引</h2>
+        </div>
+        <span class="chapter-tag">STEP-BY-STEP USER MANUAL</span>
+      </header>
+
+      <div class="steps-container">
+        <!-- 步驟 1 -->
+        <div class="step-item">
+          <div class="step-ordinal">壹</div>
+          <div class="step-content">
+            <h4 class="step-title">免安裝・三秒極速啟動</h4>
+            <p class="step-desc">
+              本系統採用免安裝綠色設計，解壓縮後即可隨插即用。請先下載軟體檔案套件，再依照當前設備環境自由選擇啟動方式：
+            </p>
+            <div class="step-tips-box">
+              <span>💡</span>
+              <div>
+                <strong>雙擊「啟動學習導覽圖工作室.bat」</strong>或<strong>「學習導覽圖工作室.exe」</strong>：開啟獨立 Windows 桌面視窗，享受專屬檔案儲存對話框。<br>
+                亦可直接以 Edge / Chrome / Safari 雙擊 <strong>index.html</strong>，跨系統（Mac/iPad/Chromebook）免安裝純瀏覽器運行！
+              </div>
+            </div>
+            <div class="download-card-cta">
+              <a href="https://drive.google.com/file/d/1Y0V_D4vfZv1RKdqDFzwLdFsMFzBPu2c9/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn-step-download" title="點擊前往 Google Drive 下載完整壓縮檔案">
+                <span>📦</span> 立即至 Google 雲端硬碟下載套件檔案
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- 步驟 2 -->
+        <div class="step-item">
+          <div class="step-ordinal">貳</div>
+          <div class="step-content">
+            <h4 class="step-title">底圖置入與智慧適配（支援各類長寬比）</h4>
+            <p class="step-desc">
+              點選左上角<strong>「🖼️ 更換底圖」</strong>，選取任何您自備的圖片（JPG、PNG、WebP、SVG 均可），或直接點選<strong>「🌏 精細世界」</strong>/<strong>「🇹🇼 精細台灣」</strong>使用內建的高階向量地圖。
+            </p>
+            <div class="step-tips-box">
+              <span>📐</span>
+              <div>
+                <strong>完全免調解析度</strong>：系統會自動讀取圖片寬高比並智慧計算畫布大小。即使是直式的景區摺頁海報或正方形 Instagram 圖片，都能 100% 等比呈現，絕無拉伸黑邊。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 步驟 3 -->
+        <div class="step-item">
+          <div class="step-ordinal">參</div>
+          <div class="step-content">
+            <h4 class="step-title">滑鼠拖曳框選標註・外觀即時切換</h4>
+            <p class="step-desc">
+              將滑鼠移至圖面目標景物上，<strong>按住滑鼠左鍵並拖曳出一個矩形框</strong>，放開後立即彈出編輯視窗！
+            </p>
+            <div class="step-tips-box">
+              <span>🛠️</span>
+              <div>
+                <strong>即時外觀套用</strong>：畫布上點選任一標註後，點擊左側工具列的圖示（⭕ 脈衝圓形、🥚 橢圓、▭ 圓角框、📍 編號圖釘），標註外觀<strong>瞬間即時變身</strong>！點擊左側最下方「✕」或頂部「🛠️」可隨時隱藏工具列。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 步驟 4 -->
+        <div class="step-item">
+          <div class="step-ordinal">肆</div>
+          <div class="step-content">
+            <h4 class="step-title">填寫標註內容（支援語音試聽與配圖）</h4>
+            <p class="step-desc">
+              表單經過極簡重構，僅保留最具通用價值的欄位：
+              <strong>標題名稱</strong>、<strong>分類標籤</strong>、<strong>副標題摘要</strong>、<strong>內文詳情解說</strong>、<strong>標註主題色</strong>、<strong>特寫配圖與外部延伸網址</strong>。
+            </p>
+            <div class="step-tips-box">
+              <span>🔊</span>
+              <div>
+                在編輯器中輸入解說文字後，可點擊<strong>「🔊 試聽語音」</strong>預覽朗讀效果。確認無誤後點擊「💾 儲存標註」（或鍵盤快捷鍵 <span class="shortcut-kbd">Ctrl</span> + <span class="shortcut-kbd">S</span>）。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 步驟 5 -->
+        <div class="step-item">
+          <div class="step-ordinal">伍</div>
+          <div class="step-content">
+            <h4 class="step-title">一鍵匯出獨立 HTML・隨處分享傳播</h4>
+            <p class="step-desc">
+              編輯完成後，點擊右上角<strong>「匯出獨立 HTML」</strong>按鈕。系統將自動產出一個單一、完整的 <code>.html</code> 網頁檔案！
+            </p>
+            <div class="step-tips-box">
+              <span>🚀</span>
+              <div>
+                <strong>單檔零依賴</strong>：底圖與標註資料已全部內嵌於該 HTML 檔中，無需伺服器、無需安裝任何軟體。直接將此檔案丟到隨身碟、上傳至 Google 雲端硬碟、以 LINE 傳送或放入教學平台，任何人點開即能沈浸式探索！
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 鍵盤快捷鍵一覽 -->
+      <div class="prose-block">
+        <h3>專業製作者常用快捷鍵 (Keybindings)</h3>
+        <p style="margin-bottom: 12px;">善用鍵盤快捷鍵，能讓您的編製流程如同揮灑自如的藝術創作：</p>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; font-size: 14px;">
+          <div><span class="shortcut-kbd">Ctrl</span> + <span class="shortcut-kbd">Z</span>：復原上一步動作 (Undo)</div>
+          <div><span class="shortcut-kbd">Ctrl</span> + <span class="shortcut-kbd">Y</span>：重做下一步動作 (Redo)</div>
+          <div><span class="shortcut-kbd">Ctrl</span> + <span class="shortcut-kbd">S</span>：儲存目前編輯中的標註</div>
+          <div><span class="shortcut-kbd">Delete</span>：刪除目前在畫布上選取的標註</div>
+          <div><span class="shortcut-kbd">Esc</span>：關閉編輯表單或關閉預覽氣泡</div>
+          <div><span class="shortcut-kbd">←</span> / <span class="shortcut-kbd">→</span>：預覽模式下切換上一個/下一個標註</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 卷四：意匠風格・六景配色盤 -->
+    <section id="themes">
+      <header class="chapter-header">
+        <div class="chapter-title-group">
+          <span class="chapter-number">第四卷</span>
+          <h2 class="chapter-title">意匠調和・六景配色</h2>
+        </div>
+        <span class="chapter-tag">HARMONIC COLOR PALETTES</span>
+      </header>
+
+      <div class="interactive-swatch-box">
+        <div class="swatch-header">
+          <div class="swatch-title">
+            <span>🎨</span>
+            <span>點擊即時感受 6 款情境配色風格</span>
+          </div>
+          <div class="theme-selector-chips" id="themeChips">
+            <button class="theme-chip active" data-theme="ocean" onclick="switchManualTheme('ocean')">🌊 蔚藍海洋</button>
+            <button class="theme-chip" data-theme="vitality" onclick="switchManualTheme('vitality')">☀️ 暖陽活力</button>
+            <button class="theme-chip" data-theme="forest" onclick="switchManualTheme('forest')">🌲 翠綠自然</button>
+            <button class="theme-chip" data-theme="sakura" onclick="switchManualTheme('sakura')">🌸 櫻花粉彩</button>
+            <button class="theme-chip" data-theme="vintage" onclick="switchManualTheme('vintage')">📜 復古羊皮卷</button>
+            <button class="theme-chip" data-theme="cosmic" onclick="switchManualTheme('cosmic')">🌌 星際極光</button>
+          </div>
+        </div>
+
+        <div class="swatch-preview-canvas" id="swatchCanvas" style="background: radial-gradient(circle at center, #13223b 0%, #090d16 100%);">
+          <div id="swatchTitle" style="font-family: var(--font-serif); font-size: 20px; font-weight: 700; color: #fbbf24;">
+            蔚藍海洋 (Ocean) · 深邃海域與琥珀之光
+          </div>
+          <div id="swatchDesc" style="font-size: 13.5px; color: #94a3b8; max-width: 580px; text-align: center;">
+            深邃星夜海藍、湛藍大地與金色標記。最適合世界地理、海洋探索、國際航線與正式學術研究展示。
+          </div>
+          <div style="display: flex; gap: 10px; margin-top: 8px;" id="swatchPins">
+            <span style="background: #e11d48; color: #fff; padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">亞洲 01</span>
+            <span style="background: #8b5cf6; color: #fff; padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">歐洲 02</span>
+            <span style="background: #f59e0b; color: #000; padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">非洲 03</span>
+            <span style="background: #3b82f6; color: #fff; padding: 3px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">美洲 04</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="zen-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+        <div class="zen-card">
+          <h4 class="card-title">🌸 櫻花粉彩 (Sakura)</h4>
+          <p class="card-body">柔和粉紫漸層夜海，映照櫻粉溫暖陸地。營造溫馨、細膩、人文氣息濃厚的教學與繪本空間，適合國小低中年級與藝術展覽。</p>
+        </div>
+        <div class="zen-card">
+          <h4 class="card-title">🌲 翠綠自然 (Forest)</h4>
+          <p class="card-body">墨綠幽邃海域、青蔥森林綠意與薄荷亮調。專為自然生態保育、國家公園巡禮、台灣山脈水系與步道導覽量身打造。</p>
+        </div>
+        <div class="zen-card">
+          <h4 class="card-title">📜 復古羊皮卷 (Vintage)</h4>
+          <p class="card-body">十六世紀大航海時代的羊皮紙質、古銅赭墨線條與懷舊探險氣息。完美搭配大航海史、台灣古地圖、鄉土歷史踏查與古蹟文化。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 卷五：教學與實務錦囊 -->
+    <section id="faq">
+      <header class="chapter-header">
+        <div class="chapter-title-group">
+          <span class="chapter-number">第五卷</span>
+          <h2 class="chapter-title">跨界應用與教學錦囊</h2>
+        </div>
+        <span class="chapter-tag">PRACTICE & FAQ</span>
+      </header>
+
+      <div class="prose-block">
+        <h3>多重情境跨界應用典範</h3>
+        <ul style="list-style: none; padding-left: 0; display: flex; flex-direction: column; gap: 14px; font-size: 15px;">
+          <li style="display: flex; gap: 10px;">
+            <span style="color: var(--akane-red); font-weight: bold;">01 學校教育與跨領域學習：</span>
+            <span>地理地形識別、歷史戰役推移、國文古蹟文學散步、生物人體器官結構解析、校園動植物生態尋寶。</span>
+          </li>
+          <li style="display: flex; gap: 10px;">
+            <span style="color: var(--ainezumi); font-weight: bold;">02 地方創生與文化景區漫遊：</span>
+            <span>老街古蹟文化地圖、休閒農業園區地圖、自行車道與登山步道全景指南、文青市集攤位導覽。</span>
+          </li>
+          <li style="display: flex; gap: 10px;">
+            <span style="color: var(--matcha); font-weight: bold;">03 場館策展與公共空間指引：</span>
+            <span>博物館樓層平面圖、美術館展覽動線圖、校園新生尋寶地圖、會展中心各攤位指引。</span>
+          </li>
+          <li style="display: flex; gap: 10px;">
+            <span style="color: var(--yamabuki); font-weight: bold;">04 工業、機械與產品特色展示：</span>
+            <span>精密儀器結構爆炸圖、新車規格亮點解說圖、智慧家電功能按鍵直觀說明。</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="prose-block">
+        <h3>常見問題與分享訣竅 (Q&A)</h3>
+        
+        <p><strong>問：學生家裡沒有安裝 Python，也沒有本軟體，能打開我匯出的 HTML 檔案嗎？</strong></p>
+        <p style="color: var(--sumi-light); margin-bottom: 20px;">
+          答：<strong>絕對可以！</strong>這正是本系統最大的特色。匯出的 <code>.html</code> 是 100% 獨立的單一靜態網頁，內含完整的樣式、腳本、底圖與語音引擎。任何人在 Windows、Mac、iPhone、Android 或 iPad 上，直接點兩下檔案或在瀏覽器開啟，即刻體驗全部互動功能！
+        </p>
+
+        <p><strong>問：在大螢幕電視、智慧黑板或觸控螢幕上教學時，有什麼最佳使用建議？</strong></p>
+        <p style="color: var(--sumi-light); margin-bottom: 20px;">
+          答：匯出的 HTML 頁面右上角配有<strong>「全螢幕模式（⛶）」</strong>按鈕，可直接隱藏瀏覽器標籤頁，享受無干擾的沉浸大螢幕展示。觸控螢幕支援直接手指點擊標註跳出氣泡，點擊右上角<strong>「🚀 自動巡航」</strong>還能像電視專題報導般，依序自動播放各點位的語音解說！
+        </p>
+
+        <p><strong>問：我能將做好的導覽圖放上學校網站或個人部落格嗎？</strong></p>
+        <p style="color: var(--sumi-light);">
+          答：完全可以。您可以直接將該 <code>.html</code> 上傳至任何 Web 伺服器，或使用 <code>&lt;iframe src="導覽圖.html" width="100%" height="800"&gt;&lt;/iframe&gt;</code> 完美嵌入在任何網站、Google Sites、Moodle 或 Notion 頁面中。
+        </p>
+      </div>
+    </section>
+
+    <!-- 卷尾・落款與著作版權 -->
+    <footer class="zen-colophon">
+      <div class="colophon-seals">
+        <div class="square-seal" title="設計理念">設計<br>理念</div>
+        <div class="square-seal" style="border-color: var(--ainezumi); color: var(--ainezumi);" title="使用指南">完全<br>手引</div>
+        <div class="square-seal" style="border-color: var(--matcha); color: var(--matcha);" title="永久保留">傳世<br>藏版</div>
+      </div>
+      <p class="colophon-text">
+        本互動導覽圖系統本著教育共享、美學普及與知識自由傳遞之宗旨而建構。<br>
+        願每一位耕耘知識者，皆能以此利器，繪出屬於自己的萬象星圖。
+      </p>
+      <div class="colophon-sub">
+        INTERACTIVE MAP STUDIO PRO · 和風意匠手引本 · VERSION 2.0 RELEASE
+      </div>
+    </footer>
+
+  </main>
+
+  <script>
+    // =========================================================================
+    // 和風印鑑音效 (Web Audio API 頌缽清音)
+    // =========================================================================
+    function playZenBell() {
+      try {
+        var AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        var ctx = new AudioCtx();
+        var now = ctx.currentTime;
+
+        // 基頻與泛音 (頌缽/風鈴質感的雙振盪器)
+        var osc1 = ctx.createOscillator();
+        var osc2 = ctx.createOscillator();
+        var gain = ctx.createGain();
+
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(587.33, now); // D5 和弦主音
+        osc1.frequency.exponentialRampToValueAtTime(587.33 * 0.99, now + 1.2);
+
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(1174.66, now); // 高八度倍頻
+        osc2.frequency.exponentialRampToValueAtTime(1174.66 * 0.99, now + 0.8);
+
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.linearRampToValueAtTime(0.18, now + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.4);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 1.4);
+        osc2.stop(now + 1.4);
+      } catch (e) {}
+    }
+
+    document.getElementById('hankoStamp').addEventListener('click', function () {
+      playZenBell();
+      this.style.transform = 'scale(0.9) rotate(8deg)';
+      var self = this;
+      setTimeout(function () {
+        self.style.transform = '';
+      }, 200);
+    });
+
+    // =========================================================================
+    // 手冊內互動式配色切換展示邏輯
+    // =========================================================================
+    var THEME_INFO = {
+      ocean: {
+        title: '蔚藍海洋 (Ocean) · 深邃海域與琥珀之光',
+        desc: '深邃星夜海藍、湛藍大地與金色標記。最適合世界地理、海洋探索、國際航線與正式學術研究展示。',
+        bg: 'radial-gradient(circle at center, #13223b 0%, #090d16 100%)',
+        accent: '#fbbf24',
+        sub: '#94a3b8'
+      },
+      vitality: {
+        title: '暖陽活力 (Vitality) · 天青湖水與橙光燦爛',
+        desc: '天青湖水藍底、溫暖陶土金黃大地與亮橙圖釘。洋溢陽光、元氣與探險趣味，深受中小學生喜愛。',
+        bg: 'radial-gradient(circle at center, #0f3d4c 0%, #08212b 100%)',
+        accent: '#f97316',
+        sub: '#99f6e4'
+      },
+      forest: {
+        title: '翠綠自然 (Forest) · 幽深林海與翡翠山林',
+        desc: '墨綠深潭海、蒼翠島嶼與薄荷綠高光。為自然生態、國家公園、台灣山脈水系與步道巡禮專門訂製。',
+        bg: 'radial-gradient(circle at center, #063c2c 0%, #041f17 100%)',
+        accent: '#34d399',
+        sub: '#a7f3d0'
+      },
+      sakura: {
+        title: '櫻花粉彩 (Sakura) · 暮色紫夜與粉櫻雅境',
+        desc: '柔和粉紫漸層夜海，映照櫻粉溫暖陸地。營造溫馨、細膩、人文氣息濃厚的教學與展館空間。',
+        bg: 'radial-gradient(circle at center, #3c1a36 0%, #210d1e 100%)',
+        accent: '#f472b6',
+        sub: '#fbcfe8'
+      },
+      vintage: {
+        title: '復古羊皮卷 (Vintage) · 大航海歲月與古墨手繪',
+        desc: '經典羊皮古地圖米褐色澤、復古赭墨與航海羅盤線條。最適合鄉土歷史、大航海時代與古蹟巡禮。',
+        bg: 'radial-gradient(circle at center, #3d3122 0%, #241c13 100%)',
+        accent: '#f59e0b',
+        sub: '#e2d4be'
+      },
+      cosmic: {
+        title: '星際極光 (Cosmic) · 浩瀚深空與極光霓虹',
+        desc: '深邃藍紫太空、星塵背景與賽博龐克光暈。適合天文科學探索、未來城市藍圖與高科技解說展示。',
+        bg: 'radial-gradient(circle at center, #2e1065 0%, #170733 100%)',
+        accent: '#38bdf8',
+        sub: '#c084fc'
+      }
+    };
+
+    function switchManualTheme(themeKey) {
+      playZenBell();
+      var info = THEME_INFO[themeKey];
+      if (!info) return;
+
+      document.querySelectorAll('.theme-chip').forEach(function (c) {
+        c.classList.toggle('active', c.getAttribute('data-theme') === themeKey);
+      });
+
+      var canvas = document.getElementById('swatchCanvas');
+      var tEl = document.getElementById('swatchTitle');
+      var dEl = document.getElementById('swatchDesc');
+
+      canvas.style.background = info.bg;
+      tEl.style.color = info.accent;
+      tEl.textContent = info.title;
+      dEl.textContent = info.desc;
+      dEl.style.color = info.sub;
+    }
+  </script>
+</body>
+
+</html>
