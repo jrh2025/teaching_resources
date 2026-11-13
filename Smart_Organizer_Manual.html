@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Organizer — 設計理念與使用說明手冊</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --surface-alt: #f0f4fa;
+      --text: #1b2432;
+      --text-muted: #5a6678;
+      --border: #dce3ee;
+      --primary: #2563eb;
+      --primary-soft: #e8f0fe;
+      --accent: #0ea5e9;
+      --success: #16a34a;
+      --success-soft: #e8f8ee;
+      --warn: #d97706;
+      --warn-soft: #fef5e6;
+      --danger: #dc2626;
+      --danger-soft: #fdecec;
+      --code-bg: #eef2f8;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+      --radius: 14px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f141d;
+      --surface: #171e2b;
+      --surface-alt: #1e2738;
+      --text: #e6edf7;
+      --text-muted: #9aa7bc;
+      --border: #2a3548;
+      --primary: #60a5fa;
+      --primary-soft: rgba(96, 165, 250, 0.14);
+      --accent: #38bdf8;
+      --success: #4ade80;
+      --success-soft: rgba(74, 222, 128, 0.12);
+      --warn: #fbbf24;
+      --warn-soft: rgba(251, 191, 36, 0.12);
+      --danger: #f87171;
+      --danger-soft: rgba(248, 113, 113, 0.12);
+      --code-bg: #232d40;
+      --shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Microsoft JhengHei", "PingFang TC", "Noto Sans TC", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.72;
+      font-size: 15.5px;
+    }
+
+    /* 版面配置 */
+    .layout {
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+      max-width: 1320px;
+      margin: 0 auto;
+      gap: 28px;
+      padding: 24px;
+    }
+
+    /* 左側導覽 */
+    .sidebar {
+      position: sticky;
+      top: 20px;
+      height: calc(100vh - 40px);
+      overflow-y: auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 18px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .brand h1 {
+      font-size: 16px;
+      margin: 0;
+      line-height: 1.3;
+    }
+
+    .brand small {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .toolbar-mini {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-ghost {
+      flex: 1;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--text);
+      padding: 7px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12.5px;
+      font-family: inherit;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-ghost:hover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+
+    .search-box {
+      width: 100%;
+      padding: 8px 11px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-alt);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13.5px;
+    }
+    .search-box:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .nav-group-title {
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      margin: 8px 0 4px 8px;
+    }
+
+    .nav-links {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .nav-links a {
+      display: block;
+      padding: 7px 10px;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text);
+      font-size: 13.5px;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      background: var(--primary-soft);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* 主內容區 */
+    .main {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      min-width: 0;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 55%, #0284c7 100%);
+      color: #ffffff;
+      border-radius: var(--radius);
+      padding: 34px 36px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 240px;
+      height: 240px;
+      background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      padding: 3px 11px;
+      border-radius: 999px;
+      font-size: 12.5px;
+      margin-bottom: 12px;
+    }
+
+    .hero h2 {
+      margin: 0 0 10px 0;
+      font-size: 28px;
+      line-height: 1.3;
+    }
+
+    .hero p {
+      margin: 0;
+      max-width: 780px;
+      opacity: 0.94;
+      font-size: 15.5px;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 20px;
+      align-items: center;
+    }
+
+    .btn-download-hero {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #ffffff;
+      color: #1e3a8a;
+      font-weight: 700;
+      font-size: 14.5px;
+      padding: 10px 18px;
+      border-radius: 10px;
+      text-decoration: none;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.2);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-download-hero:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.28);
+    }
+
+    .btn-secondary-hero {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      font-weight: 600;
+      font-size: 14px;
+      padding: 9px 16px;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .btn-secondary-hero:hover {
+      background: rgba(255, 255, 255, 0.26);
+    }
+
+    .btn-download-side {
+      display: block;
+      text-align: center;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 13.5px;
+      padding: 9px 12px;
+      border-radius: 9px;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .btn-download-side:hover { opacity: 0.92; }
+
+    .download-box {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      background: var(--primary-soft);
+      border: 1px solid var(--primary);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin: 14px 0;
+    }
+
+    .download-url {
+      word-break: break-all;
+      font-family: Consolas, "Cascadia Code", monospace;
+      font-size: 13px;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .download-url:hover { text-decoration: underline; }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--primary);
+      color: #ffffff;
+      border: none;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 9px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+
+    .hero-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .metric {
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 10px;
+      padding: 10px 14px;
+    }
+    .metric strong { display: block; font-size: 17px; }
+    .metric span { font-size: 12px; opacity: 0.88; }
+
+    section.card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 32px;
+      box-shadow: var(--shadow);
+      scroll-margin-top: 20px;
+    }
+
+    section.card.hidden-by-search {
+      display: none;
+    }
+
+    .section-tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--primary);
+      background: var(--primary-soft);
+      padding: 2px 10px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+
+    h3 {
+      margin: 0 0 14px 0;
+      font-size: 22px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 10px;
+    }
+
+    h4 {
+      margin: 22px 0 10px 0;
+      font-size: 16.5px;
+      color: var(--text);
+    }
+
+    p { margin: 0 0 12px 0; }
+
+    ul, ol {
+      margin: 0 0 14px 0;
+      padding-left: 22px;
+    }
+    li { margin-bottom: 6px; }
+
+    code {
+      font-family: Consolas, "Cascadia Code", "Courier New", monospace;
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-size: 0.9em;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin: 14px 0;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin: 14px 0;
+    }
+
+    .pillar {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+    }
+    .pillar h5 {
+      margin: 0 0 6px 0;
+      font-size: 15.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pillar p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .callout {
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin: 14px 0;
+      border-left: 4px solid;
+      font-size: 14.5px;
+    }
+    .callout strong { display: block; margin-bottom: 4px; }
+    .callout.info { background: var(--primary-soft); border-color: var(--primary); }
+    .callout.success { background: var(--success-soft); border-color: var(--success); }
+    .callout.warn { background: var(--warn-soft); border-color: var(--warn); }
+    .callout.danger { background: var(--danger-soft); border-color: var(--danger); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--surface-alt);
+      font-weight: 700;
+    }
+
+    .tree {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+      font-family: Consolas, "Cascadia Code", monospace;
+      font-size: 13.5px;
+      line-height: 1.65;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin: 14px 0;
+    }
+    .step {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .step-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      font-size: 14px;
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .step h5 { margin: 0 0 4px 0; font-size: 15px; }
+    .step p { margin: 0; font-size: 14px; color: var(--text-muted); }
+
+    .diagram-wrap {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 16px 0;
+      overflow-x: auto;
+    }
+    .diagram-wrap svg {
+      width: 100%;
+      min-width: 680px;
+      height: auto;
+      display: block;
+    }
+
+    details {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 15px;
+    }
+    details p {
+      margin: 10px 0 0 0;
+      font-size: 14.5px;
+      color: var(--text-muted);
+    }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      padding: 12px 0 28px;
+    }
+
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; padding: 14px; }
+      .sidebar { position: static; height: auto; }
+      .hero-metrics, .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      body { background: #fff; color: #000; font-size: 12pt; }
+      .sidebar, .toolbar-mini { display: none !important; }
+      .layout { grid-template-columns: 1fr; padding: 0; }
+      section.card { box-shadow: none; break-inside: avoid; border-color: #ccc; }
+      .hero { background: #1e3a8a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">SO</div>
+        <div>
+          <h1>Smart Organizer</h1>
+          <small>v0.1.0 設計理念與操作手冊</small>
+        </div>
+      </div>
+
+      <div class="toolbar-mini">
+        <button class="btn-ghost" id="themeToggle" type="button">🌙 切換深色</button>
+        <button class="btn-ghost" onclick="window.print()" type="button">🖨 列印 / PDF</button>
+      </div>
+
+      <a class="btn-download-side" href="https://drive.google.com/file/d/1ODyRgSzEW__rpcViSBgmKYWvEV_QNori/view?usp=sharing" target="_blank" rel="noopener noreferrer">⬇ 下載主程式 (Google Drive)</a>
+
+      <input class="search-box" id="manualSearch" type="search" placeholder="搜尋手冊章節或關鍵字..." />
+
+      <div>
+        <div class="nav-group-title">快速開始</div>
+        <ul class="nav-links">
+          <li><a href="#download">0. 程式下載與首次開啟</a></li>
+        </ul>
+
+        <div class="nav-group-title">Part 1 · 設計理念與架構</div>
+        <ul class="nav-links">
+          <li><a href="#philosophy">1. 核心設計哲學</a></li>
+          <li><a href="#architecture">2. 系統架構與處理管線</a></li>
+          <li><a href="#project-safety">3. 專案邊界與多層安全防護</a></li>
+          <li><a href="#dedup-engine">4. 預診斷與三段式去重</a></li>
+        </ul>
+
+        <div class="nav-group-title">Part 2 · 使用說明手冊</div>
+        <ul class="nav-links">
+          <li><a href="#desktop-guide">5. 桌面懶人極速整理教學</a></li>
+          <li><a href="#modes">6. 三種執行模式與復原機制</a></li>
+          <li><a href="#cleanup-force">7. 智慧清理建議與強制移除</a></li>
+          <li><a href="#categories">8. 分類目錄與命名規則一覽</a></li>
+          <li><a href="#ai-settings">9. 選配 AI 歸納與自訂規則</a></li>
+          <li><a href="#faq">10. 常見問題與安全排解 (FAQ)</a></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="hero">
+        <span class="hero-badge">純 Rust 單檔免安裝桌面整理工具 · eframe / egui</span>
+        <h2>Smart Organizer 設計理念與使用說明手冊</h2>
+        <p>
+          專為解決「凌亂桌面、爆滿下載區、混雜照片與程式專案」而生的智慧資料夾總整理工具。
+          以<strong>「安全不誤刪、專案不拆散、預覽即所得、執行可復原」</strong>為最高原則，結合單次平行掃描、三段式 BLAKE3 精準去重、EXIF 拍攝日歸檔與可選雲端／本地 AI。
+        </p>
+        <div class="hero-actions">
+          <a class="btn-download-hero" href="https://drive.google.com/file/d/1ODyRgSzEW__rpcViSBgmKYWvEV_QNori/view?usp=sharing" target="_blank" rel="noopener noreferrer">
+            ⬇ 下載 Smart Organizer (Windows x64)
+          </a>
+          <a class="btn-secondary-hero" href="#download">📖 查看下載與啟動指引</a>
+        </div>
+        <div class="hero-metrics">
+          <div class="metric"><strong>單檔免安裝</strong><span>無需外部執行環境，隨開即用</span></div>
+          <div class="metric"><strong>7 大智慧分類</strong><span>捷徑保護 / 專案原子 / 截圖分箱</span></div>
+          <div class="metric"><strong>三段式 BLAKE3</strong><span>大小 → 4KB 抽樣 → 完整指紋</span></div>
+          <div class="metric"><strong>獨立復原日誌</strong><span>支援背景一鍵還原與指定日誌還原</span></div>
+        </div>
+      </header>
+
+      <!-- 0. 程式下載與首次開啟 -->
+      <section class="card" id="download">
+        <span class="section-tag">快速開始 · 檔案下載</span>
+        <h3>0. 程式下載位置與首次開啟指引</h3>
+        <p>
+          本程式為單檔免安裝版，解壓縮後雙擊 <code>smart-organizer.exe</code> 即可使用，不寫入系統機碼、不需安裝任何額外執行環境。
+        </p>
+
+        <div class="download-box">
+          <div style="flex: 1; min-width: 260px;">
+            <strong style="display:block; margin-bottom:4px;">📦 官方雲端下載位置（Windows 64-bit 壓縮包）：</strong>
+            <a class="download-url" id="downloadUrlText" href="https://drive.google.com/file/d/1ODyRgSzEW__rpcViSBgmKYWvEV_QNori/view?usp=sharing" target="_blank" rel="noopener noreferrer">
+              https://drive.google.com/file/d/1ODyRgSzEW__rpcViSBgmKYWvEV_QNori/view?usp=sharing
+            </a>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <a class="btn-primary" href="https://drive.google.com/file/d/1ODyRgSzEW__rpcViSBgmKYWvEV_QNori/view?usp=sharing" target="_blank" rel="noopener noreferrer">⬇ 前往下載</a>
+            <button class="btn-ghost" id="copyLinkBtn" type="button">📋 複製連結</button>
+          </div>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div>
+              <h5>下載並解壓縮</h5>
+              <p>點擊上方連結前往 Google Drive 下載壓縮檔，右鍵選擇「全部解壓縮」至任意資料夾（請勿直接在壓縮檔預覽視窗中雙擊執行）。</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div>
+              <h5>雙擊啟動 <code>smart-organizer.exe</code></h5>
+              <p>若 Windows 跳出藍色「Windows 已保護您的電腦」SmartScreen 提醒，這是因為獨立編譯執行檔未購買商業數位簽章；請點選「<strong>其他資訊</strong>」→「<strong>仍要執行</strong>」即可正常開啟。</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div>
+              <h5>開始安全整理您的桌面或資料夾</h5>
+              <p>建議先點擊頂部的「✨ 載入桌面（原地精簡分類）」或選擇「安全複製」模式試跑預覽成果。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 1. 核心設計哲學 -->
+      <section class="card" id="philosophy">
+        <span class="section-tag">設計理念</span>
+        <h3>1. 核心設計哲學：為什麼這樣設計？</h3>
+        <p>
+          多數檔案整理工具容易陷入兩個極端：要麼只看副檔名粗暴搬移（導致整個程式專案被拆得支離破碎），要麼沒有預覽與反悔機制，整理一次反而更找不到東西。Smart Organizer 在設計上堅持四大核心支柱：
+        </p>
+        <div class="grid-2">
+          <div class="pillar">
+            <h5>🛡 1. 安全永遠優先於自動化</h5>
+            <p>
+              絕不未經確認就靜默刪除資料。重複檔與無用檔優先集中至 <code>05_待確認隔離區</code>；所有搬移與原地取代皆寫入獨立時間戳 JSONL 復原日誌，隨時可一鍵還原。
+            </p>
+          </div>
+          <div class="pillar">
+            <h5>🧩 2. 語意邊界感知，而非只看副檔名</h5>
+            <p>
+              同時讀取檔案前 8KB 的 Magic Bytes 真實格式、照片 EXIF 拍攝日期，並辨識專案根目錄標記。副檔名被改錯的檔案也能正確歸類，專案資料夾更會被完整保留。
+            </p>
+          </div>
+          <div class="pillar">
+            <h5>👁 3. 預覽即所得（WYSIWYG）</h5>
+            <p>
+              掃描完成後，目標路徑撞名消歧（如 <code>(1)</code>）、同名專案區別、AI 更名與手動調整分類都會在列表即時定案；「整理前後規劃總覽」更讓您先看藍圖再動手。
+            </p>
+          </div>
+          <div class="pillar">
+            <h5>⚡ 4. 極致效能與隱私主權</h5>
+            <p>
+              單次平行遍歷（不重覆掃描快取或子目錄），配合虛擬捲動渲染萬級檔案。AI 功能預設完全關閉，僅在您自行填入 API Key 或連接本地 Ollama 時啟用，金鑰預設不寫入硬碟。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. 系統架構與處理管線 -->
+      <section class="card" id="architecture">
+        <span class="section-tag">系統架構</span>
+        <h3>2. 系統架構與多階段處理管線</h3>
+        <p>
+          為了兼顧掃描速度與分類準確度，Smart Organizer 採用「單次 I/O 掃描 → 無用檔預檢 → 三段式去重 → 規則分類 → 預覽消歧 →（選配）AI 語意歸納 → 安全執行」七段流水線，耗時作業全部在背景執行緒執行，不阻塞桌面視窗操作。
+        </p>
+
+        <div class="diagram-wrap">
+          <svg viewBox="0 0 920 220" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b" />
+              </marker>
+            </defs>
+            <g font-family="Microsoft JhengHei, sans-serif" font-size="12.5" text-anchor="middle">
+              <!-- Box 1 -->
+              <rect x="12" y="28" width="128" height="72" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="1.5"/>
+              <text x="76" y="54" font-weight="700" fill="#1e3a8a">1. 單次平行掃描</text>
+              <text x="76" y="74" fill="#334155">jwalk 遍歷＋統計大小</text>
+              <text x="76" y="90" fill="#334155">辨識專案邊界與快取</text>
+              <line x1="140" y1="64" x2="164" y2="64" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+              <!-- Box 2 -->
+              <rect x="166" y="28" width="128" height="72" rx="10" fill="#fef3c7" stroke="#d97706" stroke-width="1.5"/>
+              <text x="230" y="54" font-weight="700" fill="#92400e">2. 無用檔預檢</text>
+              <text x="230" y="74" fill="#334155">0-byte / 系統殘留</text>
+              <text x="230" y="90" fill="#334155">未完成下載進隔離區</text>
+              <line x1="294" y1="64" x2="318" y2="64" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+              <!-- Box 3 -->
+              <rect x="320" y="28" width="136" height="72" rx="10" fill="#fee2e2" stroke="#dc2626" stroke-width="1.5"/>
+              <text x="388" y="54" font-weight="700" fill="#991b1b">3. 三段式去重</text>
+              <text x="388" y="74" fill="#334155">大小 → 頭中尾 4KB</text>
+              <text x="388" y="90" fill="#334155">→ 完整 BLAKE3 指紋</text>
+              <line x1="456" y1="64" x2="480" y2="64" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+              <!-- Box 4 -->
+              <rect x="482" y="28" width="136" height="72" rx="10" fill="#dcfce7" stroke="#16a34a" stroke-width="1.5"/>
+              <text x="550" y="54" font-weight="700" fill="#166534">4. 規則與 EXIF 分類</text>
+              <text x="550" y="74" fill="#334155">Magic Bytes / 捷徑</text>
+              <text x="550" y="90" fill="#334155">截圖分箱 / 碰撞消歧</text>
+              <line x1="618" y1="64" x2="642" y2="64" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+              <!-- Box 5 -->
+              <rect x="644" y="28" width="124" height="72" rx="10" fill="#e0f2fe" stroke="#0284c7" stroke-width="1.5"/>
+              <text x="706" y="54" font-weight="700" fill="#075985">5. 預覽與微調</text>
+              <text x="706" y="74" fill="#334155">Before → After 藍圖</text>
+              <text x="706" y="90" fill="#334155">選配 AI 歸納未分類</text>
+              <line x1="768" y1="64" x2="792" y2="64" stroke="#64748b" stroke-width="2" marker-end="url(#arrow)"/>
+
+              <!-- Box 6 -->
+              <rect x="794" y="28" width="114" height="72" rx="10" fill="#f3e8ff" stroke="#7e22ce" stroke-width="1.5"/>
+              <text x="851" y="54" font-weight="700" fill="#581c87">6. 安全執行</text>
+              <text x="851" y="74" fill="#334155">複製 / 搬移 / 原地</text>
+              <text x="851" y="90" fill="#334155">寫入獨立復原日誌</text>
+
+              <!-- 底部安全防護帶 -->
+              <rect x="12" y="132" width="896" height="64" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-dasharray="6 4" stroke-width="1.5"/>
+              <text x="460" y="158" font-weight="700" fill="#1e293b">底層安全防呆層（全程守護）</text>
+              <text x="460" y="180" fill="#475569">不跟隨符號連結 · 路徑重疊驗證 · 跨磁碟複製數量與位元組校驗 · 路徑穿越消毒 · 二次確認刪除與獨立復原日誌</text>
+            </g>
+          </svg>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>模組檔案</th>
+              <th>職責定位</th>
+              <th>關鍵設計亮點</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>scanner.rs</code></td>
+              <td>單次平行掃描與邊界偵測</td>
+              <td>不重複遍歷計算大小、忽略內部標記與復原日誌、不跟隨符號連結、自動區分同名專案。</td>
+            </tr>
+            <tr>
+              <td><code>dedup.rs</code></td>
+              <td>三段式 BLAKE3 去重引擎</td>
+              <td>只對有效非隔離檔案比對，避開 0-byte 與垃圾檔干擾；<code>rayon</code> 平行讀寫與計算。</td>
+            </tr>
+            <tr>
+              <td><code>classifier.rs</code></td>
+              <td>規則與 EXIF 智慧分類</td>
+              <td>捷徑辨識、截圖獨立分箱、Magic Bytes 真實格式偵測、當地時區日期回退、預覽撞名消歧。</td>
+            </tr>
+            <tr>
+              <td><code>executor.rs</code></td>
+              <td>執行、復原與強制清理</td>
+              <td>原地整理與空目錄安全清理、跨磁碟目錄複製校驗、獨立復原日誌、解除唯讀與長路徑強制刪除。</td>
+            </tr>
+            <tr>
+              <td><code>ai.rs</code></td>
+              <td>選配雲端／本地 AI 引擎</td>
+              <td>Gemini 與 OpenAI-compatible 雙支援、純文字自動過濾、嚴格消毒路徑與 Windows 保留字。</td>
+            </tr>
+            <tr>
+              <td><code>config.rs</code> &amp; <code>app.rs</code></td>
+              <td>設定持久化與互動介面</td>
+              <td>自動偵測桌面/下載/文件位置、虛擬捲動列表、即時進度條與中途取消、Before→After 規劃總覽。</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 3. 專案邊界與多層安全防護 -->
+      <section class="card" id="project-safety">
+        <span class="section-tag">專案保護機制</span>
+        <h3>3. 複雜多層專案與檔案安全防護</h3>
+        <p>
+          程式開發專案、Unity/Unreal 遊戲專案或複合設計專案往往包含數十層子資料夾與圖片、PDF、字型、二進位檔等多種格式。一般整理工具很容易誤把專案裡的貼圖抽進「照片區」、說明書抽進「文件區」，導致專案編譯失敗。
+        </p>
+
+        <h4>Smart Organizer 的四重專案安全防線</h4>
+        <ul>
+          <li>
+            <strong>廣泛的專案根目錄標記辨識：</strong>
+            自動偵測 <code>.git</code>、<code>.hg</code>、<code>.svn</code>、<code>Cargo.toml</code>、<code>package.json</code>、<code>pyproject.toml</code>、<code>go.mod</code>、<code>pom.xml</code>、<code>build.gradle(.kts)</code>、<code>settings.gradle(.kts)</code>、<code>composer.json</code>、<code>CMakeLists.txt</code>、<code>pubspec.yaml</code>、<code>Gemfile</code>、<code>mix.exs</code>、<code>Makefile</code>、<code>meson.build</code>、Unity <code>ProjectSettings</code>，以及 <code>.sln</code>、<code>.csproj</code>、<code>.vbproj</code>、<code>.vcxproj</code>、<code>.xcodeproj</code>、<code>.xcworkspace</code>。
+          </li>
+          <li>
+            <strong>單一原子單元保護（Atomic Unit）：</strong>
+            一旦目錄被判定為最外層專案（<code>top_projects</code>），其內部所有子模組、靜態資源、文件與設定檔一律封存於專案內整體移動，不進入去重也不拆散分類，列表中以 <code>🛡 完整專案（原子保護）</code> 標示並鎖定不可誤改分類。
+          </li>
+          <li>
+            <strong>排除內部偽標記誤判：</strong>
+            不會把 <code>node_modules</code>、<code>target</code>、<code>.venv</code> 或已整理好的非專案分類夾裡的 <code>package.json</code> 誤認為獨立專案；不同子目錄下的同名專案（如 <code>work/app</code> 與 <code>personal/app</code>）會自動補上父目錄區分命名。
+          </li>
+          <li>
+            <strong>跨磁碟複製完整性校驗與來源警示：</strong>
+            若跨磁碟機搬移專案（無法單純透過 <code>rename</code> 完成），系統會先遞迴複製並核對<strong>檔案總數與總位元組數完全一致</strong>後才安全移除來源；若使用者不小心選取了本身即專案根目錄的資料夾作為來源，頂部會立即顯示橘色安全警告。
+          </li>
+        </ul>
+      </section>
+
+      <!-- 4. 預診斷與三段式去重 -->
+      <section class="card" id="dedup-engine">
+        <span class="section-tag">去重演算法</span>
+        <h3>4. 為什麼「先預檢垃圾，再去重」？</h3>
+        <p>
+          許多資料夾中存在複數個 <code>Thumbs.db</code>、<code>.DS_Store</code> 或相同的 0-byte 空檔案。如果先做去重，系統會誤把其中一個 <code>Thumbs.db</code> 視為「主檔」，另一個標記為「重複檔」，導致重複空間統計失真。
+        </p>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div>
+              <h5>階段 A：無用垃圾預檢（Pre-diagnosis）</h5>
+              <p>先挑出 0-byte 空檔、系統殘留（<code>.DS_Store</code>、<code>Thumbs.db</code>、<code>desktop.ini</code>、<code>._*</code>）與未完成下載（<code>.crdownload</code>、<code>.part</code>、<code>.tmp</code>、<code>.download</code>），直接歸入隔離區。</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div>
+              <h5>階段 B：大小分組 → 頭中尾 4KB 局部雜湊 → 完整 BLAKE3</h5>
+              <p>只對「非專案、非隔離區、大小 &gt; 0」的有效檔案執行。先依檔案大小過濾唯一值，再平行讀取頭、中、尾各 4KB 計算局部雜湊，最後只對依然碰撞的極少數候選者計算完整 BLAKE3，大幅節省磁碟讀取時間。</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div>
+              <h5>階段 C：保留主檔與標註建議</h5>
+              <p>每組重複檔中保留「修改時間較早（若相同則路徑較短）」的檔案為主檔留在原分類；其餘重複副本歸入 <code>05_待確認隔離區/重複檔案</code> 並附註來源主檔名稱與「建議刪除」提示。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. 桌面懶人極速整理教學 -->
+      <section class="card" id="desktop-guide">
+        <span class="section-tag">使用手冊 · 最受歡迎情境</span>
+        <h3>5. 凌亂桌面一鍵整理實戰教學</h3>
+        <p>
+          打開 <code>smart-organizer.exe</code> 後，不需手動翻找使用者目錄，頂部的「<strong>🖥 懶人快速規劃</strong>」提供專為桌面設計的雙方案：
+        </p>
+
+        <div class="grid-2">
+          <div class="callout info">
+            <strong>方案 A：✨ 載入桌面（原地精簡分類）</strong>
+            自動偵測系統桌面（含 Windows OneDrive 桌面），切換為原地整理並開啟「保留桌面捷徑於原位」與「截圖獨立分箱」。整理後，您的桌面只會留下<strong>常用軟體捷徑＋數個整齊分類箱</strong>，並自動移除被搬空的舊資料夾。
+          </div>
+          <div class="callout success">
+            <strong>方案 B：🧹 桌面極淨歸檔（移至「文件」資料夾）</strong>
+            適合追求「零雜物極簡桌面」的使用者！保留常用的軟體與網頁捷徑留在桌面上方便點擊，把散落桌面各處的 PDF、簡報、照片、截圖與壓縮包一次搬移歸檔至 <code>文件/桌面整理歸檔_YYYYMMDD</code>（含完整復原日誌）。
+          </div>
+        </div>
+
+        <h4>標準四步驟操作流程</h4>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div>
+              <h5>一鍵載入與自動掃描</h5>
+              <p>點擊「✨ 載入桌面（原地精簡分類）」或「🧹 桌面極淨歸檔」（或手動選取任意來源資料夾並按「🔍 1. 快速掃描與診斷」）。系統會自動識別捷徑、專案、截圖、文件與重複垃圾。</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div>
+              <h5>先清垃圾：一鍵處理「智慧清理建議」</h5>
+              <p>若掃描發現重複檔、空檔、系統殘留或陳舊安裝檔，列表上方會亮起「🧹 智慧清理建議」列，顯示可釋放總空間。點擊「🗑 一鍵移至回收桶」即可先瘦身（遇到唯讀檔刪不掉時系統會主動引導轉用強制刪除）。</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div>
+              <h5>開啟「🗺 整理前後規劃總覽 (Before → After)」確認藍圖</h5>
+              <p>檢視整理前後的對比結構、保留原位捷徑數量、各分類資料夾項目數與大小；若有個別檔案想改分類，直接在列表中下拉調整即可。還可點「📋 複製規劃報告 (Markdown)」留存紀錄。</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div>
+              <h5>確認執行，隨時可一鍵復原</h5>
+              <p>點擊「🚀 執行整理」或「🚀 執行原地取代」，執行進度條會即時回報進度（也可隨時按「⏹ 取消」中斷）。完成後若不滿意，按「↩ 一鍵復原上次搬移」即可還原。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout warn">
+          <strong>桌面三大貼心預設保護</strong>
+          1. 工具列預設勾選「<code>保留桌面捷徑於原位</code>」，Chrome、Line、Office 等 <code>.lnk</code> / <code>.url</code> 圖示不會被收進資料夾。<br />
+          2. 桌面根目錄下的系統隱藏檔 <code>desktop.ini</code> 預設略過保護，不影響 Windows 圖示排版與資料夾名稱顯示。<br />
+          3. 檔名含 <code>螢幕擷取</code>、<code>截圖</code>、<code>Screenshot</code>、<code>Snipaste</code> 等截圖圖片會自動獨立歸入 <code>螢幕截圖/YYYY-MM</code>，不與旅遊照片混雜。
+        </div>
+      </section>
+
+      <!-- 6. 三種執行模式與復原機制 -->
+      <section class="card" id="modes">
+        <span class="section-tag">使用手冊 · 執行模式</span>
+        <h3>6. 三種執行模式與復原機制</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>模式名稱</th>
+              <th>對原目錄的影響</th>
+              <th>安全防呆與日誌</th>
+              <th>適用情境</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>安全複製（保留原檔）</strong></td>
+              <td>來源資料夾<strong>完全不動</strong>，在目標資料夾建立整理好的副本。</td>
+              <td>禁止來源與目標路徑重疊或互相包含；預覽即消歧。</td>
+              <td>第一次使用、想先在旁測試分類成果或保留原貌備份。</td>
+            </tr>
+            <tr>
+              <td><strong>搬移至目標（含獨立復原日誌）</strong></td>
+              <td>將勾選項目從來源搬移至全新的目標資料夾（同磁碟秒速搬移）。</td>
+              <td>寫入 <code>.organizer_undo_YYYYMMDD_HHMMSS.jsonl</code> 獨立日誌。</td>
+              <td>「桌面極淨歸檔」或將下載區彙整到外部硬碟／文件歸檔區。</td>
+            </tr>
+            <tr>
+              <td><strong>原地整理（直接取代原目錄）</strong></td>
+              <td>直接在來源資料夾內重新歸類成整齊子目錄，並可自動清理搬空的舊子目錄。</td>
+              <td>寫入獨立復原日誌；自動跳過已位於正確目標的檔案與日誌檔本身。</td>
+              <td>「桌面原地精簡」、直接整理現有混亂資料夾且不想多出新位置。</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4>如何進行復原（Undo）？</h4>
+        <ul>
+          <li><strong>當次立即復原：</strong>搬移或原地整理完成後，頂部會出現「<code>↩ 一鍵復原上次搬移</code>」按鈕，點擊後於背景執行緒倒序還原所有項目（且不會覆蓋任何新增的同名檔案）。</li>
+          <li><strong>重開程式後復原過去紀錄：</strong>點擊右上角「<code>📂 選擇日誌復原</code>」，選取目標（或原）資料夾內隱藏的 <code>.organizer_undo_*.jsonl</code> 檔案即可還原。當整份日誌完全還原成功後，系統會自動將其更名為 <code>*.restored.jsonl</code> 避免重複執行。</li>
+        </ul>
+      </section>
+
+      <!-- 7. 智慧清理建議與強制移除 -->
+      <section class="card" id="cleanup-force">
+        <span class="section-tag">使用手冊 · 深度清理</span>
+        <h3>7. 智慧清理建議、快取清理與強制移除</h3>
+        <p>
+          針對一般使用者最頭痛的「重複檔佔空間」與「部分檔案或資料夾死活刪不掉（例如含唯讀 <code>.git</code> 或超長路徑 <code>node_modules</code>）」問題，系統提供兩階段安全清理能力：
+        </p>
+        <div class="grid-2">
+          <div class="pillar">
+            <h5>🗑 一般清理：移至系統資源回收桶</h5>
+            <p>
+              適用所有常規重複檔、0-byte 空檔、系統殘留、過期安裝包與肥大快取。刪除後仍可在 Windows 資源回收桶／macOS 垃圾桶找回。若發生部分檔案因唯讀或路徑過長無法移入回收桶，系統會自動彙整失敗清單，彈出視窗詢問是否改用「強制永久刪除」。
+            </p>
+          </div>
+          <div class="pillar">
+            <h5>⚡ 強制移除：強制永久刪除</h5>
+            <p>
+              點擊前必經<strong>紅色警告二次確認視窗</strong>（標示影響數量與總空間）。執行時自動解除唯讀屬性（<code>readonly</code>）、支援 Windows <code>\\?\</code> 長路徑延伸前綴、針對短暫占用重試，且嚴格不跟隨符號連結誤刪外部目錄。
+            </p>
+          </div>
+        </div>
+        <div class="callout info">
+          <strong>如何清理開發專案留下的肥大快取？</strong>
+          掃描後若偵測到大於門檻（預設 10 MB）的 <code>node_modules</code>、<code>target</code>、<code>__pycache__</code>、<code>.venv</code>、<code>.next</code>、<code>dist</code>，列表上方會顯示黃色提示條與「<code>檢視／清理快取目錄</code>」按鈕，點開後可依大小排序勾選並自由選擇「移至回收桶」或「強制永久刪除」。
+        </div>
+      </section>
+
+      <!-- 8. 分類目錄與命名規則一覽 -->
+      <section class="card" id="categories">
+        <span class="section-tag">分類規則表</span>
+        <h3>8. 預設整理目標目錄結構一覽</h3>
+        <div class="tree">目標資料夾（或原地整理後的來源資料夾）
+├── 00_常用捷徑/                  # .lnk, .url, .webloc, .desktop, .appref-ms（預設保留於桌面原位）
+├── 01_程式專案/                  # 含專案標記之完整資料夾（原子保護，不拆散內部）
+├── 02_照片與影音/
+│   ├── 照片/YYYY/YYYY-MM/        # 優先讀取 EXIF 拍攝日期，無 EXIF 回退當地修改時間
+│   ├── 螢幕截圖/YYYY-MM/         # 檔名含截圖關鍵字（Screenshot / Snipaste / 螢幕擷取…）
+│   ├── 影片/YYYY/YYYY-MM/
+│   └── 音訊/YYYY/YYYY-MM/
+├── 03_教學教材與文件/
+│   ├── 教學與課程/               # 檔名命中自訂教學關鍵字（教案、講義、考卷、學習單…）
+│   ├── PDF文件/
+│   ├── 簡報與試算表/             # pptx, xlsx, csv, odp, ods, key, numbers
+│   ├── 電子書/                   # epub, mobi, azw3
+│   ├── 設計與字型/               # psd, ai, fig, sketch, xd, ttf, otf, woff2
+│   ├── 散落程式與設定/           # 不在專案內的獨立 .json, .yaml, .py, .rs, .sql, .html…
+│   └── 一般文件/                 # docx, md, txt, rtf, odt
+├── 04_下載軟體與壓縮包/
+│   ├── 安裝程式/                 # 未超過設定天數之 .exe, .msi, .dmg, .pkg, .apk…
+│   └── 壓縮歸檔/                 # .zip, .7z, .rar, .tar, .gz, .iso…
+├── 05_待確認隔離區/
+│   ├── 重複檔案/                 # 三段式 BLAKE3 比對完全相同的副本（附建議刪除提示）
+│   ├── 空檔案/                   # 0-byte 檔案
+│   ├── 系統殘留/                 # .DS_Store, Thumbs.db, desktop.ini, ._*
+│   ├── 未完成下載/               # .crdownload, .part, .tmp, .download
+│   └── 陳舊安裝檔/               # 超過指定天數（預設 180 天）未修改的安裝檔
+├── 06_AI語意歸納/                # 僅在啟用選配 AI 時，針對原 99_未分類 檔案依語意建立子資料夾
+└── 99_未分類/                    # 無法由規則辨識之其餘檔案（可在列表中手動下拉改分類）</div>
+      </section>
+
+      <!-- 9. 選配 AI 歸納與自訂規則 -->
+      <section class="card" id="ai-settings">
+        <span class="section-tag">進階設定與隱私</span>
+        <h3>9. 選配 AI 語意歸納與分類規則設定</h3>
+        <p>
+          點擊視窗右上角「<strong>⚙ 設定（AI 與分類規則）</strong>」即可切換兩大設定分頁，所有設定會自動儲存至本機設定檔：
+        </p>
+        <ul>
+          <li><strong>Windows 設定檔位置：</strong><code>%APPDATA%\SmartOrganizer\settings.json</code></li>
+          <li><strong>macOS 設定檔位置：</strong><code>~/Library/Application Support/SmartOrganizer/settings.json</code></li>
+          <li><strong>Linux 設定檔位置：</strong><code>~/.config/smart-organizer/settings.json</code></li>
+        </ul>
+
+        <div class="grid-2">
+          <div class="pillar">
+            <h5>🤖 AI 輔助設定（預設關閉）</h5>
+            <p>
+              支援 <strong>Google Gemini 原生 API</strong> 與 <strong>OpenAI-Compatible</strong>（內建 OpenAI、DeepSeek 與本地 <strong>Ollama</strong> <code>http://localhost:11434/v1</code> 一鍵帶入）。<br />
+              • 支援「檢查可用模型」自動切換有效模型。<br />
+              • 「傳送前 300 字摘要」自動偵測並排除二進位檔。<br />
+              • 回傳資料夾與更名經過嚴格消毒（攔截 <code>..</code>、非法字元與系統保留名並保留原副檔名）。<br />
+              • <strong>金鑰隱私</strong>：「在本機設定檔記住 API Key」預設關閉，不勾選就絕不寫入磁碟。
+            </p>
+          </div>
+          <div class="pillar">
+            <h5>📐 分類規則設定</h5>
+            <p>
+              可依個人習慣微調：<br />
+              • <strong>保留桌面捷徑於原位</strong>（可即時套用無需重掃）。<br />
+              • <strong>螢幕截圖獨立歸檔</strong>。<br />
+              • <strong>陳舊安裝檔隔離門檻</strong>（7 ～ 3650 天，預設 180 天）。<br />
+              • <strong>肥大快取警示門檻</strong>（1 ～ 10240 MB，預設 10 MB）。<br />
+              • <strong>教學與課程關鍵字</strong>（以逗號分隔，可隨時恢復預設）。
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. FAQ -->
+      <section class="card" id="faq">
+        <span class="section-tag">疑難排解</span>
+        <h3>10. 常見問題與安全排解 (FAQ)</h3>
+
+        <details open>
+          <summary>Q1：桌面整理後，我常用的 Chrome / Line / Office 圖示會不會不見？</summary>
+          <p>
+            不會。只要工具列上的「保留桌面捷徑於原位」保持勾選（預設開啟），所有 <code>.lnk</code>、<code>.url</code> 等桌面捷徑都會自動取消勾選搬移，穩穩留在原本的桌面位置。如果未來您希望連捷徑一起收進 <code>00_常用捷徑</code>，取消該勾選即可即時生效。
+          </p>
+        </details>
+
+        <details>
+          <summary>Q2：為什麼有些資料夾明明有許多檔案，Smart Organizer 卻把它當作「一個項目」整體搬移？</summary>
+          <p>
+            那是專案邊界保護機制在運作。只要該資料夾內含有 <code>.git</code>、<code>package.json</code>、<code>Cargo.toml</code>、<code>pyproject.toml</code>、<code>.sln</code> 等開發標記，程式就會判定它是一個完整專案，為了確保不拆散原始碼與資源檔案導致無法編譯或執行，會以單一原子單位整體處理。
+          </p>
+        </details>
+
+        <details>
+          <summary>Q3：在「原地整理」模式下，如果我整理完之後過幾天桌面又亂了，可以再整理一次嗎？</summary>
+          <p>
+            可以。再次點擊「✨ 載入桌面（原地精簡分類）」掃描時，程式會自動忽略內部的 <code>.organizer_undo_*.jsonl</code> 日誌檔，也不會把已整理在 <code>03_教學教材與文件</code> 裡的散落設定檔誤認為程式專案；已位於正確目標路徑的檔案與專案也會安全略過，只會把新出現的雜亂檔案歸入對應分類箱。
+          </p>
+        </details>
+
+        <details>
+          <summary>Q4：按下「一鍵移至回收桶」時跳出「有部分項目無法移除」怎麼辦？</summary>
+          <p>
+            這通常發生在含有唯讀屬性的檔案（例如舊專案殘留的 <code>.git</code> 物件）、路徑長度超過 Windows 260 字元限制的深層 <code>node_modules</code>，或系統特殊屬性暫存檔。此時程式會自動跳出提示視窗詢問您是否對這批失敗項目改用「⚡ 強制永久刪除」——確認後系統會解除唯讀並透過延伸長路徑移除。若仍失敗，代表該檔案正被其他開啟中的程式鎖定，請先關閉相關程式後再試。
+          </p>
+        </details>
+
+        <details>
+          <summary>Q5：執行到一半突然想停止，或整理完後悔了怎麼辦？</summary>
+          <p>
+            執行中可隨時點擊底部進度條旁的「⏹ 取消」，程式會立即安全中止後續項目，並為「已完成搬移」的項目保留合法的復原日誌。完成或取消後，只要點擊「↩ 一鍵復原上次搬移」（或「📂 選擇日誌復原」選取對應的 <code>.organizer_undo_*.jsonl</code>），即可把已搬移的檔案全部還原回原路徑。
+          </p>
+        </details>
+      </section>
+
+      <footer>
+        Smart Organizer (v0.1.0) · Built with Pure Rust, eframe/egui, BLAKE3 &amp; Rayon · 離線單檔版說明手冊
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // 主題切換（記憶於 localStorage，離線可用）
+    const rootEl = document.documentElement;
+    const toggleBtn = document.getElementById("themeToggle");
+    const savedTheme = localStorage.getItem("so_manual_theme");
+    if (savedTheme === "dark") {
+      rootEl.setAttribute("data-theme", "dark");
+      toggleBtn.textContent = "☀ 切換淺色";
+    }
+    toggleBtn.addEventListener("click", () => {
+      const isDark = rootEl.getAttribute("data-theme") === "dark";
+      if (isDark) {
+        rootEl.removeAttribute("data-theme");
+        toggleBtn.textContent = "🌙 切換深色";
+        localStorage.setItem("so_manual_theme", "light");
+      } else {
+        rootEl.setAttribute("data-theme", "dark");
+        toggleBtn.textContent = "☀ 切換淺色";
+        localStorage.setItem("so_manual_theme", "dark");
+      }
+    });
+
+    // 手冊即時關鍵字搜尋
+    const searchInput = document.getElementById("manualSearch");
+    const sections = Array.from(document.querySelectorAll("section.card"));
+    searchInput.addEventListener("input", () => {
+      const q = searchInput.value.trim().toLowerCase();
+      sections.forEach((sec) => {
+        if (!q || sec.textContent.toLowerCase().includes(q)) {
+          sec.classList.remove("hidden-by-search");
+        } else {
+          sec.classList.add("hidden-by-search");
+        }
+      });
+    });
+
+    // 複製下載連結按鈕
+    const copyLinkBtn = document.getElementById("copyLinkBtn");
+    if (copyLinkBtn) {
+      copyLinkBtn.addEventListener("click", async () => {
+        const url = "https://drive.google.com/file/d/1ODyRgSzEW__rpcViSBgmKYWvEV_QNori/view?usp=sharing";
+        try {
+          await navigator.clipboard.writeText(url);
+          copyLinkBtn.textContent = "✓ 已複製連結";
+          setTimeout(() => { copyLinkBtn.textContent = "📋 複製連結"; }, 2000);
+        } catch {
+          window.prompt("請複製以下下載連結：", url);
+        }
+      });
+    }
+
+    // 側邊欄滾動高亮
+    const navLinks = Array.from(document.querySelectorAll(".nav-links a"));
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const id = entry.target.getAttribute("id");
+            navLinks.forEach((a) => {
+              a.classList.toggle("active", a.getAttribute("href") === "#" + id);
+            });
+          }
+        });
+      },
+      { rootMargin: "-20% 0px -65% 0px" }
+    );
+    sections.forEach((sec) => observer.observe(sec));
+  </script>
+</body>
+</html>
