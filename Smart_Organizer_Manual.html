@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Smart Organizer — 設計理念與使用說明手冊</title>
+  <title>智慧整理管家 — 設計理念與使用說明手冊</title>
   <style>
     :root {
       --bg: #f6f8fb;
@@ -572,10 +572,10 @@
   <div class="layout">
     <aside class="sidebar">
       <div class="brand">
-        <div class="brand-icon">SO</div>
+        <div class="brand-icon">整</div>
         <div>
-          <h1>Smart Organizer</h1>
-          <small>v0.1.0 設計理念與操作手冊</small>
+          <h1>智慧整理管家</h1>
+          <small>桌面與資料夾歸納助手 · 使用手冊</small>
         </div>
       </div>
 
@@ -616,22 +616,22 @@
 
     <main class="main">
       <header class="hero">
-        <span class="hero-badge">純 Rust 單檔免安裝桌面整理工具 · eframe / egui</span>
-        <h2>Smart Organizer 設計理念與使用說明手冊</h2>
+        <span class="hero-badge">單檔免安裝 · 智慧專案整包保護 · 字體自由縮放</span>
+        <h2>智慧整理管家 — 設計理念與使用說明手冊</h2>
         <p>
-          專為解決「凌亂桌面、爆滿下載區、混雜照片與程式專案」而生的智慧資料夾總整理工具。
-          以<strong>「安全不誤刪、專案不拆散、預覽即所得、執行可復原」</strong>為最高原則，結合單次平行掃描、三段式 BLAKE3 精準去重、EXIF 拍攝日歸檔與可選雲端／本地 AI。
+          專為解決「凌亂桌面、爆滿下載區、混雜照片、作業專題與影音專案」而生的桌面與資料夾歸納助手。
+          以<strong>「安全不誤刪、專題作業不拆散、可人工審核整包保護、執行可復原」</strong>為最高原則，結合單次平行掃描、三段式去重、EXIF 拍攝日歸檔與可選 Gemma 4 AI。
         </p>
         <div class="hero-actions">
           <a class="btn-download-hero" href="https://drive.google.com/file/d/1ODyRgSzEW__rpcViSBgmKYWvEV_QNori/view?usp=sharing" target="_blank" rel="noopener noreferrer">
-            ⬇ 下載 Smart Organizer (Windows x64)
+            ⬇ 下載 智慧整理管家 (Windows x64)
           </a>
           <a class="btn-secondary-hero" href="#download">📖 查看下載與啟動指引</a>
         </div>
         <div class="hero-metrics">
-          <div class="metric"><strong>單檔免安裝</strong><span>無需外部執行環境，隨開即用</span></div>
-          <div class="metric"><strong>7 大智慧分類</strong><span>捷徑保護 / 專案原子 / 截圖分箱</span></div>
-          <div class="metric"><strong>三段式 BLAKE3</strong><span>大小 → 4KB 抽樣 → 完整指紋</span></div>
+          <div class="metric"><strong>單檔免安裝 · 護眼字體</strong><span>支援 A+/A- 與 85%～160% 自由放大</span></div>
+          <div class="metric"><strong>非程式專案亦不拆散</strong><span>作業／論文／影音剪輯智慧判斷 ＋ 人工審核</span></div>
+          <div class="metric"><strong>三段式精準去重</strong><span>大小 → 4KB 抽樣 → 完整指紋比對</span></div>
           <div class="metric"><strong>獨立復原日誌</strong><span>支援背景一鍵還原與指定日誌還原</span></div>
         </div>
       </header>
@@ -833,23 +833,23 @@
           程式開發專案、Unity/Unreal 遊戲專案或複合設計專案往往包含數十層子資料夾與圖片、PDF、字型、二進位檔等多種格式。一般整理工具很容易誤把專案裡的貼圖抽進「照片區」、說明書抽進「文件區」，導致專案編譯失敗。
         </p>
 
-        <h4>Smart Organizer 的四重專案安全防線</h4>
+        <h4>四重「不可分拆資料夾」安全防線（涵蓋程式、作業與影音）</h4>
         <ul>
           <li>
-            <strong>廣泛的專案根目錄標記辨識：</strong>
-            自動偵測 <code>.git</code>、<code>.hg</code>、<code>.svn</code>、<code>Cargo.toml</code>、<code>package.json</code>、<code>pyproject.toml</code>、<code>go.mod</code>、<code>pom.xml</code>、<code>build.gradle(.kts)</code>、<code>settings.gradle(.kts)</code>、<code>composer.json</code>、<code>CMakeLists.txt</code>、<code>pubspec.yaml</code>、<code>Gemfile</code>、<code>mix.exs</code>、<code>Makefile</code>、<code>meson.build</code>、Unity <code>ProjectSettings</code>，以及 <code>.sln</code>、<code>.csproj</code>、<code>.vbproj</code>、<code>.vcxproj</code>、<code>.xcodeproj</code>、<code>.xcworkspace</code>。
+            <strong>擴展專案與創作套件標記：</strong>
+            除程式標記（<code>.git</code>、<code>Cargo.toml</code>、<code>package.json</code>、<code>.sln</code> 等），亦支援剪映 <code>draft_content.json</code>、Premiere <code>.prproj</code>、DaVinci <code>.drp</code>、After Effects <code>.aep</code>、Blender <code>.blend</code>、Figma <code>.fig</code> 等創作專案標記。
           </li>
           <li>
-            <strong>單一原子單元保護（Atomic Unit）：</strong>
-            一旦目錄被判定為最外層專案（<code>top_projects</code>），其內部所有子模組、靜態資源、文件與設定檔一律封存於專案內整體移動，不進入去重也不拆散分類，列表中以 <code>🛡 完整專案（原子保護）</code> 標示並鎖定不可誤改分類。
+            <strong>非程式類「作業／專題／影音」智慧判斷：</strong>
+            針對不含程式標記的資料夾，系統依名稱關鍵字（專案、專題、作業、報告、論文、剪輯、攝影…）、影音＋字幕／封面配對、簡報＋圖表關聯與跨領域多層結構，自動推薦整體保護，避免作業與影片素材被拆散。
           </li>
           <li>
-            <strong>排除內部偽標記誤判：</strong>
-            不會把 <code>node_modules</code>、<code>target</code>、<code>.venv</code> 或已整理好的非專案分類夾裡的 <code>package.json</code> 誤認為獨立專案；不同子目錄下的同名專案（如 <code>work/app</code> 與 <code>personal/app</code>）會自動補上父目錄區分命名。
+            <strong>掃描後可人工審核與即時重算：</strong>
+            掃描完點擊「<code>🛡 審核不可分拆資料夾</code>」，即可逐一檢查每個資料夾的檔案組成與判斷理由，自由勾選「整體保留」或改為「展開拆開分類」，套用後無需重掃硬碟即刻更新預覽。
           </li>
           <li>
-            <strong>跨磁碟複製完整性校驗與來源警示：</strong>
-            若跨磁碟機搬移專案（無法單純透過 <code>rename</code> 完成），系統會先遞迴複製並核對<strong>檔案總數與總位元組數完全一致</strong>後才安全移除來源；若使用者不小心選取了本身即專案根目錄的資料夾作為來源，頂部會立即顯示橘色安全警告。
+            <strong>排除內部偽標記與跨磁碟校驗：</strong>
+            略過 <code>node_modules</code>、<code>target</code>、<code>.venv</code> 與通用堆放容器（如下載、新增資料夾），跨磁碟搬移整包資料夾會先驗證檔案數與總位元組數完全一致後才移除來源。
           </li>
         </ul>
       </section>
@@ -1020,7 +1020,7 @@
         <h3>8. 預設整理目標目錄結構一覽</h3>
         <div class="tree">目標資料夾（或原地整理後的來源資料夾）
 ├── 00_常用捷徑/                  # .lnk, .url, .webloc, .desktop, .appref-ms（預設保留於桌面原位）
-├── 01_程式專案/                  # 含專案標記之完整資料夾（原子保護，不拆散內部）
+├── 01_完整專案與整包/            # 含程式開發、作業與專題、影音與設計等整包保留資料夾（不拆散內部）
 ├── 02_照片與影音/
 │   ├── 照片/YYYY/YYYY-MM/        # 優先讀取 EXIF 拍攝日期，無 EXIF 回退當地修改時間
 │   ├── 螢幕截圖/YYYY-MM/         # 檔名含截圖關鍵字（Screenshot / Snipaste / 螢幕擷取…）
@@ -1062,10 +1062,10 @@
 
         <div class="grid-2">
           <div class="pillar">
-            <h5>🤖 AI 輔助設定（預設關閉）</h5>
+            <h5>🤖 AI 輔助設定（預設關閉・優先使用 Gemma 4）</h5>
             <p>
-              支援 <strong>Google Gemini 原生 API</strong> 與 <strong>OpenAI-Compatible</strong>（內建 OpenAI、DeepSeek 與本地 <strong>Ollama</strong> <code>http://localhost:11434/v1</code> 一鍵帶入）。<br />
-              • 支援「檢查可用模型」自動切換有效模型。<br />
+              支援 <strong>Google AI Studio（Gemma 4／Gemini 原生 API）</strong>與 <strong>OpenAI-Compatible</strong>（內建 OpenAI、DeepSeek 與本地 <strong>Ollama</strong> <code>http://localhost:11434/v1</code> 一鍵帶入）。<br />
+              • <strong>優先選用 Gemma 4 並保證即時可用</strong>：預設開啟「優先自動選用 Gemma 模型」，點擊「檢查可用模型」或執行 AI 分類前皆會即時向端點查核清單，優先挑選目前真正可用的 <code>gemma-4-26b-a4b-it</code>／<code>gemma-4-31b-it</code>／Ollama <code>gemma4</code> 模型，並支援思考標籤（<code>&lt;think&gt;</code>）與 JSON 格式相容降級處理。<br />
               • 「傳送前 300 字摘要」自動偵測並排除二進位檔。<br />
               • 回傳資料夾與更名經過嚴格消毒（攔截 <code>..</code>、非法字元與系統保留名並保留原副檔名）。<br />
               • <strong>金鑰隱私</strong>：「在本機設定檔記住 API Key」預設關閉，不勾選就絕不寫入磁碟。
