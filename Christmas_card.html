@@ -89,13 +89,17 @@
        主應用程式佈局 (手機優先 Mobile-First -> 桌面端三欄自適應)
        ========================================================================== */
     .app-shell {
+      position: fixed;
+      inset: 0;
       display: flex;
       flex-direction: column;
       width: 100%;
-      height: 100dvh;
       height: 100vh;
+      height: 100dvh;
+      height: var(--app-h, 100dvh);
       padding-top: var(--safe-top);
       background: radial-gradient(circle at 50% 0%, #17233d 0%, #080d1a 70%);
+      overflow: hidden;
     }
 
     /* 頂部工具列 */
@@ -224,15 +228,15 @@
       overflow: hidden;
     }
 
-    /* 左側 / 底部抽屜：素材庫與編輯分頁 */
+    /* 手機/平板底部抽屜：位於 7 大功能導覽列正下方 */
     .library-pane {
-      order: 2;
+      order: 3;
       background: var(--bg-surface);
-      border-top: 1px solid var(--border-strong);
+      border-top: 1px solid var(--border-subtle);
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
-      height: var(--drawer-h);
+      height: 37%;
       transition: height 0.25s cubic-bezier(0.22, 1, 0.36, 1);
       z-index: 30;
       position: relative;
@@ -242,10 +246,10 @@
       overflow: hidden;
     }
     .library-pane.expanded {
-      height: 56vh;
+      height: 52%;
     }
 
-    /* 抽屜拖曳與高度切換把手 (僅手機版顯示) */
+    /* 抽屜拖曳與高度切換把手 (僅手機/平板顯示) */
     .drawer-handle-bar {
       height: 30px;
       flex-shrink: 0;
@@ -284,7 +288,7 @@
       min-height: 0;
       overflow-y: auto;
       overflow-x: hidden;
-      padding: 12px;
+      padding: 12px 12px calc(18px + var(--safe-bottom));
       -webkit-overflow-scrolling: touch;
     }
 
@@ -292,12 +296,12 @@
     .stage-pane {
       order: 1;
       flex: 1;
-      min-height: 0;
+      min-height: 150px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 8px 12px;
+      padding: 6px 10px;
       position: relative;
       overflow: hidden;
     }
@@ -405,56 +409,50 @@
       color: #fde68a;
     }
 
-    /* 底部 7 大功能導覽列 (手機版) / 左側導覽軌道 (桌面版) */
+    /* 7 大功能導覽列：手機/平板置於畫布正下方、抽屜正上方 7 等分滿版顯示 */
     .nav-tabs {
-      order: 3;
-      height: calc(var(--bottomnav-h) + var(--safe-bottom));
-      padding-bottom: var(--safe-bottom);
-      background: #0b1120;
+      order: 2;
+      height: 58px;
+      background: #0d1527;
       border-top: 1px solid var(--border-strong);
-      display: flex;
-      align-items: center;
-      justify-content: space-around;
+      border-bottom: 1px solid var(--border-subtle);
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+      padding: 5px 6px;
       flex-shrink: 0;
       z-index: 40;
-      overflow-x: auto;
     }
 
     .nav-tab {
-      flex: 1;
-      min-width: 48px;
+      width: 100%;
       height: 100%;
-      border: none;
-      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
       color: var(--text-secondary);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 3px;
+      gap: 2px;
       font-size: 10px;
       font-weight: 700;
       cursor: pointer;
       position: relative;
-      padding: 4px 2px;
-      transition: color 0.15s;
+      padding: 2px 1px;
+      white-space: nowrap;
+      overflow: hidden;
+      transition: color 0.15s, background 0.15s, border-color 0.15s;
     }
     .nav-tab .tab-ico {
-      font-size: 19px;
+      font-size: 17px;
       line-height: 1;
     }
     .nav-tab.active {
       color: var(--xmas-gold);
-    }
-    .nav-tab.active::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      left: 22%;
-      right: 22%;
-      height: 3px;
-      border-radius: 0 0 4px 4px;
-      background: var(--xmas-gold);
+      background: linear-gradient(135deg, rgba(245, 196, 81, 0.24), rgba(225, 29, 72, 0.2));
+      border-color: rgba(245, 196, 81, 0.65);
     }
 
     /* 右側獨立屬性與圖層面板 (桌面版顯示，手機版透過彈窗或分頁整合) */
@@ -471,27 +469,34 @@
       }
       .nav-tabs {
         order: 1;
+        display: flex;
         flex-direction: column;
         width: 72px;
         height: 100%;
-        padding-bottom: 0;
+        padding: 10px 6px 0;
         border-top: none;
+        border-bottom: none;
         border-right: 1px solid var(--border-subtle);
         justify-content: flex-start;
-        padding-top: 10px;
         gap: 6px;
+        background: #0b1120;
       }
       .nav-tab {
         flex: none;
         width: 60px;
         height: 60px;
         border-radius: 12px;
+        border: none;
+        background: transparent;
         font-size: 11px;
       }
       .nav-tab.active {
         background: rgba(245, 196, 81, 0.12);
+        border: none;
       }
       .nav-tab.active::after {
+        content: "";
+        position: absolute;
         top: 18%;
         bottom: 18%;
         left: 0;
@@ -499,6 +504,7 @@
         width: 3px;
         height: auto;
         border-radius: 0 4px 4px 0;
+        background: var(--xmas-gold);
       }
       .library-pane {
         order: 2;
@@ -506,6 +512,9 @@
         height: 100% !important;
         border-top: none;
         border-right: 1px solid var(--border-subtle);
+      }
+      .panel-scroll {
+        padding: 12px;
       }
       .drawer-handle-bar {
         display: none;
@@ -926,14 +935,14 @@
           <span class="tab-ico">✍️</span><span>文字</span>
         </button>
         <button class="nav-tab" data-tab="music">
-          <span class="tab-ico">🎵</span><span>音樂/圖層</span>
+          <span class="tab-ico">🎵</span><span>音樂</span>
         </button>
       </nav>
 
       <!-- 素材與功能面板 (手機底部抽屜 / 桌面左側欄) -->
       <aside class="library-pane" id="libraryPane">
         <div class="drawer-handle-bar" id="drawerHandleBar">
-          <span class="drawer-title" id="drawerTitle">🎨 精選耶誕樣板 (32款)</span>
+          <span class="drawer-title" id="drawerTitle">🎨 精選耶誕樣板 (36款)</span>
           <div class="drawer-pill"></div>
           <span class="drawer-toggle-text" id="drawerToggleText">展開 / 收合</span>
         </div>
@@ -5612,14 +5621,19 @@
     /* ==========================================================================
        15. 畫布自適應縮放、主動畫迴圈與事件綁定
        ========================================================================== */
+    function syncViewportHeight() {
+      const vh = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+      document.documentElement.style.setProperty("--app-h", `${Math.round(vh)}px`);
+    }
+
     function resizeStageCanvas() {
       const ratio = RATIOS[state.ratioKey];
       canvas.width = ratio.w;
       canvas.height = ratio.h;
 
       const stage = document.getElementById("stagePane");
-      const availW = Math.max(180, stage.clientWidth - 24);
-      const availH = Math.max(200, stage.clientHeight - 62);
+      const availW = Math.max(150, stage.clientWidth - 20);
+      const availH = Math.max(110, stage.clientHeight - 50);
       const scale = Math.min(availW / ratio.w, availH / ratio.h);
 
       canvasContainer.style.width = `${Math.floor(ratio.w * scale)}px`;
@@ -5697,7 +5711,8 @@
       e.target.value = "";
     };
 
-    // 導覽列切換
+    // 導覽列切換 (手機端點擊分頁若抽屜已收合則自動開啟)
+    let drawerState = 0; // 0: 半高, 1: 展開, 2: 收合
     document.getElementById("navTabs").addEventListener("click", (e) => {
       const tabBtn = e.target.closest(".nav-tab");
       if (!tabBtn) return;
@@ -5707,13 +5722,14 @@
       const pane = document.getElementById("libraryPane");
       if (pane.classList.contains("collapsed")) {
         pane.classList.remove("collapsed");
+        drawerState = 0;
+        document.getElementById("drawerToggleText").textContent = "展開 / 收合";
         setTimeout(resizeStageCanvas, 260);
       }
       renderActiveTabPanel();
     });
 
     // 手機底部抽屜高度切換 (半高 -> 展開 -> 收合)
-    let drawerState = 0; // 0: 半高, 1: 展開, 2: 收合
     document.getElementById("drawerHandleBar").onclick = () => {
       const pane = document.getElementById("libraryPane");
       const txt = document.getElementById("drawerToggleText");
@@ -5792,7 +5808,11 @@
     }
 
     // 啟動初始化
-    window.addEventListener("resize", resizeStageCanvas);
+    syncViewportHeight();
+    window.addEventListener("resize", () => { syncViewportHeight(); resizeStageCanvas(); });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", () => { syncViewportHeight(); resizeStageCanvas(); });
+    }
     if (typeof ResizeObserver !== "undefined") {
       new ResizeObserver(resizeStageCanvas).observe(document.getElementById("stagePane"));
     }
