@@ -559,13 +559,11 @@
 
     .chip-row {
       display: flex;
+      flex-wrap: wrap;
       gap: 6px;
-      overflow-x: auto;
-      padding-bottom: 8px;
-      margin-bottom: 8px;
-      scrollbar-width: none;
+      padding-bottom: 4px;
+      margin-bottom: 10px;
     }
-    .chip-row::-webkit-scrollbar { display: none; }
 
     .chip {
       padding: 6px 12px;
@@ -5089,7 +5087,7 @@
         };
         container.appendChild(freezeAllBtn);
 
-        const cats = [...new Set(STATIC_STICKERS.map(s => s.cat))];
+        const cats = ["全部", "韓風質感", "日式手繪", "節慶角色", "聖誕樹與花環", "禮物與飾品", "美食與在地", "徽章與標籤"];
         const chipRow = document.createElement("div"); chipRow.className = "chip-row";
         cats.forEach(cat => {
           const b = document.createElement("button");
@@ -5101,7 +5099,10 @@
         container.appendChild(chipRow);
 
         const grid = document.createElement("div"); grid.className = "grid-3";
-        STATIC_STICKERS.filter(s => s.cat === state.activeStickerCat).forEach(st => {
+        const stickerList = state.activeStickerCat === "全部"
+          ? STATIC_STICKERS
+          : STATIC_STICKERS.filter(s => s.cat === state.activeStickerCat);
+        stickerList.forEach(st => {
           const card = document.createElement("div"); card.className = "item-card";
           const c = createMiniCanvas(120, 120);
           const cctx = c.getContext("2d");
