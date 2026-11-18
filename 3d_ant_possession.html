@@ -1,0 +1,3865 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>微觀帝國：蟻群生態 3D 開放世界 V3 (Ultra-Detailed PBR & Full Possession)</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #070b09;
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+      color: #ecfdf5;
+    }
+    #canvas-container {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+    .glass-panel {
+      background: rgba(10, 18, 14, 0.84);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(110, 231, 183, 0.25);
+      box-shadow: 0 12px 34px -6px rgba(0, 0, 0, 0.72);
+    }
+    .tool-btn {
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .tool-btn:hover {
+      transform: translateY(-2px);
+      border-color: rgba(52, 211, 153, 0.7);
+      background: rgba(20, 48, 34, 0.92);
+    }
+    .tool-btn.active {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.42), rgba(5, 150, 105, 0.65));
+      border-color: #34d399;
+      box-shadow: 0 0 16px rgba(52, 211, 153, 0.42);
+    }
+    .action-key-btn {
+      transition: all 0.12s ease;
+    }
+    .action-key-btn:active, .action-key-btn.pressed {
+      transform: scale(0.93);
+      background: rgba(16, 185, 129, 0.65);
+      border-color: #6ee7b7;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.2);
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(52, 211, 153, 0.38);
+      border-radius: 9999px;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.65; }
+      50% { opacity: 1; }
+    }
+    .pulse-indicator {
+      animation: pulseGlow 2s infinite ease-in-out;
+    }
+    /* Bright Daylight Observation Mode Theme Overrides */
+    body.bright-theme {
+      background-color: #dbeafe;
+      color: #064e3b;
+    }
+    body.bright-theme .glass-panel {
+      background: rgba(248, 252, 249, 0.88);
+      border: 1px solid rgba(16, 185, 129, 0.42);
+      box-shadow: 0 12px 32px -6px rgba(6, 78, 59, 0.18);
+      color: #064e3b;
+    }
+    body.bright-theme [class*="text-emerald-100"],
+    body.bright-theme [class*="text-emerald-200"],
+    body.bright-theme [class*="text-teal-100"],
+    body.bright-theme [class*="text-teal-200"] {
+      color: #064e3b !important;
+    }
+    body.bright-theme [class*="text-emerald-300"],
+    body.bright-theme [class*="text-emerald-400"],
+    body.bright-theme [class*="text-teal-300"] {
+      color: #047857 !important;
+    }
+    body.bright-theme [class*="text-amber-200"],
+    body.bright-theme [class*="text-amber-300"],
+    body.bright-theme [class*="text-yellow-100"],
+    body.bright-theme [class*="text-yellow-300"] {
+      color: #b45309 !important;
+    }
+    body.bright-theme [class*="text-rose-100"],
+    body.bright-theme [class*="text-rose-200"],
+    body.bright-theme [class*="text-rose-300"] {
+      color: #be123c !important;
+    }
+    body.bright-theme [class*="text-cyan-100"],
+    body.bright-theme [class*="text-cyan-200"],
+    body.bright-theme [class*="text-cyan-300"] {
+      color: #0369a1 !important;
+    }
+    body.bright-theme [class*="bg-emerald-950"],
+    body.bright-theme [class*="bg-emerald-900"],
+    body.bright-theme [class*="bg-black/50"] {
+      background-color: rgba(209, 250, 229, 0.78) !important;
+      border-color: rgba(16, 185, 129, 0.45) !important;
+      color: #064e3b !important;
+    }
+    body.bright-theme .tool-btn:hover {
+      background: rgba(167, 243, 208, 0.92) !important;
+      border-color: #059669 !important;
+    }
+    body.bright-theme .tool-btn.active {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.32), rgba(5, 150, 105, 0.48)) !important;
+      border-color: #059669 !important;
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.35) !important;
+    }
+  </style>
+</head>
+<body class="relative w-full h-full overflow-hidden">
+
+  <!-- 3D WebGL Canvas Container -->
+  <div id="canvas-container"></div>
+
+  <!-- Top Telemetry & Environmental HUD -->
+  <header class="fixed top-2 left-2 right-2 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+    <!-- Brand & Ecological Status -->
+    <div class="glass-panel rounded-xl px-3 py-1.5 flex items-center gap-2.5 pointer-events-auto">
+      <div class="w-8 h-8 rounded-lg bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 font-bold text-lg shadow-inner">
+        🐜
+      </div>
+      <div>
+        <div class="flex items-center gap-1.5">
+          <h1 class="text-xs sm:text-sm font-bold tracking-wide text-emerald-100">微觀帝國：蟻群生態 3D</h1>
+          <span id="colony-status-badge" class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium">真社會性穩定</span>
+          <span id="kingdom-stage-badge" class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/25 text-amber-200 border border-amber-400/40 font-semibold">Lv.4 繁榮生態帝國</span>
+        </div>
+        <p class="text-[10px] text-emerald-300/75 hidden sm:block">PBR 幾丁質微米法線著色器 × 多關節逆向運動學 × 指定全方位附身系統</p>
+      </div>
+    </div>
+
+    <!-- Colony Real-time Metrics -->
+    <div class="glass-panel rounded-xl px-3 py-1.5 flex flex-wrap items-center gap-3 sm:gap-4 pointer-events-auto text-xs">
+      <div class="flex items-center gap-1.5" title="糖分與蜜露儲量 (維持工蟻與蟻后代謝)">
+        <span class="text-amber-300">🍯</span>
+        <div>
+          <div class="text-[10px] text-emerald-300/70">蜜露糖分</div>
+          <div id="stat-food" class="font-bold text-amber-200 tabular-nums">145</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5" title="昆蟲蛋白質與種子 (催化幼蟲孵化與兵蟻培育)">
+        <span class="text-rose-300">🌰</span>
+        <div>
+          <div class="text-[10px] text-emerald-300/70">蛋白種子</div>
+          <div id="stat-protein" class="font-bold text-rose-200 tabular-nums">85</div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5" title="蟻后(1) / 工蟻 / 兵蟻 / 保育蟻 總數">
+        <span class="text-emerald-300">🐜</span>
+        <div>
+          <div class="text-[10px] text-emerald-300/70">族群規模</div>
+          <div class="font-bold text-emerald-100 tabular-nums">
+            <span id="stat-total-ants">78</span>
+            <span class="text-[10px] text-emerald-400/80 font-normal ml-0.5">(<span id="stat-caste-breakdown">工52/兵14/育11</span>)</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5" title="育幼腔內的卵、幼蟲與蛹">
+        <span class="text-cyan-300">🥚</span>
+        <div>
+          <div class="text-[10px] text-emerald-300/70">卵與幼蟲</div>
+          <div id="stat-brood" class="font-bold text-cyan-200 tabular-nums">24</div>
+        </div>
+      </div>
+      <div class="hidden lg:flex items-center gap-1.5" title="環境時序與地表溫度">
+        <span id="weather-icon" class="text-yellow-300">☀️</span>
+        <div>
+          <div class="text-[10px] text-emerald-300/70">時序 / 溫度</div>
+          <div class="font-bold text-yellow-100 tabular-nums">
+            <span id="stat-time">09:30</span> · <span id="stat-temp">26.4°C</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Right Utility Controls -->
+    <div class="glass-panel rounded-xl px-2.5 py-1.5 flex flex-wrap items-center gap-1.5 pointer-events-auto">
+      <button id="btn-speed-0" class="px-2 py-1 rounded text-[11px] font-medium bg-emerald-950/60 hover:bg-emerald-800/60 text-emerald-200 border border-emerald-700/40" title="暫停模擬">⏸</button>
+      <button id="btn-speed-1" class="px-2 py-1 rounded text-[11px] font-medium bg-emerald-600/50 text-white border border-emerald-400" title="1倍標準速度">1x</button>
+      <button id="btn-speed-2" class="px-2 py-1 rounded text-[11px] font-medium bg-emerald-950/60 hover:bg-emerald-800/60 text-emerald-200 border border-emerald-700/40" title="2倍加速">2x</button>
+      <button id="btn-speed-4" class="px-2 py-1 rounded text-[11px] font-medium bg-emerald-950/60 hover:bg-emerald-800/60 text-emerald-200 border border-emerald-700/40" title="4倍高速演化">4x</button>
+      <div class="h-4 w-px bg-emerald-700/50 mx-0.5"></div>
+      <button id="btn-light-theme-toggle" class="px-2.5 py-1 rounded text-[11px] font-bold bg-amber-400/30 hover:bg-amber-400/50 text-amber-100 border border-amber-300/70 shadow-sm flex items-center gap-1" title="切換「明亮日光觀察環境」與「深邃夜光微距模式」(快捷鍵 L)">
+        <span id="btn-light-theme-label">🌞 明亮日光模式</span>
+      </button>
+      <button id="btn-weather-toggle" class="px-2 py-1 rounded text-[11px] font-medium bg-emerald-950/60 hover:bg-emerald-800/60 text-emerald-200 border border-emerald-700/40 flex items-center gap-1" title="切換晴朗/微雨天氣">
+        <span id="btn-weather-label">☀️ 晴朗</span>
+      </button>
+      <button id="btn-audio-toggle" class="px-2 py-1 rounded text-[11px] font-medium bg-emerald-950/60 hover:bg-emerald-800/60 text-emerald-200 border border-emerald-700/40" title="切換 Web Audio 自然空間聲景">
+        🔊 聲景
+      </button>
+      <button id="btn-3d-anatomy-open" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-teal-500/30 hover:bg-teal-500/50 text-teal-100 border border-teal-400/60 shadow-sm" title="開啟四大階級超精細 3D 解剖轉台展示廳">
+        🔬 3D 階級解剖室
+      </button>
+      <button id="btn-codex-open" class="px-2 py-1 rounded text-[11px] font-semibold bg-amber-500/25 hover:bg-amber-500/40 text-amber-200 border border-amber-400/50" title="開啟螞蟻生態圖鑑與科學文獻指南">
+        📖 生態圖鑑
+      </button>
+      <button id="btn-toggle-all-ui" class="px-2 py-1 rounded text-[11px] font-medium bg-emerald-950/70 hover:bg-emerald-800/70 text-emerald-200 border border-emerald-600/40" title="一鍵收合或展開所有介面面板 (快捷鍵 H)">
+        👁️ 收合介面
+      </button>
+      <button id="btn-fullscreen" class="px-2 py-1 rounded text-[11px] font-medium bg-emerald-950/70 hover:bg-emerald-800/70 text-emerald-200 border border-emerald-600/40" title="切換瀏覽器全螢幕模式">
+        ⛶ 全螢幕
+      </button>
+    </div>
+  </header>
+
+  <!-- Left Camera, Scene Biome & Layer Switching Panel -->
+  <aside id="left-sidebar" class="fixed top-20 left-2 z-20 flex flex-col gap-2 w-52 sm:w-60 pointer-events-none transition-all duration-300">
+    <div class="glass-panel rounded-xl p-2.5 pointer-events-auto">
+      <div class="flex items-center justify-between mb-1.5">
+        <span class="text-[11px] font-bold text-emerald-300">🌍 場景地景與視角控制</span>
+        <button id="btn-collapse-left" class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/60 hover:bg-emerald-700/60 text-emerald-200 border border-emerald-600/40">
+          ▲ 收合
+        </button>
+      </div>
+
+      <div id="left-panel-content" class="space-y-2.5">
+        <!-- Observation Lighting Mode Selector (Bright vs Dark) -->
+        <div>
+          <div class="text-[10px] text-emerald-400/80 mb-1 font-medium">💡 選擇觀察環境色系 (快捷鍵 L)：</div>
+          <div class="grid grid-cols-2 gap-1 text-[11px]">
+            <button id="env-mode-bright" class="tool-btn active px-2 py-1 rounded-lg border border-amber-400/50 text-left truncate font-semibold">🌞 明亮日光觀察</button>
+            <button id="env-mode-dark" class="tool-btn px-2 py-1 rounded-lg border border-emerald-500/30 text-left truncate font-semibold">🌙 深邃夜光微距</button>
+          </div>
+        </div>
+
+        <!-- 5 Ecological Biomes Selector -->
+        <div>
+          <div class="text-[10px] text-emerald-400/80 mb-1 font-medium">🗺️ 切換高精細生態地景：</div>
+          <div class="grid grid-cols-2 gap-1 text-[11px]">
+            <button data-biome="meadow" class="biome-btn tool-btn active px-2 py-1 rounded-lg border border-emerald-500/30 text-left truncate">🌿 溫帶翠綠草甸</button>
+            <button data-biome="forest" class="biome-btn tool-btn px-2 py-1 rounded-lg border border-emerald-500/30 text-left truncate">🍄 台灣樟木林床</button>
+            <button data-biome="arid" class="biome-btn tool-btn px-2 py-1 rounded-lg border border-emerald-500/30 text-left truncate">🏜️ 紅土礫石旱地</button>
+            <button data-biome="patio" class="biome-btn tool-btn px-2 py-1 rounded-lg border border-emerald-500/30 text-left truncate">🧱 庭院石板花園</button>
+            <button data-biome="sunlit" class="biome-btn tool-btn col-span-2 px-2 py-1 rounded-lg border border-amber-400/40 text-left truncate">☀️ 晴空日光白沙生態箱 (高對比明亮地景)</button>
+          </div>
+        </div>
+
+        <!-- View Modes -->
+        <div class="pt-1.5 border-t border-emerald-800/50">
+          <div class="text-[10px] text-emerald-400/80 mb-1 flex items-center justify-between">
+            <span>👁️ 視角與地層模式</span>
+            <span>快捷鍵 1-3</span>
+          </div>
+          <div class="grid grid-cols-1 gap-1">
+            <button id="view-surface" class="tool-btn active w-full text-left px-2.5 py-1 rounded-lg border border-emerald-500/30 text-xs flex items-center justify-between">
+              <span>🌿 地表開放生態系</span>
+              <span class="text-[10px] opacity-75">俯瞰</span>
+            </button>
+            <button id="view-cutaway" class="tool-btn w-full text-left px-2.5 py-1 rounded-lg border border-emerald-500/30 text-xs flex items-center justify-between">
+              <span>🕳️ 地底巢穴 X 光透視</span>
+              <span class="text-[10px] opacity-75">剖面</span>
+            </button>
+            <button id="view-antcam" class="tool-btn w-full text-left px-2.5 py-1 rounded-lg border border-emerald-500/30 text-xs flex items-center justify-between">
+              <span>🎥 個體微距跟隨視角</span>
+              <span class="text-[10px] opacity-75">沉浸</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Pheromone & Bookmarks -->
+        <div class="pt-1.5 border-t border-emerald-800/50 flex flex-col gap-1">
+          <label class="flex items-center justify-between text-xs cursor-pointer">
+            <span class="text-emerald-200/90">🧪 費洛蒙化學熱區</span>
+            <input id="toggle-pheromone" type="checkbox" checked class="accent-emerald-400 w-3.5 h-3.5 rounded cursor-pointer" />
+          </label>
+          <div class="grid grid-cols-2 gap-1 text-[10px] mt-1">
+            <button id="cam-mound" class="px-2 py-1 rounded bg-emerald-950/70 hover:bg-emerald-800/60 border border-emerald-700/40 text-emerald-200 text-left truncate">🌋 火山蟻塚口</button>
+            <button id="cam-queen" class="px-2 py-1 rounded bg-emerald-950/70 hover:bg-emerald-800/60 border border-emerald-700/40 text-emerald-200 text-left truncate">👑 地底王室腔</button>
+            <button id="cam-brood" class="px-2 py-1 rounded bg-emerald-950/70 hover:bg-emerald-800/60 border border-emerald-700/40 text-emerald-200 text-left truncate">🥚 育幼與儲糧</button>
+            <button id="cam-aphid" class="px-2 py-1 rounded bg-emerald-950/70 hover:bg-emerald-800/60 border border-emerald-700/40 text-emerald-200 text-left truncate">🌱 蚜蟲共生區</button>
+          </div>
+        </div>
+
+        <!-- Live Event Feed -->
+        <div class="pt-1.5 border-t border-emerald-800/50 flex flex-col max-h-36">
+          <div class="text-[10px] font-semibold text-emerald-300/90 mb-1 flex items-center justify-between">
+            <span>📡 群體自組織事件日誌</span>
+            <span class="w-2 h-2 rounded-full bg-emerald-400 pulse-indicator"></span>
+          </div>
+          <div id="event-log" class="custom-scroll overflow-y-auto text-[10px] space-y-1 text-emerald-100/85 pr-1 max-h-28"></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right Inspector, Target Selector & Full Possession Cockpit Panel -->
+  <aside id="right-sidebar" class="fixed top-20 right-2 z-20 flex flex-col gap-2 w-64 sm:w-76 pointer-events-none transition-all duration-300 max-h-[calc(100vh-165px)]">
+    <div class="glass-panel rounded-xl p-2.5 pointer-events-auto flex flex-col overflow-hidden">
+      <div class="flex items-center justify-between border-b border-emerald-800/60 pb-1.5 mb-2">
+        <div class="flex items-center gap-1.5">
+          <span id="inspector-icon" class="text-sm">🕹️</span>
+          <h2 id="inspector-title" class="text-xs font-bold text-emerald-200">指定對象附身與王國操控</h2>
+        </div>
+        <div class="flex items-center gap-1">
+          <button id="btn-follow-selected" class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-600/40 hover:bg-emerald-500/60 border border-emerald-400/50 text-emerald-100">
+            鎖定跟隨
+          </button>
+          <button id="btn-collapse-right" class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-900/60 hover:bg-emerald-700/60 text-emerald-200 border border-emerald-600/40">
+            ▲ 收合
+          </button>
+        </div>
+      </div>
+
+      <div id="right-panel-content" class="custom-scroll overflow-y-auto space-y-2.5 pr-1">
+        <!-- Target Designation Selector (Requirement 2: Specify Any Target for Possession) -->
+        <div class="bg-emerald-950/75 p-2 rounded-xl border border-teal-500/40 space-y-1.5">
+          <div class="flex items-center justify-between text-[11px]">
+            <span class="font-bold text-teal-300">🎯 指定附身對象 (或直接點擊 3D 個體)</span>
+            <button id="btn-inspect-3d-caste" class="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/25 hover:bg-teal-500/45 border border-teal-400/50 text-teal-100">
+              🔬 3D 解剖檢視
+            </button>
+          </div>
+
+          <!-- Quick Caste Filter + Dropdown Roster -->
+          <div class="grid grid-cols-5 gap-1 text-[10px]">
+            <button data-possess-filter="all" class="possess-filter-btn px-1 py-0.5 rounded bg-teal-600/50 text-white border border-teal-400 font-medium">全部</button>
+            <button data-possess-filter="queen" class="possess-filter-btn px-1 py-0.5 rounded bg-emerald-900/60 text-amber-200 border border-emerald-700/40">👑蟻后</button>
+            <button data-possess-filter="soldier" class="possess-filter-btn px-1 py-0.5 rounded bg-emerald-900/60 text-rose-200 border border-emerald-700/40">⚔️兵蟻</button>
+            <button data-possess-filter="worker" class="possess-filter-btn px-1 py-0.5 rounded bg-emerald-900/60 text-emerald-200 border border-emerald-700/40">🍯工蟻</button>
+            <button data-possess-filter="nurse" class="possess-filter-btn px-1 py-0.5 rounded bg-emerald-900/60 text-cyan-200 border border-emerald-700/40">🥚保育</button>
+          </div>
+
+          <div class="flex items-center gap-1">
+            <button id="btn-prev-ant" class="px-2 py-1 rounded bg-emerald-900/80 hover:bg-emerald-700 text-xs text-emerald-100 border border-emerald-600/40" title="切換上一隻螞蟻">◀</button>
+            <select id="select-possess-target" class="flex-1 bg-black/50 text-emerald-100 text-[11px] px-2 py-1 rounded border border-emerald-600/50 focus:outline-none cursor-pointer"></select>
+            <button id="btn-next-ant" class="px-2 py-1 rounded bg-emerald-900/80 hover:bg-emerald-700 text-xs text-emerald-100 border border-emerald-600/40" title="切換下一隻螞蟻">▶</button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-1.5 pt-0.5">
+            <button id="cmd-ant-pilot" class="px-2 py-1.5 rounded-lg bg-gradient-to-r from-teal-600/60 to-emerald-600/60 hover:from-teal-500/80 hover:to-emerald-500/80 border border-teal-300/70 text-white text-[11px] font-bold shadow">
+              🕹️ 附身操控 (IJKL)
+            </button>
+            <select id="select-pilot-cam" class="bg-emerald-950/90 text-teal-200 text-[10px] px-2 py-1 rounded-lg border border-teal-500/40 focus:outline-none cursor-pointer">
+              <option value="tps">🎥 第三人稱微距追尾</option>
+              <option value="fps">👀 第一人稱複眼大顎視角</option>
+              <option value="free">🛸 自由俯瞰上帝鏡頭</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Individual Inspector Readout -->
+        <div id="inspector-body" class="text-xs space-y-1 text-emerald-100/90 bg-emerald-950/40 p-2 rounded-xl border border-emerald-800/40">
+          <div class="flex justify-between">
+            <span class="text-emerald-400/80">當前鎖定：</span>
+            <span id="insp-name" class="font-semibold text-amber-200">工蟻 #2 (Forager)</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-emerald-400/80">階級分工：</span>
+            <span id="insp-caste" class="text-emerald-200">外勤覓食工蟻 (Minor)</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-emerald-400/80">即時狀態：</span>
+            <span id="insp-state" class="text-cyan-300 font-medium truncate max-w-[150px]">沿費洛蒙梯度返巢</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-emerald-400/80">大顎負載：</span>
+            <span id="insp-cargo" class="text-amber-300">無負載 (空顎)</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <div>
+              <div class="flex justify-between text-[10px] text-emerald-300/80 mb-0.5">
+                <span>體能代謝</span>
+                <span id="insp-energy-text">92%</span>
+              </div>
+              <div class="w-full h-1.5 bg-emerald-950 rounded-full overflow-hidden">
+                <div id="insp-energy-bar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-300" style="width: 92%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-[10px] text-emerald-300/80 mb-0.5">
+                <span>費洛蒙感應</span>
+                <span id="insp-pheromone-text">0.78 Eq</span>
+              </div>
+              <div class="w-full h-1.5 bg-emerald-950 rounded-full overflow-hidden">
+                <div id="insp-pheromone-bar" class="h-full bg-gradient-to-r from-cyan-400 to-amber-300" style="width: 78%"></div>
+              </div>
+            </div>
+          </div>
+          <p id="insp-desc" class="text-[10px] text-emerald-300/75 leading-relaxed pt-1">
+            透過 12 節膝狀觸角偵測地面化學分子梯度，發現食物後由腹部杜氏腺分泌追蹤費洛蒙。
+          </p>
+        </div>
+
+        <!-- Quick Auxiliary Micro-Commands -->
+        <div class="grid grid-cols-3 gap-1 text-[10px]">
+          <button id="cmd-ant-trophallaxis" class="px-1.5 py-1 rounded bg-amber-900/60 hover:bg-amber-700/60 border border-amber-500/40 text-amber-100 font-medium">
+            🍯 交哺補充體能
+          </button>
+          <button id="cmd-ant-switch-role" class="px-1.5 py-1 rounded bg-cyan-900/60 hover:bg-cyan-700/60 border border-cyan-500/40 text-cyan-100 font-medium">
+            🔄 切換地底/外勤
+          </button>
+          <button id="cmd-ant-burst-phero" class="px-1.5 py-1 rounded bg-rose-900/60 hover:bg-rose-700/60 border border-rose-500/40 text-rose-100 font-medium">
+            🧪 激發費洛蒙脈衝
+          </button>
+        </div>
+
+        <div class="space-y-1 bg-emerald-950/50 p-1.5 rounded-lg border border-emerald-800/40 text-[10px]">
+          <div class="flex items-center justify-between">
+            <span class="text-emerald-300/90">⚔️ 群體防衛侵略度：</span>
+            <span id="policy-defense-val" class="text-amber-300 font-semibold">60%</span>
+          </div>
+          <input id="slider-defense" type="range" min="10" max="100" value="60" class="w-full h-1 accent-emerald-400 cursor-pointer" />
+        </div>
+
+        <!-- Zero-to-Empire Kingdom Builder & Challenges -->
+        <div class="pt-1.5 border-t border-emerald-800/60">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-[11px] font-bold text-amber-300">👑 螞蟻王國從零培育計畫</span>
+            <button id="btn-start-zero-kingdom" class="text-[10px] px-2 py-0.5 rounded bg-amber-500/30 hover:bg-amber-500/50 border border-amber-400/60 text-amber-100 font-semibold shadow">
+              🌱 從零創生挑戰
+            </button>
+          </div>
+          <div id="kingdom-quest-box" class="bg-emerald-950/65 p-2 rounded-lg border border-amber-500/30 text-[10px] space-y-1">
+            <div class="flex items-center justify-between font-semibold text-amber-200">
+              <span id="quest-title">階段目標：維持生態平衡或啟動從零創生</span>
+              <span id="quest-progress">100%</span>
+            </div>
+            <p id="quest-desc" class="text-emerald-200/80 leading-snug">
+              點擊「🌱 從零創生挑戰」由單隻婚飛落地蟻后與初代微型工蟻開始，逐步挖掘四大腔室並抵禦天敵！
+            </p>
+          </div>
+
+          <div class="grid grid-cols-3 gap-1 mt-1.5">
+            <button id="btn-hatch-worker" class="px-1.5 py-1 rounded-lg bg-emerald-900/60 hover:bg-emerald-700/60 border border-emerald-500/40 text-[10px] text-emerald-100 flex flex-col items-center">
+              <span class="font-semibold">+ 培育工蟻</span>
+              <span class="text-[8px] text-amber-300/90">消耗 15 蜜露 / 10 蛋白</span>
+            </button>
+            <button id="btn-hatch-nurse" class="px-1.5 py-1 rounded-lg bg-cyan-900/60 hover:bg-cyan-700/60 border border-cyan-500/40 text-[10px] text-cyan-100 flex flex-col items-center">
+              <span class="font-semibold">+ 培育保育蟻</span>
+              <span class="text-[8px] text-cyan-300/90">15糖/15蛋白</span>
+            </button>
+            <button id="btn-hatch-soldier" class="px-1.5 py-1 rounded-lg bg-rose-950/60 hover:bg-rose-800/60 border border-rose-500/40 text-[10px] text-rose-100 flex flex-col items-center">
+              <span class="font-semibold">+ 培育巨顎兵蟻</span>
+              <span class="text-[8px] text-rose-300/90">消耗 25 蜜露 / 25 蛋白</span>
+            </button>
+          </div>
+          <div class="grid grid-cols-2 gap-1 mt-1">
+            <button id="btn-upgrade-nest" class="px-2 py-1 rounded-lg bg-purple-950/60 hover:bg-purple-800/60 border border-purple-400/40 text-[10px] text-purple-100 font-medium">
+              ⛏️ 擴建地底腔室 (40糖)
+            </button>
+            <button id="btn-trigger-challenge" class="px-2 py-1 rounded-lg bg-orange-950/60 hover:bg-orange-800/60 border border-orange-400/40 text-[10px] text-orange-100 font-medium">
+              ⚡ 觸發天敵生存考驗
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ======================================================================= -->
+  <!-- OMNI-DIRECTIONAL POSSESSION ACTION DECK HUD (Visible in Pilot Mode)     -->
+  <!-- ======================================================================= -->
+  <div id="possession-cockpit" class="fixed bottom-24 left-1/2 -translate-x-1/2 z-30 hidden pointer-events-auto">
+    <div class="glass-panel rounded-2xl px-3.5 py-2.5 border-2 border-teal-400/70 shadow-2xl flex flex-col gap-2 items-center">
+      <div class="flex items-center justify-between w-full gap-4 border-b border-teal-700/50 pb-1">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-teal-400 pulse-indicator"></span>
+          <span id="cockpit-ant-label" class="text-xs font-bold text-teal-200">🕹️ 全方位附身操控中：工蟻 #2</span>
+        </div>
+        <span class="text-[10px] text-emerald-300/80">移動：WASD / 方向鍵 / 虛擬方向盤 · 支援全動作技能</span>
+        <button id="btn-exit-pilot" class="text-[10px] px-2 py-0.5 rounded bg-rose-600/60 hover:bg-rose-500 text-white font-semibold">
+          ✕ 解除附身
+        </button>
+      </div>
+
+      <!-- D-Pad + 8 Omni-Directional Ant Actions -->
+      <div class="flex flex-wrap items-center justify-center gap-3">
+        <!-- On-Screen Touch/Click D-Pad -->
+        <div class="grid grid-cols-3 gap-1 w-28 text-xs font-bold">
+          <button id="pad-q" class="action-key-btn py-1 rounded bg-emerald-950/80 border border-emerald-600/50 text-emerald-300 text-[10px]" title="左橫移 (Q)">↖ Q</button>
+          <button id="pad-w" class="action-key-btn py-1 rounded bg-teal-800/80 border border-teal-400/60 text-white" title="前進 (W/↑)">▲ W</button>
+          <button id="pad-e" class="action-key-btn py-1 rounded bg-emerald-950/80 border border-emerald-600/50 text-emerald-300 text-[10px]" title="右橫移 (E)">E ↗</button>
+          <button id="pad-a" class="action-key-btn py-1 rounded bg-teal-800/80 border border-teal-400/60 text-white" title="左轉 (A/←)">◀ A</button>
+          <button id="pad-s" class="action-key-btn py-1 rounded bg-teal-800/80 border border-teal-400/60 text-white" title="後退 (S/↓)">▼ S</button>
+          <button id="pad-d" class="action-key-btn py-1 rounded bg-teal-800/80 border border-teal-400/60 text-white" title="右轉 (D/→)">D ▶</button>
+        </div>
+
+        <!-- 8 Specialized Ant Biological Action Buttons -->
+        <div class="grid grid-cols-4 sm:grid-cols-8 gap-1.5 text-[10px]">
+          <button id="act-sprint" class="action-key-btn flex flex-col items-center justify-center px-2 py-1.5 rounded-xl bg-emerald-900/70 hover:bg-emerald-700/80 border border-emerald-400/50 text-emerald-100">
+            <span class="text-sm">⚡</span>
+            <span class="font-bold">疾馳衝刺</span>
+            <span class="text-[8px] text-emerald-300">[Shift]</span>
+          </button>
+          <button id="act-bite" class="action-key-btn flex flex-col items-center justify-center px-2 py-1.5 rounded-xl bg-rose-900/70 hover:bg-rose-700/80 border border-rose-400/50 text-rose-100">
+            <span class="text-sm">⚔️</span>
+            <span class="font-bold">大顎咬擊</span>
+            <span class="text-[8px] text-rose-300">[F 鍵]</span>
+          </button>
+          <button id="act-carry" class="action-key-btn flex flex-col items-center justify-center px-2 py-1.5 rounded-xl bg-amber-900/70 hover:bg-amber-700/80 border border-amber-400/50 text-amber-100">
+            <span class="text-sm">🍯</span>
+            <span class="font-bold">銜取/卸載</span>
+            <span class="text-[8px] text-amber-300">[G 鍵]</span>
+          </button>
+          <button id="act-trail" class="action-key-btn flex flex-col items-center justify-center px-2 py-1.5 rounded-xl bg-teal-900/70 hover:bg-teal-700/80 border border-teal-400/50 text-teal-100">
+            <span class="text-sm">🧪</span>
+            <span class="font-bold">追蹤費洛蒙</span>
+            <span class="text-[8px] text-teal-300">[Z 鍵]</span>
+          </button>
+          <button id="act-alarm" class="action-key-btn flex flex-col items-center justify-center px-2 py-1.5 rounded-xl bg-red-900/70 hover:bg-red-700/80 border border-red-400/50 text-red-100">
+            <span class="text-sm">🚨</span>
+            <span class="font-bold">警戒召集</span>
+            <span class="text-[8px] text-red-300">[X 鍵]</span>
+          </button>
+          <button id="act-feed" class="action-key-btn flex flex-col items-center justify-center px-2 py-1.5 rounded-xl bg-yellow-900/70 hover:bg-yellow-700/80 border border-yellow-400/50 text-yellow-100">
+            <span class="text-sm">🤝</span>
+            <span class="font-bold">交哺/產卵</span>
+            <span class="text-[8px] text-yellow-300">[C 鍵]</span>
+          </button>
+          <button id="act-tunnel" class="action-key-btn flex flex-col items-center justify-center px-2 py-1.5 rounded-xl bg-cyan-900/70 hover:bg-cyan-700/80 border border-cyan-400/50 text-cyan-100">
+            <span class="text-sm">🕳️</span>
+            <span class="font-bold">鑽入/出巢</span>
+            <span class="text-[8px] text-cyan-300">[V 鍵]</span>
+          </button>
+          <button id="act-dig" class="action-key-btn flex flex-col items-center justify-center px-2 py-1.5 rounded-xl bg-purple-900/70 hover:bg-purple-700/80 border border-purple-400/50 text-purple-100">
+            <span class="text-sm">⛏️</span>
+            <span class="font-bold">掘土築巢</span>
+            <span class="text-[8px] text-purple-300">[B 鍵]</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom God-Mode Interactive Toolbelt -->
+  <footer id="bottom-toolbar" class="fixed bottom-2 left-1/2 -translate-x-1/2 z-20 w-[98%] max-w-4xl pointer-events-none transition-all duration-300">
+    <div class="glass-panel rounded-2xl p-2 pointer-events-auto">
+      <div class="flex flex-wrap items-center justify-between gap-2 px-2 mb-1">
+        <span id="active-tool-hint" class="text-[11px] text-emerald-200 font-medium truncate">
+          👆 當前工具：【觀察追蹤】點擊任意螞蟻可直接鎖定並啟動全方位附身操控；左鍵旋轉，滾輪縮放，右鍵平移。
+        </span>
+        <div class="flex items-center gap-1.5">
+          <div class="flex items-center gap-1 bg-rose-950/60 border border-rose-500/40 rounded-lg px-2 py-0.5 text-[10px]">
+            <span class="text-rose-300 font-semibold">天敵種類：</span>
+            <select id="select-predator-type" class="bg-transparent text-rose-100 font-medium focus:outline-none cursor-pointer">
+              <option value="beetle" class="bg-stone-900 text-rose-200">🪲 獵食步甲蟲 (高甲殼/中速)</option>
+              <option value="spider" class="bg-stone-900 text-purple-200">🕷️ 叢林徘徊狼蛛 (高速突襲)</option>
+              <option value="antlion" class="bg-stone-900 text-amber-200">🕳️ 蟻獅流沙陷阱 (漩渦牽引)</option>
+              <option value="hornet" class="bg-stone-900 text-yellow-200">🐝 虎頭蜂掠食者 (低空俯衝)</option>
+              <option value="centipede" class="bg-stone-900 text-red-300">蜈 巨型赤蜈蚣 (多節高傷害)</option>
+            </select>
+          </div>
+          <button id="btn-collapse-bottom" class="text-[10px] px-2 py-0.5 rounded bg-emerald-900/60 hover:bg-emerald-700/60 text-emerald-200 border border-emerald-600/40">
+            ▼ 收合工具列
+          </button>
+        </div>
+      </div>
+
+      <div id="bottom-toolbar-content" class="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
+        <button data-tool="inspect" class="tool-btn active flex flex-col items-center justify-center py-1.5 px-1 rounded-xl border border-emerald-500/30 text-center">
+          <span class="text-base">🔍</span>
+          <span class="text-[11px] font-semibold mt-0.5">觀察追蹤</span>
+          <span class="text-[9px] text-emerald-300/70">個體/腔室</span>
+        </button>
+        <button data-tool="sugar" class="tool-btn flex flex-col items-center justify-center py-1.5 px-1 rounded-xl border border-emerald-500/30 text-center">
+          <span class="text-base">🍯</span>
+          <span class="text-[11px] font-semibold mt-0.5">投放蜜露</span>
+          <span class="text-[9px] text-amber-300/80">高能量糖晶</span>
+        </button>
+        <button data-tool="protein" class="tool-btn flex flex-col items-center justify-center py-1.5 px-1 rounded-xl border border-emerald-500/30 text-center">
+          <span class="text-base">🌰</span>
+          <span class="text-[11px] font-semibold mt-0.5">投放種子</span>
+          <span class="text-[9px] text-rose-300/80">育幼蛋白質</span>
+        </button>
+        <button data-tool="trail" class="tool-btn flex flex-col items-center justify-center py-1.5 px-1 rounded-xl border border-emerald-500/30 text-center">
+          <span class="text-base">🧪</span>
+          <span class="text-[11px] font-semibold mt-0.5">覓食費洛蒙</span>
+          <span class="text-[9px] text-teal-300/80">人工化學引導</span>
+        </button>
+        <button data-tool="alarm" class="tool-btn flex flex-col items-center justify-center py-1.5 px-1 rounded-xl border border-emerald-500/30 text-center">
+          <span class="text-base">🚨</span>
+          <span class="text-[11px] font-semibold mt-0.5">警戒費洛蒙</span>
+          <span class="text-[9px] text-rose-400/90">召集兵蟻防禦</span>
+        </button>
+        <button data-tool="rally" class="tool-btn flex flex-col items-center justify-center py-1.5 px-1 rounded-xl border border-emerald-500/30 text-center">
+          <span class="text-base">🚩</span>
+          <span class="text-[11px] font-semibold mt-0.5">集結信標</span>
+          <span class="text-[9px] text-cyan-300/90">指定地點召集</span>
+        </button>
+        <button data-tool="obstacle" class="tool-btn flex flex-col items-center justify-center py-1.5 px-1 rounded-xl border border-emerald-500/30 text-center">
+          <span class="text-base">🪨</span>
+          <span class="text-[11px] font-semibold mt-0.5">放置鵝卵石</span>
+          <span class="text-[9px] text-slate-300/80">雙橋路徑實驗</span>
+        </button>
+        <button data-tool="predator" class="tool-btn flex flex-col items-center justify-center py-1.5 px-1 rounded-xl border border-emerald-500/30 text-center">
+          <span class="text-base">🪲</span>
+          <span class="text-[11px] font-semibold mt-0.5">召喚步甲蟲</span>
+          <span class="text-[9px] text-orange-300/90">測試群體防衛</span>
+        </button>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ======================================================================= -->
+  <!-- 3D CASTE ANATOMY TURNTABLE STUDIO MODAL (Ultra-Detailed PBR Edition)    -->
+  <!-- ======================================================================= -->
+  <div id="anatomy-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-3 sm:p-6">
+    <div class="glass-panel rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-teal-400/50 shadow-2xl">
+      <div class="flex flex-wrap items-center justify-between gap-2 px-5 py-3 border-b border-emerald-800/60 bg-emerald-950/70">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">🔬</span>
+          <div>
+            <h2 class="text-sm sm:text-base font-bold text-teal-100">真社會性四大階級：超精細 3D 幾丁質解剖展示廳</h2>
+            <p class="text-[11px] text-emerald-300/80">包含上唇、複眼小眼刻面、11節膝狀觸角、前/中/後胸背板、腹柄節、後腹5節背板環與五節足（基/轉/腿/脛/跗爪）</p>
+          </div>
+        </div>
+        <button id="btn-anatomy-close" class="px-3 py-1 rounded-lg bg-emerald-800/60 hover:bg-emerald-700/70 text-emerald-100 text-xs font-semibold border border-emerald-500/40">
+          ✕ 關閉 3D 解剖室
+        </button>
+      </div>
+
+      <!-- Caste Tabs -->
+      <div class="grid grid-cols-4 gap-2 px-5 pt-3 bg-emerald-950/40">
+        <button data-caste-tab="queen" class="caste-tab-btn tool-btn active py-2 px-3 rounded-xl border border-amber-400/50 text-xs font-bold flex items-center justify-center gap-1.5">
+          <span>👑</span><span>生殖核心蟻后 (Queen)</span>
+        </button>
+        <button data-caste-tab="soldier" class="caste-tab-btn tool-btn py-2 px-3 rounded-xl border border-emerald-500/30 text-xs font-bold flex items-center justify-center gap-1.5">
+          <span>⚔️</span><span>巨顎防衛兵蟻 (Major)</span>
+        </button>
+        <button data-caste-tab="worker" class="caste-tab-btn tool-btn py-2 px-3 rounded-xl border border-emerald-500/30 text-xs font-bold flex items-center justify-center gap-1.5">
+          <span>🍯</span><span>外勤覓食工蟻 (Minor)</span>
+        </button>
+        <button data-caste-tab="nurse" class="caste-tab-btn tool-btn py-2 px-3 rounded-xl border border-emerald-500/30 text-xs font-bold flex items-center justify-center gap-1.5">
+          <span>🥚</span><span>內勤育幼保育蟻 (Nurse)</span>
+        </button>
+      </div>
+
+      <div class="p-5 grid grid-cols-1 md:grid-cols-12 gap-4 overflow-y-auto custom-scroll items-center">
+        <div class="md:col-span-7 relative rounded-2xl overflow-hidden border border-teal-500/35 bg-gradient-to-b from-emerald-950/90 to-black h-72 sm:h-80 flex items-center justify-center">
+          <canvas id="anatomy-canvas" class="w-full h-full cursor-grab active:cursor-grabbing"></canvas>
+          <div class="absolute top-2.5 left-3 pointer-events-none flex items-center gap-1.5 bg-black/60 px-2.5 py-1 rounded-full border border-teal-400/30 text-[10px] text-teal-200">
+            <span>🔄 左鍵拖曳 360° 檢視微米級幾丁質骨片與多關節運動</span>
+          </div>
+          <div class="absolute bottom-2.5 right-3 flex gap-1.5">
+            <button id="btn-anatomy-wireframe" class="px-2.5 py-1 rounded-lg bg-emerald-900/80 hover:bg-emerald-700/80 border border-emerald-400/40 text-[10px] text-emerald-100">
+              🕸️ 切換網格結構
+            </button>
+            <button id="btn-anatomy-pose" class="px-2.5 py-1 rounded-lg bg-amber-900/80 hover:bg-amber-700/80 border border-amber-400/40 text-[10px] text-amber-100">
+              ⚡ 切換戰鬥/覓食動態
+            </button>
+          </div>
+        </div>
+
+        <div class="md:col-span-5 space-y-3 text-xs">
+          <div class="p-3 rounded-xl bg-emerald-950/70 border border-emerald-600/40">
+            <div class="flex items-center justify-between mb-1">
+              <h3 id="anat-title" class="text-sm font-bold text-amber-300">👑 蟻后 (Colony Queen)</h3>
+              <span id="anat-size" class="text-[11px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-200 border border-amber-400/40">體長 8.5–12.0 mm</span>
+            </div>
+            <p id="anat-summary" class="text-emerald-100/90 leading-relaxed text-[11px]">
+              群體唯一的繁殖核心。婚飛受精後脫去雙翅，中軀（Mesosoma）具明顯隆起的前/中/後胸背板與翅基疤痕，後腹部（Gaster）由 5 節可伸縮骨板組成以容納發達卵巢。
+            </p>
+          </div>
+
+          <div class="p-3 rounded-xl bg-emerald-950/70 border border-emerald-600/40 space-y-1.5 text-[11px]">
+            <div class="font-bold text-teal-300 border-b border-emerald-800/60 pb-1">🔍 關鍵 3D 解剖特徵與生理數值</div>
+            <div class="flex justify-between">
+              <span class="text-emerald-400/80">頭部與大顎 (Head & Mandibles)：</span>
+              <span id="anat-head" class="text-emerald-100 font-medium">3 單眼 + 多刻面複眼 + 鋸齒大顎</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-emerald-400/80">中軀與腹柄節 (Mesosoma)：</span>
+              <span id="anat-thorax" class="text-emerald-100 font-medium">三節胸背板 + 雙節腹柄 (Petiole)</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-emerald-400/80">後腹部腺體 (Gaster Glands)：</span>
+              <span id="anat-gaster" class="text-amber-200 font-medium">五環骨片 + 后費洛蒙外分泌腺</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-emerald-400/80">六足五節構造 (Hexapod Legs)：</span>
+              <span id="anat-lifespan" class="text-cyan-200 font-medium">基節→轉節→腿節→脛節→五節跗爪</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ecological Codex Modal -->
+  <div id="codex-modal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="glass-panel rounded-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden border border-emerald-400/40">
+      <div class="flex items-center justify-between px-5 py-3.5 border-b border-emerald-800/60 bg-emerald-950/50">
+        <div class="flex items-center gap-2">
+          <span class="text-xl">📖</span>
+          <h2 class="text-base font-bold text-emerald-100">螞蟻生態學與真社會性自組織圖鑑 (Ecological Codex)</h2>
+        </div>
+        <button id="btn-codex-close" class="px-3 py-1 rounded-lg bg-emerald-800/50 hover:bg-emerald-700/60 text-emerald-100 text-xs font-semibold">
+          ✕ 關閉圖鑑
+        </button>
+      </div>
+      <div class="p-5 overflow-y-auto custom-scroll space-y-4 text-xs sm:text-sm leading-relaxed text-emerald-100/90">
+        <div class="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-700/40">
+          <h3 class="font-bold text-amber-300 mb-1">1. 專業級 3D 昆蟲外骨骼解剖學 (Exoskeleton Morphology)</h3>
+          <p>
+            螞蟻身體分為三大體段：<b>頭部 (Head)</b>、<b>中軀 (Mesosoma/Alitrunk)</b>、<b>腹柄節 (Petiole/Post-petiole)</b> 與<b>後腹部 (Gaster)</b>。本系統採用各向異性幾丁質微結構 GLSL 著色器，真實呈現上唇基 (Clypeus)、多齒咀嚼式大顎、柄節與鞭節組成的膝狀觸角、前中後三胸節，以及具備基節、轉節、腿節、脛節、跗節與雙爪的完整六足三角步態。
+          </p>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-700/40">
+          <h3 class="font-bold text-teal-300 mb-1">2. 指定對象全方位附身操控 (Target Possession & Action Deck)</h3>
+          <p>
+            您可以在右側「🎯 指定附身對象」下拉選單（或直接點擊 3D 畫面中的任意蟻后、兵蟻、工蟻、保育蟻）鎖定目標，點擊「🕹️ 附身操控 (IJKL)」：
+          </p>
+          <ul class="list-disc list-inside mt-2 space-y-1 text-emerald-200/90">
+            <li><b>全方位運動</b>：`W/S` 前進後退、`A/D` 左右轉向、`Q/E` 左右側步橫移、`Shift` 疾馳衝刺。</li>
+            <li><b>八大生物技能</b>：`[F] 大顎咬擊/蟻酸噴射`（攻擊天敵）、`[G] 銜取/卸載糧食`、`[Z] 分泌追蹤費洛蒙`、`[X] 釋放警戒費洛蒙召集兵蟻`、`[C] 口對口交哺/蟻后產卵`、`[V] 鑽入地底/爬出蟻塚`、`[B] 掘土擴建腔室`。</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 1. WEB AUDIO API SPATIAL SOUNDSCAPE & INTERACTIVE SYNTHESIS
+    // =========================================================================
+    class MicroSoundscape {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+        this.initialized = false;
+        this.windGain = null;
+      }
+
+      init() {
+        if (this.initialized) return;
+        try {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioCtx();
+          this.initialized = true;
+
+          const bufferSize = 2 * this.ctx.sampleRate;
+          const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+          const output = noiseBuffer.getChannelData(0);
+          let lastOut = 0.0;
+          for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
+            output[i] = (lastOut + (0.02 * white)) / 1.02;
+            lastOut = output[i];
+            output[i] *= 0.15;
+          }
+          const whiteNoise = this.ctx.createBufferSource();
+          whiteNoise.buffer = noiseBuffer;
+          whiteNoise.loop = true;
+
+          const filter = this.ctx.createBiquadFilter();
+          filter.type = 'bandpass';
+          filter.frequency.value = 420;
+          filter.Q.value = 1.5;
+
+          this.windGain = this.ctx.createGain();
+          this.windGain.gain.value = 0.08;
+
+          whiteNoise.connect(filter);
+          filter.connect(this.windGain);
+          this.windGain.connect(this.ctx.destination);
+          whiteNoise.start(0);
+        } catch (e) {
+          console.warn('Web Audio init skipped:', e);
+        }
+      }
+
+      playTone(freq = 520, duration = 0.12, type = 'sine', vol = 0.08) {
+        if (this.muted) return;
+        this.init();
+        if (!this.ctx) return;
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.25, this.ctx.currentTime + duration);
+
+        gain.gain.setValueAtTime(vol, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + duration);
+      }
+
+      playAlarm() {
+        this.playTone(280, 0.22, 'sawtooth', 0.07);
+        setTimeout(() => this.playTone(340, 0.25, 'sawtooth', 0.07), 90);
+      }
+
+      toggleMute() {
+        this.init();
+        this.muted = !this.muted;
+        if (this.windGain && this.ctx) {
+          this.windGain.gain.setValueAtTime(this.muted ? 0 : 0.08, this.ctx.currentTime);
+        }
+        return this.muted;
+      }
+    }
+
+    const soundscape = new MicroSoundscape();
+
+    // =========================================================================
+    // 2. SIMULATION STATE, BIOMES & KINGDOM PROGRESSION
+    // =========================================================================
+    const WORLD_SIZE = 120;
+    const HALF_WORLD = WORLD_SIZE / 2;
+    const PHERO_RES = 128;
+
+    const BIOME_CONFIGS = {
+      meadow: {
+        name: '🌿 溫帶翠綠草甸',
+        skyHex: 0x09130e,
+        brightSkyHex: 0xcffafe,
+        moundVec: new THREE.Vector3(0.36, 0.22, 0.12),
+        soilVec: new THREE.Vector3(0.19, 0.14, 0.09),
+        mossVec: new THREE.Vector3(0.13, 0.33, 0.16),
+        brightMoundVec: new THREE.Vector3(0.62, 0.44, 0.26),
+        brightSoilVec: new THREE.Vector3(0.46, 0.36, 0.24),
+        brightMossVec: new THREE.Vector3(0.28, 0.62, 0.32),
+        grassBase: new THREE.Vector3(0.08, 0.24, 0.10),
+        grassTip: new THREE.Vector3(0.34, 0.70, 0.26),
+        brightGrassBase: new THREE.Vector3(0.18, 0.48, 0.22),
+        brightGrassTip: new THREE.Vector3(0.48, 0.85, 0.36),
+        tempOffset: 0
+      },
+      forest: {
+        name: '🍄 台灣亞熱帶樟木林床',
+        skyHex: 0x061012,
+        brightSkyHex: 0xd1fae5,
+        moundVec: new THREE.Vector3(0.28, 0.16, 0.09),
+        soilVec: new THREE.Vector3(0.14, 0.10, 0.07),
+        mossVec: new THREE.Vector3(0.08, 0.36, 0.24),
+        brightMoundVec: new THREE.Vector3(0.52, 0.36, 0.22),
+        brightSoilVec: new THREE.Vector3(0.38, 0.29, 0.20),
+        brightMossVec: new THREE.Vector3(0.22, 0.60, 0.42),
+        grassBase: new THREE.Vector3(0.05, 0.20, 0.14),
+        grassTip: new THREE.Vector3(0.18, 0.58, 0.42),
+        brightGrassBase: new THREE.Vector3(0.14, 0.44, 0.30),
+        brightGrassTip: new THREE.Vector3(0.34, 0.78, 0.56),
+        tempOffset: -1.8
+      },
+      arid: {
+        name: '🏜️ 紅土礫石旱地',
+        skyHex: 0x181009,
+        brightSkyHex: 0xfef3c7,
+        moundVec: new THREE.Vector3(0.55, 0.28, 0.14),
+        soilVec: new THREE.Vector3(0.42, 0.22, 0.11),
+        mossVec: new THREE.Vector3(0.48, 0.36, 0.16),
+        brightMoundVec: new THREE.Vector3(0.78, 0.48, 0.26),
+        brightSoilVec: new THREE.Vector3(0.72, 0.46, 0.26),
+        brightMossVec: new THREE.Vector3(0.76, 0.60, 0.34),
+        grassBase: new THREE.Vector3(0.35, 0.28, 0.10),
+        grassTip: new THREE.Vector3(0.68, 0.54, 0.22),
+        brightGrassBase: new THREE.Vector3(0.52, 0.42, 0.18),
+        brightGrassTip: new THREE.Vector3(0.84, 0.70, 0.34),
+        tempOffset: 4.5
+      },
+      patio: {
+        name: '🧱 庭院石板花園',
+        skyHex: 0x0c1116,
+        brightSkyHex: 0xe0f2fe,
+        moundVec: new THREE.Vector3(0.34, 0.26, 0.20),
+        soilVec: new THREE.Vector3(0.25, 0.26, 0.28),
+        mossVec: new THREE.Vector3(0.18, 0.38, 0.22),
+        brightMoundVec: new THREE.Vector3(0.60, 0.48, 0.36),
+        brightSoilVec: new THREE.Vector3(0.64, 0.66, 0.68),
+        brightMossVec: new THREE.Vector3(0.34, 0.68, 0.40),
+        grassBase: new THREE.Vector3(0.10, 0.26, 0.14),
+        grassTip: new THREE.Vector3(0.38, 0.72, 0.34),
+        brightGrassBase: new THREE.Vector3(0.20, 0.48, 0.26),
+        brightGrassTip: new THREE.Vector3(0.46, 0.84, 0.44),
+        tempOffset: 1.2
+      },
+      sunlit: {
+        name: '☀️ 晴空日光白沙生態箱',
+        skyHex: 0x14221c,
+        brightSkyHex: 0xecfeff,
+        moundVec: new THREE.Vector3(0.52, 0.40, 0.26),
+        soilVec: new THREE.Vector3(0.45, 0.38, 0.28),
+        mossVec: new THREE.Vector3(0.25, 0.52, 0.30),
+        brightMoundVec: new THREE.Vector3(0.76, 0.62, 0.44),
+        brightSoilVec: new THREE.Vector3(0.74, 0.68, 0.56),
+        brightMossVec: new THREE.Vector3(0.38, 0.74, 0.44),
+        grassBase: new THREE.Vector3(0.16, 0.42, 0.20),
+        grassTip: new THREE.Vector3(0.45, 0.80, 0.36),
+        brightGrassBase: new THREE.Vector3(0.24, 0.56, 0.28),
+        brightGrassTip: new THREE.Vector3(0.54, 0.90, 0.42),
+        tempOffset: 2.0
+      }
+    };
+
+    const simState = {
+      timeScale: 1,
+      timeOfDay: 9.5,
+      temperature: 26.4,
+      weather: 'sunny',
+      lightingTheme: 'bright', // 'bright' (明亮日光觀察環境) | 'dark' (深邃夜光微距模式)
+      biome: 'meadow',
+      viewMode: 'surface',
+      showPheromone: true,
+      activeTool: 'inspect',
+      predatorTypeToSpawn: 'beetle',
+      defenseAggression: 0.6,
+      pilotMode: false,
+      pilotCamMode: 'tps', // 'tps' | 'fps' | 'free'
+      possessFilter: 'all',
+      nestLevel: 4,
+      kingdomMode: false,
+      kingdomStage: 4,
+      foodStored: 145,
+      proteinStored: 85,
+      broodCount: 24,
+      selectedEntity: null,
+      followTarget: true,
+      rallyPoint: null
+    };
+
+    const CHAMBERS = [
+      {
+        id: 'mound',
+        name: '火山狀蟻塚入口 (Nest Entrance)',
+        pos: new THREE.Vector3(0, 2.6, 0),
+        radius: 3.5,
+        color: 0xd97706,
+        minLevel: 1,
+        role: '地表與地下隧道的咽喉要道，由兵蟻全天候駐守並調節巢內通風對流。'
+      },
+      {
+        id: 'royal',
+        name: '王室產卵腔 (Royal Chamber)',
+        pos: new THREE.Vector3(0, -15.5, -2),
+        radius: 6.8,
+        color: 0xa855f7,
+        minLevel: 1,
+        role: '最深處的核心腔室，蟻后定居於此分泌后費洛蒙維持社會秩序並持續產卵。'
+      },
+      {
+        id: 'brood',
+        name: '育幼腔 (Brood Nursery)',
+        pos: new THREE.Vector3(11, -9.5, 3),
+        radius: 5.6,
+        color: 0x38bdf8,
+        minLevel: 2,
+        role: '恆溫育嬰室，保育蟻在此透過交哺餵食幼蟲，並將卵與蛹依溫濕度分層照料。'
+      },
+      {
+        id: 'granary',
+        name: '儲糧腔 (Granary Chamber)',
+        pos: new THREE.Vector3(-12, -7.5, -4),
+        radius: 5.2,
+        color: 0xf59e0b,
+        minLevel: 3,
+        role: '乾燥涼爽的淺層地下腔室，專門儲存工蟻採集回來的蜜露糖晶與植物種子。'
+      },
+      {
+        id: 'midden',
+        name: '廢棄物墓室 (Midden Chamber)',
+        pos: new THREE.Vector3(16, -6.5, -10),
+        radius: 4.0,
+        color: 0x64748b,
+        minLevel: 4,
+        role: '遠離育幼區的衛生隔離腔室，專門堆放有機殘渣與外殼，抑制病原真菌滋生。'
+      }
+    ];
+
+    function addEventLog(msg, badgeColor = 'text-emerald-300') {
+      const logEl = document.getElementById('event-log');
+      if (!logEl) return;
+      const hrs = Math.floor(simState.timeOfDay).toString().padStart(2, '0');
+      const mins = Math.floor((simState.timeOfDay % 1) * 60).toString().padStart(2, '0');
+      const item = document.createElement('div');
+      item.className = 'leading-snug border-l-2 border-emerald-500/40 pl-1.5 py-0.5';
+      item.innerHTML = `<span class="text-[9px] text-emerald-400/70 mr-1">[${hrs}:${mins}]</span><span class="${badgeColor}">${msg}</span>`;
+      logEl.prepend(item);
+      while (logEl.children.length > 20) {
+        logEl.removeChild(logEl.lastChild);
+      }
+    }
+
+    // =========================================================================
+    // 3. TERRAIN HEIGHT & PHEROMONE 2D CHEMICAL FIELD (DATATEXTURE)
+    // =========================================================================
+    function getTerrainHeight(x, z) {
+      const r2 = x * x + z * z;
+      const mound = 3.35 * Math.exp(-r2 / 38.0) - 0.92 * Math.exp(-r2 / 3.2);
+      const hills = 0.68 * Math.sin(x * 0.09) * Math.cos(z * 0.09) + 0.32 * Math.sin(x * 0.22 + z * 0.18);
+      return mound + hills;
+    }
+
+    function getTerrainNormal(x, z) {
+      const eps = 0.22;
+      const hL = getTerrainHeight(x - eps, z);
+      const hR = getTerrainHeight(x + eps, z);
+      const hD = getTerrainHeight(x, z - eps);
+      const hU = getTerrainHeight(x, z + eps);
+      return new THREE.Vector3(hL - hR, 2.0 * eps, hD - hU).normalize();
+    }
+
+    const pheroData = new Uint8Array(PHERO_RES * PHERO_RES * 4);
+    const trailFloat = new Float32Array(PHERO_RES * PHERO_RES);
+    const alarmFloat = new Float32Array(PHERO_RES * PHERO_RES);
+
+    const pheroTexture = new THREE.DataTexture(pheroData, PHERO_RES, PHERO_RES, THREE.RGBAFormat);
+    pheroTexture.wrapS = THREE.ClampToEdgeWrapping;
+    pheroTexture.wrapT = THREE.ClampToEdgeWrapping;
+    pheroTexture.magFilter = THREE.LinearFilter;
+    pheroTexture.minFilter = THREE.LinearFilter;
+    pheroTexture.needsUpdate = true;
+
+    function worldToGrid(x, z) {
+      const gx = Math.floor(((x + HALF_WORLD) / WORLD_SIZE) * PHERO_RES);
+      const gz = Math.floor(((z + HALF_WORLD) / WORLD_SIZE) * PHERO_RES);
+      return {
+        gx: Math.max(0, Math.min(PHERO_RES - 1, gx)),
+        gz: Math.max(0, Math.min(PHERO_RES - 1, gz))
+      };
+    }
+
+    function depositPheromone(x, z, type, amount, radius = 1) {
+      const { gx, gz } = worldToGrid(x, z);
+      for (let dz = -radius; dz <= radius; dz++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          const nx = gx + dx;
+          const nz = gz + dz;
+          if (nx >= 0 && nx < PHERO_RES && nz >= 0 && nz < PHERO_RES) {
+            const dist = Math.sqrt(dx * dx + dz * dz);
+            if (dist <= radius + 0.3) {
+              const falloff = Math.max(0, 1 - dist / (radius + 1));
+              const idx = nz * PHERO_RES + nx;
+              if (type === 'trail') {
+                trailFloat[idx] = Math.min(1.0, trailFloat[idx] + amount * falloff);
+              } else if (type === 'alarm') {
+                alarmFloat[idx] = Math.min(1.0, alarmFloat[idx] + amount * falloff);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    function samplePheromone(x, z, type) {
+      const { gx, gz } = worldToGrid(x, z);
+      const idx = gz * PHERO_RES + gx;
+      return type === 'trail' ? trailFloat[idx] : alarmFloat[idx];
+    }
+
+    function stepPheromoneField(dt) {
+      const evapRate = simState.weather === 'rain' ? 0.14 : 0.042;
+      const alarmEvap = 0.15;
+      for (let i = 0; i < PHERO_RES * PHERO_RES; i++) {
+        trailFloat[i] = Math.max(0, trailFloat[i] - evapRate * dt);
+        alarmFloat[i] = Math.max(0, alarmFloat[i] - alarmEvap * dt);
+        const p4 = i * 4;
+        pheroData[p4] = Math.min(255, Math.floor(trailFloat[i] * 255));
+        pheroData[p4 + 1] = Math.min(255, Math.floor(alarmFloat[i] * 255));
+        pheroData[p4 + 2] = simState.weather === 'rain' ? 200 : 60;
+        pheroData[p4 + 3] = 255;
+      }
+      pheroTexture.needsUpdate = true;
+    }
+
+    // =========================================================================
+    // 4. THREE.JS SCENE, CAMERA & ULTRA-DETAILED GLSL SHADERS
+    // =========================================================================
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x09130e);
+    scene.fog = new THREE.FogExp2(0x09130e, 0.0075);
+
+    const camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.15, 320);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.05);
+    scene.add(ambientLight);
+
+    const hemiLight = new THREE.HemisphereLight(0xe0f2fe, 0xd97706, 0.85);
+    hemiLight.position.set(0, 60, 0);
+    scene.add(hemiLight);
+
+    const sunLight = new THREE.DirectionalLight(0xfff5db, 1.35);
+    sunLight.position.set(35, 55, 25);
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.width = 2048;
+    sunLight.shadow.mapSize.height = 2048;
+    sunLight.shadow.camera.near = 5;
+    sunLight.shadow.camera.far = 140;
+    const d = 55;
+    sunLight.shadow.camera.left = -d;
+    sunLight.shadow.camera.right = d;
+    sunLight.shadow.camera.top = d;
+    sunLight.shadow.camera.bottom = -d;
+    scene.add(sunLight);
+
+    const undergroundLight = new THREE.PointLight(0xf59e0b, 1.5, 52);
+    undergroundLight.position.set(0, -10, 0);
+    scene.add(undergroundLight);
+
+    // -------------------------------------------------------------------------
+    // SHADER 1: Multi-Octave FBM Micro-Soil Normal Perturbation + Pheromone Field
+    // -------------------------------------------------------------------------
+    const terrainUniforms = {
+      uTime: { value: 0 },
+      uPheromoneTex: { value: pheroTexture },
+      uShowPheromone: { value: 1.0 },
+      uCutawayAlpha: { value: 1.0 },
+      uSunDir: { value: new THREE.Vector3(0.5, 0.8, 0.3).normalize() },
+      uWorldSize: { value: WORLD_SIZE },
+      uMoundColor: { value: BIOME_CONFIGS.meadow.moundVec.clone() },
+      uSoilColor: { value: BIOME_CONFIGS.meadow.soilVec.clone() },
+      uMossColor: { value: BIOME_CONFIGS.meadow.mossVec.clone() },
+      uIsPatio: { value: 0.0 }
+    };
+
+    const terrainMat = new THREE.ShaderMaterial({
+      uniforms: terrainUniforms,
+      transparent: true,
+      vertexShader: `
+        varying vec3 vWorldPos;
+        varying vec3 vNormal;
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+          vWorldPos = worldPosition.xyz;
+          vNormal = normalize(normalMatrix * normal);
+          gl_Position = projectionMatrix * viewMatrix * worldPosition;
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform sampler2D uPheromoneTex;
+        uniform float uShowPheromone;
+        uniform float uCutawayAlpha;
+        uniform vec3 uSunDir;
+        uniform float uWorldSize;
+        uniform vec3 uMoundColor;
+        uniform vec3 uSoilColor;
+        uniform vec3 uMossColor;
+        uniform float uIsPatio;
+
+        varying vec3 vWorldPos;
+        varying vec3 vNormal;
+        varying vec2 vUv;
+
+        float hash(vec2 p) {
+          return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+        }
+
+        float noise(vec2 p) {
+          vec2 i = floor(p);
+          vec2 f = fract(p);
+          f = f * f * (3.0 - 2.0 * f);
+          return mix(
+            mix(hash(i + vec2(0.0, 0.0)), hash(i + vec2(1.0, 0.0)), f.x),
+            mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
+            f.y
+          );
+        }
+
+        float fbm(vec2 p) {
+          float v = 0.0;
+          float a = 0.5;
+          for (int i = 0; i < 4; i++) {
+            v += a * noise(p);
+            p *= 2.15;
+            a *= 0.48;
+          }
+          return v;
+        }
+
+        void main() {
+          float distFromCenter = length(vWorldPos.xz);
+          float macroNoise = fbm(vWorldPos.xz * 0.65);
+          float microPebble = fbm(vWorldPos.xz * 5.8);
+          float fineSand = noise(vWorldPos.xz * 24.0);
+
+          // Procedural micro-normal perturbation for realistic soil relief
+          vec3 pertNormal = normalize(vNormal + vec3(
+            (microPebble - 0.5) * 0.42 + (fineSand - 0.5) * 0.18,
+            0.0,
+            (macroNoise - 0.5) * 0.42 + (fineSand - 0.5) * 0.18
+          ));
+
+          float moundFactor = smoothstep(10.5, 2.0, distFromCenter);
+          float mossFactor = smoothstep(0.42, 0.68, macroNoise) * (1.0 - moundFactor);
+
+          vec3 baseCol = mix(uSoilColor, uMossColor, mossFactor);
+          if (uIsPatio > 0.5 && distFromCenter > 9.0) {
+            vec2 tileGrid = abs(fract(vWorldPos.xz * 0.12) - 0.5);
+            float seam = smoothstep(0.43, 0.48, max(tileGrid.x, tileGrid.y));
+            baseCol = mix(baseCol * (0.9 + 0.2 * microPebble), uMossColor * 1.15, seam);
+          }
+          baseCol = mix(baseCol, uMoundColor, moundFactor);
+          baseCol *= (0.72 + 0.42 * microPebble + 0.16 * fineSand);
+
+          // Volcanic anthill crater entrance occlusion
+          float crater = smoothstep(1.65, 0.22, distFromCenter);
+          baseCol = mix(baseCol, vec3(0.02, 0.015, 0.01), crater);
+
+          float diff = max(dot(pertNormal, uSunDir), 0.16);
+          vec3 viewDir = normalize(cameraPosition - vWorldPos);
+          vec3 halfDir = normalize(uSunDir + viewDir);
+          float spec = pow(max(dot(pertNormal, halfDir), 0.0), 28.0) * 0.18 * (1.0 - mossFactor * 0.5);
+
+          vec3 finalCol = baseCol * (diff * 1.18 + 0.24) + vec3(1.0, 0.95, 0.85) * spec;
+
+          // Sample Pheromone Texture
+          vec2 pUv = (vWorldPos.xz + uWorldSize * 0.5) / uWorldSize;
+          vec4 phero = texture2D(uPheromoneTex, pUv);
+
+          if (uShowPheromone > 0.5) {
+            float trailStrength = phero.r;
+            float alarmStrength = phero.g;
+            float pulse = 0.8 + 0.2 * sin(uTime * 6.0 - distFromCenter * 0.8);
+            vec3 trailGlow = vec3(0.15, 0.96, 0.80) * trailStrength * 1.38 * pulse;
+            vec3 alarmGlow = vec3(1.0, 0.22, 0.32) * alarmStrength * 1.7 * (0.7 + 0.3 * sin(uTime * 14.0));
+            finalCol += trailGlow + alarmGlow;
+          }
+
+          float alpha = uCutawayAlpha;
+          if (uCutawayAlpha < 0.9) {
+            float contour = step(0.92, fract(vWorldPos.y * 2.5));
+            finalCol += vec3(0.12, 0.45, 0.34) * contour * 0.35;
+          }
+
+          gl_FragColor = vec4(finalCol, alpha);
+        }
+      `
+    });
+
+    const terrainGeo = new THREE.PlaneGeometry(WORLD_SIZE, WORLD_SIZE, 160, 160);
+    terrainGeo.rotateX(-Math.PI / 2);
+    const posAttr = terrainGeo.attributes.position;
+    for (let i = 0; i < posAttr.count; i++) {
+      const vx = posAttr.getX(i);
+      const vz = posAttr.getZ(i);
+      posAttr.setY(i, getTerrainHeight(vx, vz));
+    }
+    terrainGeo.computeVertexNormals();
+    const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
+    terrainMesh.receiveShadow = true;
+    scene.add(terrainMesh);
+
+    // -------------------------------------------------------------------------
+    // SHADER 2: Ultra-Detailed PBR Anisotropic Chitin & Micro-Pore Cuticle Shader
+    // -------------------------------------------------------------------------
+    function createChitinMaterial(baseColorHex, rimColorHex, iridColorHex = 0x10b981, roughness = 0.24) {
+      return new THREE.ShaderMaterial({
+        uniforms: {
+          uBaseColor: { value: new THREE.Color(baseColorHex) },
+          uRimColor: { value: new THREE.Color(rimColorHex) },
+          uIridColor: { value: new THREE.Color(iridColorHex) },
+          uSunDir: { value: new THREE.Vector3(0.5, 0.8, 0.3).normalize() },
+          uRoughness: { value: roughness }
+        },
+        vertexShader: `
+          varying vec3 vNormal;
+          varying vec3 vViewPosition;
+          varying vec3 vLocalPos;
+          void main() {
+            vLocalPos = position;
+            vNormal = normalize(normalMatrix * normal);
+            vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+            vViewPosition = -mvPosition.xyz;
+            gl_Position = projectionMatrix * mvPosition;
+          }
+        `,
+        fragmentShader: `
+          uniform vec3 uBaseColor;
+          uniform vec3 uRimColor;
+          uniform vec3 uIridColor;
+          uniform vec3 uSunDir;
+          uniform float uRoughness;
+          varying vec3 vNormal;
+          varying vec3 vViewPosition;
+          varying vec3 vLocalPos;
+
+          void main() {
+            // Micro-cuticle pore & seta hair-follicle dimple pattern
+            float microPore = sin(vLocalPos.x * 95.0) * cos(vLocalPos.y * 95.0) * sin(vLocalPos.z * 95.0);
+            vec3 normal = normalize(vNormal + vec3(microPore * 0.06));
+            vec3 viewDir = normalize(vViewPosition);
+
+            // Wrap diffuse for subsurface chitin warmth
+            float NdotL = dot(normal, uSunDir);
+            float diff = max((NdotL + 0.25) / 1.25, 0.12);
+
+            // Dual-lobe specular (sharp outer wax layer + broad inner cuticle sheen)
+            vec3 halfDir = normalize(uSunDir + viewDir);
+            float NdotH = max(dot(normal, halfDir), 0.0);
+            float specSharp = pow(NdotH, mix(96.0, 24.0, uRoughness));
+            float specBroad = pow(NdotH, 10.0) * 0.25;
+
+            // Fresnel rim & structural iridescence shift
+            float NdotV = max(dot(normal, viewDir), 0.0);
+            float fresnel = pow(1.0 - NdotV, 2.7);
+            vec3 iridShift = mix(uRimColor, uIridColor, sin(NdotV * 6.28) * 0.5 + 0.5);
+
+            // Cuticle segment darkening near joints
+            float jointAO = smoothstep(0.0, 0.18, length(vLocalPos));
+
+            vec3 color = uBaseColor * (diff * 0.95 + 0.28) * (0.8 + 0.2 * jointAO)
+                       + vec3(1.0, 0.97, 0.90) * (specSharp * 0.58 + specBroad)
+                       + iridShift * fresnel * 0.82;
+            gl_FragColor = vec4(color, 1.0);
+          }
+        `
+      });
+    }
+
+    // Compound Eye Ommatidia Hexagonal Facet Shader
+    const compoundEyeMat = new THREE.ShaderMaterial({
+      vertexShader: `
+        varying vec3 vNormal;
+        varying vec3 vViewPos;
+        varying vec3 vLocal;
+        void main() {
+          vLocal = position;
+          vNormal = normalize(normalMatrix * normal);
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          vViewPos = -mv.xyz;
+          gl_Position = projectionMatrix * mv;
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vNormal;
+        varying vec3 vViewPos;
+        varying vec3 vLocal;
+        void main() {
+          vec3 n = normalize(vNormal);
+          vec3 v = normalize(vViewPos);
+          float ommatidia = step(0.15, abs(sin(vLocal.x * 160.0) * cos(vLocal.y * 160.0) * sin(vLocal.z * 160.0)));
+          float spec = pow(max(dot(n, normalize(vec3(0.4, 0.8, 0.5) + v)), 0.0), 42.0);
+          float fres = pow(1.0 - max(dot(n, v), 0.0), 3.0);
+          vec3 col = vec3(0.04, 0.05, 0.06) * (0.7 + 0.3 * ommatidia) + vec3(0.9, 0.95, 1.0) * spec * 0.65 + vec3(0.2, 0.5, 0.4) * fres * 0.4;
+          gl_FragColor = vec4(col, 1.0);
+        }
+      `
+    });
+
+    // -------------------------------------------------------------------------
+    // SHADER 3: Multi-Blade Curved Grass Tuft Geometry + Surface Pebble Scatter
+    // -------------------------------------------------------------------------
+    const GRASS_COUNT = 1100;
+    const grassGeo = new THREE.ConeGeometry(0.13, 2.35, 5, 5);
+    grassGeo.translate(0, 1.175, 0);
+
+    const grassUniforms = {
+      uTime: { value: 0 },
+      uCutawayAlpha: { value: 1.0 },
+      uBaseCol: { value: BIOME_CONFIGS.meadow.grassBase.clone() },
+      uTipCol: { value: BIOME_CONFIGS.meadow.grassTip.clone() }
+    };
+
+    const grassMat = new THREE.ShaderMaterial({
+      uniforms: grassUniforms,
+      transparent: true,
+      vertexShader: `
+        uniform float uTime;
+        uniform vec3 uBaseCol;
+        uniform vec3 uTipCol;
+        varying float vHeight;
+        varying vec3 vColor;
+        void main() {
+          vHeight = position.y / 2.35;
+          vec4 instPos = instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0);
+          vec3 localPos = position;
+          // Natural parabolic blade arch + wind wave
+          float wind = sin(uTime * 2.4 + instPos.x * 0.25 + instPos.z * 0.25) * 0.42;
+          localPos.x += (wind + 0.18) * vHeight * vHeight;
+          localPos.z += cos(uTime * 1.8 + instPos.z * 0.3) * 0.22 * vHeight * vHeight;
+
+          vec4 mvPosition = modelViewMatrix * instanceMatrix * vec4(localPos, 1.0);
+          vColor = mix(uBaseCol, uTipCol, smoothstep(0.0, 1.0, vHeight));
+          gl_Position = projectionMatrix * mvPosition;
+        }
+      `,
+      fragmentShader: `
+        uniform float uCutawayAlpha;
+        varying float vHeight;
+        varying vec3 vColor;
+        void main() {
+          gl_FragColor = vec4(vColor, uCutawayAlpha);
+        }
+      `
+    });
+
+    const grassInstanced = new THREE.InstancedMesh(grassGeo, grassMat, GRASS_COUNT);
+    const dummy = new THREE.Object3D();
+    for (let i = 0; i < GRASS_COUNT; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const radius = 5.2 + Math.random() * (HALF_WORLD - 7);
+      const gx = Math.cos(angle) * radius;
+      const gz = Math.sin(angle) * radius;
+      const gy = getTerrainHeight(gx, gz);
+
+      dummy.position.set(gx, gy, gz);
+      dummy.rotation.set((Math.random() - 0.5) * 0.28, Math.random() * Math.PI * 2, (Math.random() - 0.5) * 0.28);
+      const s = 0.65 + Math.random() * 1.2;
+      dummy.scale.set(s, s * (0.8 + Math.random() * 0.75), s);
+      dummy.updateMatrix();
+      grassInstanced.setMatrixAt(i, dummy.matrix);
+    }
+    grassInstanced.instanceMatrix.needsUpdate = true;
+    scene.add(grassInstanced);
+
+    // Instanced Micro-Soil Clods & Pebbles around Anthill Crater & World
+    const CLOD_COUNT = 380;
+    const clodGeo = new THREE.DodecahedronGeometry(0.18, 1);
+    const clodMat = new THREE.MeshStandardMaterial({ color: 0x5c3a21, roughness: 0.88, metalness: 0.05 });
+    const clodInstanced = new THREE.InstancedMesh(clodGeo, clodMat, CLOD_COUNT);
+    for (let i = 0; i < CLOD_COUNT; i++) {
+      const isMoundClod = i < 200;
+      const a = Math.random() * Math.PI * 2;
+      const r = isMoundClod ? 1.4 + Math.random() * 6.5 : 8.0 + Math.random() * 45.0;
+      const cx = Math.cos(a) * r;
+      const cz = Math.sin(a) * r;
+      const cy = getTerrainHeight(cx, cz);
+      dummy.position.set(cx, cy + 0.06, cz);
+      dummy.rotation.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
+      const s = isMoundClod ? 0.5 + Math.random() * 1.1 : 0.7 + Math.random() * 1.6;
+      dummy.scale.set(s * 1.2, s * 0.75, s);
+      dummy.updateMatrix();
+      clodInstanced.setMatrixAt(i, dummy.matrix);
+    }
+    clodInstanced.instanceMatrix.needsUpdate = true;
+    scene.add(clodInstanced);
+
+    const biomePropsGroup = new THREE.Group();
+    scene.add(biomePropsGroup);
+
+    function rebuildBiomeProps(biomeKey) {
+      while (biomePropsGroup.children.length > 0) {
+        biomePropsGroup.remove(biomePropsGroup.children[0]);
+      }
+
+      if (biomeKey === 'forest') {
+        for (let i = 0; i < 18; i++) {
+          const a = (i / 18) * Math.PI * 2 + 0.3;
+          const r = 12 + (i % 4) * 9;
+          const x = Math.cos(a) * r;
+          const z = Math.sin(a) * r;
+          const y = getTerrainHeight(x, z);
+
+          const mGroup = new THREE.Group();
+          const stem = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.18, 0.28, 1.45, 10),
+            new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.7 })
+          );
+          stem.position.y = 0.72;
+          const cap = new THREE.Mesh(
+            new THREE.ConeGeometry(1.0, 0.8, 16),
+            new THREE.MeshStandardMaterial({ color: 0x14b8a6, emissive: 0x0d9488, emissiveIntensity: 0.45 })
+          );
+          cap.position.y = 1.48;
+          mGroup.add(stem, cap);
+          mGroup.position.set(x, y, z);
+          biomePropsGroup.add(mGroup);
+        }
+      } else if (biomeKey === 'arid') {
+        for (let i = 0; i < 16; i++) {
+          const a = (i / 16) * Math.PI * 2;
+          const r = 14 + (i % 3) * 11;
+          const x = Math.cos(a) * r;
+          const z = Math.sin(a) * r;
+          const y = getTerrainHeight(x, z);
+
+          const crystal = new THREE.Mesh(
+            new THREE.OctahedronGeometry(1.2, 0),
+            new THREE.MeshStandardMaterial({ color: 0xf59e0b, emissive: 0xb45309, emissiveIntensity: 0.22, roughness: 0.22 })
+          );
+          crystal.scale.set(0.7, 1.85, 0.7);
+          crystal.position.set(x, y + 0.8, z);
+          crystal.rotation.set(0.2, a, -0.15);
+          biomePropsGroup.add(crystal);
+        }
+      } else if (biomeKey === 'patio') {
+        for (let i = 0; i < 8; i++) {
+          const a = (i / 8) * Math.PI * 2;
+          const r = 18;
+          const x = Math.cos(a) * r;
+          const z = Math.sin(a) * r;
+          const slab = new THREE.Mesh(
+            new THREE.BoxGeometry(4.2, 0.35, 4.2),
+            new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.8 })
+          );
+          slab.position.set(x, getTerrainHeight(x, z) + 0.1, z);
+          slab.rotation.y = a;
+          biomePropsGroup.add(slab);
+        }
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // SHADER 4: Dewdrop Fresnel Refraction Shader
+    // -------------------------------------------------------------------------
+    const dewMat = new THREE.ShaderMaterial({
+      uniforms: { uTime: { value: 0 } },
+      transparent: true,
+      vertexShader: `
+        varying vec3 vNormal;
+        varying vec3 vViewPos;
+        void main() {
+          vNormal = normalize(normalMatrix * normal);
+          vec4 mvPos = modelViewMatrix * vec4(position, 1.0);
+          vViewPos = -mvPos.xyz;
+          gl_Position = projectionMatrix * mvPos;
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vNormal;
+        varying vec3 vViewPos;
+        void main() {
+          vec3 n = normalize(vNormal);
+          vec3 v = normalize(vViewPos);
+          float fresnel = pow(1.0 - max(dot(n, v), 0.0), 2.2);
+          float spec = pow(max(dot(n, normalize(vec3(0.4, 0.9, 0.3))), 0.0), 48.0);
+          vec3 col = mix(vec3(0.35, 0.75, 0.95), vec3(0.9, 0.98, 1.0), fresnel) + vec3(1.0) * spec;
+          gl_FragColor = vec4(col, 0.72 + fresnel * 0.25);
+        }
+      `
+    });
+
+    const dewGroup = new THREE.Group();
+    scene.add(dewGroup);
+    for (let i = 0; i < 14; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const r = 8 + Math.random() * 38;
+      const dx = Math.cos(a) * r;
+      const dz = Math.sin(a) * r;
+      const rad = 0.35 + Math.random() * 0.45;
+      const drop = new THREE.Mesh(new THREE.SphereGeometry(rad, 16, 12), dewMat);
+      drop.scale.set(1, 0.72, 1);
+      drop.position.set(dx, getTerrainHeight(dx, dz) + rad * 0.5, dz);
+      dewGroup.add(drop);
+    }
+
+    // =========================================================================
+    // 5. SUBTERRANEAN NEST CHAMBERS & TUNNEL NETWORK (3D CUTAWAY)
+    // =========================================================================
+    const undergroundGroup = new THREE.Group();
+    scene.add(undergroundGroup);
+
+    const soilBlockGeo = new THREE.BoxGeometry(56, 20, 42);
+    const soilBlockMat = new THREE.MeshPhongMaterial({
+      color: 0x1c120c,
+      transparent: true,
+      opacity: 0.28,
+      depthWrite: false,
+      side: THREE.BackSide
+    });
+    const soilBlock = new THREE.Mesh(soilBlockGeo, soilBlockMat);
+    soilBlock.position.set(0, -10.5, -2);
+    undergroundGroup.add(soilBlock);
+
+    const chamberMeshes = [];
+    const chamberVisualObjects = {};
+
+    CHAMBERS.forEach((ch) => {
+      if (ch.id === 'mound') return;
+      const chGroup = new THREE.Group();
+      const geo = new THREE.SphereGeometry(ch.radius, 24, 16);
+      geo.scale(1.25, 0.52, 1.0);
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x3b2314,
+        emissive: ch.color,
+        emissiveIntensity: 0.22,
+        roughness: 0.85,
+        side: THREE.BackSide
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.copy(ch.pos);
+      mesh.userData = { type: 'chamber', chamber: ch };
+      chGroup.add(mesh);
+      chamberMeshes.push(mesh);
+
+      const padGeo = new THREE.CircleGeometry(ch.radius * 0.85, 24);
+      padGeo.rotateX(-Math.PI / 2);
+      const padMat = new THREE.MeshBasicMaterial({
+        color: ch.color,
+        transparent: true,
+        opacity: 0.22
+      });
+      const pad = new THREE.Mesh(padGeo, padMat);
+      pad.position.set(ch.pos.x, ch.pos.y - ch.radius * 0.42, ch.pos.z);
+      chGroup.add(pad);
+
+      undergroundGroup.add(chGroup);
+      chamberVisualObjects[ch.id] = chGroup;
+    });
+
+    const TUNNEL_LINKS = [
+      ['mound', 'royal', 1],
+      ['mound', 'brood', 2],
+      ['brood', 'royal', 2],
+      ['mound', 'granary', 3],
+      ['granary', 'royal', 3],
+      ['brood', 'midden', 4]
+    ];
+
+    function getChamberById(id) {
+      return CHAMBERS.find((c) => c.id === id);
+    }
+
+    const tunnelMeshes = [];
+    TUNNEL_LINKS.forEach(([aId, bId, minLv]) => {
+      const ca = getChamberById(aId);
+      const cb = getChamberById(bId);
+      const curve = new THREE.CatmullRomCurve3([
+        ca.pos.clone(),
+        ca.pos.clone().lerp(cb.pos, 0.5).add(new THREE.Vector3(0, -1.2, 1.5)),
+        cb.pos.clone()
+      ]);
+      const tubeGeo = new THREE.TubeGeometry(curve, 20, 1.15, 10, false);
+      const tubeMat = new THREE.MeshStandardMaterial({
+        color: 0x4a2c18,
+        emissive: 0x78350f,
+        emissiveIntensity: 0.25,
+        roughness: 0.9,
+        transparent: true,
+        opacity: 0.55,
+        side: THREE.DoubleSide
+      });
+      const tube = new THREE.Mesh(tubeGeo, tubeMat);
+      tube.userData = { minLevel: minLv };
+      undergroundGroup.add(tube);
+      tunnelMeshes.push(tube);
+    });
+
+    function syncNestLevelVisibility() {
+      CHAMBERS.forEach((ch) => {
+        if (ch.id === 'mound') return;
+        const grp = chamberVisualObjects[ch.id];
+        if (grp) grp.visible = simState.nestLevel >= ch.minLevel;
+      });
+      tunnelMeshes.forEach((t) => {
+        t.visible = simState.nestLevel >= t.userData.minLevel;
+      });
+    }
+
+    const broodVisualGroup = new THREE.Group();
+    const broodChamber = getChamberById('brood');
+    for (let i = 0; i < 18; i++) {
+      const eggGeo = new THREE.SphereGeometry(0.28, 10, 8);
+      eggGeo.scale(1.4, 0.85, 0.85);
+      const eggMat = new THREE.MeshStandardMaterial({
+        color: 0xfef9c3,
+        emissive: 0xfde047,
+        emissiveIntensity: 0.2,
+        roughness: 0.3
+      });
+      const egg = new THREE.Mesh(eggGeo, eggMat);
+      const a = (i / 18) * Math.PI * 2;
+      const r = 1.0 + (i % 3) * 1.1;
+      egg.position.set(
+        broodChamber.pos.x + Math.cos(a) * r,
+        broodChamber.pos.y - 2.2,
+        broodChamber.pos.z + Math.sin(a) * r
+      );
+      egg.rotation.y = a;
+      broodVisualGroup.add(egg);
+    }
+    undergroundGroup.add(broodVisualGroup);
+
+    // =========================================================================
+    // 6. APHID SYMBIOSIS BRANCH, FOOD SOURCES & PEBBLE OBSTACLES
+    // =========================================================================
+    const resources = [];
+    const obstacles = [];
+    const resourceGroup = new THREE.Group();
+    scene.add(resourceGroup);
+
+    function spawnResource(x, z, kind = 'sugar', amount = 80) {
+      const y = getTerrainHeight(x, z);
+      const group = new THREE.Group();
+      group.position.set(x, y + 0.35, z);
+
+      let mesh;
+      if (kind === 'sugar') {
+        const geo = new THREE.DodecahedronGeometry(0.95, 0);
+        const mat = new THREE.MeshStandardMaterial({
+          color: 0xfde68a,
+          emissive: 0xf59e0b,
+          emissiveIntensity: 0.35,
+          roughness: 0.15,
+          metalness: 0.1
+        });
+        mesh = new THREE.Mesh(geo, mat);
+      } else {
+        const geo = new THREE.SphereGeometry(1.05, 14, 12);
+        geo.scale(1.3, 0.75, 0.95);
+        const mat = new THREE.MeshStandardMaterial({
+          color: 0xfb7185,
+          emissive: 0xe11d48,
+          emissiveIntensity: 0.25,
+          roughness: 0.45
+        });
+        mesh = new THREE.Mesh(geo, mat);
+      }
+      mesh.castShadow = true;
+      group.add(mesh);
+      resourceGroup.add(group);
+
+      const res = {
+        id: 'res_' + Math.random().toString(36).slice(2, 7),
+        kind,
+        amount,
+        maxAmount: amount,
+        pos: new THREE.Vector3(x, y, z),
+        group,
+        mesh
+      };
+      mesh.userData = { type: 'resource', resource: res };
+      resources.push(res);
+      return res;
+    }
+
+    function spawnObstacle(x, z, radius = 3.2) {
+      const y = getTerrainHeight(x, z);
+      const geo = new THREE.DodecahedronGeometry(radius, 1);
+      geo.scale(1.2, 0.68, 1.0);
+      const mat = new THREE.MeshStandardMaterial({
+        color: 0x64748b,
+        roughness: 0.85,
+        metalness: 0.08
+      });
+      const rock = new THREE.Mesh(geo, mat);
+      rock.position.set(x, y + radius * 0.25, z);
+      rock.rotation.y = Math.random() * Math.PI;
+      rock.castShadow = true;
+      rock.receiveShadow = true;
+      scene.add(rock);
+      obstacles.push({ pos: new THREE.Vector3(x, y, z), radius: radius * 1.15, mesh: rock });
+    }
+
+    const aphidZonePos = new THREE.Vector3(22, getTerrainHeight(22, -16), -16);
+    const stemCurve = new THREE.CatmullRomCurve3([
+      aphidZonePos.clone(),
+      aphidZonePos.clone().add(new THREE.Vector3(1.5, 4.5, 1.0)),
+      aphidZonePos.clone().add(new THREE.Vector3(4.0, 7.5, -1.5))
+    ]);
+    const stemGeo = new THREE.TubeGeometry(stemCurve, 16, 0.55, 8, false);
+    const stemMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.6 });
+    const stemMesh = new THREE.Mesh(stemGeo, stemMat);
+    stemMesh.castShadow = true;
+    scene.add(stemMesh);
+
+    for (let i = 0; i < 8; i++) {
+      const aphid = new THREE.Mesh(
+        new THREE.SphereGeometry(0.35, 10, 8),
+        new THREE.MeshStandardMaterial({ color: 0x86efac, emissive: 0x22c55e, emissiveIntensity: 0.25 })
+      );
+      const a = (i / 8) * Math.PI * 2;
+      aphid.position.set(
+        aphidZonePos.x + Math.cos(a) * 1.1,
+        aphidZonePos.y + 0.8 + (i % 3) * 0.4,
+        aphidZonePos.z + Math.sin(a) * 1.1
+      );
+      scene.add(aphid);
+    }
+
+    spawnResource(22, -16, 'sugar', 160);
+    spawnResource(-24, 18, 'sugar', 130);
+    spawnResource(18, 24, 'protein', 120);
+    spawnResource(-20, -22, 'protein', 110);
+
+    spawnObstacle(10, 10, 2.8);
+    spawnObstacle(-12, 8, 3.1);
+    spawnObstacle(8, -11, 2.5);
+
+    const rallyGroup = new THREE.Group();
+    const rallyPole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.12, 0.12, 4.5, 8),
+      new THREE.MeshBasicMaterial({ color: 0x22d3ee })
+    );
+    rallyPole.position.y = 2.25;
+    const rallyRing = new THREE.Mesh(
+      new THREE.RingGeometry(1.2, 1.6, 24),
+      new THREE.MeshBasicMaterial({ color: 0x22d3ee, side: THREE.DoubleSide })
+    );
+    rallyRing.rotateX(-Math.PI / 2);
+    rallyRing.position.y = 0.2;
+    rallyGroup.add(rallyPole, rallyRing);
+    rallyGroup.visible = false;
+    scene.add(rallyGroup);
+
+    // =========================================================================
+    // 7. ULTRA-DETAILED ENTOMOLOGICAL 3D ANT BUILDER (Requirement 1)
+    // =========================================================================
+    const sharedAntMats = {
+      worker: createChitinMaterial(0x3a1e10, 0xd97706, 0xf59e0b, 0.24),
+      soldier: createChitinMaterial(0x421417, 0xf43f5e, 0xfb7185, 0.18),
+      nurse: createChitinMaterial(0x283824, 0x34d399, 0x6ee7b7, 0.28),
+      queen: createChitinMaterial(0x2b0e36, 0xfbbf24, 0xc084fc, 0.15),
+      eye: compoundEyeMat,
+      ocelli: new THREE.MeshBasicMaterial({ color: 0xfef08a }),
+      tergiteBand: new THREE.MeshStandardMaterial({ color: 0x140a05, roughness: 0.35, metalness: 0.2 })
+    };
+
+    const sharedGeos = {
+      head: new THREE.SphereGeometry(0.28, 18, 16),
+      clypeus: new THREE.SphereGeometry(0.16, 12, 10),
+      pronotum: new THREE.SphereGeometry(0.22, 16, 14),
+      mesonotum: new THREE.SphereGeometry(0.19, 14, 12),
+      propodeum: new THREE.SphereGeometry(0.20, 14, 12),
+      petiole: new THREE.SphereGeometry(0.10, 12, 10),
+      postPetiole: new THREE.SphereGeometry(0.09, 12, 10),
+      gaster: new THREE.SphereGeometry(0.39, 20, 18),
+      tergiteRing: new THREE.TorusGeometry(0.34, 0.018, 8, 24),
+      stinger: new THREE.ConeGeometry(0.04, 0.18, 8),
+      eye: new THREE.SphereGeometry(0.072, 12, 10),
+      mandibleBase: new THREE.ConeGeometry(0.075, 0.28, 10),
+      mandibleTooth: new THREE.ConeGeometry(0.025, 0.08, 6),
+      antennaBulbus: new THREE.SphereGeometry(0.032, 8, 8),
+      antennaScape: new THREE.CylinderGeometry(0.018, 0.014, 0.30, 8),
+      antennaFuniculus: new THREE.CylinderGeometry(0.016, 0.012, 0.32, 8),
+      antennaClub: new THREE.SphereGeometry(0.024, 8, 8),
+      coxa: new THREE.SphereGeometry(0.048, 8, 8),
+      femur: new THREE.CylinderGeometry(0.030, 0.022, 0.44, 8),
+      kneeJoint: new THREE.SphereGeometry(0.026, 8, 8),
+      tibia: new THREE.CylinderGeometry(0.022, 0.014, 0.48, 8),
+      tarsus: new THREE.CylinderGeometry(0.012, 0.008, 0.22, 6),
+      claw: new THREE.ConeGeometry(0.012, 0.06, 5),
+      spine: new THREE.ConeGeometry(0.035, 0.24, 8)
+    };
+    sharedGeos.head.scale(1.06, 0.88, 1.18);
+    sharedGeos.clypeus.scale(1.1, 0.6, 0.8);
+    sharedGeos.pronotum.scale(0.95, 0.88, 1.15);
+    sharedGeos.mesonotum.scale(0.82, 0.78, 1.1);
+    sharedGeos.propodeum.scale(0.88, 0.82, 1.1);
+    sharedGeos.gaster.scale(0.96, 0.92, 1.42);
+    sharedGeos.antennaClub.scale(0.8, 0.8, 2.2);
+
+    function buildAntMesh(caste = 'worker', customMat = null) {
+      const root = new THREE.Group();
+      const mat = customMat || sharedAntMats[caste] || sharedAntMats.worker;
+
+      let scale = 1.0;
+      if (caste === 'soldier') scale = 1.45;
+      if (caste === 'nurse') scale = 0.92;
+      if (caste === 'queen') scale = 2.15;
+      root.scale.setScalar(scale);
+
+      // 1. Segmented Mesosoma (Alitrunk: Pronotum + Mesonotum + Propodeum)
+      const thoraxGroup = new THREE.Group();
+      const pronotum = new THREE.Mesh(sharedGeos.pronotum, mat);
+      pronotum.position.set(0, 0.36, 0.22);
+      const mesonotum = new THREE.Mesh(sharedGeos.mesonotum, mat);
+      mesonotum.position.set(0, 0.34, 0.0);
+      const propodeum = new THREE.Mesh(sharedGeos.propodeum, mat);
+      propodeum.position.set(0, 0.33, -0.22);
+      if (caste === 'queen') {
+        pronotum.scale.set(1.25, 1.35, 1.2);
+        mesonotum.scale.set(1.38, 1.5, 1.3);
+      }
+      thoraxGroup.add(pronotum, mesonotum, propodeum);
+      root.add(thoraxGroup);
+
+      // Queen wing scars or Soldier defensive pronotal spines
+      if (caste === 'queen') {
+        [-1, 1].forEach((s) => {
+          const scar = new THREE.Mesh(
+            new THREE.BoxGeometry(0.08, 0.08, 0.28),
+            new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.35, metalness: 0.3 })
+          );
+          scar.position.set(s * 0.24, 0.50, 0.04);
+          root.add(scar);
+        });
+      } else if (caste === 'soldier') {
+        [-1, 1].forEach((s) => {
+          const spine = new THREE.Mesh(sharedGeos.spine, mat);
+          spine.position.set(s * 0.17, 0.50, 0.16);
+          spine.rotation.z = -s * 0.45;
+          spine.rotation.x = 0.2;
+          root.add(spine);
+        });
+      }
+
+      // 2. Two-Node Waist (Petiole + Post-petiole with dorsal nodes)
+      const petiole = new THREE.Mesh(sharedGeos.petiole, mat);
+      petiole.position.set(0, 0.33, -0.42);
+      const postPetiole = new THREE.Mesh(sharedGeos.postPetiole, mat);
+      postPetiole.position.set(0, 0.34, -0.56);
+      root.add(petiole, postPetiole);
+
+      // 3. Multi-Tergite Gaster (Abdomen with 4 chitinous suture rings & terminal acidopore/stinger)
+      const gasterGroup = new THREE.Group();
+      gasterGroup.position.set(0, 0.39, -1.04);
+      const gaster = new THREE.Mesh(sharedGeos.gaster, mat);
+      if (caste === 'queen') gasterGroup.scale.set(1.32, 1.25, 1.55);
+      if (caste === 'nurse') gasterGroup.scale.set(1.12, 1.1, 1.22);
+      gaster.castShadow = true;
+      gasterGroup.add(gaster);
+
+      [-0.26, -0.08, 0.10, 0.26].forEach((zRing, rIdx) => {
+        const ring = new THREE.Mesh(sharedGeos.tergiteRing, sharedAntMats.tergiteBand);
+        const rScale = 1.0 - Math.abs(zRing) * 1.15;
+        ring.scale.set(rScale, rScale * 0.92, 1.0);
+        ring.position.set(0, 0, zRing);
+        gasterGroup.add(ring);
+      });
+
+      const stinger = new THREE.Mesh(sharedGeos.stinger, mat);
+      stinger.rotation.x = -Math.PI / 2;
+      stinger.position.set(0, -0.04, -0.58);
+      gasterGroup.add(stinger);
+      root.add(gasterGroup);
+
+      // 4. Anatomically Detailed Head (Cranium, Clypeus, 3 Ocelli, Faceted Compound Eyes, Dentate Mandibles, 11-seg Antennae)
+      const headGroup = new THREE.Group();
+      headGroup.position.set(0, 0.40, 0.56);
+      const head = new THREE.Mesh(sharedGeos.head, mat);
+      if (caste === 'soldier') head.scale.set(1.46, 1.24, 1.30);
+      headGroup.add(head);
+
+      const clypeus = new THREE.Mesh(sharedGeos.clypeus, mat);
+      clypeus.position.set(0, -0.04, 0.28);
+      headGroup.add(clypeus);
+
+      if (caste === 'queen') {
+        [-0.06, 0, 0.06].forEach((ox, idx) => {
+          const ocellus = new THREE.Mesh(new THREE.SphereGeometry(0.032, 8, 8), sharedAntMats.ocelli);
+          ocellus.position.set(ox, 0.24, idx === 1 ? 0.08 : 0.02);
+          headGroup.add(ocellus);
+        });
+      }
+
+      const eyeL = new THREE.Mesh(sharedGeos.eye, sharedAntMats.eye);
+      eyeL.position.set(0.23, 0.06, 0.12);
+      const eyeR = eyeL.clone();
+      eyeR.position.x = -0.23;
+      headGroup.add(eyeL, eyeR);
+
+      // Serrated Mandibles with 3 Inner Masticatory Teeth
+      function buildSerratedMandible(side) {
+        const mPivot = new THREE.Group();
+        mPivot.position.set(side * 0.15, -0.06, 0.32);
+        const blade = new THREE.Mesh(sharedGeos.mandibleBase, mat);
+        blade.rotation.x = Math.PI / 2;
+        blade.rotation.z = -side * 0.35;
+        mPivot.add(blade);
+
+        for (let t = 0; t < 3; t++) {
+          const tooth = new THREE.Mesh(sharedGeos.mandibleTooth, mat);
+          tooth.position.set(-side * 0.03, 0, 0.04 + t * 0.05);
+          tooth.rotation.z = side * (Math.PI / 2);
+          mPivot.add(tooth);
+        }
+        if (caste === 'soldier') mPivot.scale.set(1.65, 1.85, 1.75);
+        return mPivot;
+      }
+
+      const mandL = buildSerratedMandible(1);
+      const mandR = buildSerratedMandible(-1);
+      headGroup.add(mandL, mandR);
+
+      // Geniculate Antennae (Bulbus -> Scape -> Elbow -> Funiculus -> Sensory Club)
+      function buildAntenna(side) {
+        const aGroup = new THREE.Group();
+        const bulbus = new THREE.Mesh(sharedGeos.antennaBulbus, mat);
+        bulbus.position.set(side * 0.08, 0.08, 0.24);
+        const scape = new THREE.Mesh(sharedGeos.antennaScape, mat);
+        scape.position.set(side * 0.16, 0.18, 0.32);
+        scape.rotation.set(0.65, 0, -side * 0.48);
+        const funic = new THREE.Mesh(sharedGeos.antennaFuniculus, mat);
+        funic.position.set(side * 0.28, 0.26, 0.50);
+        funic.rotation.set(1.25, 0, -side * 0.18);
+        const club = new THREE.Mesh(sharedGeos.antennaClub, mat);
+        club.position.set(side * 0.32, 0.24, 0.66);
+        club.rotation.x = 0.3;
+        aGroup.add(bulbus, scape, funic, club);
+        return aGroup;
+      }
+
+      const antL = buildAntenna(1);
+      const antR = buildAntenna(-1);
+      headGroup.add(antL, antR);
+      root.add(headGroup);
+
+      // 5. Six 5-Segmented Articulated Hexapod Legs (Coxa -> Femur -> Knee -> Tibia -> Tarsus -> Pretarsal Claws)
+      const legs = [];
+      const zOffsets = [0.24, 0.0, -0.24];
+      for (let i = 0; i < 3; i++) {
+        [-1, 1].forEach((side) => {
+          const legPivot = new THREE.Group();
+          legPivot.position.set(side * 0.18, 0.30, zOffsets[i]);
+
+          const coxa = new THREE.Mesh(sharedGeos.coxa, mat);
+          legPivot.add(coxa);
+
+          const femur = new THREE.Mesh(sharedGeos.femur, mat);
+          femur.position.set(side * 0.17, 0.02, 0);
+          femur.rotation.z = side * 1.18;
+
+          const knee = new THREE.Mesh(sharedGeos.kneeJoint, mat);
+          knee.position.set(side * 0.34, 0.08, 0);
+
+          const tibia = new THREE.Mesh(sharedGeos.tibia, mat);
+          tibia.position.set(side * 0.44, -0.14, 0);
+          tibia.rotation.z = side * 0.32;
+
+          const tarsus = new THREE.Mesh(sharedGeos.tarsus, mat);
+          tarsus.position.set(side * 0.54, -0.34, 0.04);
+          tarsus.rotation.z = side * 0.78;
+          tarsus.rotation.x = 0.25;
+
+          const claw = new THREE.Mesh(sharedGeos.claw, mat);
+          claw.position.set(side * 0.62, -0.38, 0.08);
+          claw.rotation.z = -side * 0.6;
+
+          legPivot.add(femur, knee, tibia, tarsus, claw);
+          root.add(legPivot);
+          legs.push({ pivot: legPivot, femur, tibia, side, index: i });
+        });
+      }
+
+      // Cargo visual holder
+      const cargoMesh = new THREE.Mesh(
+        new THREE.DodecahedronGeometry(0.18, 0),
+        new THREE.MeshStandardMaterial({ color: 0xfde047, emissive: 0xf59e0b, emissiveIntensity: 0.5 })
+      );
+      cargoMesh.position.set(0, 0.36, 0.96);
+      cargoMesh.visible = false;
+      root.add(cargoMesh);
+
+      if (caste === 'nurse') {
+        cargoMesh.geometry = new THREE.SphereGeometry(0.16, 12, 10);
+        cargoMesh.material = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xfef08a, emissiveIntensity: 0.3 });
+        cargoMesh.visible = true;
+      }
+
+      return { root, headGroup, gaster: gasterGroup, legs, cargoMesh, mandL, mandR, antL, antR };
+    }
+
+    // =========================================================================
+    // 8. MULTI-SPECIES PREDATOR BUILDERS (High-Detail Articulated Predators)
+    // =========================================================================
+    const ants = [];
+    const predators = [];
+    const antGroup = new THREE.Group();
+    scene.add(antGroup);
+
+    let nextAntId = 1;
+
+    function createAnt(caste = 'worker', startSubterranean = false) {
+      const built = buildAntMesh(caste);
+      const id = nextAntId++;
+
+      let pos = new THREE.Vector3();
+      let underground = startSubterranean;
+
+      if (caste === 'queen') {
+        const royal = getChamberById('royal');
+        pos.copy(royal.pos).add(new THREE.Vector3(0, -1.8, 0));
+        underground = true;
+      } else if (caste === 'nurse') {
+        const brood = getChamberById('brood');
+        pos.copy(brood.pos).add(new THREE.Vector3((Math.random() - 0.5) * 4, -1.8, (Math.random() - 0.5) * 3));
+        underground = true;
+      } else if (underground) {
+        const gran = getChamberById('granary');
+        pos.copy(gran.pos).add(new THREE.Vector3((Math.random() - 0.5) * 4, -1.5, (Math.random() - 0.5) * 3));
+      } else {
+        const a = Math.random() * Math.PI * 2;
+        const r = 2.5 + Math.random() * 24;
+        const x = Math.cos(a) * r;
+        const z = Math.sin(a) * r;
+        pos.set(x, getTerrainHeight(x, z), z);
+      }
+
+      built.root.position.copy(pos);
+      antGroup.add(built.root);
+
+      const ant = {
+        id,
+        caste,
+        pos,
+        heading: Math.random() * Math.PI * 2,
+        speed: caste === 'soldier' ? 4.4 : caste === 'nurse' ? 2.8 : caste === 'queen' ? 1.8 : 5.2,
+        state: caste === 'queen' ? '產卵與分泌后費洛蒙' : caste === 'nurse' ? '照料育幼腔幼蟲' : '隨機探索覓食 (Scouting)',
+        carrying: null,
+        energy: 85 + Math.random() * 15,
+        sensedPheromone: 0,
+        underground,
+        legPhase: Math.random() * Math.PI * 2,
+        biteAnimTimer: 0,
+        targetChamber: 'brood',
+        mesh: built.root,
+        parts: built
+      };
+
+      built.root.traverse((child) => {
+        if (child.isMesh) child.userData = { type: 'ant', ant };
+      });
+
+      ants.push(ant);
+      return ant;
+    }
+
+    let queenAnt = createAnt('queen', true);
+    for (let i = 0; i < 48; i++) createAnt('worker', i < 6);
+    for (let i = 0; i < 14; i++) createAnt('soldier', false);
+    for (let i = 0; i < 11; i++) createAnt('nurse', true);
+    simState.selectedEntity = { type: 'ant', ant: ants[1] };
+
+    const PREDATOR_SPECS = {
+      beetle: {
+        name: '🪲 獵食步甲蟲 (Carabid Beetle)',
+        hp: 120,
+        speed: 2.5,
+        dps: 6,
+        rewardProtein: 140,
+        desc: '鞘翅目地面重裝掠食者，擁有堅硬幾丁質翅鞘、6 條長足與強壯大顎，需召集巨顎兵蟻圍剿。'
+      },
+      spider: {
+        name: '🕷️ 叢林徘徊狼蛛 (Wolf Spider)',
+        hp: 95,
+        speed: 4.3,
+        dps: 10,
+        rewardProtein: 130,
+        desc: '八足高速伏擊型蜘蛛，具 8 顆單眼、螯肢與多關節步足，直接疾馳獵捕外勤工蟻。'
+      },
+      antlion: {
+        name: '🕳️ 蟻獅流沙陷阱 (Antlion Larva Pit)',
+        hp: 150,
+        speed: 0.0,
+        dps: 14,
+        rewardProtein: 160,
+        desc: '脈翅目蛟蛉幼蟲挖掘的圓錐形流沙陷阱，會產生重力渦流將經過的螞蟻拉入坑底鐮刀巨顎！'
+      },
+      hornet: {
+        name: '🐝 巡弋虎頭蜂 (Giant Hornet Scout)',
+        hp: 110,
+        speed: 5.0,
+        dps: 12,
+        rewardProtein: 150,
+        desc: '膜翅目低空掠食者，拍動透明翅脈雙翅於地表上方高速盤旋俯衝，散發強烈警戒震波。'
+      },
+      centipede: {
+        name: '蜈 巨型赤蜈蚣 (Scolopendra Centipede)',
+        hp: 180,
+        speed: 3.4,
+        dps: 15,
+        rewardProtein: 220,
+        desc: '唇足綱頂級掠食者，具多體節背板、雙側步足與毒顎，是考驗成熟螞蟻王國防衛力的終極威脅。'
+      }
+    };
+
+    function spawnPredatorBySpecies(x, z, species = 'beetle') {
+      const spec = PREDATOR_SPECS[species] || PREDATOR_SPECS.beetle;
+      const y = getTerrainHeight(x, z);
+      const group = new THREE.Group();
+
+      if (species === 'beetle') {
+        const bodyMat = createChitinMaterial(0x111827, 0xef4444, 0x38bdf8, 0.14);
+        const carapace = new THREE.Mesh(new THREE.SphereGeometry(1.15, 20, 16), bodyMat);
+        carapace.scale.set(1.1, 0.65, 1.55);
+        carapace.position.y = 0.68;
+        group.add(carapace);
+        const pronotum = new THREE.Mesh(new THREE.SphereGeometry(0.78, 16, 12), bodyMat);
+        pronotum.scale.set(1.15, 0.68, 0.9);
+        pronotum.position.set(0, 0.64, 1.25);
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.55, 14, 12), bodyMat);
+        head.position.set(0, 0.55, 1.75);
+        group.add(pronotum, head);
+        const hornGeo = new THREE.ConeGeometry(0.18, 0.95, 8);
+        [-1, 1].forEach((s) => {
+          const horn = new THREE.Mesh(hornGeo, bodyMat);
+          horn.position.set(s * 0.35, 0.5, 2.25);
+          horn.rotation.x = Math.PI / 2;
+          horn.rotation.z = -s * 0.25;
+          group.add(horn);
+        });
+        // 6 Articulated Beetle Legs
+        for (let i = 0; i < 3; i++) {
+          [-1, 1].forEach((s) => {
+            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.04, 1.65, 6), bodyMat);
+            leg.position.set(s * 1.15, 0.42, 0.9 - i * 0.85);
+            leg.rotation.z = s * 1.1;
+            group.add(leg);
+          });
+        }
+      } else if (species === 'spider') {
+        const spMat = createChitinMaterial(0x3b1d5e, 0xc084fc, 0xf472b6, 0.32);
+        const ceph = new THREE.Mesh(new THREE.SphereGeometry(0.68, 16, 14), spMat);
+        ceph.position.set(0, 0.68, 0.55);
+        const abd = new THREE.Mesh(new THREE.SphereGeometry(1.0, 18, 14), spMat);
+        abd.scale.set(1.0, 0.85, 1.3);
+        abd.position.set(0, 0.78, -0.9);
+        group.add(ceph, abd);
+        for (let i = 0; i < 4; i++) {
+          [-1, 1].forEach((s) => {
+            const femur = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.04, 1.5, 6), spMat);
+            femur.position.set(s * 0.75, 0.95, 0.8 - i * 0.45);
+            femur.rotation.z = s * 0.65;
+            const tibia = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.02, 1.6, 6), spMat);
+            tibia.position.set(s * 1.45, 0.45, 0.8 - i * 0.45);
+            tibia.rotation.z = s * 1.35;
+            group.add(femur, tibia);
+          });
+        }
+      } else if (species === 'antlion') {
+        const pitGeo = new THREE.ConeGeometry(4.2, 2.2, 28, 1, true);
+        const pitMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.9, side: THREE.DoubleSide });
+        const pit = new THREE.Mesh(pitGeo, pitMat);
+        pit.rotation.x = Math.PI;
+        pit.position.y = 0.2;
+        group.add(pit);
+
+        const jawMat = createChitinMaterial(0x78350f, 0xfbbf24, 0xf59e0b, 0.22);
+        [-1, 1].forEach((s) => {
+          const jaw = new THREE.Mesh(new THREE.ConeGeometry(0.25, 1.45, 8), jawMat);
+          jaw.position.set(s * 0.45, 0.35, 0.4);
+          jaw.rotation.x = Math.PI / 2.5;
+          jaw.rotation.z = -s * 0.4;
+          group.add(jaw);
+        });
+      } else if (species === 'hornet') {
+        const hMat = createChitinMaterial(0xca8a04, 0xfef08a, 0xf97316, 0.18);
+        const thorax = new THREE.Mesh(new THREE.SphereGeometry(0.68, 16, 12), hMat);
+        thorax.position.set(0, 2.6, 0);
+        const gaster = new THREE.Mesh(new THREE.ConeGeometry(0.72, 1.95, 14), hMat);
+        gaster.rotation.x = -Math.PI / 2;
+        gaster.position.set(0, 2.6, -1.4);
+        const wingGeo = new THREE.PlaneGeometry(2.8, 0.7);
+        const wingMat = new THREE.MeshBasicMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.58, side: THREE.DoubleSide });
+        const wings = new THREE.Mesh(wingGeo, wingMat);
+        wings.rotation.x = Math.PI / 2;
+        wings.position.set(0, 3.12, 0);
+        wings.name = 'hornetWings';
+        group.add(thorax, gaster, wings);
+      } else if (species === 'centipede') {
+        const cMat = createChitinMaterial(0x7f1d1d, 0xf87171, 0xfb923c, 0.2);
+        for (let seg = 0; seg < 7; seg++) {
+          const sMesh = new THREE.Mesh(new THREE.SphereGeometry(0.55, 12, 10), cMat);
+          sMesh.scale.set(1.12, 0.52, 0.95);
+          const zPos = 1.8 - seg * 0.68;
+          sMesh.position.set(Math.sin(seg * 0.6) * 0.25, 0.45, zPos);
+          group.add(sMesh);
+          [-1, 1].forEach((s) => {
+            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.02, 0.95, 5), cMat);
+            leg.position.set(s * 0.68, 0.28, zPos);
+            leg.rotation.z = s * 1.15;
+            group.add(leg);
+          });
+        }
+      }
+
+      group.position.set(x, y, z);
+      scene.add(group);
+
+      const pred = {
+        id: 'beetle_' + species + '_' + Math.random().toString(36).slice(2, 6),
+        species,
+        name: spec.name,
+        desc: spec.desc,
+        pos: new THREE.Vector3(x, y, z),
+        heading: Math.atan2(-x, -z),
+        hp: spec.hp,
+        maxHp: spec.hp,
+        speed: spec.speed,
+        dps: spec.dps,
+        rewardProtein: spec.rewardProtein,
+        group
+      };
+      group.traverse((c) => {
+        if (c.isMesh) c.userData = { type: 'predator', predator: pred };
+      });
+      predators.push(pred);
+
+      depositPheromone(x, z, 'alarm', 0.95, 4);
+      soundscape.playAlarm();
+      addEventLog(`⚠️ 天敵「${spec.name}」出現於 (${x.toFixed(0)}, ${z.toFixed(0)})！`, 'text-rose-400 font-semibold');
+      return pred;
+    }
+
+    // =========================================================================
+    // 9. SPECIFIED TARGET POSSESSION & OMNI-DIRECTIONAL ACTIONS (Requirement 2)
+    // =========================================================================
+    function refreshPossessDropdown() {
+      const selEl = document.getElementById('select-possess-target');
+      if (!selEl) return;
+      const filter = simState.possessFilter;
+      const filtered = ants.filter((a) => filter === 'all' || a.caste === filter);
+
+      const currentAntId = simState.selectedEntity && simState.selectedEntity.type === 'ant'
+        ? simState.selectedEntity.ant.id
+        : null;
+
+      selEl.innerHTML = '';
+      filtered.forEach((a) => {
+        const opt = document.createElement('option');
+        opt.value = a.id;
+        opt.className = 'bg-stone-900 text-emerald-100';
+        const icon = a.caste === 'queen' ? '👑' : a.caste === 'soldier' ? '⚔️' : a.caste === 'nurse' ? '🥚' : '🍯';
+        const loc = a.underground ? '地底' : '地表';
+        opt.textContent = `${icon} #${a.id} (${a.caste.toUpperCase()} · ${loc} · ${Math.round(a.energy)}%)`;
+        if (a.id === currentAntId) opt.selected = true;
+        selEl.appendChild(opt);
+      });
+    }
+
+    function selectAntForPossession(antObj, enablePilotImmediately = false) {
+      if (!antObj) return;
+      simState.selectedEntity = { type: 'ant', ant: antObj };
+      simState.followTarget = true;
+      if (enablePilotImmediately) {
+        setPilotMode(true);
+      }
+      refreshPossessDropdown();
+      updateInspectorUI();
+    }
+
+    function setPilotMode(active) {
+      simState.pilotMode = active;
+      const btn = document.getElementById('cmd-ant-pilot');
+      const cockpit = document.getElementById('possession-cockpit');
+
+      if (active) {
+        if (!simState.selectedEntity || simState.selectedEntity.type !== 'ant') {
+          simState.selectedEntity = { type: 'ant', ant: ants[1] || ants[0] };
+        }
+        const a = simState.selectedEntity.ant;
+        if (a.underground && simState.viewMode === 'surface') {
+          setViewMode('cutaway');
+        }
+        btn.classList.add('ring-2', 'ring-teal-300');
+        btn.textContent = `🕹️ 附身中 (#${a.id})`;
+        cockpit.classList.remove('hidden');
+        document.getElementById('cockpit-ant-label').textContent = `🕹️ 全方位附身操控中：${a.caste === 'queen' ? '👑 蟻后' : '🐜 ' + a.caste.toUpperCase()} #${a.id}`;
+        soundscape.playTone(680, 0.12, 'triangle', 0.08);
+        addEventLog(`🕹️ 已附身指定對象 #${a.id} (${a.caste})！可用 WASD/QE 移動，F 咬擊、G 搬運、Z/X 費洛蒙、C 交哺/產卵、V 鑽洞！`, 'text-teal-300 font-semibold');
+      } else {
+        btn.classList.remove('ring-2', 'ring-teal-300');
+        btn.textContent = '🕹️ 附身操控 (IJKL)';
+        cockpit.classList.add('hidden');
+        addEventLog('🕹️ 已解除個體附身操控，恢復群體自組織模式。', 'text-emerald-300');
+      }
+      refreshPossessDropdown();
+    }
+
+    // Execute Specialized Ant Biological Actions during Possession
+    function executePossessedAction(actionType) {
+      if (!simState.selectedEntity || simState.selectedEntity.type !== 'ant') return;
+      const a = simState.selectedEntity.ant;
+
+      if (actionType === 'bite') {
+        a.biteAnimTimer = 0.35;
+        soundscape.playTone(260, 0.12, 'sawtooth', 0.09);
+        // Damage nearby predators within 4.5 units
+        let hitCount = 0;
+        predators.forEach((p) => {
+          if (p.pos.distanceTo(a.pos) < 4.8) {
+            const dmg = a.caste === 'soldier' ? 35 : a.caste === 'queen' ? 20 : 14;
+            p.hp -= dmg;
+            hitCount++;
+          }
+        });
+        if (hitCount > 0) {
+          addEventLog(`⚔️ 附身個體 #${a.id} 發動大顎強力咬擊與蟻酸噴射，重創天敵！`, 'text-rose-300 font-semibold');
+        } else {
+          addEventLog(`⚔️ #${a.id} 張開鋸齒大顎威嚇示警！`, 'text-amber-200');
+        }
+      } else if (actionType === 'carry') {
+        if (a.carrying) {
+          // Drop or deliver cargo
+          if (Math.hypot(a.pos.x, a.pos.z) < 4.5 || a.underground) {
+            if (a.carrying === 'sugar') simState.foodStored += 8;
+            else simState.proteinStored += 8;
+            addEventLog(`🏠 #${a.id} 將攜帶的糧食存入巢穴，儲量 +8！`, 'text-amber-300 font-semibold');
+          } else {
+            spawnResource(a.pos.x, a.pos.z, a.carrying, 40);
+            addEventLog(`🍯 #${a.id} 於原地卸下大顎負載物。`, 'text-emerald-200');
+          }
+          a.carrying = null;
+          a.parts.cargoMesh.visible = false;
+        } else {
+          // Try picking up nearby resource
+          let picked = false;
+          for (let i = resources.length - 1; i >= 0; i--) {
+            const res = resources[i];
+            if (Math.hypot(res.pos.x - a.pos.x, res.pos.z - a.pos.z) < 4.2) {
+              a.carrying = res.kind;
+              a.parts.cargoMesh.visible = true;
+              a.parts.cargoMesh.material.color.setHex(res.kind === 'sugar' ? 0xfde047 : 0xfb7185);
+              res.amount -= 10;
+              if (res.amount <= 0) {
+                resourceGroup.remove(res.group);
+                resources.splice(i, 1);
+              }
+              picked = true;
+              soundscape.playTone(620, 0.1, 'triangle', 0.08);
+              addEventLog(`🍯 #${a.id} 用大顎銜起${res.kind === 'sugar' ? '高純度蜜露糖晶' : '蛋白質種子'}！`, 'text-amber-300');
+              break;
+            }
+          }
+          if (!picked) {
+            // Harvest directly if near aphid zone
+            if (Math.hypot(a.pos.x - aphidZonePos.x, a.pos.z - aphidZonePos.z) < 5.0) {
+              a.carrying = 'sugar';
+              a.parts.cargoMesh.visible = true;
+              a.parts.cargoMesh.material.color.setHex(0xfde047);
+              addEventLog(`🌱 #${a.id} 以觸角拍打共生蚜蟲，成功採集一滴新鮮蜜露！`, 'text-emerald-300');
+            } else {
+              addEventLog('💡 周邊 4m 內無食物源，請靠近蜜露糖晶或種子後再按 [G] 銜取！', 'text-emerald-300/80');
+            }
+          }
+        }
+      } else if (actionType === 'trail') {
+        depositPheromone(a.pos.x, a.pos.z, 'trail', 1.0, 3);
+        soundscape.playTone(760, 0.1, 'sine', 0.07);
+        addEventLog(`🧪 #${a.id} 由腹部杜氏腺分泌高濃度追蹤費洛蒙，引導周邊工蟻跟隨！`, 'text-teal-300');
+      } else if (actionType === 'alarm') {
+        depositPheromone(a.pos.x, a.pos.z, 'alarm', 1.0, 5);
+        soundscape.playAlarm();
+        addEventLog(`🚨 #${a.id} 釋放強烈警戒費洛蒙，召集全場巨顎兵蟻向此座標集結！`, 'text-rose-400 font-semibold');
+      } else if (actionType === 'feed') {
+        if (a.caste === 'queen') {
+          simState.broodCount += 2;
+          soundscape.playTone(840, 0.15, 'triangle', 0.08);
+          addEventLog('👑 蟻后親自產下 2 顆新世代受精蟻卵！', 'text-amber-300 font-semibold');
+        } else {
+          a.energy = 100;
+          ants.forEach((other) => {
+            if (other.pos.distanceTo(a.pos) < 5.0) other.energy = 100;
+          });
+          soundscape.playTone(720, 0.12, 'sine', 0.08);
+          addEventLog(`🤝 #${a.id} 與周邊同伴進行口對口交哺 (Trophallaxis)，群體體能恢復 100%！`, 'text-yellow-300');
+        }
+      } else if (actionType === 'tunnel') {
+        a.underground = !a.underground;
+        if (a.underground) {
+          const targetCh = getChamberById(a.caste === 'queen' ? 'royal' : 'brood');
+          a.pos.copy(targetCh.pos).add(new THREE.Vector3(0, -1.6, 0));
+          setViewMode('cutaway');
+          addEventLog(`🕳️ #${a.id} 鑽入地底巢穴隧道，抵達「${targetCh.name}」。`, 'text-cyan-300');
+        } else {
+          a.pos.set(0, getTerrainHeight(0, 0), 0);
+          setViewMode('surface');
+          addEventLog(`🌿 #${a.id} 爬出火山蟻塚口，回到地表開放世界！`, 'text-emerald-300');
+        }
+      } else if (actionType === 'dig') {
+        document.getElementById('btn-upgrade-nest').click();
+      }
+      updateInspectorUI();
+    }
+
+    // =========================================================================
+    // 10. AGENT BEHAVIOR UPDATE LOOP (WITH OMNI-DIRECTIONAL PILOT & IK GAIT)
+    // =========================================================================
+    const virtualPadState = { w: false, s: false, a: false, d: false, q: false, e: false, sprint: false };
+
+    function updateAntsAndPredators(dt) {
+      const tempFactor = simState.temperature >= 15 && simState.temperature <= 35 ? 1.0 : 0.65;
+      const rainFactor = simState.weather === 'rain' ? 0.78 : 1.0;
+
+      for (let i = predators.length - 1; i >= 0; i--) {
+        const p = predators[i];
+        if (p.species !== 'antlion') {
+          p.heading += (Math.random() - 0.5) * 1.5 * dt;
+          const step = p.speed * dt;
+          p.pos.x += Math.sin(p.heading) * step;
+          p.pos.z += Math.cos(p.heading) * step;
+          p.pos.x = Math.max(-HALF_WORLD + 6, Math.min(HALF_WORLD - 6, p.pos.x));
+          p.pos.z = Math.max(-HALF_WORLD + 6, Math.min(HALF_WORLD - 6, p.pos.z));
+          p.pos.y = getTerrainHeight(p.pos.x, p.pos.z);
+          p.group.position.copy(p.pos);
+          p.group.rotation.y = p.heading;
+
+          if (p.species === 'hornet') {
+            const w = p.group.getObjectByName('hornetWings');
+            if (w) w.rotation.z = Math.sin(performance.now() * 0.05) * 0.35;
+          }
+        } else {
+          p.group.rotation.y += 0.8 * dt;
+        }
+
+        depositPheromone(p.pos.x, p.pos.z, 'alarm', 0.45 * dt, 3);
+
+        if (p.hp <= 0) {
+          scene.remove(p.group);
+          spawnResource(p.pos.x, p.pos.z, 'protein', p.rewardProtein);
+          predators.splice(i, 1);
+          soundscape.playTone(660, 0.25, 'triangle', 0.09);
+          addEventLog(`🛡️ 成功擊潰「${p.name}」，獲得 ${p.rewardProtein} 單位高純度蛋白質！`, 'text-amber-300 font-semibold');
+        }
+      }
+
+      if (simState.foodStored > 20 && Math.random() < 0.12 * dt) {
+        simState.broodCount += 1;
+      }
+
+      ants.forEach((ant) => {
+        const isPiloted =
+          simState.pilotMode &&
+          simState.selectedEntity &&
+          simState.selectedEntity.type === 'ant' &&
+          simState.selectedEntity.ant.id === ant.id;
+
+        // Articulated Mandible Bite Animation
+        if (ant.biteAnimTimer > 0) {
+          ant.biteAnimTimer = Math.max(0, ant.biteAnimTimer - dt);
+          const pinch = Math.sin(ant.biteAnimTimer * 28) * 0.35;
+          ant.parts.mandL.rotation.y = -pinch;
+          ant.parts.mandR.rotation.y = pinch;
+        } else {
+          ant.parts.mandL.rotation.y = 0;
+          ant.parts.mandR.rotation.y = 0;
+        }
+
+        // Active Antennae Chemical Scanning Animation
+        const scanPhase = performance.now() * 0.008 + ant.id;
+        ant.parts.antL.rotation.x = Math.sin(scanPhase) * 0.15;
+        ant.parts.antR.rotation.x = Math.cos(scanPhase * 1.1) * 0.15;
+
+        ant.energy = Math.max(15, ant.energy - 0.20 * dt);
+
+        // =====================================================================
+        // OMNI-DIRECTIONAL POSSESSION CONTROL (Works on ANY chosen ant, surface or underground!)
+        // =====================================================================
+        if (isPiloted) {
+          const isSprinting = camState.keys['ShiftLeft'] || camState.keys['ShiftRight'] || virtualPadState.sprint;
+          const speedMult = isSprinting ? 1.85 : 1.15;
+          ant.state = isSprinting ? '⚡ 玩家附身疾馳衝刺中' : '🕹️ 玩家全方位附身操控中';
+
+          const turnLeft = camState.keys['KeyA'] || camState.keys['ArrowLeft'] || camState.keys['KeyJ'] || virtualPadState.a;
+          const turnRight = camState.keys['KeyD'] || camState.keys['ArrowRight'] || camState.keys['KeyL'] || virtualPadState.d;
+          const moveFwd = camState.keys['KeyW'] || camState.keys['ArrowUp'] || camState.keys['KeyI'] || virtualPadState.w;
+          const moveBack = camState.keys['KeyS'] || camState.keys['ArrowDown'] || camState.keys['KeyK'] || virtualPadState.s;
+          const strafeLeft = camState.keys['KeyQ'] || virtualPadState.q;
+          const strafeRight = camState.keys['KeyE'] || virtualPadState.e;
+
+          if (turnLeft) ant.heading += 3.0 * dt;
+          if (turnRight) ant.heading -= 3.0 * dt;
+
+          let fwdAmount = 0;
+          if (moveFwd) fwdAmount += 1.0;
+          if (moveBack) fwdAmount -= 0.7;
+
+          let strafeAmount = 0;
+          if (strafeLeft) strafeAmount += 0.75;
+          if (strafeRight) strafeAmount -= 0.75;
+
+          const moving = Math.abs(fwdAmount) > 0.01 || Math.abs(strafeAmount) > 0.01 || turnLeft || turnRight;
+          if (moving) {
+            ant.legPhase += dt * ant.speed * speedMult * 5.2;
+          }
+
+          const stepLen = ant.speed * speedMult * dt;
+          ant.pos.x += (Math.sin(ant.heading) * fwdAmount + Math.cos(ant.heading) * strafeAmount) * stepLen;
+          ant.pos.z += (Math.cos(ant.heading) * fwdAmount - Math.sin(ant.heading) * strafeAmount) * stepLen;
+
+          ant.pos.x = Math.max(-HALF_WORLD + 4, Math.min(HALF_WORLD - 4, ant.pos.x));
+          ant.pos.z = Math.max(-HALF_WORLD + 4, Math.min(HALF_WORLD - 4, ant.pos.z));
+
+          if (!ant.underground) {
+            ant.pos.y = getTerrainHeight(ant.pos.x, ant.pos.z);
+            const normal = getTerrainNormal(ant.pos.x, ant.pos.z);
+            const forward = new THREE.Vector3(Math.sin(ant.heading), 0, Math.cos(ant.heading)).normalize();
+            const right = new THREE.Vector3().crossVectors(normal, forward).normalize();
+            const correctedForward = new THREE.Vector3().crossVectors(right, normal).normalize();
+            const rotMatrix = new THREE.Matrix4().makeBasis(right, normal, correctedForward);
+            ant.mesh.quaternion.setFromRotationMatrix(rotMatrix);
+          } else {
+            ant.mesh.rotation.set(0, ant.heading, 0);
+          }
+          ant.mesh.position.copy(ant.pos);
+
+          // Multi-jointed Tripod Gait Animation
+          ant.parts.legs.forEach((leg) => {
+            const phaseOffset = (leg.index % 2 === 0 ? 0 : Math.PI) + (leg.side > 0 ? 0 : Math.PI);
+            const swing = moving ? Math.sin(ant.legPhase + phaseOffset) * 0.34 : 0;
+            const lift = moving ? Math.max(0, Math.cos(ant.legPhase + phaseOffset)) * 0.22 : 0;
+            leg.pivot.rotation.y = swing;
+            leg.pivot.rotation.z = leg.side * lift;
+          });
+          return;
+        }
+
+        // Standard AI Tripod Gait
+        ant.legPhase += dt * ant.speed * 4.4;
+        ant.parts.legs.forEach((leg) => {
+          const phaseOffset = (leg.index % 2 === 0 ? 0 : Math.PI) + (leg.side > 0 ? 0 : Math.PI);
+          const swing = Math.sin(ant.legPhase + phaseOffset) * 0.30;
+          const lift = Math.max(0, Math.cos(ant.legPhase + phaseOffset)) * 0.16;
+          leg.pivot.rotation.y = swing;
+          leg.pivot.rotation.z = leg.side * lift;
+        });
+
+        ant.parts.headGroup.rotation.y = Math.sin(ant.legPhase * 0.7) * 0.12;
+        ant.parts.gaster.rotation.x = Math.sin(ant.legPhase * 0.5) * 0.06;
+
+        if (ant.caste === 'queen') {
+          const royal = getChamberById('royal');
+          ant.pos.x = royal.pos.x + Math.sin(ant.legPhase * 0.15) * 0.8;
+          ant.pos.z = royal.pos.z + Math.cos(ant.legPhase * 0.15) * 0.8;
+          ant.pos.y = royal.pos.y - 2.1;
+          ant.mesh.position.copy(ant.pos);
+          ant.mesh.rotation.y = ant.legPhase * 0.1;
+          ant.sensedPheromone = 0.98;
+          return;
+        }
+
+        if (ant.underground) {
+          const targetCh = getChamberById(ant.targetChamber || 'royal');
+          const toTarget = new THREE.Vector3().subVectors(targetCh.pos, ant.pos);
+          toTarget.y -= 1.6;
+          if (toTarget.length() < 1.8) {
+            const avail = CHAMBERS.filter((c) => simState.nestLevel >= c.minLevel).map((c) => c.id);
+            ant.targetChamber = avail[Math.floor(Math.random() * avail.length)];
+            if (ant.targetChamber === 'mound' && ant.caste !== 'nurse') {
+              ant.underground = false;
+              ant.pos.set(0, getTerrainHeight(0, 0), 0);
+            }
+          } else {
+            toTarget.normalize();
+            ant.pos.addScaledVector(toTarget, ant.speed * 0.65 * dt);
+            ant.heading = Math.atan2(toTarget.x, toTarget.z);
+          }
+          ant.mesh.position.copy(ant.pos);
+          ant.mesh.rotation.set(0, ant.heading, 0);
+          ant.sensedPheromone = 0.65;
+          return;
+        }
+
+        const moveStep = ant.speed * tempFactor * rainFactor * dt;
+
+        let nearestPred = null;
+        let minPredDist = 14 + simState.defenseAggression * 12;
+        predators.forEach((p) => {
+          const d = p.pos.distanceTo(ant.pos);
+          if (d < minPredDist) {
+            minPredDist = d;
+            nearestPred = p;
+          }
+          if (p.species === 'antlion' && d < 5.5) {
+            const pull = new THREE.Vector3().subVectors(p.pos, ant.pos).normalize();
+            ant.pos.addScaledVector(pull, 2.1 * dt);
+          }
+        });
+
+        if (nearestPred && (ant.caste === 'soldier' || minPredDist < 8)) {
+          ant.heading = Math.atan2(nearestPred.pos.x - ant.pos.x, nearestPred.pos.z - ant.pos.z);
+          ant.state = ant.caste === 'soldier' ? '⚔️ 巨顎兵蟻圍剿天敵' : '🚨 釋放警戒費洛蒙';
+          depositPheromone(ant.pos.x, ant.pos.z, 'alarm', 0.35 * dt, 2);
+          if (minPredDist < 2.8) {
+            ant.biteAnimTimer = 0.2;
+            nearestPred.hp -= (ant.caste === 'soldier' ? 20 : 5) * dt;
+            ant.energy = Math.max(10, ant.energy - nearestPred.dps * 0.25 * dt);
+          }
+        } else if (simState.rallyPoint && ant.pos.distanceTo(simState.rallyPoint) < 22 && !ant.carrying) {
+          ant.state = '🚩 響應玩家集結信標號令';
+          ant.heading = Math.atan2(simState.rallyPoint.x - ant.pos.x, simState.rallyPoint.z - ant.pos.z);
+          if (ant.pos.distanceTo(simState.rallyPoint) < 2.5) {
+            simState.rallyPoint = null;
+            rallyGroup.visible = false;
+          }
+        } else if (ant.carrying) {
+          ant.state = '🏠 攜帶糧食返巢並釋放追蹤費洛蒙';
+          const angleToHome = Math.atan2(-ant.pos.x, -ant.pos.z);
+          let diff = angleToHome - ant.heading;
+          while (diff > Math.PI) diff -= Math.PI * 2;
+          while (diff < -Math.PI) diff += Math.PI * 2;
+          ant.heading += diff * 4.5 * dt + (Math.random() - 0.5) * 0.4 * dt;
+
+          depositPheromone(ant.pos.x, ant.pos.z, 'trail', 0.48 * dt, 1);
+
+          if (Math.hypot(ant.pos.x, ant.pos.z) < 2.4) {
+            if (ant.carrying === 'sugar') simState.foodStored += 4;
+            else simState.proteinStored += 4;
+            ant.carrying = null;
+            ant.parts.cargoMesh.visible = false;
+            ant.energy = 100;
+            ant.heading += Math.PI;
+          }
+        } else {
+          const sensorDist = 2.6;
+          const sensorAngle = 0.52;
+          const pType = ant.caste === 'soldier' ? 'alarm' : 'trail';
+
+          const lx = ant.pos.x + Math.sin(ant.heading - sensorAngle) * sensorDist;
+          const lz = ant.pos.z + Math.cos(ant.heading - sensorAngle) * sensorDist;
+          const cx = ant.pos.x + Math.sin(ant.heading) * sensorDist;
+          const cz = ant.pos.z + Math.cos(ant.heading) * sensorDist;
+          const rx = ant.pos.x + Math.sin(ant.heading + sensorAngle) * sensorDist;
+          const rz = ant.pos.z + Math.cos(ant.heading + sensorAngle) * sensorDist;
+
+          const sL = samplePheromone(lx, lz, pType);
+          const sC = samplePheromone(cx, cz, pType);
+          const sR = samplePheromone(rx, rz, pType);
+          ant.sensedPheromone = Math.max(sL, sC, sR);
+
+          if (ant.sensedPheromone > 0.06) {
+            ant.state = ant.caste === 'soldier' ? '🛡️ 循警戒費洛蒙巡邏' : '🧪 循費洛蒙濃度梯度追蹤';
+            if (sL > sC && sL > sR) ant.heading -= 2.8 * dt;
+            else if (sR > sC && sR > sL) ant.heading += 2.8 * dt;
+          } else {
+            ant.state = ant.caste === 'soldier' ? '🛡️ 守衛巢穴周邊領地' : '🧭 隨機探索未知食物源';
+            ant.heading += (Math.random() - 0.5) * 2.4 * dt;
+          }
+
+          for (let i = resources.length - 1; i >= 0; i--) {
+            const res = resources[i];
+            const dist = Math.hypot(res.pos.x - ant.pos.x, res.pos.z - ant.pos.z);
+            if (dist < 6.5 && dist > 1.3) {
+              ant.heading = Math.atan2(res.pos.x - ant.pos.x, res.pos.z - ant.pos.z);
+            } else if (dist <= 1.35 && ant.caste !== 'soldier') {
+              ant.carrying = res.kind;
+              ant.parts.cargoMesh.visible = true;
+              ant.parts.cargoMesh.material.color.setHex(res.kind === 'sugar' ? 0xfde047 : 0xfb7185);
+              ant.heading += Math.PI;
+              depositPheromone(ant.pos.x, ant.pos.z, 'trail', 0.85, 2);
+
+              if (Math.hypot(res.pos.x - aphidZonePos.x, res.pos.z - aphidZonePos.z) > 3.5) {
+                res.amount -= 5;
+                const s = Math.max(0.25, res.amount / res.maxAmount);
+                res.group.scale.setScalar(s);
+                if (res.amount <= 0) {
+                  resourceGroup.remove(res.group);
+                  resources.splice(i, 1);
+                  addEventLog('🍂 一處地表食物源已被工蟻搬運殆盡，舊費洛蒙軌跡自然揮發。', 'text-amber-200');
+                }
+              }
+              break;
+            }
+          }
+        }
+
+        obstacles.forEach((ob) => {
+          const dx = ant.pos.x - ob.pos.x;
+          const dz = ant.pos.z - ob.pos.z;
+          const dist = Math.hypot(dx, dz);
+          if (dist < ob.radius + 0.6) {
+            const pushAngle = Math.atan2(dx, dz);
+            ant.pos.x = ob.pos.x + Math.sin(pushAngle) * (ob.radius + 0.65);
+            ant.pos.z = ob.pos.z + Math.cos(pushAngle) * (ob.radius + 0.65);
+            ant.heading += (Math.random() > 0.5 ? 0.9 : -0.9);
+          }
+        });
+
+        ant.pos.x += Math.sin(ant.heading) * moveStep;
+        ant.pos.z += Math.cos(ant.heading) * moveStep;
+
+        if (Math.abs(ant.pos.x) > HALF_WORLD - 4 || Math.abs(ant.pos.z) > HALF_WORLD - 4) {
+          ant.heading = Math.atan2(-ant.pos.x, -ant.pos.z);
+        }
+
+        ant.pos.y = getTerrainHeight(ant.pos.x, ant.pos.z);
+        ant.mesh.position.copy(ant.pos);
+
+        const normal = getTerrainNormal(ant.pos.x, ant.pos.z);
+        const forward = new THREE.Vector3(Math.sin(ant.heading), 0, Math.cos(ant.heading)).normalize();
+        const right = new THREE.Vector3().crossVectors(normal, forward).normalize();
+        const correctedForward = new THREE.Vector3().crossVectors(right, normal).normalize();
+        const rotMatrix = new THREE.Matrix4().makeBasis(right, normal, correctedForward);
+        ant.mesh.quaternion.setFromRotationMatrix(rotMatrix);
+      });
+    }
+
+    // =========================================================================
+    // 11. 3D CASTE ANATOMY TURNTABLE STUDIO
+    // =========================================================================
+    const ANATOMY_SPECS = {
+      queen: {
+        title: '👑 生殖核心蟻后 (Colony Queen)',
+        size: '體長 8.5–12.0 mm',
+        summary: '群體唯一的繁殖核心。婚飛受精後脫去雙翅，中軀（Mesosoma）具明顯隆起的前/中/後胸背板與翅基疤痕，後腹部（Gaster）由 5 節可伸縮骨板組成以容納發達卵巢。',
+        head: '3 顆感光單眼 (Ocelli) + 多刻面複眼 + 鋸齒大顎',
+        thorax: '高聳駝峰三節胸背板 + 雙節腹柄 (Petiole)',
+        gaster: '五環幾丁質骨片 + 后費洛蒙外分泌腺',
+        lifespan: '5–20 年 · 基節→轉節→腿節→脛節→五節跗爪'
+      },
+      soldier: {
+        title: '⚔️ 巨顎防衛兵蟻 (Major Soldier)',
+        size: '體長 4.0–6.3 mm',
+        summary: '特化的大型工蟻，頭部異常碩大呈雙葉心形，內含強大收縮肌驅動內側具 3 枚咀嚼齒的巨型鐮刀大顎，前胸背板具一對尖銳防衛棘刺。',
+        head: '雙葉心形巨頭 + 三齒咀嚼式鐮刀大顎',
+        thorax: '前胸背板防衛棘刺 + 雙節腹柄構造',
+        gaster: '五環腹部背板 + 杜氏警戒腺與蟻酸噴孔',
+        lifespan: '6–18 個月 · 巢口防衛、圍剿天敵、破碎堅果'
+      },
+      worker: {
+        title: '🍯 外勤覓食工蟻 (Minor Forager)',
+        size: '體長 2.0–3.5 mm',
+        summary: '蟻群數量最多的基石階級。體態修長敏捷，六足具備基節、轉節、腿節、脛節與跗爪五節構造，膝狀觸角末端的感應棒可精準判讀費洛蒙梯度。',
+        head: '柄節/鞭節/感應棒組成的膝狀觸角 + 複眼',
+        thorax: '前/中/後胸三節緊湊中軀，可負重 20 倍體重',
+        gaster: '具社會胃 (嗉囊) 與追蹤費洛蒙分泌腺體',
+        lifespan: '3–12 個月 · 探索覓食、收集蚜蟲蜜露、挖掘隧道'
+      },
+      nurse: {
+        title: '🥚 內勤育幼保育蟻 (Brood Nurse)',
+        size: '體長 1.8–2.8 mm',
+        summary: '羽化初期的年輕工蟻，主要留守地底恆溫育幼腔。大顎動作輕柔，隨時銜著蟻卵或幼蟲依土壤溫濕度垂直搬移，並透過口對口交哺餵食蟻后與幼蟲。',
+        head: '高靈敏觸角感應器 (偵測幼蟲飢餓費洛蒙)',
+        thorax: '靈巧前足脛節距，負責梳理幼蟲防止黴菌感染',
+        gaster: '飽滿半透明嗉囊 (Crop)，專司液態營養交哺',
+        lifespan: '隨年齡增長會逐漸轉任外勤覓食工蟻'
+      }
+    };
+
+    const anatCanvas = document.getElementById('anatomy-canvas');
+    const anatScene = new THREE.Scene();
+    const anatCamera = new THREE.PerspectiveCamera(38, 1.5, 0.1, 50);
+    anatCamera.position.set(2.6, 1.65, 3.0);
+    anatCamera.lookAt(0, 0.38, -0.2);
+
+    const anatRenderer = new THREE.WebGLRenderer({ canvas: anatCanvas, antialias: true, alpha: true });
+    anatScene.add(new THREE.AmbientLight(0xa7f3d0, 0.8));
+    const anatDirLight = new THREE.DirectionalLight(0xfffbeb, 1.5);
+    anatDirLight.position.set(4, 6, 4);
+    anatScene.add(anatDirLight);
+
+    const pedGeo = new THREE.CylinderGeometry(1.65, 1.85, 0.14, 36);
+    const pedMat = new THREE.MeshStandardMaterial({ color: 0x064e3b, metalness: 0.45, roughness: 0.25 });
+    const pedestal = new THREE.Mesh(pedGeo, pedMat);
+    pedestal.position.set(0, -0.08, -0.2);
+    anatScene.add(pedestal);
+
+    let anatModelGroup = new THREE.Group();
+    anatScene.add(anatModelGroup);
+    let anatBuilt = null;
+    let anatWireframe = false;
+    let anatActionPose = false;
+    let anatRotY = 0.55;
+    let anatRotX = 0.12;
+    let anatDragging = false;
+    let anatLastMouse = { x: 0, y: 0 };
+
+    function loadAnatomyCaste(caste) {
+      while (anatModelGroup.children.length > 0) {
+        anatModelGroup.remove(anatModelGroup.children[0]);
+      }
+      anatBuilt = buildAntMesh(caste);
+      const normScale = caste === 'queen' ? 1.15 : caste === 'soldier' ? 1.35 : 1.55;
+      anatBuilt.root.scale.setScalar(normScale);
+      anatBuilt.root.position.set(0, 0, 0.2);
+      anatModelGroup.add(anatBuilt.root);
+
+      const info = ANATOMY_SPECS[caste];
+      document.getElementById('anat-title').textContent = info.title;
+      document.getElementById('anat-size').textContent = info.size;
+      document.getElementById('anat-summary').textContent = info.summary;
+      document.getElementById('anat-head').textContent = info.head;
+      document.getElementById('anat-thorax').textContent = info.thorax;
+      document.getElementById('anat-gaster').textContent = info.gaster;
+      document.getElementById('anat-lifespan').textContent = info.lifespan;
+
+      document.querySelectorAll('.caste-tab-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn.getAttribute('data-caste-tab') === caste);
+      });
+    }
+
+    loadAnatomyCaste('queen');
+
+    anatCanvas.addEventListener('pointerdown', (e) => {
+      anatDragging = true;
+      anatLastMouse = { x: e.clientX, y: e.clientY };
+    });
+    window.addEventListener('pointermove', (e) => {
+      if (!anatDragging) return;
+      anatRotY += (e.clientX - anatLastMouse.x) * 0.012;
+      anatRotX = Math.max(-0.5, Math.min(0.6, anatRotX + (e.clientY - anatLastMouse.y) * 0.008));
+      anatLastMouse = { x: e.clientX, y: e.clientY };
+    });
+    window.addEventListener('pointerup', () => {
+      anatDragging = false;
+    });
+
+    document.querySelectorAll('.caste-tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        loadAnatomyCaste(btn.getAttribute('data-caste-tab'));
+        soundscape.playTone(600, 0.08, 'sine', 0.06);
+      });
+    });
+
+    document.getElementById('btn-anatomy-wireframe').addEventListener('click', () => {
+      anatWireframe = !anatWireframe;
+      anatModelGroup.traverse((c) => {
+        if (c.isMesh && c.material) c.material.wireframe = anatWireframe;
+      });
+    });
+
+    document.getElementById('btn-anatomy-pose').addEventListener('click', () => {
+      anatActionPose = !anatActionPose;
+      soundscape.playTone(520, 0.09, 'triangle', 0.06);
+    });
+
+    // =========================================================================
+    // 12. CAMERA CONTROLLER (TPS, FPS COMPOUND-EYE & ORBIT)
+    // =========================================================================
+    const camState = {
+      target: new THREE.Vector3(0, 1.5, 0),
+      spherical: new THREE.Spherical(32, 0.92, 0.65),
+      isDragging: false,
+      dragButton: 0,
+      lastMouse: { x: 0, y: 0 },
+      keys: {}
+    };
+
+    function updateCamera(dt) {
+      if (simState.pilotMode && simState.selectedEntity && simState.selectedEntity.type === 'ant') {
+        const a = simState.selectedEntity.ant;
+        if (simState.pilotCamMode === 'fps') {
+          // First-Person Compound-Eye View right between the antennae & mandibles
+          const eyePos = a.pos.clone().add(new THREE.Vector3(Math.sin(a.heading) * 0.85, 0.82, Math.cos(a.heading) * 0.85));
+          camera.position.lerp(eyePos, 0.35);
+          const lookTarget = a.pos.clone().add(new THREE.Vector3(Math.sin(a.heading) * 8.0, 0.55, Math.cos(a.heading) * 8.0));
+          camera.lookAt(lookTarget);
+          return;
+        } else if (simState.pilotCamMode === 'tps') {
+          const behindOffset = new THREE.Vector3(-Math.sin(a.heading) * 4.5, 2.3, -Math.cos(a.heading) * 4.5);
+          camera.position.lerp(a.pos.clone().add(behindOffset), 0.16);
+          const lookAhead = a.pos.clone().add(new THREE.Vector3(Math.sin(a.heading) * 2.8, 0.5, Math.cos(a.heading) * 2.8));
+          camera.lookAt(lookAhead);
+          return;
+        }
+      }
+
+      if (simState.viewMode === 'antcam' && simState.selectedEntity && simState.selectedEntity.type === 'ant') {
+        const a = simState.selectedEntity.ant;
+        const behindOffset = new THREE.Vector3(-Math.sin(a.heading) * 4.2, 2.2, -Math.cos(a.heading) * 4.2);
+        camera.position.lerp(a.pos.clone().add(behindOffset), 0.14);
+        const lookAhead = a.pos.clone().add(new THREE.Vector3(Math.sin(a.heading) * 2.5, 0.5, Math.cos(a.heading) * 2.5));
+        camera.lookAt(lookAhead);
+        return;
+      }
+
+      // Free Orbit Camera Panning when not piloting
+      if (!simState.pilotMode) {
+        const panSpeed = 18 * dt;
+        const forward = new THREE.Vector3(Math.sin(camState.spherical.theta), 0, Math.cos(camState.spherical.theta));
+        const right = new THREE.Vector3(forward.z, 0, -forward.x);
+        if (camState.keys['KeyW'] || camState.keys['ArrowUp']) camState.target.addScaledVector(forward, -panSpeed);
+        if (camState.keys['KeyS'] || camState.keys['ArrowDown']) camState.target.addScaledVector(forward, panSpeed);
+        if (camState.keys['KeyA'] || camState.keys['ArrowLeft']) camState.target.addScaledVector(right, -panSpeed);
+        if (camState.keys['KeyD'] || camState.keys['ArrowRight']) camState.target.addScaledVector(right, panSpeed);
+      }
+
+      if (simState.followTarget && simState.selectedEntity) {
+        if (simState.selectedEntity.type === 'ant') camState.target.lerp(simState.selectedEntity.ant.pos, 0.08);
+        else if (simState.selectedEntity.type === 'chamber') camState.target.lerp(simState.selectedEntity.chamber.pos, 0.08);
+        else if (simState.selectedEntity.type === 'predator') camState.target.lerp(simState.selectedEntity.predator.pos, 0.08);
+      }
+
+      const offset = new THREE.Vector3().setFromSpherical(camState.spherical);
+      camera.position.copy(camState.target).add(offset);
+      camera.lookAt(camState.target);
+    }
+
+    const raycaster = new THREE.Raycaster();
+    const mouseNDC = new THREE.Vector2();
+
+    const selectRingGeo = new THREE.RingGeometry(0.85, 1.18, 28);
+    selectRingGeo.rotateX(-Math.PI / 2);
+    const selectRingMat = new THREE.MeshBasicMaterial({ color: 0x34d399, side: THREE.DoubleSide });
+    const selectRing = new THREE.Mesh(selectRingGeo, selectRingMat);
+    scene.add(selectRing);
+
+    function handleCanvasPointer(clientX, clientY, isDragPaint = false) {
+      const rect = renderer.domElement.getBoundingClientRect();
+      mouseNDC.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      mouseNDC.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+      raycaster.setFromCamera(mouseNDC, camera);
+
+      if (simState.activeTool === 'inspect' && !isDragPaint) {
+        const pickables = [...antGroup.children, ...chamberMeshes, ...predators.map((p) => p.group)];
+        const hits = raycaster.intersectObjects(pickables, true);
+        if (hits.length > 0) {
+          let obj = hits[0].object;
+          while (obj && (!obj.userData || !obj.userData.type)) {
+            obj = obj.parent;
+          }
+          if (obj && obj.userData && obj.userData.type) {
+            simState.selectedEntity = obj.userData;
+            simState.followTarget = true;
+            if (obj.userData.type === 'ant' && simState.pilotMode) {
+              setPilotMode(true);
+            }
+            refreshPossessDropdown();
+            soundscape.playTone(620, 0.08, 'sine', 0.06);
+            updateInspectorUI();
+            return;
+          }
+        }
+        return;
+      }
+
+      const terrainHits = raycaster.intersectObject(terrainMesh);
+      if (terrainHits.length === 0) return;
+      const pt = terrainHits[0].point;
+
+      if (simState.activeTool === 'trail') {
+        depositPheromone(pt.x, pt.z, 'trail', 0.85, 2);
+        soundscape.playTone(740, 0.05, 'sine', 0.03);
+        return;
+      }
+
+      if (isDragPaint) return;
+
+      if (simState.activeTool === 'sugar') {
+        spawnResource(pt.x, pt.z, 'sugar', 110);
+        depositPheromone(pt.x, pt.z, 'trail', 0.55, 2);
+        soundscape.playTone(580, 0.12, 'triangle', 0.07);
+        addEventLog(`🍯 在座標 (${pt.x.toFixed(0)}, ${pt.z.toFixed(0)}) 投放高純度蜜露糖晶。`, 'text-amber-300');
+      } else if (simState.activeTool === 'protein') {
+        spawnResource(pt.x, pt.z, 'protein', 120);
+        soundscape.playTone(460, 0.14, 'triangle', 0.07);
+        addEventLog(`🌰 在座標 (${pt.x.toFixed(0)}, ${pt.z.toFixed(0)}) 投放蛋白質種子。`, 'text-rose-300');
+      } else if (simState.activeTool === 'alarm') {
+        depositPheromone(pt.x, pt.z, 'alarm', 1.0, 4);
+        soundscape.playAlarm();
+        addEventLog(`🚨 在座標 (${pt.x.toFixed(0)}, ${pt.z.toFixed(0)}) 釋放警戒費洛蒙，召集兵蟻！`, 'text-rose-400');
+      } else if (simState.activeTool === 'rally') {
+        simState.rallyPoint = pt.clone();
+        rallyGroup.position.copy(pt);
+        rallyGroup.visible = true;
+        depositPheromone(pt.x, pt.z, 'trail', 0.9, 3);
+        soundscape.playTone(690, 0.15, 'sine', 0.08);
+        addEventLog(`🚩 設立群體集結信標於 (${pt.x.toFixed(0)}, ${pt.z.toFixed(0)})！`, 'text-cyan-300');
+      } else if (simState.activeTool === 'obstacle') {
+        spawnObstacle(pt.x, pt.z, 2.8);
+        soundscape.playTone(220, 0.15, 'sine', 0.09);
+        addEventLog(`🪨 放置鵝卵石障礙，觀察蟻群如何透過雙橋分岔重新收斂最短路徑。`, 'text-slate-300');
+      } else if (simState.activeTool === 'predator') {
+        spawnPredatorBySpecies(pt.x, pt.z, simState.predatorTypeToSpawn);
+      }
+    }
+
+    let pointerDownPos = { x: 0, y: 0 };
+    renderer.domElement.addEventListener('pointerdown', (e) => {
+      camState.isDragging = true;
+      camState.dragButton = e.button;
+      camState.lastMouse.x = e.clientX;
+      camState.lastMouse.y = e.clientY;
+      pointerDownPos = { x: e.clientX, y: e.clientY };
+
+      if (simState.activeTool === 'trail' && e.button === 0) {
+        handleCanvasPointer(e.clientX, e.clientY, true);
+      }
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      if (!camState.isDragging) return;
+      const dx = e.clientX - camState.lastMouse.x;
+      const dy = e.clientY - camState.lastMouse.y;
+      camState.lastMouse.x = e.clientX;
+      camState.lastMouse.y = e.clientY;
+
+      if (simState.activeTool === 'trail' && camState.dragButton === 0) {
+        handleCanvasPointer(e.clientX, e.clientY, true);
+        return;
+      }
+
+      if (camState.dragButton === 0) {
+        camState.spherical.theta -= dx * 0.0065;
+        camState.spherical.phi = Math.max(0.25, Math.min(Math.PI * 0.62, camState.spherical.phi - dy * 0.0065));
+      } else {
+        simState.followTarget = false;
+        const panScale = camState.spherical.radius * 0.0018;
+        const forward = new THREE.Vector3(Math.sin(camState.spherical.theta), 0, Math.cos(camState.spherical.theta));
+        const right = new THREE.Vector3(forward.z, 0, -forward.x);
+        camState.target.addScaledVector(right, -dx * panScale);
+        camState.target.addScaledVector(forward, dy * panScale);
+      }
+    });
+
+    window.addEventListener('pointerup', (e) => {
+      const moveDist = Math.hypot(e.clientX - pointerDownPos.x, e.clientY - pointerDownPos.y);
+      if (moveDist < 6 && e.button === 0) {
+        handleCanvasPointer(e.clientX, e.clientY, false);
+      }
+      camState.isDragging = false;
+    });
+
+    renderer.domElement.addEventListener('contextmenu', (e) => e.preventDefault());
+    renderer.domElement.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      camState.spherical.radius = Math.max(5, Math.min(95, camState.spherical.radius + e.deltaY * 0.035));
+    }, { passive: false });
+
+    // =========================================================================
+    // 13. UI LISTENERS FOR TARGET POSSESSION, BIOMES & KINGDOM BUILDER
+    // =========================================================================
+    // Caste Filter Buttons for Possession Selector
+    document.querySelectorAll('.possess-filter-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        simState.possessFilter = btn.getAttribute('data-possess-filter');
+        document.querySelectorAll('.possess-filter-btn').forEach((b) => {
+          b.className = b === btn
+            ? 'possess-filter-btn px-1 py-0.5 rounded bg-teal-600/50 text-white border border-teal-400 font-medium'
+            : 'possess-filter-btn px-1 py-0.5 rounded bg-emerald-900/60 text-emerald-200 border border-emerald-700/40';
+        });
+        refreshPossessDropdown();
+        const selEl = document.getElementById('select-possess-target');
+        if (selEl.value) {
+          const found = ants.find((a) => a.id === parseInt(selEl.value, 10));
+          if (found) selectAntForPossession(found, simState.pilotMode);
+        }
+      });
+    });
+
+    document.getElementById('select-possess-target').addEventListener('change', (e) => {
+      const id = parseInt(e.target.value, 10);
+      const found = ants.find((a) => a.id === id);
+      if (found) selectAntForPossession(found, simState.pilotMode);
+    });
+
+    document.getElementById('btn-prev-ant').addEventListener('click', () => {
+      const filter = simState.possessFilter;
+      const list = ants.filter((a) => filter === 'all' || a.caste === filter);
+      if (list.length === 0) return;
+      const curId = simState.selectedEntity && simState.selectedEntity.type === 'ant' ? simState.selectedEntity.ant.id : list[0].id;
+      const idx = list.findIndex((a) => a.id === curId);
+      const prev = list[(idx - 1 + list.length) % list.length];
+      selectAntForPossession(prev, simState.pilotMode);
+    });
+
+    document.getElementById('btn-next-ant').addEventListener('click', () => {
+      const filter = simState.possessFilter;
+      const list = ants.filter((a) => filter === 'all' || a.caste === filter);
+      if (list.length === 0) return;
+      const curId = simState.selectedEntity && simState.selectedEntity.type === 'ant' ? simState.selectedEntity.ant.id : list[0].id;
+      const idx = list.findIndex((a) => a.id === curId);
+      const next = list[(idx + 1) % list.length];
+      selectAntForPossession(next, simState.pilotMode);
+    });
+
+    document.getElementById('cmd-ant-pilot').addEventListener('click', () => {
+      setPilotMode(!simState.pilotMode);
+    });
+
+    document.getElementById('btn-exit-pilot').addEventListener('click', () => {
+      setPilotMode(false);
+    });
+
+    document.getElementById('select-pilot-cam').addEventListener('change', (e) => {
+      simState.pilotCamMode = e.target.value;
+    });
+
+    // Bind On-Screen D-Pad & 8 Action Deck Buttons
+    ['w', 's', 'a', 'd', 'q', 'e'].forEach((k) => {
+      const padBtn = document.getElementById('pad-' + k);
+      if (!padBtn) return;
+      padBtn.addEventListener('pointerdown', () => { virtualPadState[k] = true; padBtn.classList.add('pressed'); });
+      padBtn.addEventListener('pointerup', () => { virtualPadState[k] = false; padBtn.classList.remove('pressed'); });
+      padBtn.addEventListener('pointerleave', () => { virtualPadState[k] = false; padBtn.classList.remove('pressed'); });
+    });
+
+    const sprintBtn = document.getElementById('act-sprint');
+    sprintBtn.addEventListener('click', () => {
+      virtualPadState.sprint = !virtualPadState.sprint;
+      sprintBtn.classList.toggle('pressed', virtualPadState.sprint);
+    });
+
+    document.getElementById('act-bite').addEventListener('click', () => executePossessedAction('bite'));
+    document.getElementById('act-carry').addEventListener('click', () => executePossessedAction('carry'));
+    document.getElementById('act-trail').addEventListener('click', () => executePossessedAction('trail'));
+    document.getElementById('act-alarm').addEventListener('click', () => executePossessedAction('alarm'));
+    document.getElementById('act-feed').addEventListener('click', () => executePossessedAction('feed'));
+    document.getElementById('act-tunnel').addEventListener('click', () => executePossessedAction('tunnel'));
+    document.getElementById('act-dig').addEventListener('click', () => executePossessedAction('dig'));
+
+    function applyEnvironmentColors() {
+      const cfg = BIOME_CONFIGS[simState.biome] || BIOME_CONFIGS.meadow;
+      const isBright = simState.lightingTheme === 'bright';
+
+      const skyCol = isBright ? cfg.brightSkyHex : cfg.skyHex;
+      scene.background.setHex(skyCol);
+      scene.fog.color.setHex(skyCol);
+      scene.fog.density = isBright ? 0.0032 : 0.0075;
+
+      terrainUniforms.uMoundColor.value.copy(isBright ? cfg.brightMoundVec : cfg.moundVec);
+      terrainUniforms.uSoilColor.value.copy(isBright ? cfg.brightSoilVec : cfg.soilVec);
+      terrainUniforms.uMossColor.value.copy(isBright ? cfg.brightMossVec : cfg.mossVec);
+      terrainUniforms.uIsPatio.value = simState.biome === 'patio' ? 1.0 : 0.0;
+
+      grassUniforms.uBaseCol.value.copy(isBright ? cfg.brightGrassBase : cfg.grassBase);
+      grassUniforms.uTipCol.value.copy(isBright ? cfg.brightGrassTip : cfg.grassTip);
+
+      // Adjust subterranean cross-section earth block & lighting for bright vs dark mode
+      soilBlockMat.color.setHex(isBright ? 0x855836 : 0x1c120c);
+      soilBlockMat.opacity = isBright ? 0.22 : 0.28;
+      ambientLight.intensity = isBright ? 1.15 : 0.62;
+      hemiLight.intensity = isBright ? 0.95 : 0.25;
+      undergroundLight.intensity = isBright ? 2.2 : 1.5;
+
+      // Sync UI theme class & buttons
+      document.body.classList.toggle('bright-theme', isBright);
+      const topLabel = document.getElementById('btn-light-theme-label');
+      if (topLabel) {
+        topLabel.textContent = isBright ? '🌞 明亮日光模式' : '🌙 深邃夜光模式';
+      }
+      const btnBright = document.getElementById('env-mode-bright');
+      const btnDark = document.getElementById('env-mode-dark');
+      if (btnBright && btnDark) {
+        btnBright.classList.toggle('active', isBright);
+        btnDark.classList.toggle('active', !isBright);
+      }
+    }
+
+    function setLightingTheme(themeMode) {
+      simState.lightingTheme = themeMode;
+      applyEnvironmentColors();
+      soundscape.playTone(themeMode === 'bright' ? 680 : 420, 0.1, 'sine', 0.07);
+      addEventLog(
+        themeMode === 'bright'
+          ? '🌞 已切換至「明亮日光觀察環境」：提升全域自然光照、淺色高對比土壤與清透天空視野！'
+          : '🌙 已切換至「深邃夜光微距模式」：強化生物發光費洛蒙軌跡與高反差幾丁質光澤。',
+        'text-emerald-300 font-semibold'
+      );
+    }
+
+    function setBiome(biomeKey) {
+      const cfg = BIOME_CONFIGS[biomeKey];
+      if (!cfg) return;
+      simState.biome = biomeKey;
+      applyEnvironmentColors();
+
+      rebuildBiomeProps(biomeKey);
+      document.querySelectorAll('.biome-btn').forEach((b) => {
+        b.classList.toggle('active', b.getAttribute('data-biome') === biomeKey);
+      });
+      soundscape.playTone(540, 0.1, 'sine', 0.06);
+      addEventLog(`🌍 場景已切換至「${cfg.name}」。`, 'text-emerald-300');
+    }
+
+    document.querySelectorAll('.biome-btn').forEach((btn) => {
+      btn.addEventListener('click', () => setBiome(btn.getAttribute('data-biome')));
+    });
+
+    document.getElementById('btn-light-theme-toggle').addEventListener('click', () => {
+      setLightingTheme(simState.lightingTheme === 'bright' ? 'dark' : 'bright');
+    });
+    document.getElementById('env-mode-bright').addEventListener('click', () => setLightingTheme('bright'));
+    document.getElementById('env-mode-dark').addEventListener('click', () => setLightingTheme('dark'));
+
+    document.getElementById('select-predator-type').addEventListener('change', (e) => {
+      simState.predatorTypeToSpawn = e.target.value;
+      document.querySelector('[data-tool="predator"]').click();
+    });
+
+    document.getElementById('cmd-ant-trophallaxis').addEventListener('click', () => executePossessedAction('feed'));
+    document.getElementById('cmd-ant-switch-role').addEventListener('click', () => executePossessedAction('tunnel'));
+    document.getElementById('cmd-ant-burst-phero').addEventListener('click', () => executePossessedAction('trail'));
+
+    document.getElementById('slider-defense').addEventListener('input', (e) => {
+      const val = parseInt(e.target.value, 10);
+      simState.defenseAggression = val / 100;
+      document.getElementById('policy-defense-val').textContent = `${val}%`;
+    });
+
+    const anatomyModal = document.getElementById('anatomy-modal');
+    function openAnatomyModal(caste = 'queen') {
+      anatomyModal.classList.remove('hidden');
+      anatomyModal.classList.add('flex');
+      loadAnatomyCaste(caste);
+      setTimeout(() => {
+        const rect = anatCanvas.parentElement.getBoundingClientRect();
+        anatRenderer.setSize(rect.width, rect.height);
+        anatCamera.aspect = rect.width / rect.height;
+        anatCamera.updateProjectionMatrix();
+      }, 30);
+    }
+
+    document.getElementById('btn-3d-anatomy-open').addEventListener('click', () => openAnatomyModal('queen'));
+    document.getElementById('btn-inspect-3d-caste').addEventListener('click', () => {
+      const c = simState.selectedEntity && simState.selectedEntity.type === 'ant' ? simState.selectedEntity.ant.caste : 'worker';
+      openAnatomyModal(c);
+    });
+    document.getElementById('btn-anatomy-close').addEventListener('click', () => {
+      anatomyModal.classList.add('hidden');
+      anatomyModal.classList.remove('flex');
+    });
+
+    // Zero-to-Empire Campaign
+    function startZeroToEmpireCampaign() {
+      ants.forEach((a) => antGroup.remove(a.mesh));
+      ants.length = 0;
+      predators.forEach((p) => scene.remove(p.group));
+      predators.length = 0;
+      trailFloat.fill(0);
+      alarmFloat.fill(0);
+
+      simState.kingdomMode = true;
+      simState.kingdomStage = 1;
+      simState.nestLevel = 1;
+      simState.foodStored = 45;
+      simState.proteinStored = 30;
+      simState.broodCount = 8;
+      syncNestLevelVisibility();
+
+      queenAnt = createAnt('queen', true);
+      for (let i = 0; i < 3; i++) createAnt('worker', false);
+      createAnt('nurse', true);
+
+      simState.selectedEntity = { type: 'ant', ant: queenAnt };
+      setViewMode('cutaway');
+      refreshPossessDropdown();
+      soundscape.playTone(520, 0.25, 'triangle', 0.1);
+      addEventLog('👑 【從零創生模式啟動】婚飛蟻后已落入地底建立初始王室腔，帶領 3 隻初代微型工蟻展開王國培育！', 'text-amber-300 font-bold');
+      updateKingdomProgressionUI();
+    }
+
+    function updateKingdomProgressionUI() {
+      const stageBadge = document.getElementById('kingdom-stage-badge');
+      const qTitle = document.getElementById('quest-title');
+      const qProgress = document.getElementById('quest-progress');
+      const qDesc = document.getElementById('quest-desc');
+
+      if (!simState.kingdomMode) {
+        stageBadge.textContent = `Lv.${simState.nestLevel} 繁榮生態帝國`;
+        return;
+      }
+
+      const totalPop = ants.length;
+      const sCount = ants.filter((a) => a.caste === 'soldier').length;
+
+      if (simState.kingdomStage === 1) {
+        stageBadge.textContent = '🌱 階段1：蟻后創生期 (Founding)';
+        qTitle.textContent = '目標 1：擴建育幼腔並培育達 10 隻螞蟻';
+        const pct = Math.min(100, Math.round(((totalPop / 10) * 0.6 + (simState.nestLevel >= 2 ? 0.4 : 0)) * 100));
+        qProgress.textContent = `${pct}%`;
+        qDesc.textContent = '請投放蜜露與種子，累積 40 糖分後點擊「⛏️ 擴建地底腔室」解鎖育幼腔，並孵化新工蟻！';
+        if (totalPop >= 10 && simState.nestLevel >= 2) {
+          simState.kingdomStage = 2;
+          soundscape.playTone(680, 0.2, 'triangle', 0.1);
+          addEventLog('🎉 王國晉升至【階段 2：族群成長期】！已解鎖育幼腔。', 'text-amber-300 font-bold');
+        }
+      } else if (simState.kingdomStage === 2) {
+        stageBadge.textContent = '🌿 階段2：族群成長期 (Ergonomic)';
+        qTitle.textContent = '目標 2：擴建儲糧腔 (Lv.3) 並擁有 3 隻巨顎兵蟻';
+        const pct = Math.min(100, Math.round(((sCount / 3) * 0.5 + (simState.nestLevel >= 3 ? 0.5 : 0)) * 100));
+        qProgress.textContent = `${pct}%`;
+        qDesc.textContent = '請擴建至 Lv.3 儲糧腔並培育至少 3 隻巨顎兵蟻！';
+        if (sCount >= 3 && simState.nestLevel >= 3) {
+          simState.kingdomStage = 3;
+          spawnPredatorBySpecies(18, -14, 'spider');
+          addEventLog('⚡ 【生存考驗觸發】叢林徘徊狼蛛來襲！可附身兵蟻按 [F] 咬擊或釋放警戒費洛蒙！', 'text-rose-400 font-bold');
+        }
+      } else if (simState.kingdomStage === 3) {
+        stageBadge.textContent = '⚔️ 階段3：領地防衛期 (Defense)';
+        qTitle.textContent = '目標 3：擊退入侵天敵並擴建至完整 Lv.4 巢穴';
+        const pct = predators.length === 0 && simState.nestLevel >= 4 ? 100 : 65;
+        qProgress.textContent = `${pct}%`;
+        qDesc.textContent = '消滅地表上的入侵掠食者，並將地底巢穴擴建至 Lv.4 完整四大腔室規模！';
+        if (predators.length === 0 && simState.nestLevel >= 4) {
+          simState.kingdomStage = 4;
+          soundscape.playTone(880, 0.3, 'triangle', 0.12);
+          addEventLog('🏆 恭喜達成【階段 4：不朽微觀螞蟻帝國】！', 'text-amber-300 font-bold');
+        }
+      } else {
+        stageBadge.textContent = '👑 階段4：不朽螞蟻帝國 (Empire)';
+        qTitle.textContent = '王國巔峰：自由探索各大場景與天敵挑戰';
+        qProgress.textContent = '100%';
+        qDesc.textContent = '您已建立繁榮王國！可隨時指定任意螞蟻附身體驗微觀世界。';
+      }
+    }
+
+    document.getElementById('btn-start-zero-kingdom').addEventListener('click', startZeroToEmpireCampaign);
+
+    document.getElementById('btn-upgrade-nest').addEventListener('click', () => {
+      if (simState.nestLevel >= 4) {
+        addEventLog('✨ 地底四大腔室已全部擴建完成！', 'text-emerald-300');
+        return;
+      }
+      if (simState.foodStored >= 40) {
+        simState.foodStored -= 40;
+        simState.nestLevel += 1;
+        syncNestLevelVisibility();
+        soundscape.playTone(590, 0.18, 'triangle', 0.09);
+        const unlocked = CHAMBERS.find((c) => c.minLevel === simState.nestLevel);
+        addEventLog(`⛏️ 成功擴建「${unlocked ? unlocked.name : '新腔室'}」(巢穴 Lv.${simState.nestLevel})。`, 'text-purple-300 font-semibold');
+        updateKingdomProgressionUI();
+      } else {
+        addEventLog('⚠️ 擴建地底腔室需要 40 單位蜜露糖分！', 'text-amber-300');
+      }
+    });
+
+    document.getElementById('btn-trigger-challenge').addEventListener('click', () => {
+      const types = ['beetle', 'spider', 'antlion', 'hornet', 'centipede'];
+      const chosen = types[Math.floor(Math.random() * types.length)];
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 16 + Math.random() * 12;
+      spawnPredatorBySpecies(Math.cos(angle) * dist, Math.sin(angle) * dist, chosen);
+    });
+
+    document.getElementById('btn-hatch-worker').addEventListener('click', () => {
+      if (simState.foodStored >= 15 && simState.proteinStored >= 10) {
+        simState.foodStored -= 15;
+        simState.proteinStored -= 10;
+        const w = createAnt('worker', false);
+        selectAntForPossession(w, false);
+        soundscape.playTone(680, 0.14, 'triangle', 0.08);
+        addEventLog(`🐣 育幼腔羽化外勤工蟻 #${w.id}！`, 'text-emerald-300');
+        updateKingdomProgressionUI();
+      } else {
+        addEventLog('⚠️ 蜜露(15)或蛋白質(10)不足！', 'text-amber-300');
+      }
+    });
+
+    document.getElementById('btn-hatch-nurse').addEventListener('click', () => {
+      if (simState.foodStored >= 15 && simState.proteinStored >= 15) {
+        simState.foodStored -= 15;
+        simState.proteinStored -= 15;
+        const n = createAnt('nurse', true);
+        selectAntForPossession(n, false);
+        soundscape.playTone(720, 0.14, 'sine', 0.08);
+        addEventLog(`🥚 育幼腔羽化內勤保育蟻 #${n.id}！`, 'text-cyan-300');
+        updateKingdomProgressionUI();
+      } else {
+        addEventLog('⚠️ 培育保育蟻需 15 蜜露與 15 蛋白質！', 'text-amber-300');
+      }
+    });
+
+    document.getElementById('btn-hatch-soldier').addEventListener('click', () => {
+      if (simState.foodStored >= 25 && simState.proteinStored >= 25) {
+        simState.foodStored -= 25;
+        simState.proteinStored -= 25;
+        const s = createAnt('soldier', false);
+        selectAntForPossession(s, false);
+        soundscape.playTone(380, 0.18, 'sawtooth', 0.08);
+        addEventLog(`🛡️ 育幼腔培育出巨顎兵蟻 #${s.id}！`, 'text-rose-300');
+        updateKingdomProgressionUI();
+      } else {
+        addEventLog('⚠️ 培育巨顎兵蟻需 25 蜜露與 25 蛋白質！', 'text-amber-300');
+      }
+    });
+
+    // Collapsible Panels & Fullscreen
+    let leftCollapsed = false;
+    let rightCollapsed = false;
+    let bottomCollapsed = false;
+    let allUiHidden = false;
+
+    document.getElementById('btn-collapse-left').addEventListener('click', () => {
+      leftCollapsed = !leftCollapsed;
+      document.getElementById('left-panel-content').classList.toggle('hidden', leftCollapsed);
+      document.getElementById('btn-collapse-left').textContent = leftCollapsed ? '▼ 展開' : '▲ 收合';
+    });
+
+    document.getElementById('btn-collapse-right').addEventListener('click', () => {
+      rightCollapsed = !rightCollapsed;
+      document.getElementById('right-panel-content').classList.toggle('hidden', rightCollapsed);
+      document.getElementById('btn-collapse-right').textContent = rightCollapsed ? '▼ 展開' : '▲ 收合';
+    });
+
+    document.getElementById('btn-collapse-bottom').addEventListener('click', () => {
+      bottomCollapsed = !bottomCollapsed;
+      document.getElementById('bottom-toolbar-content').classList.toggle('hidden', bottomCollapsed);
+      document.getElementById('btn-collapse-bottom').textContent = bottomCollapsed ? '▲ 展開工具列' : '▼ 收合工具列';
+    });
+
+    document.getElementById('btn-toggle-all-ui').addEventListener('click', () => {
+      allUiHidden = !allUiHidden;
+      document.getElementById('left-sidebar').classList.toggle('hidden', allUiHidden);
+      document.getElementById('right-sidebar').classList.toggle('hidden', allUiHidden);
+      document.getElementById('bottom-toolbar').classList.toggle('hidden', allUiHidden);
+      document.getElementById('btn-toggle-all-ui').textContent = allUiHidden ? '👁️ 顯示介面' : '👁️ 收合介面';
+    });
+
+    document.getElementById('btn-fullscreen').addEventListener('click', () => {
+      const docEl = document.documentElement;
+      if (!document.fullscreenElement) {
+        if (docEl.requestFullscreen) docEl.requestFullscreen().catch(() => {});
+        document.getElementById('btn-fullscreen').textContent = '🗗 退出全螢幕';
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        document.getElementById('btn-fullscreen').textContent = '⛶ 全螢幕';
+      }
+    });
+
+    const TOOL_HINTS = {
+      inspect: '👆 當前工具：【觀察追蹤】點擊任意螞蟻可直接鎖定並啟動全方位附身操控；左鍵旋轉，滾輪縮放，右鍵平移。',
+      sugar: '🍯 當前工具：【投放蜜露】點擊地表任意處放置高能量糖晶，誘導工蟻探索並建立追蹤費洛蒙高速公路。',
+      protein: '🌰 當前工具：【投放種子】點擊地表放置蛋白質種子，供工蟻搬回儲糧腔催化幼蟲與兵蟻培育。',
+      trail: '🧪 當前工具：【覓食費洛蒙】在地面按住左鍵塗抹人工追蹤費洛蒙，直接引導工蟻改變覓食路線！',
+      alarm: '🚨 當前工具：【警戒費洛蒙】點擊地面釋放高濃度警戒化學訊號，立即召集周邊巨顎兵蟻集結防禦。',
+      rally: '🚩 當前工具：【集結信標】點擊地面設立信標，號令周邊所有工蟻與兵蟻立即向指定地點靠攏！',
+      obstacle: '🪨 當前工具：【放置鵝卵石】在費洛蒙路徑上放置石塊障礙，觀察蟻群如何透過雙橋分岔收斂出最短繞行路徑。',
+      predator: '🪲 當前工具：【召喚各類天敵】點擊地面放入下拉選單指定的天敵（步甲蟲/狼蛛/蟻獅陷阱/虎頭蜂/赤蜈蚣）！'
+    };
+
+    document.querySelectorAll('[data-tool]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-tool]').forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        simState.activeTool = btn.getAttribute('data-tool');
+        document.getElementById('active-tool-hint').textContent = TOOL_HINTS[simState.activeTool] || '';
+        soundscape.playTone(500, 0.06, 'sine', 0.05);
+      });
+    });
+
+    function setViewMode(mode) {
+      simState.viewMode = mode;
+      ['surface', 'cutaway', 'antcam'].forEach((m) => {
+        const el = document.getElementById('view-' + m);
+        if (el) el.classList.toggle('active', m === mode);
+      });
+
+      if (mode === 'cutaway') {
+        terrainUniforms.uCutawayAlpha.value = 0.26;
+        grassUniforms.uCutawayAlpha.value = 0.18;
+        camState.target.set(0, -8.5, -2);
+        camState.spherical.phi = 1.28;
+        camState.spherical.radius = 34;
+        simState.followTarget = false;
+      } else if (mode === 'surface') {
+        terrainUniforms.uCutawayAlpha.value = 1.0;
+        grassUniforms.uCutawayAlpha.value = 1.0;
+        camState.target.set(0, 1.5, 0);
+        camState.spherical.phi = 0.92;
+      } else if (mode === 'antcam') {
+        terrainUniforms.uCutawayAlpha.value = 1.0;
+        grassUniforms.uCutawayAlpha.value = 1.0;
+        if (!simState.selectedEntity || simState.selectedEntity.type !== 'ant') {
+          const surfaceAnt = ants.find((a) => !a.underground) || ants[0];
+          simState.selectedEntity = { type: 'ant', ant: surfaceAnt };
+        }
+      }
+      soundscape.playTone(640, 0.09, 'sine', 0.06);
+    }
+
+    document.getElementById('view-surface').addEventListener('click', () => setViewMode('surface'));
+    document.getElementById('view-cutaway').addEventListener('click', () => setViewMode('cutaway'));
+    document.getElementById('view-antcam').addEventListener('click', () => setViewMode('antcam'));
+
+    document.getElementById('toggle-pheromone').addEventListener('change', (e) => {
+      simState.showPheromone = e.target.checked;
+      terrainUniforms.uShowPheromone.value = simState.showPheromone ? 1.0 : 0.0;
+    });
+
+    document.getElementById('cam-mound').addEventListener('click', () => {
+      setViewMode('surface');
+      simState.followTarget = false;
+      camState.target.set(0, 2.5, 0);
+      camState.spherical.radius = 22;
+    });
+    document.getElementById('cam-queen').addEventListener('click', () => {
+      setViewMode('cutaway');
+      selectAntForPossession(queenAnt, simState.pilotMode);
+      camState.spherical.radius = 18;
+    });
+    document.getElementById('cam-brood').addEventListener('click', () => {
+      setViewMode('cutaway');
+      simState.selectedEntity = { type: 'chamber', chamber: getChamberById('brood') };
+      simState.followTarget = true;
+      camState.spherical.radius = 20;
+      updateInspectorUI();
+    });
+    document.getElementById('cam-aphid').addEventListener('click', () => {
+      setViewMode('surface');
+      simState.followTarget = false;
+      camState.target.copy(aphidZonePos);
+      camState.spherical.radius = 18;
+    });
+
+    [0, 1, 2, 4].forEach((spd) => {
+      const btn = document.getElementById('btn-speed-' + spd);
+      btn.addEventListener('click', () => {
+        simState.timeScale = spd;
+        [0, 1, 2, 4].forEach((s) => {
+          const b = document.getElementById('btn-speed-' + s);
+          b.className = s === spd
+            ? 'px-2 py-1 rounded text-[11px] font-medium bg-emerald-600/50 text-white border border-emerald-400'
+            : 'px-2 py-1 rounded text-[11px] font-medium bg-emerald-950/60 hover:bg-emerald-800/60 text-emerald-200 border border-emerald-700/40';
+        });
+      });
+    });
+
+    document.getElementById('btn-weather-toggle').addEventListener('click', () => {
+      simState.weather = simState.weather === 'sunny' ? 'rain' : 'sunny';
+      document.getElementById('btn-weather-label').textContent = simState.weather === 'rain' ? '🌧️ 微雨' : '☀️ 晴朗';
+      document.getElementById('weather-icon').textContent = simState.weather === 'rain' ? '🌧️' : '☀️';
+      soundscape.playTone(440, 0.1, 'sine', 0.06);
+    });
+
+    document.getElementById('btn-audio-toggle').addEventListener('click', () => {
+      const muted = soundscape.toggleMute();
+      document.getElementById('btn-audio-toggle').textContent = muted ? '🔇 靜音' : '🔊 聲景';
+    });
+
+    const codexModal = document.getElementById('codex-modal');
+    document.getElementById('btn-codex-open').addEventListener('click', () => {
+      codexModal.classList.remove('hidden');
+      codexModal.classList.add('flex');
+    });
+    document.getElementById('btn-codex-close').addEventListener('click', () => {
+      codexModal.classList.add('hidden');
+      codexModal.classList.remove('flex');
+    });
+
+    document.getElementById('btn-follow-selected').addEventListener('click', () => {
+      simState.followTarget = !simState.followTarget;
+      document.getElementById('btn-follow-selected').textContent = simState.followTarget ? '鎖定跟隨' : '自由鏡頭';
+    });
+
+    window.addEventListener('keydown', (e) => {
+      camState.keys[e.code] = true;
+      if (e.code === 'Digit1') setViewMode('surface');
+      if (e.code === 'Digit2') setViewMode('cutaway');
+      if (e.code === 'Digit3') setViewMode('antcam');
+      if (e.code === 'KeyH') document.getElementById('btn-toggle-all-ui').click();
+
+      // Possession Action Hotkeys
+      if (simState.pilotMode) {
+        if (e.code === 'KeyF') executePossessedAction('bite');
+        if (e.code === 'KeyG') executePossessedAction('carry');
+        if (e.code === 'KeyZ') executePossessedAction('trail');
+        if (e.code === 'KeyX') executePossessedAction('alarm');
+        if (e.code === 'KeyC') executePossessedAction('feed');
+        if (e.code === 'KeyV') executePossessedAction('tunnel');
+        if (e.code === 'KeyB') executePossessedAction('dig');
+      }
+
+      if (e.code === 'Space') {
+        const nextSpeed = simState.timeScale === 0 ? 1 : 0;
+        document.getElementById('btn-speed-' + nextSpeed).click();
+      }
+    });
+    window.addEventListener('keyup', (e) => {
+      camState.keys[e.code] = false;
+    });
+
+    // =========================================================================
+    // 14. INSPECTOR & TELEMETRY UI SYNCHRONIZATION
+    // =========================================================================
+    const CASTE_LABELS = {
+      worker: '外勤覓食工蟻 (Minor Worker)',
+      soldier: '巨顎防衛兵蟻 (Major Soldier)',
+      nurse: '內勤育幼保育蟻 (Brood Nurse)',
+      queen: '生殖核心蟻后 (Colony Queen)'
+    };
+
+    const CASTE_DESCS = {
+      worker: '透過膝狀觸角偵測地面化學分子梯度，發現食物後由腹部腺體分泌追蹤費洛蒙，引導同伴形成最短路徑正回饋。',
+      soldier: '頭部特化具強健大顎肌肉與前胸棘刺，對警戒費洛蒙高度敏感，專門執行蟻塚防衛、圍剿各類天敵與切碎堅果。',
+      nurse: '留守地底育幼腔與王室腔，根據溫濕度搬移卵與幼蟲，並透過口對口交哺 (Trophallaxis) 分配液態營養。',
+      queen: '群體唯一的生殖核心，頭頂具 3 顆單眼，中軀保留脫翅痕跡，持續分泌后費洛蒙維持真社會性分工秩序。'
+    };
+
+    function updateInspectorUI() {
+      const sel = simState.selectedEntity;
+      if (!sel) return;
+
+      const nameEl = document.getElementById('insp-name');
+      const casteEl = document.getElementById('insp-caste');
+      const stateEl = document.getElementById('insp-state');
+      const cargoEl = document.getElementById('insp-cargo');
+      const eText = document.getElementById('insp-energy-text');
+      const eBar = document.getElementById('insp-energy-bar');
+      const pText = document.getElementById('insp-pheromone-text');
+      const pBar = document.getElementById('insp-pheromone-bar');
+      const descEl = document.getElementById('insp-desc');
+
+      if (sel.type === 'ant') {
+        const a = sel.ant;
+        nameEl.textContent = `${a.caste === 'queen' ? '👑 蟻后' : '🐜 螞蟻'} #${a.id}`;
+        casteEl.textContent = CASTE_LABELS[a.caste] || a.caste;
+        stateEl.textContent = a.state;
+        cargoEl.textContent = a.carrying === 'sugar' ? '🍯 蜜露糖晶 (1.2mg)' : a.carrying === 'protein' ? '🌰 蛋白質種子 (1.8mg)' : a.caste === 'nurse' ? '🥚 照護蟻卵與幼蟲' : '無負載 (空顎)';
+        eText.textContent = `${Math.round(a.energy)}%`;
+        eBar.style.width = `${Math.round(a.energy)}%`;
+        pText.textContent = `${a.sensedPheromone.toFixed(2)} Eq`;
+        pBar.style.width = `${Math.min(100, Math.round(a.sensedPheromone * 100))}%`;
+        descEl.textContent = CASTE_DESCS[a.caste];
+        selectRing.position.set(a.pos.x, a.pos.y + 0.12, a.pos.z);
+        selectRing.scale.setScalar(1.0);
+      } else if (sel.type === 'chamber') {
+        const ch = sel.chamber;
+        nameEl.textContent = ch.name;
+        casteEl.textContent = `地底恆溫腔室 (需 Lv.${ch.minLevel})`;
+        stateEl.textContent = simState.nestLevel >= ch.minLevel ? '微氣候運作中 (濕度 78%)' : '尚未開鑿解鎖';
+        cargoEl.textContent = `深度 ${Math.abs(ch.pos.y).toFixed(1)} cm`;
+        eText.textContent = '100%';
+        eBar.style.width = '100%';
+        pText.textContent = '0.88 Eq';
+        pBar.style.width = '88%';
+        descEl.textContent = ch.role;
+        selectRing.position.set(ch.pos.x, ch.pos.y - ch.radius * 0.35, ch.pos.z);
+        selectRing.scale.setScalar(ch.radius * 0.7);
+      } else if (sel.type === 'predator') {
+        const p = sel.predator;
+        nameEl.textContent = p.name;
+        casteEl.textContent = '外來生態系掠食天敵';
+        stateEl.textContent = '遭警戒兵蟻圍剿中';
+        cargoEl.textContent = `擊殺獎勵 ${p.rewardProtein} 蛋白`;
+        const pct = Math.max(0, Math.round((p.hp / p.maxHp) * 100));
+        eText.textContent = `${pct}% HP`;
+        eBar.style.width = `${pct}%`;
+        pText.textContent = '警戒源 1.00';
+        pBar.style.width = '100%';
+        descEl.textContent = p.desc;
+        selectRing.position.set(p.pos.x, p.pos.y + 0.15, p.pos.z);
+        selectRing.scale.setScalar(1.8);
+      }
+    }
+
+    function updateTopMetrics(dt) {
+      const biomeCfg = BIOME_CONFIGS[simState.biome] || BIOME_CONFIGS.meadow;
+      simState.timeOfDay = (simState.timeOfDay + dt * 0.08) % 24;
+      const dayAngle = ((simState.timeOfDay - 6) / 24) * Math.PI * 2;
+      const sunElev = Math.sin(dayAngle);
+      simState.temperature = 21.5 + biomeCfg.tempOffset + sunElev * 7.5 + (simState.weather === 'rain' ? -3.2 : 0);
+
+      sunLight.position.set(Math.cos(dayAngle) * 45, Math.max(14, (sunElev + 0.45) * 52), 25);
+      terrainUniforms.uSunDir.value.copy(sunLight.position).normalize();
+      const minSun = simState.lightingTheme === 'bright' ? 1.25 : 0.35;
+      sunLight.intensity = Math.max(minSun, (sunElev + 0.5) * (simState.lightingTheme === 'bright' ? 1.55 : 1.15));
+
+      const hrs = Math.floor(simState.timeOfDay).toString().padStart(2, '0');
+      const mins = Math.floor((simState.timeOfDay % 1) * 60).toString().padStart(2, '0');
+
+      document.getElementById('stat-food').textContent = Math.floor(simState.foodStored);
+      document.getElementById('stat-protein').textContent = Math.floor(simState.proteinStored);
+      document.getElementById('stat-brood').textContent = simState.broodCount;
+      document.getElementById('stat-time').textContent = `${hrs}:${mins}`;
+      document.getElementById('stat-temp').textContent = `${simState.temperature.toFixed(1)}°C`;
+
+      const wCount = ants.filter((a) => a.caste === 'worker').length;
+      const sCount = ants.filter((a) => a.caste === 'soldier').length;
+      const nCount = ants.filter((a) => a.caste === 'nurse').length;
+      document.getElementById('stat-total-ants').textContent = ants.length;
+      document.getElementById('stat-caste-breakdown').textContent = `工${wCount}/兵${sCount}/育${nCount}`;
+
+      const badge = document.getElementById('colony-status-badge');
+      if (predators.length > 0) {
+        badge.textContent = `⚠️ ${predators.length} 處天敵交戰中`;
+        badge.className = 'text-[10px] px-1.5 py-0.5 rounded bg-rose-500/30 text-rose-200 border border-rose-400/50 font-medium';
+      } else {
+        badge.textContent = '真社會性穩定';
+        badge.className = 'text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-medium';
+      }
+
+      updateKingdomProgressionUI();
+    }
+
+    // =========================================================================
+    // 15. RAIN PARTICLE SYSTEM & MAIN ANIMATION LOOP
+    // =========================================================================
+    const rainGeo = new THREE.BufferGeometry();
+    const RAIN_COUNT = 450;
+    const rainPositions = new Float32Array(RAIN_COUNT * 3);
+    for (let i = 0; i < RAIN_COUNT; i++) {
+      rainPositions[i * 3] = (Math.random() - 0.5) * WORLD_SIZE;
+      rainPositions[i * 3 + 1] = Math.random() * 35;
+      rainPositions[i * 3 + 2] = (Math.random() - 0.5) * WORLD_SIZE;
+    }
+    rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPositions, 3));
+    const rainMat = new THREE.PointsMaterial({ color: 0x93c5fd, size: 0.22, transparent: true, opacity: 0.65 });
+    const rainSystem = new THREE.Points(rainGeo, rainMat);
+    rainSystem.visible = false;
+    scene.add(rainSystem);
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    for (let t = 0; t <= 1; t += 0.025) {
+      depositPheromone(aphidZonePos.x * t, aphidZonePos.z * t, 'trail', 0.72, 1);
+    }
+
+    refreshPossessDropdown();
+    addEventLog('🔬 3D 視覺與骨骼全面升級：新增五節足關節、多齒大顎、複眼刻面著色器與後腹骨片環！', 'text-teal-300 font-semibold');
+    addEventLog('🕹️ 指定對象全方位附身系統就緒：可在右側下拉選單或直接點擊任意螞蟻，體驗 8 大生物技能與第一人稱複眼視角！', 'text-amber-200');
+
+    let lastTime = performance.now();
+    let uiTimer = 0;
+
+    function animate(now) {
+      requestAnimationFrame(animate);
+      const rawDt = Math.min(0.05, (now - lastTime) / 1000);
+      lastTime = now;
+      const simDt = rawDt * simState.timeScale;
+
+      if (simDt > 0) {
+        terrainUniforms.uTime.value += simDt;
+        grassUniforms.uTime.value += simDt;
+        dewMat.uniforms.uTime.value += simDt;
+
+        stepPheromoneField(simDt);
+        updateAntsAndPredators(simDt);
+
+        rainSystem.visible = simState.weather === 'rain';
+        if (rainSystem.visible) {
+          const pos = rainGeo.attributes.position.array;
+          for (let i = 0; i < RAIN_COUNT; i++) {
+            pos[i * 3 + 1] -= 28 * simDt;
+            if (pos[i * 3 + 1] < 0) pos[i * 3 + 1] = 35;
+          }
+          rainGeo.attributes.position.needsUpdate = true;
+        }
+      }
+
+      if (!anatomyModal.classList.contains('hidden') && anatBuilt) {
+        if (!anatDragging) anatRotY += rawDt * 0.55;
+        anatModelGroup.rotation.y = anatRotY;
+        anatModelGroup.rotation.x = anatRotX;
+
+        const phase = now * 0.006;
+        anatBuilt.legs.forEach((leg) => {
+          const offset = (leg.index % 2 === 0 ? 0 : Math.PI) + (leg.side > 0 ? 0 : Math.PI);
+          leg.pivot.rotation.y = anatActionPose ? Math.sin(phase + offset) * 0.34 : Math.sin(phase * 0.3 + offset) * 0.08;
+          leg.pivot.rotation.z = anatActionPose ? leg.side * Math.max(0, Math.cos(phase + offset)) * 0.22 : 0;
+        });
+        if (anatBuilt.mandL && anatBuilt.mandR) {
+          const pinch = anatActionPose ? Math.sin(phase * 1.6) * 0.28 : 0;
+          anatBuilt.mandL.rotation.y = -pinch;
+          anatBuilt.mandR.rotation.y = pinch;
+        }
+        anatRenderer.render(anatScene, anatCamera);
+      }
+
+      updateCamera(rawDt);
+
+      uiTimer += rawDt;
+      if (uiTimer > 0.18) {
+        uiTimer = 0;
+        updateTopMetrics(simDt);
+        updateInspectorUI();
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    window.onload = () => {
+      applyEnvironmentColors();
+      updateInspectorUI();
+      requestAnimationFrame(animate);
+    };
+  </script>
+</body>
+</html>
