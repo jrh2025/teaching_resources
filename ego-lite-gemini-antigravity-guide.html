@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ego Lite（ego-browser）完整安裝與 Gemini／Antigravity 實戰指南</title>
+  <style>
+    /* 全站設計系統：延續專案暖象牙出版物排版美學，零外部網路依賴 */
+    :root {
+      --bg-paper: #FAF8F3;
+      --bg-card: #FFFFFF;
+      --bg-subtle: #F3EFE6;
+      --bg-code: #F6F3EC;
+      --ink-primary: #1A1918;
+      --ink-secondary: #54504A;
+      --ink-muted: #847E75;
+      --border-hairline: #E3DDD1;
+      --border-strong: #CCC3B2;
+      --accent-terra: #C2593F;
+      --accent-terra-soft: #F7EAE6;
+      --accent-indigo: #264653;
+      --accent-indigo-soft: #E9EFF1;
+      --accent-sage: #46695B;
+      --accent-sage-soft: #ECF2EF;
+      --accent-gold: #B67D24;
+      --accent-gold-soft: #FBF4E4;
+      --shadow-card: 0 6px 24px rgba(26, 25, 24, 0.045);
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-pill: 999px;
+      --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, -apple-system, sans-serif;
+      --font-serif: "Noto Serif TC", "PMingLiU", Georgia, serif;
+      --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, "Courier New", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      color: var(--ink-primary);
+      background-color: var(--bg-paper);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
+      line-height: 1.72;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent-indigo); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.9em;
+      background: var(--bg-subtle);
+      padding: 2px 6px;
+      border-radius: 5px;
+      color: #2B2825;
+      border: 1px solid var(--border-hairline);
+    }
+
+    .page-shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 20px 84px;
+    }
+
+    /* 頂部標頭卡片 */
+    .hero {
+      background: var(--bg-card);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-lg);
+      padding: 32px 34px 28px;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 280px;
+      height: 100%;
+      background: radial-gradient(circle at top right, rgba(194, 89, 63, 0.08), transparent 72%);
+      pointer-events: none;
+    }
+    .hero-top-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 2;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      color: var(--accent-terra);
+      background: var(--accent-terra-soft);
+      padding: 5px 12px;
+      border-radius: var(--radius-pill);
+    }
+    .nav-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-card);
+      color: var(--ink-primary);
+      cursor: pointer;
+      font-family: inherit;
+      text-decoration: none;
+      transition: all 0.15s ease;
+    }
+    .btn-nav:hover { border-color: var(--ink-primary); text-decoration: none; transform: translateY(-1px); }
+    .btn-nav.primary { background: var(--accent-indigo); border-color: var(--accent-indigo); color: #fff; }
+    .btn-nav.primary:hover { background: #1B343E; }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(25px, 3.4vw, 36px);
+      line-height: 1.26;
+      margin: 0 0 12px;
+      position: relative;
+      z-index: 2;
+    }
+    .hero-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+      position: relative;
+      z-index: 2;
+    }
+    .meta-box {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      padding: 11px 14px;
+    }
+    .meta-label { font-size: 11.5px; color: var(--ink-muted); margin-bottom: 2px; }
+    .meta-value { font-size: 15.5px; font-weight: 700; color: var(--ink-primary); }
+
+    /* 雙欄主版面：左側固定目錄 + 右側內容 */
+    .layout-grid {
+      display: grid;
+      grid-template-columns: 248px 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .toc-panel {
+      position: sticky;
+      top: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-lg);
+      padding: 18px 16px;
+      box-shadow: var(--shadow-card);
+    }
+    .toc-title {
+      font-family: var(--font-serif);
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0 0 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-hairline);
+      color: var(--ink-primary);
+    }
+    .toc-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .toc-link {
+      display: block;
+      font-size: 13px;
+      color: var(--ink-secondary);
+      padding: 6px 10px;
+      border-radius: 8px;
+      transition: all 0.14s ease;
+      line-height: 1.4;
+    }
+    .toc-link:hover {
+      background: var(--bg-subtle);
+      color: var(--ink-primary);
+      text-decoration: none;
+    }
+    .toc-link.active {
+      background: var(--accent-indigo-soft);
+      color: var(--accent-indigo);
+      font-weight: 700;
+    }
+    .toc-sub {
+      padding-left: 20px;
+      font-size: 12px;
+      color: var(--ink-muted);
+    }
+
+    .content-col {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      min-width: 0;
+    }
+
+    .doc-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-lg);
+      padding: 28px 30px;
+      box-shadow: var(--shadow-card);
+      scroll-margin-top: 20px;
+    }
+
+    h2 {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      line-height: 1.35;
+      margin: 0 0 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-hairline);
+      color: var(--ink-primary);
+    }
+    h3 {
+      font-family: var(--font-serif);
+      font-size: 17.5px;
+      margin: 22px 0 10px;
+      color: var(--accent-indigo);
+    }
+    h4 {
+      font-size: 15px;
+      margin: 16px 0 8px;
+      color: var(--ink-primary);
+    }
+    p { margin: 0 0 12px; color: var(--ink-secondary); font-size: 14.8px; }
+    ul, ol { margin: 0 0 14px; padding-left: 22px; color: var(--ink-secondary); font-size: 14.5px; }
+    li { margin-bottom: 6px; }
+    strong { color: var(--ink-primary); }
+
+    /* 重點提示方塊 */
+    .callout {
+      border-radius: var(--radius-md);
+      padding: 13px 16px;
+      margin: 14px 0 16px;
+      font-size: 14px;
+      border: 1px solid;
+      border-left-width: 4px;
+    }
+    .callout-title { font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+    .callout.important {
+      background: var(--accent-terra-soft);
+      border-color: #E7C2B7;
+      border-left-color: var(--accent-terra);
+      color: #3D1F18;
+    }
+    .callout.tip {
+      background: var(--accent-sage-soft);
+      border-color: #C3D4CB;
+      border-left-color: var(--accent-sage);
+      color: #1F322A;
+    }
+    .callout.note {
+      background: var(--accent-indigo-soft);
+      border-color: #C2D2D8;
+      border-left-color: var(--accent-indigo);
+      color: #1B3039;
+    }
+    .callout p { margin: 0; color: inherit; font-size: 13.8px; }
+
+    /* Prompt 引用區塊 */
+    .prompt-quote {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-strong);
+      border-left: 4px solid var(--accent-gold);
+      border-radius: 0 var(--radius-md) var(--radius-md) 0;
+      padding: 12px 15px;
+      margin: 10px 0 14px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .prompt-quote-text {
+      font-size: 14px;
+      color: var(--ink-primary);
+      font-weight: 500;
+      margin: 0;
+    }
+
+    /* 程式碼與指令區塊（附帶一鍵複製工具列） */
+    .code-card {
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      background: var(--bg-code);
+      overflow: hidden;
+      margin: 10px 0 16px;
+    }
+    .code-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 7px 13px;
+      background: #EDE8DC;
+      border-bottom: 1px solid var(--border-strong);
+    }
+    .code-lang {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--ink-secondary);
+      letter-spacing: 0.03em;
+    }
+    .btn-copy {
+      border: 1px solid var(--accent-indigo);
+      background: var(--accent-indigo);
+      color: #fff;
+      padding: 4px 11px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      flex-shrink: 0;
+      transition: all 0.14s ease;
+    }
+    .btn-copy:hover { background: #1B343E; border-color: #1B343E; }
+    .btn-copy.copied { background: var(--accent-sage); border-color: var(--accent-sage); }
+    pre.code-pre {
+      margin: 0;
+      padding: 13px 15px;
+      font-family: var(--font-mono);
+      font-size: 12.6px;
+      line-height: 1.6;
+      color: #211F1D;
+      overflow-x: auto;
+      white-space: pre;
+    }
+
+    /* 系統架構純內嵌 SVG 容器 */
+    .diagram-box {
+      background: #FCFBF7;
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin: 14px 0 18px;
+      overflow-x: auto;
+    }
+    .diagram-caption {
+      text-align: center;
+      font-size: 12px;
+      color: var(--ink-muted);
+      margin-top: 8px;
+    }
+
+    /* 比較表格 */
+    .table-wrap { overflow-x: auto; margin: 12px 0 16px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      min-width: 640px;
+      background: #fff;
+    }
+    th {
+      text-align: left;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      background: var(--bg-subtle);
+      padding: 10px 12px;
+      border: 1px solid var(--border-hairline);
+      white-space: nowrap;
+    }
+    td {
+      padding: 10px 12px;
+      border: 1px solid var(--border-hairline);
+      vertical-align: top;
+      color: var(--ink-secondary);
+    }
+    .badge-no {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      background: var(--accent-terra-soft);
+      color: var(--accent-terra);
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .badge-yes {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: var(--radius-pill);
+      background: var(--accent-sage-soft);
+      color: var(--accent-sage);
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .footer-note {
+      margin-top: 28px;
+      text-align: center;
+      font-size: 12.5px;
+      color: var(--ink-muted);
+    }
+
+    /* 複製成功底部 Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--ink-primary);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 120;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    @media (max-width: 920px) {
+      .layout-grid { grid-template-columns: 1fr; }
+      .toc-panel { position: static; }
+      .toc-list { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+      .toc-sub { display: none; }
+      .doc-section { padding: 22px 18px; }
+    }
+
+    @media print {
+      body { background: #fff; background-image: none; }
+      .toc-panel, .nav-actions, .btn-copy, .toast { display: none !important; }
+      .layout-grid { grid-template-columns: 1fr; }
+      .doc-section { box-shadow: none; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <!-- 頂部主標頭與站內導覽 -->
+    <header class="hero">
+      <div class="hero-top-row">
+        <span class="eyebrow">技術手冊 · Ego Lite × Gemini CLI × Google Antigravity</span>
+        <div class="nav-actions">
+          <button type="button" class="btn-nav" onclick="window.print()">🖨️ 列印／另存 PDF</button>
+        </div>
+      </div>
+
+      <h1>Ego Lite（<code>ego-browser</code>）完整安裝與 Gemini／Antigravity 實戰指南</h1>
+      <p style="margin: 0; color: var(--ink-secondary); font-size: 15px;">
+        完整說明如何於 Windows／macOS 安裝桌面端 Ego Lite、配置「黃金雙全域 Skill 目錄」讓 <strong>Gemini CLI</strong> 與 <strong>Google Antigravity</strong> 隨時調用，並包含 <code>TaskSpace</code>／<code>handOff</code>／<code>finish</code> 生命週期寫法與實戰避坑指南。
+      </p>
+
+      <div class="hero-meta-grid">
+        <div class="meta-box">
+          <div class="meta-label">實測主程式版本</div>
+          <div class="meta-value">ego-browser 0.6.3.17</div>
+        </div>
+        <div class="meta-box">
+          <div class="meta-label">內建瀏覽器與執行期</div>
+          <div class="meta-value">Chromium 156 · Node v24.22.1</div>
+        </div>
+        <div class="meta-box">
+          <div class="meta-label">對應 Skill 規範</div>
+          <div class="meta-value">ego-browser v2.2.1</div>
+        </div>
+        <div class="meta-box">
+          <div class="meta-label">支援平台與工具</div>
+          <div class="meta-value">Windows／macOS · CLI &amp; Antigravity</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="layout-grid">
+      <!-- 左側快速章節目錄 -->
+      <aside class="toc-panel" aria-label="報告章節目錄">
+        <div class="toc-title">📖 報告章節目錄</div>
+        <ul class="toc-list" id="toc-list">
+          <li><a href="#sec-1" class="toc-link active">一、核心架構與優勢</a></li>
+          <li><a href="#sec-2" class="toc-link">二、系統安裝與環境驗證</a></li>
+          <li><a href="#sec-2-import" class="toc-link toc-sub">↳ 設定檔匯入與升級</a></li>
+          <li><a href="#sec-3" class="toc-link">三、Gemini 與 Antigravity 差異</a></li>
+          <li><a href="#sec-4" class="toc-link">四、安裝全域 Skill 設定</a></li>
+          <li><a href="#sec-5" class="toc-link">五、日常使用與核心 API</a></li>
+          <li><a href="#sec-5-lifecycle" class="toc-link toc-sub">↳ TaskSpace 三階段範例</a></li>
+          <li><a href="#sec-6" class="toc-link">六、避坑指南與疑難排解</a></li>
+        </ul>
+      </aside>
+
+      <!-- 右側報告正文 -->
+      <main class="content-col">
+        <!-- 第一章 -->
+        <section class="doc-section" id="sec-1">
+          <h2>一、Ego Lite 是什麼？核心架構與優勢</h2>
+          <p>
+            <strong>Ego Lite</strong>（GitHub 專案 <a href="https://github.com/citrolabs/ego-lite" target="_blank" rel="noopener noreferrer"><code>citrolabs/ego-lite</code></a>，對應指令列工具為 <code>ego-browser</code>）是一套專為「人類與 AI Agent 協同作業」設計的開放原始碼 Chromium 瀏覽器環境。
+          </p>
+          <p>
+            與傳統在背景啟動乾淨無痕實例的自動化框架（例如 Playwright、Puppeteer）不同，Ego Lite 採用人機協作隔離工作區架構：
+          </p>
+
+          <!-- 純離線內嵌 SVG 架構圖（取代 Mermaid，離線雙擊即可清晰檢視） -->
+          <div class="diagram-box">
+            <svg viewBox="0 0 840 205" width="100%" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Ego Lite 與 Gemini CLI / Antigravity 協作架構圖">
+              <defs>
+                <marker id="arrow-head" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#264653" />
+                </marker>
+                <marker id="arrow-hand" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 1 L 10 5 L 0 9 z" fill="#C2593F" />
+                </marker>
+              </defs>
+
+              <!-- 節點 1：人類使用者 -->
+              <rect x="14" y="42" width="128" height="66" rx="12" fill="#F7EAE6" stroke="#C2593F" stroke-width="1.8" />
+              <text x="78" y="70" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1A1918">人類使用者</text>
+              <text x="78" y="90" text-anchor="middle" font-size="11" fill="#54504A">下達任務／接手驗證</text>
+
+              <!-- 連線 1 -> 2 -->
+              <line x1="142" y1="75" x2="188" y2="75" stroke="#264653" stroke-width="1.8" marker-end="url(#arrow-head)" />
+              <text x="165" y="66" text-anchor="middle" font-size="10.5" fill="#54504A">指令</text>
+
+              <!-- 節點 2：Gemini CLI / Antigravity -->
+              <rect x="192" y="34" width="166" height="82" rx="12" fill="#E9EFF1" stroke="#264653" stroke-width="1.8" />
+              <text x="275" y="62" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1A1918">Gemini CLI /</text>
+              <text x="275" y="80" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1A1918">Antigravity</text>
+              <text x="275" y="99" text-anchor="middle" font-size="10.5" fill="#54504A">載入 SKILL.md + ego-browser skill</text>
+
+              <!-- 連線 2 -> 3 -->
+              <line x1="358" y1="75" x2="404" y2="75" stroke="#264653" stroke-width="1.8" marker-end="url(#arrow-head)" />
+              <text x="381" y="66" text-anchor="middle" font-size="10.5" fill="#54504A">執行</text>
+
+              <!-- 節點 3：ego-browser nodejs -->
+              <rect x="408" y="42" width="144" height="66" rx="12" fill="#F3EFE6" stroke="#847E75" stroke-width="1.6" />
+              <text x="480" y="70" text-anchor="middle" font-size="13" font-weight="700" fill="#1A1918">ego-browser</text>
+              <text x="480" y="90" text-anchor="middle" font-size="11" fill="#54504A">nodejs 內嵌執行期</text>
+
+              <!-- 連線 3 -> 4 -->
+              <line x1="552" y1="75" x2="594" y2="75" stroke="#264653" stroke-width="1.8" marker-end="url(#arrow-head)" />
+              <text x="573" y="66" text-anchor="middle" font-size="10.5" fill="#54504A">控制</text>
+
+              <!-- 節點 4：TaskSpace 與目標網站 -->
+              <rect x="598" y="28" width="228" height="94" rx="12" fill="#ECF2EF" stroke="#46695B" stroke-width="1.8" />
+              <text x="712" y="56" text-anchor="middle" font-size="13.5" font-weight="700" fill="#1A1918">Ego Lite TaskSpace</text>
+              <text x="712" y="76" text-anchor="middle" font-size="11.5" fill="#54504A">隔離分頁工作區 × 共用登入 Cookie</text>
+              <text x="712" y="97" text-anchor="middle" font-size="11" font-weight="600" fill="#46695B">→ 操作目標網站／擷取資料／截圖</text>
+
+              <!-- 底部 handOff 回授線 -->
+              <path d="M 712 122 L 712 162 Q 712 174 700 174 L 90 174 Q 78 174 78 162 L 78 113" fill="none" stroke="#C2593F" stroke-width="1.8" stroke-dasharray="6 4" marker-end="url(#arrow-hand)" />
+              <rect x="260" y="159" width="320" height="26" rx="13" fill="#FFFFFF" stroke="#E7C2B7" stroke-width="1.2" />
+              <text x="420" y="176" text-anchor="middle" font-size="11.5" font-weight="700" fill="#C2593F">遇登入牆／2FA／安全驗證時呼叫 task.handOff() 交給人類處理</text>
+            </svg>
+            <div class="diagram-caption">圖 1：Ego Lite（<code>ego-browser</code>）跨工具人機協作與 TaskSpace 隔離架構</div>
+          </div>
+
+          <h3>與傳統瀏覽器自動化的核心差異</h3>
+          <ol>
+            <li><strong>TaskSpace 隔離且共用登入狀態</strong>：初次引導可匯入 Chrome／Edge／Brave 的 Cookie 與設定檔，Agent 可直接在您已登入的網站（例如內部系統、社群後台）運作；同時使用獨立的 <code>TaskSpace</code> 分頁工作區，不會搶佔您平常手動瀏覽的分頁與滑鼠焦點。</li>
+            <li><strong>隨版本動態同步的 Skill 指南</strong>：執行 <code>ego-browser skill</code> 會印出與當前安裝版本完全對應的最新 API 規範，避免模型因記憶舊版用法而寫出過時程式碼。</li>
+            <li><strong>原生人機接力（<code>handOff</code>）機制</strong>：當網站出現尚未登入、雙重驗證或安全檢查時，Agent 會停止自動操作並呼叫 <code>task.handOff()</code>，將分頁控制權安全交由人類手動處理完成後再接手續跑。</li>
+            <li><strong>語意快照降低 Token 消耗</strong>：支援語意摘要與精準 DOM 操作，同時兼具視覺截圖與鍵鼠事件能力。</li>
+          </ol>
+        </section>
+
+        <!-- 第二章 -->
+        <section class="doc-section" id="sec-2">
+          <h2>二、系統安裝與環境驗證（Windows ／ macOS）</h2>
+          <p>使用 Ego Lite 前，需先安裝 <strong>Ego Lite 桌面應用程式</strong>（<code>ego-browser</code> 命令即由該應用程式提供）。</p>
+
+          <h3>步驟 1：下載、安裝並完成首次 Onboarding</h3>
+          <div class="callout important">
+            <div class="callout-title">⚠️ 重要前置步驟</div>
+            <p><strong>首次開啟 Ego Lite 應用程式後的「Onboarding 精靈」為必要步驟</strong>：<code>ego-browser</code> 指令必須在您於 GUI 完成 Onboarding 之後，才會自動註冊至系統 <code>PATH</code>。</p>
+          </div>
+
+          <h4>Windows 平台</h4>
+          <ol>
+            <li>Windows 目前無一鍵安裝 Shell 腳本，請直接前往官網 <a href="https://lite.ego.app/" target="_blank" rel="noopener noreferrer">https://lite.ego.app/</a> 下載 Windows 安裝程式並執行。</li>
+            <li>若遇到 Windows SmartScreen 安全性警告視窗，點擊「<strong>其他資訊</strong>」→「<strong>仍要執行</strong>」。</li>
+            <li>啟動 Ego Lite 後完成畫面上的首次 Onboarding（可自由選擇是否匯入既有的 Chrome／Edge／Brave 設定檔）。</li>
+            <li><strong>務必關閉並重新開啟一個新的終端機</strong>（既有終端機行程不會即時更新環境變數 <code>PATH</code>）。</li>
+          </ol>
+
+          <h4>macOS 平台</h4>
+          <ul>
+            <li><strong>手動安裝</strong>：從 <a href="https://lite.ego.app/" target="_blank" rel="noopener noreferrer">https://lite.ego.app/</a> 下載對應架構的 DMG（Apple Silicon <code>arm64</code> 或 Intel <code>x64</code>）拖入 <code>/Applications</code> 後開啟完成 Onboarding。</li>
+            <li><strong>透過 Skill 腳本安裝</strong>：若已安裝 <code>ego-browser</code> Skill，於 Skill 目錄內執行以下腳本（會依 CPU 架構下載 DMG、安裝至 <code>/Applications</code> 或 <code>~/Applications</code>、移除 Gatekeeper 隔離屬性並開啟 App；若首次開啟仍遭阻擋，至「系統設定 → 隱私權與安全性」手動允許執行即可）：</li>
+          </ul>
+          <div class="code-card">
+            <div class="code-toolbar"><span class="code-lang">macOS Bash</span><button type="button" class="btn-copy" data-copy-pre>複製指令</button></div>
+            <pre class="code-pre">sh skills/ego-browser/scripts/install.sh</pre>
+          </div>
+
+          <h3 id="sec-2-import">步驟 2：管理設定檔匯入與版本升級</h3>
+          <p>若首次設定後仍希望從其他瀏覽器匯入登入工作階段，可使用內建匯入工具（支援 <code>chrome</code>、<code>edge</code>、<code>brave</code>）：</p>
+          <div class="code-card">
+            <div class="code-toolbar"><span class="code-lang">設定檔匯入指令</span><button type="button" class="btn-copy" data-copy-pre>複製指令</button></div>
+            <pre class="code-pre"># 查看所有可匯入的本機瀏覽器設定檔
+ego-browser import list
+
+# 匯入指定瀏覽器設定檔（支援 chrome、edge、brave）
+ego-browser import --browser chrome --profile Default
+ego-browser import --browser edge --profile Default
+ego-browser import --browser brave --profile Default</pre>
+          </div>
+
+          <p>日後升級至最新版 Ego Lite：</p>
+          <div class="code-card">
+            <div class="code-toolbar"><span class="code-lang">版本升級指令</span><button type="button" class="btn-copy" data-copy-pre>複製指令</button></div>
+            <pre class="code-pre">ego-browser upgrade</pre>
+          </div>
+
+          <div class="callout tip">
+            <div class="callout-title">💡 小提醒</div>
+            <p>每次執行 <code>ego-browser upgrade</code> 後，應重新執行一次 <code>ego-browser skill</code> 讓 AI 助理讀取新版 API 操作手冊。</p>
+          </div>
+
+          <h3>步驟 3：驗證 <code>ego-browser</code> 執行環境</h3>
+          <p>開啟<strong>新的</strong>終端機視窗後，依序執行下列檢查：</p>
+          <div class="code-card">
+            <div class="code-toolbar"><span class="code-lang">環境檢查指令（Windows PowerShell / cmd / macOS / Git Bash）</span><button type="button" class="btn-copy" data-copy-pre>複製指令</button></div>
+            <pre class="code-pre"># 1. 確認指令路徑（依 Shell 擇一執行）
+Get-Command ego-browser      # Windows PowerShell
+where ego-browser            # Windows cmd
+command -v ego-browser       # macOS / Git Bash
+
+# 2. 查看主程式、Chromium 與內嵌 Node 版本
+ego-browser --version
+
+# 3. 驗證內嵌 Node 執行環境（PowerShell／cmd 無 heredoc，需使用 -e）
+ego-browser nodejs -e "console.log('ego-browser ready')"
+
+# （macOS / Linux / Git Bash 亦可使用 heredoc）
+ego-browser nodejs &lt;&lt;'EOF'
+console.log('ego-browser ready')
+EOF
+
+# 4. 確認可印出完整動態指南（尾端須見 "[ego-browser:skill] end of guide"）
+ego-browser skill</pre>
+          </div>
+
+          <p>若 <code>ego-browser skill</code> 在終端機輸出過長遭截斷，可先輸出至暫存檔再分段檢視：</p>
+          <div class="code-card">
+            <div class="code-toolbar"><span class="code-lang">PowerShell / Bash 匯出指南至暫存檔</span><button type="button" class="btn-copy" data-copy-pre>複製指令</button></div>
+            <pre class="code-pre"># PowerShell
+ego-browser skill &gt; "$env:TEMP\ego-browser-skill.md"
+
+# macOS / Bash
+ego-browser skill &gt; "$TMPDIR/ego-browser-skill.md"</pre>
+          </div>
+        </section>
+
+        <!-- 第三章 -->
+        <section class="doc-section" id="sec-3">
+          <h2>三、先釐清：Gemini 網頁版 vs Gemini CLI vs Google Antigravity</h2>
+          <p>許多使用者常混淆三種名稱相近的環境，能否結合 Ego Lite 取決於環境是否具備<strong>讀取本機 Skill 目錄</strong>與<strong>呼叫本機 Shell（<code>ego-browser</code>）</strong>的能力：</p>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>環境工具</th>
+                  <th>能否使用 Ego Lite？</th>
+                  <th>原因與限制</th>
+                  <th>全域 Skill 存放路徑</th>
+                  <th>專案級 Skill 路徑</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>Gemini 網頁版</strong><br/>(<code>gemini.google.com</code>)</td>
+                  <td><span class="badge-no">✕ 無法使用</span></td>
+                  <td>純雲端沙盒服務，無法存取本機瀏覽器與 CLI。</td>
+                  <td>不適用</td>
+                  <td>不適用</td>
+                </tr>
+                <tr>
+                  <td><strong>Gemini CLI</strong></td>
+                  <td><span class="badge-yes">✓ 完全支援</span></td>
+                  <td>本機終端機 AI Agent，原生支援 Agent Skills 與 Shell 工具執行 <code>ego-browser</code>。</td>
+                  <td><code>~/.gemini/skills/ego-browser/</code> 或 <code>~/.agents/skills/ego-browser/</code></td>
+                  <td><code>.gemini/skills/ego-browser/</code> 或 <code>.agents/skills/ego-browser/</code></td>
+                </tr>
+                <tr>
+                  <td><strong>Google Antigravity</strong></td>
+                  <td><span class="badge-yes">✓ 完全支援</span></td>
+                  <td>本機 Agentic IDE／開發環境，透過 Customization System 漸進式載入全域與工作區 Skills。</td>
+                  <td><code>~/.gemini/config/skills/ego-browser/</code><br/>(Windows: <code>C:\Users\&lt;使用者&gt;\.gemini\config\skills\ego-browser\</code>)</td>
+                  <td><code>.agents/skills/ego-browser/</code><br/>(亦支援 <code>.agent/</code>、<code>_agents/</code>、<code>_agent/</code>)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>Google Antigravity Skill 載入優先序（由高到低）</h3>
+          <p>Antigravity 採用「漸進式揭露（Progressive Disclosure）」機制：平時僅注入各 Skill 的 <code>name</code> 與 <code>description</code>，當判斷任務需要操作瀏覽器時才完整讀取 <code>SKILL.md</code>。當多個位置同時存在同名 Skill 時，覆蓋順序如下：</p>
+          <ol>
+            <li><strong>Workspace Project</strong>：由當前工作目錄往上掃描至版本庫根目錄的 <code>.agents/skills/</code></li>
+            <li><strong>Declared Configurations</strong>：工作區 <code>skills.json</code> 或 <code>plugins.json</code> 明確宣告之項目</li>
+            <li><strong>Global Discovery</strong>：<code>~/.gemini/config/</code></li>
+            <li><strong>Built-in Customizations</strong>：應用程式內建 Skills</li>
+            <li><strong>Global Declared Configurations</strong>：全域 JSON 設定檔宣告項目</li>
+          </ol>
+        </section>
+
+        <!-- 第四章 -->
+        <section class="doc-section" id="sec-4">
+          <h2>四、在 Gemini CLI 與 Antigravity 安裝 <code>ego-browser</code> Skill（一次設定，全域通用）</h2>
+          <p>安裝完桌面應用程式後，還需將 <code>ego-browser</code> Skill（包含 <code>SKILL.md</code>、<code>references/</code>、<code>scripts/</code> 等檔案）放進 AI 助理的探索目錄，讓任何新舊專案都能隨時調用。</p>
+
+          <h3>方法 A：透過官方 <code>skills</code> CLI 一鍵安裝</h3>
+          <div class="code-card">
+            <div class="code-toolbar"><span class="code-lang">CLI 安裝指令</span><button type="button" class="btn-copy" data-copy-pre>複製指令</button></div>
+            <pre class="code-pre">npx skills add citrolabs/ego-lite
+
+# 或直接指定儲存庫內的 ego-browser 子目錄
+npx skills add github:CitroLabs/ego-lite/skills/ego-browser</pre>
+          </div>
+
+          <h3>方法 B：直接請 AI Agent 自動安裝</h3>
+          <p>開啟 Gemini CLI 或 Antigravity 後，貼上以下指令交由助理安裝與驗證：</p>
+          <div class="prompt-quote">
+            <p class="prompt-quote-text" id="prompt-install">「請幫我安裝 citrolabs/ego-lite 的 ego-browser Skill 到全域 Skill 目錄，讓我在 Gemini CLI 與 Antigravity 的所有專案都能隨時調用，並驗證 ego-browser 環境。」</p>
+            <button type="button" class="btn-copy" data-copy-id="prompt-install">複製 Prompt</button>
+          </div>
+
+          <h3>方法 C：確保「黃金雙全域路徑」同步就緒</h3>
+          <p>若希望在同一台電腦上無論啟動 <strong>Gemini CLI</strong> 還是 <strong>Google Antigravity</strong>（任意專案資料夾）都能免設定直接使用，請確認以下兩個全域資料夾皆完整包含 <code>ego-browser</code>（內有 <code>SKILL.md</code>、<code>references/</code>、<code>scripts/</code> 等子目錄）：</p>
+          <ol>
+            <li><code>~/.agents/skills/ego-browser/</code>（跨工具共享標準路徑，Gemini CLI 原生探索）</li>
+            <li><code>~/.gemini/config/skills/ego-browser/</code>（Google Antigravity 全域探索路徑）</li>
+          </ol>
+
+          <div class="code-card">
+            <div class="code-toolbar"><span class="code-lang">Windows PowerShell 同步腳本</span><button type="button" class="btn-copy" data-copy-pre>複製指令</button></div>
+            <pre class="code-pre">$src = "$HOME\.agents\skills\ego-browser"
+$dst = "$HOME\.gemini\config\skills\ego-browser"
+New-Item -ItemType Directory -Force -Path (Split-Path $dst) | Out-Null
+Copy-Item -Path $src -Destination $dst -Recurse -Force</pre>
+          </div>
+
+          <div class="code-card">
+            <div class="code-toolbar"><span class="code-lang">macOS / Linux 建立符號連結</span><button type="button" class="btn-copy" data-copy-pre>複製指令</button></div>
+            <pre class="code-pre">mkdir -p ~/.gemini/config/skills
+ln -sfn ~/.agents/skills/ego-browser ~/.gemini/config/skills/ego-browser</pre>
+          </div>
+
+          <h4>Gemini CLI 內建驗證指令</h4>
+          <div class="code-card">
+            <div class="code-toolbar"><span class="code-lang">Gemini CLI 互動指令</span><button type="button" class="btn-copy" data-copy-pre>複製指令</button></div>
+            <pre class="code-pre">/skills list
+/skills reload
+/skills link ~/.gemini/config/skills/ego-browser --scope user</pre>
+          </div>
+
+          <div class="callout note">
+            <div class="callout-title">🖥️ 本機環境現狀確認</div>
+            <p>目前這台 Windows 主機的雙全域目錄已就緒（<code>C:\Users\USER\.gemini\config\skills\ego-browser\SKILL.md</code> 與 <code>C:\Users\USER\.agents\skills\ego-browser\SKILL.md</code> 皆為 v2.2.1，系統 <code>PATH</code> 上的 <code>ego-browser</code> 為 <code>0.6.3.17</code>）。</p>
+          </div>
+        </section>
+
+        <!-- 第五章 -->
+        <section class="doc-section" id="sec-5">
+          <h2>五、日常使用指南：在 Gemini CLI 與 Antigravity 實戰調用</h2>
+
+          <h3>1. 自然語言觸發方式與實用 Prompt 範例</h3>
+          <p>由於 <code>ego-browser</code> Skill 的 <code>description</code> 已明確設定為預設瀏覽器工具，您在 Gemini CLI 或 Antigravity 中只需要明確提到網站任務或指名 <code>ego-browser</code>，助理就會先執行 <code>ego-browser skill</code> 確認最新指令集後開始作業。</p>
+
+          <div class="prompt-quote">
+            <p class="prompt-quote-text" id="prompt-ex-1"><strong>範例 1（需登入權限的網站資料整理）：</strong>「用 ego-browser 開啟 https://www.facebook.com/profile.php?id=...，協助收集指定主題的貼文與留言內容並彙整成一份離線網頁。」</p>
+            <button type="button" class="btn-copy" data-copy-id="prompt-ex-1">複製</button>
+          </div>
+          <div class="prompt-quote">
+            <p class="prompt-quote-text" id="prompt-ex-2"><strong>範例 2（本機／線上 Web App 實機 QA 測試）：</strong>「用 ego-browser 開啟 http://localhost:3000，以我目前的登入身分測試表單送出與清單篩選功能，若有 Console 錯誤或版面破版請截圖並修正。」</p>
+            <button type="button" class="btn-copy" data-copy-id="prompt-ex-2">複製</button>
+          </div>
+          <div class="prompt-quote">
+            <p class="prompt-quote-text" id="prompt-ex-3"><strong>範例 3（建立可重複增量更新的資料管線）：</strong>「幫我在專案內用 ego-browser nodejs 寫一個增量同步腳本，只抓取最新貼文並更新 index.html，遇到未登入時自動暫停交給我接手。」</p>
+            <button type="button" class="btn-copy" data-copy-id="prompt-ex-3">複製</button>
+          </div>
+
+          <h3 id="sec-5-lifecycle">2. 核心工作流與 TaskSpace 生命週期（重要！）</h3>
+          <div class="callout important">
+            <div class="callout-title">⚠️ API 關鍵差異：<code>ego-browser</code> 不是 Playwright！</div>
+            <p><code>ego-browser</code> 僅公開自家精簡 API（<code>TaskSpace</code>、<code>Page</code>、<code>FileChooser</code>、<code>mouse</code>、<code>keyboard</code>、<code>page.evaluate()</code>、<code>page.cdp()</code>）。撰寫或審查腳本時，<strong>不可</strong>使用未定義的 Playwright 方法如 <code>locator()</code>、<code>getByRole()</code>、<code>context()</code>、<code>expect()</code>、<code>route()</code>；凡內建 API 未涵蓋的 DOM 邏輯，統一改用 <code>page.evaluate()</code> 執行。</p>
+          </div>
+
+          <h4>階段一：啟動或復原 TaskSpace（每次回覆沿用同一個任務空間）</h4>
+          <div class="code-card">
+            <div class="code-toolbar"><span class="code-lang">JavaScript · 啟動或取回工作空間</span><button type="button" class="btn-copy" data-copy-pre>複製程式碼</button></div>
+            <pre class="code-pre">// 先查詢目前存在的空間，依所有權狀態決定建立、取回或接管
+const existingSpaces = await listTaskSpaces();
+const prev = existingSpaces.find((s) =&gt; s.name === "my-research-task");
+
+const task = !prev
+  ? await taskSpace("my-research-task")
+  : prev.ownership === "user"
+    ? await claimTaskSpace(prev.id)
+    : prev.ownership === "agentDelegatedToUser"
+      ? await takeOverTaskSpace(prev.id)
+      : await taskSpace(prev.id);
+
+const page = (await task.pages())[0] ?? (await task.adopt((await task.tabs())[0].page));
+await page.goto("https://example.com", { timeout: 28_000 });</pre>
+          </div>
+
+          <h4>階段二：遇到登入牆／驗證時的人機接力（<code>handOff</code>）</h4>
+          <p>當偵測到登入畫面或安全驗證時，<strong>千萬不要嘗試繞過或自動破解驗證，也不要呼叫 <code>finish()</code></strong>；待使用者確認完成手動操作後，下一輪再透過 <code>await takeOverTaskSpace(spaceId)</code> 接回同一個空間：</p>
+          <div class="code-card">
+            <div class="code-toolbar"><span class="code-lang">JavaScript · 人機接力手交控制權</span><button type="button" class="btn-copy" data-copy-pre>複製程式碼</button></div>
+            <pre class="code-pre">const needLogin = await page.evaluate(() =&gt;
+  /\/login|\/checkpoint/.test(location.pathname) ||
+  Boolean(document.querySelector('input[type="password"]'))
+);
+
+if (needLogin) {
+  await task.handOff(); // 將控制權交給使用者於 Ego Lite GUI 手動完成
+  console.log(JSON.stringify({ status: "handed_off", spaceId: task.spaceId }));
+  process.exit(0);
+}</pre>
+          </div>
+
+          <h4>階段三：全部任務完成後，在獨立腳本關閉空間（<code>finish</code>）</h4>
+          <p>根據 <code>ego-browser skill</code> 規範，任務確定全部完成、需要清理工作區時，應在<strong>最後獨立執行的腳本</strong>中呼叫 <code>finish()</code>，且呼叫後不可再操作任何 <code>Page</code>：</p>
+          <div class="code-card">
+            <div class="code-toolbar"><span class="code-lang">JavaScript · finish-space.mjs 收尾清理</span><button type="button" class="btn-copy" data-copy-pre>複製程式碼</button></div>
+            <pre class="code-pre">// finish-space.mjs（於主要資料抓取腳本執行結束後另行呼叫）
+const spaces = await listTaskSpaces();
+const target = spaces.find((s) =&gt; s.name === "my-research-task");
+if (target &amp;&amp; target.ownership !== "agentDelegatedToUser") {
+  const task =
+    target.ownership === "user"
+      ? await claimTaskSpace(target.id)
+      : await taskSpace(target.id);
+  await task.finish({ keep: [] });
+}</pre>
+          </div>
+        </section>
+
+        <!-- 第六章 -->
+        <section class="doc-section" id="sec-6">
+          <h2>六、實戰避坑指南與疑難排解（含 Windows PowerShell 實測經驗）</h2>
+
+          <h3>1. Windows PowerShell 5.1 語法與字元編碼陷阱</h3>
+          <ul>
+            <li><strong>沒有 Bash heredoc (<code>&lt;&lt;'EOF'</code>)</strong>：PowerShell 5.1 不支援 <code>&lt;&lt;'EOF'</code>，直接照抄 Unix 範例會出現語法錯誤。</li>
+            <li><strong>外部程式吃雙引號／管線亂碼</strong>：使用 <code>ego-browser nodejs -e "..."</code> 在 PowerShell 夾帶複雜引號或繁體中文字串時，容易被參數解析或系統字碼頁損毀。</li>
+            <li><strong>最佳解法</strong>：一律先將腳本寫成 UTF-8 編碼的 <code>.mjs</code> 檔案，再使用 <code>import()</code> 匯入執行，或透過 Node <code>spawnSync("ego-browser", [...], { shell: false })</code> 呼叫：</li>
+          </ul>
+          <div class="code-card">
+            <div class="code-toolbar"><span class="code-lang">PowerShell 推薦執行方式</span><button type="button" class="btn-copy" data-copy-pre>複製指令</button></div>
+            <pre class="code-pre">ego-browser nodejs -e "await import('file:///C:/path/to/your-script.mjs')"</pre>
+          </div>
+
+          <h3>2. 環境變數與工作目錄隔離特性</h3>
+          <p><code>ego-browser nodejs</code> 內嵌執行期<strong>不會</strong>完整繼承外層 Shell 的自訂 <code>process.env</code> 或當前工作目錄（CWD）。路徑統一使用 <code>import.meta.url</code>（搭配 <code>fileURLToPath</code> + <code>dirname</code> + <code>resolve</code>）定位專案根目錄；執行期參數寫入專案 JSON 設定檔讓腳本讀取。</p>
+
+          <h3>3. 清理 Cookie／快取與儲存空間的風險警告</h3>
+          <p>執行涉及清除 Cookie、快取或 LocalStorage 的指令前，<strong>務必先閱讀 Skill 內附的 <code>references/clearing-state.md</code></strong>；因為部分清除 API 的作用範圍會觸及整個共用的 Ego Lite 瀏覽器設定檔，可能意外登出您在其他網站的日常工作階段。</p>
+
+          <h3>4. 常見錯誤快速排除對照表</h3>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>問題現象</th>
+                  <th>常見原因</th>
+                  <th>標準排除方式</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>ego-browser</code> 找不到指令</td>
+                  <td>尚未開啟 App 完成 Onboarding，或終端機為安裝前開啟（未載入新 <code>PATH</code>）</td>
+                  <td>開啟 Ego Lite 完成首次 Onboarding，<strong>重開一個全新終端機視窗</strong>後再測試 <code>Get-Command ego-browser</code>／<code>command -v ego-browser</code>。</td>
+                </tr>
+                <tr>
+                  <td><code>Unknown command: skill</code></td>
+                  <td>安裝的 Ego Lite 應用程式版本舊於 <code>SKILL.md</code>（v2.2.1）</td>
+                  <td>執行 <code>ego-browser upgrade</code>（若不支援 <code>upgrade</code> 則至官網重新下載安裝覆蓋）。</td>
+                </tr>
+                <tr>
+                  <td>Windows 安裝遭到 SmartScreen 攔截</td>
+                  <td>新版簽章尚未累積足夠下載信譽</td>
+                  <td>點擊彈窗「其他資訊」→「仍要執行」。</td>
+                </tr>
+                <tr>
+                  <td>Agent 在同一腳本呼叫 <code>finish()</code> 後報錯</td>
+                  <td>違反生命週期規範，於 <code>finish()</code> 後續接 <code>page.*</code> 操作</td>
+                  <td>將 <code>await task.finish({ keep: [] })</code> 獨立拆成最後一次執行的收尾腳本（例如本專案 <a href="./scripts/finish-space.mjs">finish-space.mjs</a>）。</td>
+                </tr>
+                <tr>
+                  <td>Gemini CLI 剛放進 Skill 卻沒感應</td>
+                  <td>Session 啟動後才手動新增檔案，未重新整理探索快取</td>
+                  <td>於 Gemini CLI 輸入 <code>/skills reload</code>，再以 <code>/skills list</code> 檢查清單。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <footer class="footer-note">
+          本文件為本機專案 <a href="./index.html">Emerson post「照片 × AI」全量創意玩法圖鑑</a> 隨附技術手冊 · 完全離線可用（Zero External Dependencies）
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // 底部輕提示通知
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      if (!toast) return;
+      toast.textContent = msg;
+      toast.classList.add("show");
+      clearTimeout(showToast._timer);
+      showToast._timer = setTimeout(() => toast.classList.remove("show"), 2200);
+    }
+
+    // 兼容 file:// 與 https:// 的雙重備援複製函式
+    async function copyTextSafe(text) {
+      if (navigator.clipboard && window.isSecureContext) {
+        try {
+          await navigator.clipboard.writeText(text);
+          return true;
+        } catch {
+          // 退回下方 textarea 選取複製
+        }
+      }
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.top = "-9999px";
+      ta.style.left = "-9999px";
+      document.body.appendChild(ta);
+      ta.select();
+      ta.setSelectionRange(0, text.length);
+      let ok = false;
+      try {
+        ok = document.execCommand("copy");
+      } catch {
+        ok = false;
+      }
+      document.body.removeChild(ta);
+      return ok;
+    }
+
+    // 代理處理所有程式碼／指令與 Prompt 一鍵複製事件
+    document.addEventListener("click", async (e) => {
+      const btnPre = e.target.closest("[data-copy-pre]");
+      if (btnPre) {
+        const card = btnPre.closest(".code-card");
+        const pre = card ? card.querySelector("pre.code-pre") : null;
+        if (!pre) return;
+        const ok = await copyTextSafe(pre.textContent || "");
+        if (ok) {
+          const prev = btnPre.textContent;
+          btnPre.classList.add("copied");
+          btnPre.textContent = "已複製 ✓";
+          showToast("已複製指令／程式碼內容！");
+          setTimeout(() => {
+            btnPre.classList.remove("copied");
+            btnPre.textContent = prev;
+          }, 1600);
+        }
+        return;
+      }
+
+      const btnId = e.target.closest("[data-copy-id]");
+      if (btnId) {
+        const targetEl = document.getElementById(btnId.getAttribute("data-copy-id"));
+        if (!targetEl) return;
+        const raw = (targetEl.textContent || "").replace(/^範例\s*\d+（[^）]+）：/, "").replace(/^[「]|[」]$/g, "");
+        const ok = await copyTextSafe(raw.trim());
+        if (ok) {
+          const prev = btnId.textContent;
+          btnId.classList.add("copied");
+          btnId.textContent = "已複製 ✓";
+          showToast("已複製 Prompt 內容！");
+          setTimeout(() => {
+            btnId.classList.remove("copied");
+            btnId.textContent = prev;
+          }, 1600);
+        }
+      }
+    });
+
+    // 捲動高亮側邊目錄目前章節
+    const tocLinks = [...document.querySelectorAll(".toc-link")];
+    const sections = tocLinks
+      .map((a) => document.querySelector(a.getAttribute("href")))
+      .filter(Boolean);
+
+    if ("IntersectionObserver" in window && sections.length > 0) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          const visible = entries.filter((x) => x.isIntersecting);
+          if (visible.length === 0) return;
+          const id = "#" + visible[0].target.id;
+          tocLinks.forEach((a) => a.classList.toggle("active", a.getAttribute("href") === id));
+        },
+        { rootMargin: "-15% 0px -70% 0px" }
+      );
+      sections.forEach((sec) => observer.observe(sec));
+    }
+  </script>
+</body>
+</html>

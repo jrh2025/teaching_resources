@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>早安圖分享｜2026 年 11 月貼文完整簡介與數據圖鑑</title>
+  <style>
+    /* 全站設計系統：暖象牙出版物排版美學，完全離線可用（零外部 CDN 依賴） */
+    :root {
+      --bg-paper: #FAF8F3;
+      --bg-card: #FFFFFF;
+      --bg-subtle: #F3EFE6;
+      --bg-code: #F6F3EC;
+      --ink-primary: #1A1918;
+      --ink-secondary: #54504A;
+      --ink-muted: #847E75;
+      --border-hairline: #E3DDD1;
+      --border-strong: #CCC3B2;
+      --accent-terra: #C2593F;
+      --accent-terra-soft: #F7EAE6;
+      --accent-indigo: #264653;
+      --accent-indigo-soft: #E9EFF1;
+      --accent-sage: #46695B;
+      --accent-sage-soft: #ECF2EF;
+      --accent-gold: #B67D24;
+      --accent-gold-soft: #FBF4E4;
+      --shadow-card: 0 6px 24px rgba(26, 25, 24, 0.045);
+      --radius-lg: 16px;
+      --radius-md: 10px;
+      --radius-pill: 999px;
+      --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, -apple-system, sans-serif;
+      --font-serif: "Noto Serif TC", "PMingLiU", Georgia, serif;
+      --font-mono: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--font-sans);
+      color: var(--ink-primary);
+      background-color: var(--bg-paper);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.028'/%3E%3C/svg%3E");
+      line-height: 1.72;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent-indigo); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .page-shell {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 28px 20px 84px;
+    }
+
+    /* 頂部標頭卡片 */
+    .hero {
+      background: var(--bg-card);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-lg);
+      padding: 32px 34px 28px;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 320px;
+      height: 100%;
+      background: radial-gradient(circle at top right, rgba(194, 89, 63, 0.09), transparent 72%);
+      pointer-events: none;
+    }
+    .hero-top-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      position: relative;
+      z-index: 2;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--accent-terra);
+      background: var(--accent-terra-soft);
+      padding: 5px 12px;
+      border-radius: var(--radius-pill);
+    }
+    .nav-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 600;
+      border: 1px solid var(--border-hairline);
+      background: var(--bg-subtle);
+      color: var(--ink-primary);
+      transition: all 0.16s ease;
+    }
+    .btn-nav:hover {
+      background: var(--ink-primary);
+      color: #fff;
+      border-color: var(--ink-primary);
+      text-decoration: none;
+    }
+    .btn-nav.primary {
+      background: var(--accent-indigo);
+      color: #fff;
+      border-color: var(--accent-indigo);
+    }
+    .btn-nav.primary:hover {
+      background: #1B3540;
+      border-color: #1B3540;
+    }
+
+    h1 {
+      font-family: var(--font-serif);
+      font-size: clamp(26px, 3.2vw, 36px);
+      line-height: 1.28;
+      margin: 0 0 10px;
+      color: var(--ink-primary);
+      position: relative;
+      z-index: 2;
+    }
+    .hero-subtitle {
+      margin: 0 0 18px;
+      font-size: 15.5px;
+      color: var(--ink-secondary);
+      max-width: 820px;
+      position: relative;
+      z-index: 2;
+    }
+    .profile-meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      font-size: 13.5px;
+      color: var(--ink-secondary);
+      padding-top: 14px;
+      border-top: 1px dashed var(--border-hairline);
+      position: relative;
+      z-index: 2;
+    }
+    .meta-item strong {
+      color: var(--ink-primary);
+    }
+
+    /* KPI 統計網格 */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-card);
+    }
+    .kpi-label {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink-muted);
+      margin-bottom: 6px;
+    }
+    .kpi-value {
+      font-family: var(--font-serif);
+      font-size: 30px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      line-height: 1.15;
+      margin-bottom: 6px;
+    }
+    .kpi-sub {
+      font-size: 12.5px;
+      color: var(--ink-secondary);
+    }
+
+    /* 章節標題 */
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 34px 0 14px;
+    }
+    .section-head h2 {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      margin: 0;
+      color: var(--ink-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-head .section-note {
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
+
+    /* 分析觀察卡 */
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .insight-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      padding: 20px 22px;
+      box-shadow: var(--shadow-card);
+    }
+    .insight-tag {
+      display: inline-block;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      margin-bottom: 10px;
+    }
+    .tag-terra { background: var(--accent-terra-soft); color: var(--accent-terra); }
+    .tag-sage { background: var(--accent-sage-soft); color: var(--accent-sage); }
+    .tag-gold { background: var(--accent-gold-soft); color: var(--accent-gold); }
+    .tag-indigo { background: var(--accent-indigo-soft); color: var(--accent-indigo); }
+
+    .insight-card h3 {
+      font-size: 16.5px;
+      margin: 0 0 8px;
+      color: var(--ink-primary);
+    }
+    .insight-card p {
+      margin: 0;
+      font-size: 14px;
+      color: var(--ink-secondary);
+    }
+
+    /* 每日發文長條圖 */
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px 18px;
+      box-shadow: var(--shadow-card);
+      margin-bottom: 28px;
+    }
+    .chart-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .chart-title {
+      font-size: 15.5px;
+      font-weight: 700;
+      color: var(--ink-primary);
+    }
+    .chart-legend {
+      display: flex;
+      gap: 14px;
+      font-size: 12.5px;
+      color: var(--ink-secondary);
+    }
+    .legend-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+    .daily-chart-scroll {
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+    .daily-chart-grid {
+      display: grid;
+      grid-template-columns: repeat(19, minmax(46px, 1fr));
+      gap: 8px;
+      align-items: end;
+      min-width: 880px;
+    }
+    .daily-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .daily-react-val {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--ink-muted);
+      margin-bottom: 5px;
+    }
+    .daily-bar-track {
+      width: 24px;
+      height: 120px;
+      background: var(--bg-subtle);
+      border-radius: 6px 6px 3px 3px;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
+    }
+    .daily-bar-fill {
+      width: 100%;
+      background: linear-gradient(180deg, #578272 0%, var(--accent-sage) 100%);
+      border-radius: 6px 6px 0 0;
+      transition: opacity 0.15s ease;
+    }
+    .daily-bar-fill.is-high {
+      background: linear-gradient(180deg, #D9725B 0%, var(--accent-terra) 100%);
+    }
+    .daily-col:hover .daily-bar-fill { opacity: 0.82; }
+    .daily-dots {
+      font-size: 10px;
+      letter-spacing: 1px;
+      color: var(--accent-terra);
+      margin-top: 6px;
+      line-height: 1;
+    }
+    .daily-count-txt {
+      font-size: 11px;
+      color: var(--ink-secondary);
+      margin-top: 2px;
+    }
+    .daily-date {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ink-primary);
+      margin-top: 2px;
+    }
+
+    /* Top 5 精選區 */
+    .top5-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+    .top-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .top-rank-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .rank-badge {
+      font-size: 11.5px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      padding: 3px 10px;
+      border-radius: var(--radius-pill);
+      background: var(--bg-subtle);
+      color: var(--ink-primary);
+    }
+    .rank-badge.rank-1 { background: var(--accent-terra); color: #fff; }
+    .rank-badge.rank-2 { background: var(--accent-indigo); color: #fff; }
+    .rank-badge.rank-3 { background: var(--accent-gold); color: #fff; }
+    .top-meta {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+    }
+    .top-quote {
+      margin: 0;
+      font-family: var(--font-serif);
+      font-size: 17px;
+      line-height: 1.6;
+      color: var(--ink-primary);
+      padding-left: 12px;
+      border-left: 3px solid var(--accent-terra);
+    }
+    .top-stats-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed var(--border-hairline);
+    }
+    .stat-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .stat-pill {
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: var(--radius-pill);
+      background: var(--bg-subtle);
+      color: var(--ink-secondary);
+    }
+    .stat-pill.is-react { background: var(--accent-terra-soft); color: var(--accent-terra); }
+    .stat-pill.is-share { background: var(--accent-indigo-soft); color: var(--accent-indigo); }
+
+    .btn-link {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--accent-indigo);
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      background: var(--accent-indigo-soft);
+      white-space: nowrap;
+    }
+    .btn-link:hover {
+      background: var(--accent-indigo);
+      color: #fff;
+      text-decoration: none;
+    }
+
+    /* 特色貼文區 */
+    .special-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+    .special-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      padding: 20px 22px;
+      box-shadow: var(--shadow-card);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .special-card h3 {
+      font-size: 16px;
+      margin: 0;
+      color: var(--ink-primary);
+    }
+    .special-date {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+    }
+    .special-body {
+      font-size: 13.8px;
+      color: var(--ink-secondary);
+      white-space: pre-line;
+      margin: 0;
+      flex: 1;
+    }
+    .special-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border-hairline);
+    }
+    details.special-full summary {
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--accent-indigo);
+      margin-top: 6px;
+    }
+    details.special-full .full-text-box {
+      margin-top: 8px;
+      padding: 12px 14px;
+      background: var(--bg-subtle);
+      border-radius: 8px;
+      font-size: 13.2px;
+      line-height: 1.65;
+      color: var(--ink-primary);
+      white-space: pre-line;
+    }
+
+    /* 完整 43 篇互動圖鑑控制列 */
+    .catalog-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      box-shadow: var(--shadow-card);
+    }
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .search-box {
+      flex: 1 1 260px;
+      position: relative;
+    }
+    .search-box input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-strong);
+      background: var(--bg-paper);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: var(--ink-primary);
+      outline: none;
+    }
+    .search-box input:focus {
+      border-color: var(--accent-indigo);
+      background: #fff;
+    }
+    .sort-view-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .sort-select {
+      padding: 9px 14px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-strong);
+      background: var(--bg-paper);
+      font-family: var(--font-sans);
+      font-size: 13.5px;
+      color: var(--ink-primary);
+      cursor: pointer;
+    }
+    .view-toggle {
+      display: inline-flex;
+      background: var(--bg-subtle);
+      padding: 3px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-hairline);
+    }
+    .view-btn {
+      border: none;
+      background: transparent;
+      padding: 6px 13px;
+      border-radius: var(--radius-pill);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-secondary);
+      cursor: pointer;
+    }
+    .view-btn.active {
+      background: var(--bg-card);
+      color: var(--ink-primary);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    }
+
+    .filter-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .chip-btn {
+      border: 1px solid var(--border-hairline);
+      background: var(--bg-paper);
+      color: var(--ink-secondary);
+      padding: 6px 13px;
+      border-radius: var(--radius-pill);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .chip-btn:hover {
+      border-color: var(--border-strong);
+      color: var(--ink-primary);
+    }
+    .chip-btn.active {
+      background: var(--ink-primary);
+      color: #fff;
+      border-color: var(--ink-primary);
+    }
+
+    .result-status {
+      font-size: 13px;
+      color: var(--ink-muted);
+      margin-bottom: 12px;
+    }
+
+    /* 表格檢視 */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+    }
+    table.posts-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 820px;
+      font-size: 14px;
+    }
+    table.posts-table th {
+      background: var(--bg-subtle);
+      color: var(--ink-secondary);
+      font-weight: 700;
+      font-size: 12.5px;
+      text-align: left;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-hairline);
+      white-space: nowrap;
+    }
+    table.posts-table td {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--border-hairline);
+      vertical-align: top;
+    }
+    table.posts-table tr:last-child td { border-bottom: none; }
+    table.posts-table tr:hover td { background: #FCFBF7; }
+
+    .td-seq {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--ink-muted);
+      white-space: nowrap;
+    }
+    .td-time {
+      white-space: nowrap;
+      font-size: 13px;
+      color: var(--ink-secondary);
+    }
+    .td-time .wk {
+      display: block;
+      font-size: 11.5px;
+      color: var(--ink-muted);
+    }
+    .type-badge {
+      display: inline-block;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: var(--radius-pill);
+      white-space: nowrap;
+    }
+    .type-reel { background: var(--accent-sage-soft); color: var(--accent-sage); }
+    .type-video { background: var(--accent-gold-soft); color: var(--accent-gold); }
+
+    .post-text-cell {
+      font-family: var(--font-serif);
+      font-size: 15px;
+      line-height: 1.62;
+      color: var(--ink-primary);
+      max-width: 480px;
+      white-space: pre-line;
+    }
+    .post-text-cell.is-collapsed {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .expand-btn {
+      border: none;
+      background: none;
+      color: var(--accent-indigo);
+      font-family: var(--font-sans);
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 3px 0;
+      cursor: pointer;
+      display: inline-block;
+      margin-top: 4px;
+    }
+    .td-num {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      text-align: right;
+      white-space: nowrap;
+      color: var(--ink-secondary);
+    }
+    .td-actions {
+      white-space: nowrap;
+    }
+    .action-group {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .btn-copy {
+      border: 1px solid var(--border-hairline);
+      background: var(--bg-paper);
+      color: var(--ink-secondary);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+    }
+    .btn-copy:hover {
+      border-color: var(--ink-primary);
+      color: var(--ink-primary);
+    }
+
+    /* 詩箋卡片牆檢視 */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .poem-card {
+      background: var(--bg-paper);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .poem-card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      color: var(--ink-muted);
+    }
+    .poem-card-body {
+      font-family: var(--font-serif);
+      font-size: 16px;
+      line-height: 1.7;
+      color: var(--ink-primary);
+      white-space: pre-line;
+      flex: 1;
+    }
+    .poem-card-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border-hairline);
+    }
+
+    .footer-note {
+      margin-top: 32px;
+      padding: 18px 22px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-hairline);
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      color: var(--ink-secondary);
+    }
+
+    @media (max-width: 960px) {
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .insight-grid, .special-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      .hero { padding: 22px 18px; }
+      .kpi-grid { grid-template-columns: 1fr; }
+      .catalog-panel { padding: 16px; }
+    }
+    @media print {
+      body { background: #fff; }
+      .nav-actions, .controls-bar, .filter-chips, .btn-copy, .expand-btn { display: none !important; }
+      .hero, .kpi-card, .insight-card, .chart-card, .top-card, .special-card, .catalog-panel {
+        box-shadow: none;
+        break-inside: avoid;
+      }
+      .post-text-cell.is-collapsed { -webkit-line-clamp: unset; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <!-- 頂部 Hero 簡介 -->
+    <header class="hero">
+      <div class="hero-top-row">
+        <span class="eyebrow">Facebook 粉專月度貼文圖鑑 · 2026 年 11 月</span>
+        <div class="nav-actions">
+          <a class="btn-nav" href="#trends">趨勢與每日統計</a>
+          <a class="btn-nav" href="#top5">本月互動 Top 5</a>
+          <a class="btn-nav" href="#catalog">完整 43 篇圖鑑</a>
+          <a class="btn-nav primary" href="https://www.facebook.com/profile.php?id=61584386097719" target="_blank" rel="noopener noreferrer">前往粉專主頁 ↗</a>
+        </div>
+      </div>
+      <h1>早安圖分享 — 2026 年 11 月貼文完整簡介</h1>
+      <p class="hero-subtitle">
+        收錄 Facebook 粉絲專頁「早安圖分享」自 2026 年 11 月 1 日至 11 月 19 日止發布之全部 <strong>43 篇</strong>貼文，包含精確發布時戳、作品形式、完整詩句／文案、互動數據與各篇直連網址，支援離線搜尋、篩選、排序與雙模式瀏覽。
+      </p>
+      <div class="profile-meta-bar">
+        <span class="meta-item"><strong>粉專簡介：</strong>早安圖、問候圖、小品圖文分享</span>
+        <span class="meta-item"><strong>粉專規模：</strong>1 萬位追蹤者 • 8.3 萬個心情</span>
+        <span class="meta-item"><strong>統計區間：</strong>2026/11/01 ～ 2026/11/19（共 19 天，日更無間斷）</span>
+      </div>
+    </header>
+
+    <!-- 四大 KPI 指標 -->
+    <section class="kpi-grid" aria-label="本月數據總覽">
+      <div class="kpi-card">
+        <div class="kpi-label">本月發布總數</div>
+        <div class="kpi-value">43 篇</div>
+        <div class="kpi-sub">42 篇 Reels 短影音 ＋ 1 篇專題影片</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">累計心情／讚數</div>
+        <div class="kpi-value">14,028</div>
+        <div class="kpi-sub">篇均 326 讚｜單篇最高 945 讚（#16）</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">累計分享次數</div>
+        <div class="kpi-value">932</div>
+        <div class="kpi-sub">單篇最高 98 次分享（11/01 #42）</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">累計留言互動</div>
+        <div class="kpi-value">309</div>
+        <div class="kpi-sub">單篇最高 22 則留言（11/11 #18）</div>
+      </div>
+    </section>
+
+    <!-- 內容趨勢與每日統計 -->
+    <section id="trends">
+      <div class="section-head">
+        <h2>本月內容趨勢與每日發文統計</h2>
+        <span class="section-note">涵蓋 2026-11-01 至 2026-11-19</span>
+      </div>
+
+      <div class="insight-grid">
+        <div class="insight-card">
+          <span class="insight-tag tag-sage">發布節奏</span>
+          <h3>日更無間斷 · 清晨雙片節拍</h3>
+          <p>19 天內天天發文（平均每日 2.26 篇），多數集中於清晨 07:11～08:27 成對上架 2～3 支詩意早安短影音；僅 11/01 兩篇於晚間 22:17–22:19 發布，並於 11/10 午間及 11/16 午後各加發 1 篇特色作品。</p>
+        </div>
+        <div class="insight-card">
+          <span class="insight-tag tag-terra">節氣與意象演變</span>
+          <h3>從深秋山水轉入初冬暖光</h3>
+          <p>上旬常見山嵐、茶壟、晨露、海棠與生活煙火；11 月立冬後逐步融入「霜風初至」、「初冬漸冷」、「朱葉凝露」、「紅楓鋪徑」及「磚窯蓄暖焙新麥，冬曉含光釀微甜」等冬晨暖意。</p>
+        </div>
+        <div class="insight-card">
+          <span class="insight-tag tag-gold">互動結構觀察</span>
+          <h3>靜美意境兼具極高轉傳力</h3>
+          <p>全月超過半數貼文為破百讚佳作，最高單篇達 945 心情（#16）。搭配清晨問候語氣的作品普遍具有高分享率，展現受眾每日早安轉傳社群的實用黏著度。</p>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">每日累計心情／讚數與發布篇數分佈（11/01 ～ 11/19）</div>
+          <div class="chart-legend">
+            <span><span class="legend-dot" style="background: var(--accent-sage);"></span>單日 1～2 篇</span>
+            <span><span class="legend-dot" style="background: var(--accent-terra);"></span>單日 3～4 篇</span>
+          </div>
+        </div>
+        <div class="daily-chart-scroll">
+          <div class="daily-chart-grid">
+            
+      <div class="daily-col" title="2026-11-01：發布 2 篇，累計 933 讚、99 分享">
+        <div class="daily-react-val">933</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill " style="height: 49%"></div>
+        </div>
+        <div class="daily-dots" aria-label="2 篇">●●</div>
+        <div class="daily-count-txt">2篇</div>
+        <div class="daily-date">11/01</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-02：發布 2 篇，累計 971 讚、50 分享">
+        <div class="daily-react-val">971</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill " style="height: 51%"></div>
+        </div>
+        <div class="daily-dots" aria-label="2 篇">●●</div>
+        <div class="daily-count-txt">2篇</div>
+        <div class="daily-date">11/02</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-03：發布 2 篇，累計 763 讚、48 分享">
+        <div class="daily-react-val">763</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill " style="height: 40%"></div>
+        </div>
+        <div class="daily-dots" aria-label="2 篇">●●</div>
+        <div class="daily-count-txt">2篇</div>
+        <div class="daily-date">11/03</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-04：發布 2 篇，累計 425 讚、25 分享">
+        <div class="daily-react-val">425</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill " style="height: 22%"></div>
+        </div>
+        <div class="daily-dots" aria-label="2 篇">●●</div>
+        <div class="daily-count-txt">2篇</div>
+        <div class="daily-date">11/04</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-05：發布 2 篇，累計 306 讚、20 分享">
+        <div class="daily-react-val">306</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill " style="height: 16%"></div>
+        </div>
+        <div class="daily-dots" aria-label="2 篇">●●</div>
+        <div class="daily-count-txt">2篇</div>
+        <div class="daily-date">11/05</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-06：發布 2 篇，累計 267 讚、24 分享">
+        <div class="daily-react-val">267</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill " style="height: 14%"></div>
+        </div>
+        <div class="daily-dots" aria-label="2 篇">●●</div>
+        <div class="daily-count-txt">2篇</div>
+        <div class="daily-date">11/06</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-07：發布 3 篇，累計 352 讚、44 分享">
+        <div class="daily-react-val">352</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill is-high" style="height: 18%"></div>
+        </div>
+        <div class="daily-dots" aria-label="3 篇">●●●</div>
+        <div class="daily-count-txt">3篇</div>
+        <div class="daily-date">11/07</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-08：發布 2 篇，累計 576 讚、32 分享">
+        <div class="daily-react-val">576</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill " style="height: 30%"></div>
+        </div>
+        <div class="daily-dots" aria-label="2 篇">●●</div>
+        <div class="daily-count-txt">2篇</div>
+        <div class="daily-date">11/08</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-09：發布 2 篇，累計 810 讚、43 分享">
+        <div class="daily-react-val">810</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill " style="height: 42%"></div>
+        </div>
+        <div class="daily-dots" aria-label="2 篇">●●</div>
+        <div class="daily-count-txt">2篇</div>
+        <div class="daily-date">11/09</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-10：發布 4 篇，累計 1,425 讚、97 分享">
+        <div class="daily-react-val">1,425</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill is-high" style="height: 74%"></div>
+        </div>
+        <div class="daily-dots" aria-label="4 篇">●●●●</div>
+        <div class="daily-count-txt">4篇</div>
+        <div class="daily-date">11/10</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-11：發布 3 篇，累計 1,916 讚、130 分享">
+        <div class="daily-react-val">1,916</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill is-high" style="height: 100%"></div>
+        </div>
+        <div class="daily-dots" aria-label="3 篇">●●●</div>
+        <div class="daily-count-txt">3篇</div>
+        <div class="daily-date">11/11</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-12：發布 2 篇，累計 1,001 讚、54 分享">
+        <div class="daily-react-val">1,001</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill " style="height: 52%"></div>
+        </div>
+        <div class="daily-dots" aria-label="2 篇">●●</div>
+        <div class="daily-count-txt">2篇</div>
+        <div class="daily-date">11/12</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-13：發布 2 篇，累計 1,118 讚、49 分享">
+        <div class="daily-react-val">1,118</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill " style="height: 58%"></div>
+        </div>
+        <div class="daily-dots" aria-label="2 篇">●●</div>
+        <div class="daily-count-txt">2篇</div>
+        <div class="daily-date">11/13</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-14：發布 2 篇，累計 710 讚、33 分享">
+        <div class="daily-react-val">710</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill " style="height: 37%"></div>
+        </div>
+        <div class="daily-dots" aria-label="2 篇">●●</div>
+        <div class="daily-count-txt">2篇</div>
+        <div class="daily-date">11/14</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-15：發布 2 篇，累計 884 讚、66 分享">
+        <div class="daily-react-val">884</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill " style="height: 46%"></div>
+        </div>
+        <div class="daily-dots" aria-label="2 篇">●●</div>
+        <div class="daily-count-txt">2篇</div>
+        <div class="daily-date">11/15</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-16：發布 3 篇，累計 311 讚、14 分享">
+        <div class="daily-react-val">311</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill is-high" style="height: 16%"></div>
+        </div>
+        <div class="daily-dots" aria-label="3 篇">●●●</div>
+        <div class="daily-count-txt">3篇</div>
+        <div class="daily-date">11/16</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-17：發布 2 篇，累計 948 讚、83 分享">
+        <div class="daily-react-val">948</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill " style="height: 49%"></div>
+        </div>
+        <div class="daily-dots" aria-label="2 篇">●●</div>
+        <div class="daily-count-txt">2篇</div>
+        <div class="daily-date">11/17</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-18：發布 2 篇，累計 211 讚、16 分享">
+        <div class="daily-react-val">211</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill " style="height: 11%"></div>
+        </div>
+        <div class="daily-dots" aria-label="2 篇">●●</div>
+        <div class="daily-count-txt">2篇</div>
+        <div class="daily-date">11/18</div>
+      </div>
+
+      <div class="daily-col" title="2026-11-19：發布 2 篇，累計 101 讚、5 分享">
+        <div class="daily-react-val">101</div>
+        <div class="daily-bar-track">
+          <div class="daily-bar-fill " style="height: 5%"></div>
+        </div>
+        <div class="daily-dots" aria-label="2 篇">●●</div>
+        <div class="daily-count-txt">2篇</div>
+        <div class="daily-date">11/19</div>
+      </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Top 5 精選 -->
+    <section id="top5">
+      <div class="section-head">
+        <h2>本月互動表現前 5 名</h2>
+        <span class="section-note">依心情／讚數排序（截至 2026-11-19）</span>
+      </div>
+      <div class="top5-grid">
+        
+      <article class="top-card">
+        <div class="top-rank-row">
+          <span class="rank-badge rank-1">TOP 1</span>
+          <span class="top-meta">#16 · 2026-11-12 07:25（星期四）</span>
+        </div>
+        <blockquote class="top-quote">晨光斜落石板巷，海風輕拂過耳梢。</blockquote>
+        <div class="top-stats-row">
+          <div class="stat-pills">
+            <span class="stat-pill is-react" title="心情／讚數">❤ 945</span>
+            <span class="stat-pill" title="留言數">💬 13</span>
+            <span class="stat-pill is-share" title="分享數">↗ 53</span>
+          </div>
+          <a class="btn-link" href="https://www.facebook.com/reel/1437346534701548/" target="_blank" rel="noopener noreferrer">開啟貼文 ↗</a>
+        </div>
+      </article>
+
+      <article class="top-card">
+        <div class="top-rank-row">
+          <span class="rank-badge rank-2">TOP 2</span>
+          <span class="top-meta">#42 · 2026-11-01 22:19（星期日）</span>
+        </div>
+        <blockquote class="top-quote">笛聲輕破曉煙，信步牽牛踏過一川青綠。</blockquote>
+        <div class="top-stats-row">
+          <div class="stat-pills">
+            <span class="stat-pill is-react" title="心情／讚數">❤ 893</span>
+            <span class="stat-pill" title="留言數">💬 8</span>
+            <span class="stat-pill is-share" title="分享數">↗ 98</span>
+          </div>
+          <a class="btn-link" href="https://www.facebook.com/reel/923624294021999/" target="_blank" rel="noopener noreferrer">開啟貼文 ↗</a>
+        </div>
+      </article>
+
+      <article class="top-card">
+        <div class="top-rank-row">
+          <span class="rank-badge rank-3">TOP 3</span>
+          <span class="top-meta">#18 · 2026-11-11 07:37（星期三）</span>
+        </div>
+        <blockquote class="top-quote">一縷清煙敬天地，晨光微熹歲月寧。</blockquote>
+        <div class="top-stats-row">
+          <div class="stat-pills">
+            <span class="stat-pill is-react" title="心情／讚數">❤ 890</span>
+            <span class="stat-pill" title="留言數">💬 22</span>
+            <span class="stat-pill is-share" title="分享數">↗ 62</span>
+          </div>
+          <a class="btn-link" href="https://www.facebook.com/reel/1802604107897718/" target="_blank" rel="noopener noreferrer">開啟貼文 ↗</a>
+        </div>
+      </article>
+
+      <article class="top-card">
+        <div class="top-rank-row">
+          <span class="rank-badge rank-4">TOP 4</span>
+          <span class="top-meta">#5 · 2026-11-17 07:27（星期二）</span>
+        </div>
+        <blockquote class="top-quote">朱葉凝露映晨光，寒枝棲雀聽風吟。</blockquote>
+        <div class="top-stats-row">
+          <div class="stat-pills">
+            <span class="stat-pill is-react" title="心情／讚數">❤ 869</span>
+            <span class="stat-pill" title="留言數">💬 9</span>
+            <span class="stat-pill is-share" title="分享數">↗ 78</span>
+          </div>
+          <a class="btn-link" href="https://www.facebook.com/reel/1168684345691581/" target="_blank" rel="noopener noreferrer">開啟貼文 ↗</a>
+        </div>
+      </article>
+
+      <article class="top-card">
+        <div class="top-rank-row">
+          <span class="rank-badge rank-5">TOP 5</span>
+          <span class="top-meta">#22 · 2026-11-10 07:28（星期二）</span>
+        </div>
+        <blockquote class="top-quote">初冬漸冷，在老樹與長椅間，靜讀一頁暖陽。</blockquote>
+        <div class="top-stats-row">
+          <div class="stat-pills">
+            <span class="stat-pill is-react" title="心情／讚數">❤ 850</span>
+            <span class="stat-pill" title="留言數">💬 15</span>
+            <span class="stat-pill is-share" title="分享數">↗ 57</span>
+          </div>
+          <a class="btn-link" href="https://www.facebook.com/reel/1159963876545237/" target="_blank" rel="noopener noreferrer">開啟貼文 ↗</a>
+        </div>
+      </article>
+      </div>
+    </section>
+
+    <!-- 本月特色與非典型貼文 -->
+    <section id="specials">
+      <div class="section-head">
+        <h2>本月特色與非典型貼文亮點</h2>
+        <span class="section-note">於常態早安詩句之外的專題企劃與多元形式</span>
+      </div>
+      <div class="special-grid">
+        <article class="special-card">
+          <div>
+            <span class="insight-tag tag-indigo">實用工具專文 · 序號 #7</span>
+            <h3>星願耶誕卡工坊（動態賀卡網頁）</h3>
+            <div class="special-date">2026-11-16 13:38 · 影片長文</div>
+          </div>
+          <p class="special-body">介紹免費免安裝的手機網頁工具，只要三步驟（選 36 種底圖 → 套用 12 種相框與祝福語庫 → 配樂匯出 MP4），3 分鐘即可製作傳送至 LINE 的動態耶誕祝福影片。</p>
+          <details class="special-full">
+            <summary>展開完整原文</summary>
+            <div class="full-text-box">你有多久沒有親自挑選一張卡片，寫上祝福的話語寄送給遠方的好朋友了？聖誕節又快到了，跟大家分享一個自製、免費又好上手的【耶誕賀卡製作網頁-星願耶誕卡工坊】。不用下載安裝程式、也不用註冊帳號，直接用手機點開網頁，3分鐘就能做出一張有音樂、會動的耶誕祝福影片，傳 LINE 給親朋好友非常方便！
+操作很簡單，只要三個步驟：
+ 挑一張喜歡的底圖：裡面準備了 36 種現成樣板，有溫馨經典、浪漫雪景、可愛插畫和台灣特色款式，點一下就能直接套用。
+ 換上照片、貼圖與祝福語：可以放上自己的生活照或合照（有花環、郵票、拍立得等 12 種相框，照片不會被拉扯變形），也能加上精緻的聖誕樹、雪人貼圖與飄雪特效。不想慢慢打字的話，裡面有現成的「祝福語庫」，點一下就能套用，還能換成漂亮的楷書或毛筆字體。
+ 挑選配樂並存成影片：內建多首好聽的聖誕音樂，也可以換成自己手機裡的歌、自由選擇從哪一段開始播放。
+最後按下右上角的「匯出 MP4」，做好後就能直接儲存到手機，或一鍵分享到 LINE 群組與好友聊天室。歲末年終，邀請大家一起動動手指，做張獨一無二的賀卡，把溫暖與平安送給心裡惦記的朋友吧！
+耶誕賀卡製作網頁連結在留言區</div>
+          </details>
+          <div class="special-actions">
+            <a class="btn-link" href="https://jrh2025.github.io/teaching_resources/Christmas_card.html" target="_blank" rel="noopener noreferrer">開啟賀卡工坊網頁 ↗</a>
+            <a class="btn-link" href="https://www.facebook.com/permalink.php?story_fbid=pfbid0Hydz6FRuvhR71AT58jsq5SavqUW3udEdWpEy9UeFuvYtHAogWTDXAAPSbz56bUDrl&amp;id=61584386097719" target="_blank" rel="noopener noreferrer">查看貼文 ↗</a>
+          </div>
+        </article>
+
+        <article class="special-card">
+          <div>
+            <span class="insight-tag tag-terra">長篇散文詩 · 序號 #21</span>
+            <h3>冬天來了，開始懷念夏天</h3>
+            <div class="special-date">2026-11-10 12:44 · Reels 短影音</div>
+          </div>
+          <p class="special-body">冬天來了，開始懷念夏天~懷念潮水中的足跡~
+陽光緩緩升起，灑落在湛藍的海面上
+啜飲著手中的茶，沒有時鐘追趕時間
+在一人的獨處心境中，尋得內心所有平靜
+隨心所欲，享受屬於自己的美好時光
+此時此刻，除了自己不必迎合任何人
+我就是自己的陽光，一抹溫柔明亮的光芒
+世間萬物，一切都恰到好處
+沙灘上的足跡，隨著溫柔的潮汐漸漸淡去
+無須任何隱藏，只有海浪起伏的純粹韻律
+靜靜聆聽，這座寧靜島嶼日常的微風低語</p>
+          <div class="special-actions">
+            <a class="btn-link" href="https://www.facebook.com/reel/4334560326687504/" target="_blank" rel="noopener noreferrer">查看貼文 ↗</a>
+          </div>
+        </article>
+
+        <article class="special-card">
+          <div>
+            <span class="insight-tag tag-gold">全英文早安 · 序號 #25</span>
+            <h3>金色落葉雙語呼應之作</h3>
+            <div class="special-date">2026-11-09 07:16 · Reels 短影音</div>
+          </div>
+          <p class="special-body">Good morning. Bending down to pick up a golden leaf, placing the clarity of the season comfortably.
+
+（對應 11/02 序號 #41 中文版本：「俯身拾起一片金黃，將清晨的溫柔好好安放。」）</p>
+          <div class="special-actions">
+            <a class="btn-link" href="https://www.facebook.com/reel/1743648196702272/" target="_blank" rel="noopener noreferrer">查看貼文 ↗</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- 完整 43 篇互動圖鑑 -->
+    <section id="catalog">
+      <div class="section-head">
+        <h2>2026 年 11 月全部 43 篇貼文圖鑑</h2>
+        <span class="section-note">支援關鍵字搜尋、條件篩選、多維度排序與一鍵複製文案</span>
+      </div>
+
+      <div class="catalog-panel">
+        <div class="controls-bar">
+          <div class="search-box">
+            <input id="searchInput" type="search" placeholder="搜尋詩句關鍵字、日期（如 11-12）或主題..." aria-label="搜尋貼文" />
+          </div>
+          <div class="sort-view-group">
+            <select id="sortSelect" class="sort-select" aria-label="排序方式">
+              <option value="newest">最新發佈優先（#1 → #43）</option>
+              <option value="oldest">最早發佈優先（#43 → #1）</option>
+              <option value="reactions">心情／讚數最高</option>
+              <option value="shares">分享次數最高</option>
+              <option value="comments">留言討論最多</option>
+              <option value="heat">綜合熱度指數</option>
+            </select>
+            <div class="view-toggle" role="group" aria-label="檢視模式">
+              <button class="view-btn active" type="button" data-view="table">表格清單</button>
+              <button class="view-btn" type="button" data-view="cards">詩箋卡片</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-chips" id="filterChips">
+          <button class="chip-btn active" type="button" data-filter="all">全部 (43)</button>
+          <button class="chip-btn" type="button" data-filter="reels">Reels 短影音 (42)</button>
+          <button class="chip-btn" type="button" data-filter="special">特色／長文／英文 (3)</button>
+          <button class="chip-btn" type="button" data-filter="hot500">500+ 讚熱門 (13)</button>
+          <button class="chip-btn" type="button" data-filter="midNov">中旬 11/11–11/19 (20)</button>
+          <button class="chip-btn" type="button" data-filter="earlyNov">上旬 11/01–11/10 (23)</button>
+        </div>
+
+        <div id="resultStatus" class="result-status">顯示全部 43 篇貼文</div>
+        <div id="catalogContainer"></div>
+      </div>
+    </section>
+
+    <footer class="footer-note">
+      <strong>資料核驗說明：</strong>本頁資料擷取並逐篇核對自 Facebook「早安圖分享」公開主頁（統計截止 2026-11-19）。已確認緊接於第 43 篇之後的貼文為 2026-10-31（20:15、20:15、20:12）與 2026-10-30（07:03），確保 2026 年 11 月貼文收錄完整且無跨月誤計。本檔為單頁離線 HTML，無需連網即可隨時查詢與列印。
+    </footer>
+  </div>
+
+  <script>
+    const POSTS = [{"seq":1,"posinset":1,"dateISO":"2026-11-19","dateTimeISO":"2026-11-19 07:46","weekday":"星期四","mediaType":"Reels 短影音","postText":"磚窯蓄暖焙新麥，冬曉含光釀微甜。","reactions":8,"comments":0,"shares":1,"heat":11,"isSpecial":false,"url":"https://www.facebook.com/reel/2090115078302091/","extraUrl":""},{"seq":2,"posinset":2,"dateISO":"2026-11-19","dateTimeISO":"2026-11-19 07:44","weekday":"星期四","mediaType":"Reels 短影音","postText":"蒼蘆搖影迎朝露，白鷺臨波映晨光。","reactions":93,"comments":4,"shares":4,"heat":113,"isSpecial":false,"url":"https://www.facebook.com/reel/1848230322866153/","extraUrl":""},{"seq":3,"posinset":3,"dateISO":"2026-11-18","dateTimeISO":"2026-11-18 07:12","weekday":"星期三","mediaType":"Reels 短影音","postText":"青石階前迎曉色，紅磚巷裡聽晨風。","reactions":142,"comments":8,"shares":11,"heat":191,"isSpecial":false,"url":"https://www.facebook.com/reel/3775524059283086/","extraUrl":""},{"seq":4,"posinset":4,"dateISO":"2026-11-18","dateTimeISO":"2026-11-18 07:11","weekday":"星期三","mediaType":"Reels 短影音","postText":"紅楓鋪徑，暖袖迎風。","reactions":69,"comments":3,"shares":5,"heat":90,"isSpecial":false,"url":"https://www.facebook.com/reel/1901677841275926/","extraUrl":""},{"seq":5,"posinset":5,"dateISO":"2026-11-17","dateTimeISO":"2026-11-17 07:27","weekday":"星期二","mediaType":"Reels 短影音","postText":"朱葉凝露映晨光，寒枝棲雀聽風吟。","reactions":869,"comments":9,"shares":78,"heat":1121,"isSpecial":false,"url":"https://www.facebook.com/reel/1168684345691581/","extraUrl":""},{"seq":6,"posinset":6,"dateISO":"2026-11-17","dateTimeISO":"2026-11-17 07:26","weekday":"星期二","mediaType":"Reels 短影音","postText":"白樹凌波迎海色，扇田映日沐晨光。","reactions":79,"comments":5,"shares":5,"heat":104,"isSpecial":false,"url":"https://www.facebook.com/reel/4708837889440770/","extraUrl":""},{"seq":7,"posinset":7,"dateISO":"2026-11-16","dateTimeISO":"2026-11-16 13:38","weekday":"星期一","mediaType":"影片","postText":"你有多久沒有親自挑選一張卡片，寫上祝福的話語寄送給遠方的好朋友了？聖誕節又快到了，跟大家分享一個自製、免費又好上手的【耶誕賀卡製作網頁-星願耶誕卡工坊】。不用下載安裝程式、也不用註冊帳號，直接用手機點開網頁，3分鐘就能做出一張有音樂、會動的耶誕祝福影片，傳 LINE 給親朋好友非常方便！\n操作很簡單，只要三個步驟：\n 挑一張喜歡的底圖：裡面準備了 36 種現成樣板，有溫馨經典、浪漫雪景、可愛插畫和台灣特色款式，點一下就能直接套用。\n 換上照片、貼圖與祝福語：可以放上自己的生活照或合照（有花環、郵票、拍立得等 12 種相框，照片不會被拉扯變形），也能加上精緻的聖誕樹、雪人貼圖與飄雪特效。不想慢慢打字的話，裡面有現成的「祝福語庫」，點一下就能套用，還能換成漂亮的楷書或毛筆字體。\n 挑選配樂並存成影片：內建多首好聽的聖誕音樂，也可以換成自己手機裡的歌、自由選擇從哪一段開始播放。\n最後按下右上角的「匯出 MP4」，做好後就能直接儲存到手機，或一鍵分享到 LINE 群組與好友聊天室。歲末年終，邀請大家一起動動手指，做張獨一無二的賀卡，把溫暖與平安送給心裡惦記的朋友吧！\n耶誕賀卡製作網頁連結在留言區","reactions":6,"comments":1,"shares":0,"heat":8,"isSpecial":true,"url":"https://www.facebook.com/permalink.php?story_fbid=pfbid0Hydz6FRuvhR71AT58jsq5SavqUW3udEdWpEy9UeFuvYtHAogWTDXAAPSbz56bUDrl&id=61584386097719","extraUrl":"https://jrh2025.github.io/teaching_resources/Christmas_card.html"},{"seq":8,"posinset":8,"dateISO":"2026-11-16","dateTimeISO":"2026-11-16 07:16","weekday":"星期一","mediaType":"Reels 短影音","postText":"薄霧漫過翠微，緩步如鏡水田，","reactions":129,"comments":4,"shares":6,"heat":155,"isSpecial":false,"url":"https://www.facebook.com/reel/2549233068931770/","extraUrl":""},{"seq":9,"posinset":9,"dateISO":"2026-11-16","dateTimeISO":"2026-11-16 07:16","weekday":"星期一","mediaType":"Reels 短影音","postText":"晨霧漫過水岸，群鳥振翅掠破微光。","reactions":176,"comments":9,"shares":8,"heat":218,"isSpecial":false,"url":"https://www.facebook.com/reel/1088493154162242/","extraUrl":""},{"seq":10,"posinset":10,"dateISO":"2026-11-15","dateTimeISO":"2026-11-15 08:11","weekday":"星期日","mediaType":"Reels 短影音","postText":"湛藍晴空下，載風而行。","reactions":178,"comments":7,"shares":12,"heat":228,"isSpecial":false,"url":"https://www.facebook.com/reel/2163658131028523/","extraUrl":""},{"seq":11,"posinset":11,"dateISO":"2026-11-15","dateTimeISO":"2026-11-15 08:10","weekday":"星期日","mediaType":"Reels 短影音","postText":"素箋留白迎晨露，墨枝點粉映初冬。","reactions":706,"comments":14,"shares":54,"heat":896,"isSpecial":false,"url":"https://www.facebook.com/reel/1445816740410432/","extraUrl":""},{"seq":12,"posinset":12,"dateISO":"2026-11-14","dateTimeISO":"2026-11-14 07:12","weekday":"星期六","mediaType":"Reels 短影音","postText":"藤間金黃葫蘆，靜藏一室清歡。","reactions":500,"comments":16,"shares":23,"heat":601,"isSpecial":false,"url":"https://www.facebook.com/reel/1285312207110406/","extraUrl":""},{"seq":13,"posinset":13,"dateISO":"2026-11-14","dateTimeISO":"2026-11-14 07:11","weekday":"星期六","mediaType":"Reels 短影音","postText":"微涼時節裡，一抹翠綠靜靜甦醒。","reactions":210,"comments":10,"shares":10,"heat":260,"isSpecial":false,"url":"https://www.facebook.com/reel/1190150030007178/","extraUrl":""},{"seq":14,"posinset":14,"dateISO":"2026-11-13","dateTimeISO":"2026-11-13 07:25","weekday":"星期五","mediaType":"Reels 短影音","postText":"微涼的日子裡，靜看藤間一抹暖橙。","reactions":761,"comments":17,"shares":32,"heat":891,"isSpecial":false,"url":"https://www.facebook.com/reel/1715878503181867/","extraUrl":""},{"seq":15,"posinset":15,"dateISO":"2026-11-13","dateTimeISO":"2026-11-13 07:24","weekday":"星期五","mediaType":"Reels 短影音","postText":"殘月猶在，微風輕拂金色田野，靜候晨光。","reactions":357,"comments":9,"shares":17,"heat":426,"isSpecial":false,"url":"https://www.facebook.com/reel/2098973905978243/","extraUrl":""},{"seq":16,"posinset":16,"dateISO":"2026-11-12","dateTimeISO":"2026-11-12 07:25","weekday":"星期四","mediaType":"Reels 短影音","postText":"晨光斜落石板巷，海風輕拂過耳梢。","reactions":945,"comments":13,"shares":53,"heat":1130,"isSpecial":false,"url":"https://www.facebook.com/reel/1437346534701548/","extraUrl":""},{"seq":17,"posinset":17,"dateISO":"2026-11-12","dateTimeISO":"2026-11-12 07:24","weekday":"星期四","mediaType":"Reels 短影音","postText":"眸中藏幽林，朝光漫過歲月。","reactions":56,"comments":1,"shares":1,"heat":61,"isSpecial":false,"url":"https://www.facebook.com/reel/1150597080881641/","extraUrl":""},{"seq":18,"posinset":18,"dateISO":"2026-11-11","dateTimeISO":"2026-11-11 07:37","weekday":"星期三","mediaType":"Reels 短影音","postText":"一縷清煙敬天地，晨光微熹歲月寧。","reactions":890,"comments":22,"shares":62,"heat":1120,"isSpecial":false,"url":"https://www.facebook.com/reel/1802604107897718/","extraUrl":""},{"seq":19,"posinset":19,"dateISO":"2026-11-11","dateTimeISO":"2026-11-11 07:34","weekday":"星期三","mediaType":"Reels 短影音","postText":"霜風初至蘆花白，歲月清歡自安然。","reactions":549,"comments":10,"shares":35,"heat":674,"isSpecial":false,"url":"https://www.facebook.com/reel/1010903054617453/","extraUrl":""},{"seq":20,"posinset":20,"dateISO":"2026-11-11","dateTimeISO":"2026-11-11 07:33","weekday":"星期三","mediaType":"Reels 短影音","postText":"高山晨露凝於楓脈，靜候初陽灑落林間。","reactions":477,"comments":12,"shares":33,"heat":600,"isSpecial":false,"url":"https://www.facebook.com/reel/1919108716132639/","extraUrl":""},{"seq":21,"posinset":21,"dateISO":"2026-11-10","dateTimeISO":"2026-11-10 12:44","weekday":"星期二","mediaType":"Reels 短影音","postText":"冬天來了，開始懷念夏天~懷念潮水中的足跡~\n陽光緩緩升起，灑落在湛藍的海面上\n啜飲著手中的茶，沒有時鐘追趕時間\n在一人的獨處心境中，尋得內心所有平靜\n隨心所欲，享受屬於自己的美好時光\n此時此刻，除了自己不必迎合任何人\n我就是自己的陽光，一抹溫柔明亮的光芒\n世間萬物，一切都恰到好處\n沙灘上的足跡，隨著溫柔的潮汐漸漸淡去\n無須任何隱藏，只有海浪起伏的純粹韻律\n靜靜聆聽，這座寧靜島嶼日常的微風低語","reactions":8,"comments":0,"shares":1,"heat":11,"isSpecial":true,"url":"https://www.facebook.com/reel/4334560326687504/","extraUrl":""},{"seq":22,"posinset":22,"dateISO":"2026-11-10","dateTimeISO":"2026-11-10 07:28","weekday":"星期二","mediaType":"Reels 短影音","postText":"初冬漸冷，在老樹與長椅間，靜讀一頁暖陽。","reactions":850,"comments":15,"shares":57,"heat":1051,"isSpecial":false,"url":"https://www.facebook.com/reel/1159963876545237/","extraUrl":""},{"seq":23,"posinset":23,"dateISO":"2026-11-10","dateTimeISO":"2026-11-10 07:25","weekday":"星期二","mediaType":"Reels 短影音","postText":"爐火初溫，杯酒留香，歲月自由一種安詳。","reactions":59,"comments":1,"shares":2,"heat":67,"isSpecial":false,"url":"https://www.facebook.com/reel/2167848543803620/","extraUrl":""},{"seq":24,"posinset":24,"dateISO":"2026-11-10","dateTimeISO":"2026-11-10 07:24","weekday":"星期二","mediaType":"Reels 短影音","postText":"晨霧漫過水鏡枯木，光斑落處心歸平靜。","reactions":508,"comments":8,"shares":37,"heat":635,"isSpecial":false,"url":"https://www.facebook.com/reel/29225262230442213/","extraUrl":""},{"seq":25,"posinset":25,"dateISO":"2026-11-09","dateTimeISO":"2026-11-09 07:16","weekday":"星期一","mediaType":"Reels 短影音","postText":"Good morning. Bending down to pick up a golden leaf, placing the clarity of the season comfortably.","reactions":41,"comments":1,"shares":2,"heat":49,"isSpecial":true,"url":"https://www.facebook.com/reel/1743648196702272/","extraUrl":""},{"seq":26,"posinset":26,"dateISO":"2026-11-09","dateTimeISO":"2026-11-09 07:13","weekday":"星期一","mediaType":"Reels 短影音","postText":"聽簷前落雨成詩，身後留一盞溫柔暖光。","reactions":769,"comments":14,"shares":41,"heat":920,"isSpecial":false,"url":"https://www.facebook.com/reel/1800725727874949/","extraUrl":""},{"seq":27,"posinset":27,"dateISO":"2026-11-08","dateTimeISO":"2026-11-08 08:11","weekday":"星期日","mediaType":"Reels 短影音","postText":"縱使風雨微涼，心裡有光，便能溫暖啟程。","reactions":286,"comments":7,"shares":21,"heat":363,"isSpecial":false,"url":"https://www.facebook.com/reel/980134985152238/","extraUrl":""},{"seq":28,"posinset":28,"dateISO":"2026-11-08","dateTimeISO":"2026-11-08 08:09","weekday":"星期日","mediaType":"Reels 短影音","postText":"把清晨的溫柔打包，裝進微風與陽光裡。","reactions":290,"comments":7,"shares":11,"heat":337,"isSpecial":false,"url":"https://www.facebook.com/reel/1094883133373037/","extraUrl":""},{"seq":29,"posinset":29,"dateISO":"2026-11-07","dateTimeISO":"2026-11-07 09:56","weekday":"星期六","mediaType":"Reels 短影音","postText":"秋意初收，水始清寒，且借晨曦一抹溫潤歲月。","reactions":156,"comments":3,"shares":25,"heat":237,"isSpecial":false,"url":"https://www.facebook.com/reel/1118341650916147/","extraUrl":""},{"seq":30,"posinset":30,"dateISO":"2026-11-07","dateTimeISO":"2026-11-07 09:56","weekday":"星期六","mediaType":"Reels 短影音","postText":"山嵐漫過金黃花海，捎來遠方的祝福。","reactions":132,"comments":3,"shares":12,"heat":174,"isSpecial":false,"url":"https://www.facebook.com/reel/979373794758556/","extraUrl":""},{"seq":31,"posinset":31,"dateISO":"2026-11-07","dateTimeISO":"2026-11-07 08:09","weekday":"星期六","mediaType":"Reels 短影音","postText":"無垠山海，晨風溫潤，心境自開闊。","reactions":64,"comments":0,"shares":7,"heat":85,"isSpecial":false,"url":"https://www.facebook.com/reel/2220664098559951/","extraUrl":""},{"seq":32,"posinset":32,"dateISO":"2026-11-06","dateTimeISO":"2026-11-06 07:26","weekday":"星期五","mediaType":"Reels 短影音","postText":"借一林素淨的枝椏，收納清晨最初的安靜。","reactions":173,"comments":2,"shares":21,"heat":240,"isSpecial":false,"url":"https://www.facebook.com/reel/1518285530396494/","extraUrl":""},{"seq":33,"posinset":33,"dateISO":"2026-11-06","dateTimeISO":"2026-11-06 07:24","weekday":"星期五","mediaType":"Reels 短影音","postText":"枕著晨風揉亂的髮，在花草低語間慢慢醒來。","reactions":94,"comments":3,"shares":3,"heat":109,"isSpecial":false,"url":"https://www.facebook.com/reel/2228797734343933/","extraUrl":""},{"seq":34,"posinset":34,"dateISO":"2026-11-05","dateTimeISO":"2026-11-05 08:27","weekday":"星期四","mediaType":"Reels 短影音","postText":"露水輕吻海棠，把微小的日常，寫成一首詩。","reactions":116,"comments":8,"shares":12,"heat":168,"isSpecial":false,"url":"https://www.facebook.com/reel/1436174302041083/","extraUrl":""},{"seq":35,"posinset":35,"dateISO":"2026-11-05","dateTimeISO":"2026-11-05 08:12","weekday":"星期四","mediaType":"Reels 短影音","postText":"破土初醒的微光，在靜默裡，養出生命的飽滿。","reactions":190,"comments":5,"shares":8,"heat":224,"isSpecial":false,"url":"https://www.facebook.com/reel/2619014508546138/","extraUrl":""},{"seq":36,"posinset":36,"dateISO":"2026-11-04","dateTimeISO":"2026-11-04 07:20","weekday":"星期三","mediaType":"Reels 短影音","postText":"山嵐輕撫，湖水在漣漪裡醒來。","reactions":216,"comments":4,"shares":14,"heat":266,"isSpecial":false,"url":"https://www.facebook.com/reel/2528766227632623/","extraUrl":""},{"seq":37,"posinset":37,"dateISO":"2026-11-04","dateTimeISO":"2026-11-04 07:18","weekday":"星期三","mediaType":"Reels 短影音","postText":"微光漫過山丘，撫平昨日的喧囂。","reactions":209,"comments":4,"shares":11,"heat":250,"isSpecial":false,"url":"https://www.facebook.com/reel/1662525055506499/","extraUrl":""},{"seq":38,"posinset":38,"dateISO":"2026-11-03","dateTimeISO":"2026-11-03 08:08","weekday":"星期二","mediaType":"Reels 短影音","postText":"山巒繞過層疊茶壟，亭間清風喚醒一季澄澈。","reactions":239,"comments":6,"shares":16,"heat":299,"isSpecial":false,"url":"https://www.facebook.com/reel/1101122122516046/","extraUrl":""},{"seq":39,"posinset":39,"dateISO":"2026-11-03","dateTimeISO":"2026-11-03 08:03","weekday":"星期二","mediaType":"Reels 短影音","postText":"藍紫花雨輕落幽徑，朝陽為歲月鋪染溫柔。","reactions":524,"comments":12,"shares":32,"heat":644,"isSpecial":false,"url":"https://www.facebook.com/reel/2310947179671391/","extraUrl":""},{"seq":40,"posinset":40,"dateISO":"2026-11-02","dateTimeISO":"2026-11-02 08:19","weekday":"星期一","mediaType":"Reels 短影音","postText":"寒潭雁過不留痕，晨光靜待撫心波。","reactions":830,"comments":16,"shares":40,"heat":982,"isSpecial":false,"url":"https://www.facebook.com/reel/2542890806225090/","extraUrl":""},{"seq":41,"posinset":41,"dateISO":"2026-11-02","dateTimeISO":"2026-11-02 07:44","weekday":"星期一","mediaType":"Reels 短影音","postText":"俯身拾起一片金黃，將清晨的溫柔好好安放。","reactions":141,"comments":7,"shares":10,"heat":185,"isSpecial":false,"url":"https://www.facebook.com/reel/1108943401776923/","extraUrl":""},{"seq":42,"posinset":42,"dateISO":"2026-11-01","dateTimeISO":"2026-11-01 22:19","weekday":"星期日","mediaType":"Reels 短影音","postText":"笛聲輕破曉煙，信步牽牛踏過一川青綠。","reactions":893,"comments":8,"shares":98,"heat":1203,"isSpecial":false,"url":"https://www.facebook.com/reel/923624294021999/","extraUrl":""},{"seq":43,"posinset":43,"dateISO":"2026-11-01","dateTimeISO":"2026-11-01 22:17","weekday":"星期日","mediaType":"Reels 短影音","postText":"細切青蔥落入滾湯，於尋常煙火裡安頓晨光。","reactions":40,"comments":1,"shares":1,"heat":45,"isSpecial":false,"url":"https://www.facebook.com/reel/1695295128864326/","extraUrl":""}];
+
+    const state = {
+      query: "",
+      filter: "all",
+      sort: "newest",
+      view: "table",
+      expandedSeqs: new Set()
+    };
+
+    const searchInput = document.getElementById("searchInput");
+    const sortSelect = document.getElementById("sortSelect");
+    const filterChips = document.getElementById("filterChips");
+    const viewBtns = document.querySelectorAll(".view-btn");
+    const resultStatus = document.getElementById("resultStatus");
+    const catalogContainer = document.getElementById("catalogContainer");
+
+    function escHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function getFilteredSortedPosts() {
+      const q = state.query.trim().toLowerCase();
+      let list = POSTS.filter((p) => {
+        if (state.filter === "reels" && p.mediaType !== "Reels 短影音") return false;
+        if (state.filter === "special" && !p.isSpecial) return false;
+        if (state.filter === "hot500" && p.reactions < 500) return false;
+        if (state.filter === "midNov" && p.dateISO < "2026-11-11") return false;
+        if (state.filter === "earlyNov" && p.dateISO > "2026-11-10") return false;
+        if (q) {
+          const hay = (p.postText + " " + p.dateTimeISO + " " + p.weekday + " " + p.mediaType).toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      list = [...list];
+      if (state.sort === "newest") list.sort((a, b) => a.seq - b.seq);
+      else if (state.sort === "oldest") list.sort((a, b) => b.seq - a.seq);
+      else if (state.sort === "reactions") list.sort((a, b) => b.reactions - a.reactions || b.shares - a.shares);
+      else if (state.sort === "shares") list.sort((a, b) => b.shares - a.shares || b.reactions - a.reactions);
+      else if (state.sort === "comments") list.sort((a, b) => b.comments - a.comments || b.reactions - a.reactions);
+      else if (state.sort === "heat") list.sort((a, b) => b.heat - a.heat || b.reactions - a.reactions);
+
+      return list;
+    }
+
+    function copyText(text, btn) {
+      const done = () => {
+        const prev = btn.textContent;
+        btn.textContent = "已複製 ✓";
+        setTimeout(() => { btn.textContent = prev; }, 1400);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+      } else {
+        fallbackCopy(text, done);
+      }
+    }
+
+    function fallbackCopy(text, done) {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); } catch (e) {}
+      document.body.removeChild(ta);
+      done();
+    }
+
+    function render() {
+      const items = getFilteredSortedPosts();
+      resultStatus.textContent = "目前顯示 " + items.length + " 篇（共 " + POSTS.length + " 篇）";
+
+      if (items.length === 0) {
+        catalogContainer.innerHTML = '<div style="padding:28px;text-align:center;color:var(--ink-muted);">沒有符合條件的貼文，請調整搜尋關鍵字或篩選條件。</div>';
+        return;
+      }
+
+      if (state.view === "table") {
+        const rows = items.map((p) => {
+          const isLong = p.postText.length > 80 || p.postText.includes("\n");
+          const expanded = state.expandedSeqs.has(p.seq);
+          const typeClass = p.mediaType === "Reels 短影音" ? "type-reel" : "type-video";
+          const extraHtml = p.extraUrl
+            ? '<div style="margin-top:6px;"><a class="btn-link" href="' + escHtml(p.extraUrl) + '" target="_blank" rel="noopener noreferrer">開啟星願耶誕卡工坊 ↗</a></div>'
+            : "";
+
+          return '<tr>' +
+            '<td class="td-seq">#' + p.seq + '</td>' +
+            '<td class="td-time">' + escHtml(p.dateTimeISO) + '<span class="wk">' + escHtml(p.weekday) + '</span></td>' +
+            '<td><span class="type-badge ' + typeClass + '">' + escHtml(p.mediaType) + '</span></td>' +
+            '<td>' +
+              '<div class="post-text-cell ' + (isLong && !expanded ? "is-collapsed" : "") + '">' + escHtml(p.postText) + '</div>' +
+              (isLong ? '<button class="expand-btn" type="button" data-expand="' + p.seq + '">' + (expanded ? "收合全文 ▲" : "展開全文 ▼") + '</button>' : '') +
+              extraHtml +
+            '</td>' +
+            '<td class="td-num">' + p.reactions.toLocaleString("zh-TW") + '</td>' +
+            '<td class="td-num">' + p.comments.toLocaleString("zh-TW") + '</td>' +
+            '<td class="td-num">' + p.shares.toLocaleString("zh-TW") + '</td>' +
+            '<td class="td-actions">' +
+              '<div class="action-group">' +
+                '<button class="btn-copy" type="button" data-copy="' + p.seq + '">複製文案</button>' +
+                '<a class="btn-link" href="' + escHtml(p.url) + '" target="_blank" rel="noopener noreferrer">查看 ↗</a>' +
+              '</div>' +
+            '</td>' +
+          '</tr>';
+        }).join("");
+
+        catalogContainer.innerHTML =
+          '<div class="table-wrap"><table class="posts-table">' +
+          '<thead><tr>' +
+            '<th>序號</th><th>發布時間</th><th>類型</th><th>貼文內容</th>' +
+            '<th style="text-align:right">讚／心情</th><th style="text-align:right">留言</th><th style="text-align:right">分享</th><th>操作</th>' +
+          '</tr></thead><tbody>' + rows + '</tbody></table></div>';
+      } else {
+        const cards = items.map((p) => {
+          const typeClass = p.mediaType === "Reels 短影音" ? "type-reel" : "type-video";
+          const extraHtml = p.extraUrl
+            ? '<div style="margin-top:8px;"><a class="btn-link" href="' + escHtml(p.extraUrl) + '" target="_blank" rel="noopener noreferrer">開啟星願耶誕卡工坊 ↗</a></div>'
+            : "";
+          return '<article class="poem-card">' +
+            '<div class="poem-card-head">' +
+              '<span><strong>#' + p.seq + '</strong> · ' + escHtml(p.dateTimeISO) + ' ' + escHtml(p.weekday) + '</span>' +
+              '<span class="type-badge ' + typeClass + '">' + escHtml(p.mediaType) + '</span>' +
+            '</div>' +
+            '<div class="poem-card-body">' + escHtml(p.postText) + extraHtml + '</div>' +
+            '<div class="poem-card-foot">' +
+              '<div class="stat-pills">' +
+                '<span class="stat-pill is-react">❤ ' + p.reactions.toLocaleString("zh-TW") + '</span>' +
+                '<span class="stat-pill">💬 ' + p.comments.toLocaleString("zh-TW") + '</span>' +
+                '<span class="stat-pill is-share">↗ ' + p.shares.toLocaleString("zh-TW") + '</span>' +
+              '</div>' +
+              '<div class="action-group">' +
+                '<button class="btn-copy" type="button" data-copy="' + p.seq + '">複製</button>' +
+                '<a class="btn-link" href="' + escHtml(p.url) + '" target="_blank" rel="noopener noreferrer">查看 ↗</a>' +
+              '</div>' +
+            '</div>' +
+          '</article>';
+        }).join("");
+
+        catalogContainer.innerHTML = '<div class="cards-grid">' + cards + '</div>';
+      }
+    }
+
+    searchInput.addEventListener("input", (e) => {
+      state.query = e.target.value;
+      render();
+    });
+
+    sortSelect.addEventListener("change", (e) => {
+      state.sort = e.target.value;
+      render();
+    });
+
+    filterChips.addEventListener("click", (e) => {
+      const btn = e.target.closest(".chip-btn");
+      if (!btn) return;
+      state.filter = btn.dataset.filter;
+      filterChips.querySelectorAll(".chip-btn").forEach((b) => b.classList.toggle("active", b === btn));
+      render();
+    });
+
+    viewBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.view = btn.dataset.view;
+        viewBtns.forEach((b) => b.classList.toggle("active", b === btn));
+        render();
+      });
+    });
+
+    catalogContainer.addEventListener("click", (e) => {
+      const expBtn = e.target.closest("[data-expand]");
+      if (expBtn) {
+        const seq = Number(expBtn.dataset.expand);
+        if (state.expandedSeqs.has(seq)) state.expandedSeqs.delete(seq);
+        else state.expandedSeqs.add(seq);
+        render();
+        return;
+      }
+      const copyBtn = e.target.closest("[data-copy]");
+      if (copyBtn) {
+        const seq = Number(copyBtn.dataset.copy);
+        const post = POSTS.find((x) => x.seq === seq);
+        if (post) copyText(post.postText, copyBtn);
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>
