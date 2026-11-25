@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>《StackCity RT（像素疊界）》完整介紹與使用手冊</title>
+  <style>
+    :root {
+      --bg: #0b1120;
+      --bg-elev: #111827;
+      --card: #162033;
+      --border: #26344b;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --heading: #f8fafc;
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.14);
+      --gold: #facc15;
+      --green: #34d399;
+      --code-bg: #090e1a;
+      --shadow: 0 12px 34px rgba(0, 0, 0, 0.35);
+    }
+    html[data-theme="light"] {
+      --bg: #f1f5f9;
+      --bg-elev: #ffffff;
+      --card: #ffffff;
+      --border: #cbd5e1;
+      --text: #1e293b;
+      --muted: #475569;
+      --heading: #0f172a;
+      --accent: #0284c7;
+      --accent-soft: rgba(2, 132, 199, 0.1);
+      --gold: #b45309;
+      --green: #059669;
+      --code-bg: #e2e8f0;
+      --shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Microsoft JhengHei", "Noto Sans TC", "PingFang TC", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.72;
+      font-size: 15px;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code, pre {
+      font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    }
+    code {
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-size: 0.9em;
+      border: 1px solid var(--border);
+    }
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    /* 頂部功能列 */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    html[data-theme="light"] .topbar {
+      background: rgba(255, 255, 255, 0.92);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      color: var(--heading);
+      font-size: 16px;
+    }
+    .brand-gem {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #0ea5e9, #6366f1);
+      color: #fff;
+      font-size: 15px;
+    }
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 13px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.12s, border-color 0.12s, background 0.12s;
+    }
+    .btn:hover {
+      border-color: var(--accent);
+      text-decoration: none;
+      transform: translateY(-1px);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7, #2563eb);
+      border-color: #38bdf8;
+      color: #fff;
+    }
+    .btn-gold {
+      background: linear-gradient(135deg, #d97706, #b45309);
+      border-color: #fbbf24;
+      color: #fff;
+    }
+
+    /* 主雙欄排版 */
+    .layout {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 28px;
+      padding: 24px 20px 64px;
+    }
+    .toc {
+      position: sticky;
+      top: 72px;
+      align-self: start;
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 12px;
+      box-shadow: var(--shadow);
+      max-height: calc(100vh - 96px);
+      overflow-y: auto;
+    }
+    .toc-title {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      margin: 0 0 8px 8px;
+      text-transform: uppercase;
+    }
+    .toc a {
+      display: block;
+      padding: 6px 10px;
+      border-radius: 7px;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .toc a:hover, .toc a.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .content {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    /* Hero 橫幅 */
+    .hero {
+      background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.22), transparent 55%),
+                  linear-gradient(135deg, var(--bg-elev), var(--card));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 30px;
+      box-shadow: var(--shadow);
+    }
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .badge {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+    .badge.green {
+      background: rgba(16, 185, 129, 0.14);
+      border-color: rgba(52, 211, 153, 0.4);
+      color: var(--green);
+    }
+    .badge.gold {
+      background: rgba(245, 158, 11, 0.14);
+      border-color: rgba(250, 204, 21, 0.45);
+      color: var(--gold);
+    }
+    .hero h1 {
+      margin: 0 0 10px;
+      font-size: 30px;
+      color: var(--heading);
+      line-height: 1.3;
+    }
+    .hero p {
+      margin: 0 0 18px;
+      font-size: 16px;
+      color: var(--muted);
+    }
+    .hero-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    section.card {
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px 26px;
+      box-shadow: var(--shadow);
+      scroll-margin-top: 76px;
+    }
+    section.card h2 {
+      margin: 0 0 14px;
+      font-size: 21px;
+      color: var(--heading);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+    }
+    section.card h3 {
+      margin: 18px 0 8px;
+      font-size: 16px;
+      color: var(--accent);
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 14px;
+      margin-top: 12px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 14px;
+      margin-top: 12px;
+    }
+    .mini-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .mini-card h4 {
+      margin: 0 0 6px;
+      font-size: 15px;
+      color: var(--heading);
+    }
+    .mini-card p, .mini-card ul {
+      margin: 0;
+      font-size: 13.5px;
+      color: var(--muted);
+    }
+    .mini-card ul {
+      padding-left: 18px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 13.5px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 8px 11px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--card);
+      color: var(--heading);
+      font-weight: 700;
+    }
+    tr:nth-child(even) td {
+      background: rgba(148, 163, 184, 0.04);
+    }
+
+    .callout {
+      border-left: 4px solid var(--accent);
+      background: var(--accent-soft);
+      padding: 12px 15px;
+      border-radius: 0 10px 10px 0;
+      margin: 12px 0;
+      font-size: 14px;
+    }
+    .callout.warn {
+      border-left-color: #f59e0b;
+      background: rgba(245, 158, 11, 0.12);
+    }
+
+    details.faq {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+    }
+    details.faq summary {
+      cursor: pointer;
+      font-weight: 700;
+      color: var(--heading);
+      font-size: 14.5px;
+    }
+    details.faq p {
+      margin: 8px 0 2px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .arch-wrap {
+      margin: 14px 0;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      overflow-x: auto;
+    }
+
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+      padding: 12px 0 0;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .toc { position: static; max-height: none; }
+    }
+    @media print {
+      .topbar, .toc { display: none !important; }
+      .layout { display: block; padding: 0; }
+      section.card, .hero { box-shadow: none; break-inside: avoid; border-color: #cbd5e1; }
+      body { background: #fff; color: #0f172a; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-gem">◆</span>
+      <span>StackCity RT（像素疊界）— 完整介紹與使用手冊</span>
+    </div>
+    <div class="top-actions">
+      <a class="btn btn-primary" href="https://github.com/jrh2025/stackcity-rt/raw/main/releases/stackcity-rt.exe">⬇️ 下載 Windows 單檔 (.exe)</a>
+      <a class="btn" href="https://github.com/jrh2025/stackcity-rt" target="_blank" rel="noopener">GitHub 專案頁</a>
+      <button id="btnTheme" class="btn" type="button">☀️ 切換淺色模式</button>
+      <button class="btn" type="button" onclick="window.print()">🖨️ 列印／另存 PDF</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="toc" aria-label="章節目錄">
+      <div class="toc-title">文件章節目錄</div>
+      <a href="#sec-philosophy">1. 設計理念</a>
+      <a href="#sec-features">2. 核心軟體特色</a>
+      <a href="#sec-scenes">3. 12 大預設場景與關卡</a>
+      <a href="#sec-start">4. 安裝與介面導覽</a>
+      <a href="#sec-controls">5. 鍵盤滑鼠快捷鍵</a>
+      <a href="#sec-guide">6. 手把手使用教學</a>
+      <a href="#sec-share">7. 雙模式分享比較</a>
+      <a href="#sec-usecases">8. 多元適用場景</a>
+      <a href="#sec-arch">9. 系統技術架構</a>
+      <a href="#sec-faq">10. 常見問題 FAQ</a>
+    </nav>
+
+    <main class="content">
+      <!-- Hero 橫幅 -->
+      <section class="hero">
+        <div class="hero-badges">
+          <span class="badge">Rust + Axum + SQLite</span>
+          <span class="badge">WebGL2 GPU Sprite-Stacking</span>
+          <span class="badge green">繁體中文 / English / 日本語</span>
+          <span class="badge gold">68 造物原型 · 12 大場景 · AI 藍圖</span>
+        </div>
+        <h1>《StackCity RT（像素疊界）》</h1>
+        <p>結合 <strong>CityRT 即時微縮城市互動體驗</strong> 與 <strong>Sprite-Stacking（精靈堆疊）偽 3D 像素體素造物技術</strong> 的單一執行檔創意沙盒與互動遊戲導演系統。</p>
+        <div class="hero-btns">
+          <a class="btn btn-primary" href="https://github.com/jrh2025/stackcity-rt/raw/main/releases/stackcity-rt.exe">⬇️ 下載 stackcity-rt.exe（Windows 免安裝約 12.9 MB）</a>
+          <a class="btn btn-gold" href="#sec-guide">📖 立即查看手把手教學</a>
+        </div>
+      </section>
+
+      <!-- 1. 設計理念 -->
+      <section id="sec-philosophy" class="card">
+        <h2>1. 設計理念（Design Philosophy）</h2>
+        <div class="grid-3">
+          <div class="mini-card">
+            <h4>🎨 人人皆可造物 3D 世界</h4>
+            <p>不需學習複雜的專業 3D 軟體，透過中文語意提示、68 種內建原型、3D 積木細調、四視圖雕刻或 AI 生成，由純 Rust 體素引擎瞬間烘焙出 360° 立體像素物件。</p>
+          </div>
+          <div class="mini-card">
+            <h4>🎮 從靜態搭建走向動態闖關</h4>
+            <p>不只是放置建築擺拍。您能設定三軸尺寸、巡航路徑、漫遊圍欄、乘載附掛與定時事件，更可設計推理抓兇、積分賽、尋寶與選擇題，製作成完整過關遊戲。</p>
+          </div>
+          <div class="mini-card">
+            <h4>📦 單檔自包含與零依賴分享</h4>
+            <p>主程式即單一 <code>.exe</code>；每個世界封裝於單一 <code>.stackworld.db</code>；更可一鍵匯出離線可玩的純玩家版 <code>.html</code> 網頁，傳給任何人皆零門檻開啟。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. 核心特色 -->
+      <section id="sec-features" class="card">
+        <h2>2. 核心軟體特色</h2>
+        <div class="grid-2">
+          <div class="mini-card">
+            <h4>✨ 純 Rust Sprite-Stacking 造物工坊</h4>
+            <ul>
+              <li>內建 6 大類 <strong>68 種原型</strong>（建築、人物、動物、植物、載具、家具），支援積雪／發光／色系語意修飾。</li>
+              <li><strong>3D 積木細部編輯器</strong>：可微調物件名稱、畫布 W×D×H、位置 X/Y/Z、長寬高、半徑、10 種材質、夜間發光與 X 軸鏡像。</li>
+              <li><strong>純記憶體預覽保護</strong>：調整草稿時僅在記憶體烘焙轉盤預覽，未確認儲存前絕不寫入個人資產庫。</li>
+              <li>支援四視圖 PNG 外殼雕刻與 <code>.zip</code> / <code>blueprint.json</code> / <code>slices.png</code> 匯入。</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4>🤖 AI 藍圖建模（Gemma 4 / Gemini / OpenAI）</h4>
+            <ul>
+              <li>原生支援 <strong>Google Gemma 4</strong>（<code>gemma-4-31b-it</code>、<code>gemma-4-26b-a4b-it</code>）、<strong>Google Gemini</strong>（2.5 / 3 主流型號）與 <strong>OpenAI 相容端點</strong>。</li>
+              <li>模型名稱可自由編輯不過時，提供 <strong>「🔍 查可用模型」</strong> 即時查詢金鑰可用型號與 404 自動排錯建議。</li>
+              <li>支援依供應商本機 <strong>記憶與移除 API Key</strong>，並依介面語系引導 AI 生成對應語言物件標題。</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4>🌆 WebGL2 3D 微縮渲染與貼近常理物理</h4>
+            <ul>
+              <li>每層精靈切片採三疊微厚度重疊，支援硬體 Z-Buffer、<code>normals.png</code> 法線三階光影與地面動態陰影。</li>
+              <li>24 小時日夜光影、晴雨雪天氣（屋頂自動積雪）、夜晚自動點亮 <code>emissive.png</code> 燈光。</li>
+              <li>陸地角色／動物／玩家自動阻擋落入無橋深水（支援踏上橋面通行）並附 2D 旋轉 OBB 建築碰撞避障。</li>
+            </ul>
+          </div>
+          <div class="mini-card">
+            <h4>🏆 活體事件導演、專屬玩家與任務系統</h4>
+            <ul>
+              <li>可設定玩家專屬角色（Avatar）、自由換裝、上帝視角 WASD 移動與 <strong>CityRT 街道漫步視角</strong>。</li>
+              <li>支援三軸獨立縮放（X/Y/Z）、巡航路徑、漫遊圈、乘載附掛與解除附掛。</li>
+              <li>支援 6 種 NPC／物件考驗（線索、選擇題、搶劫、支援、寶藏、嫌疑犯）與 5 種過關目標，過關即觸發慶賀畫面。</li>
+              <li>內建 5 種截然不同的多軌程序化配樂＋自訂音樂封裝，及繁中／English／日本語三語系即時切換。</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. 12 大預設場景 -->
+      <section id="sec-scenes" class="card">
+        <h2>3. 12 大內建預設場景與示範關卡一覽</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>類型</th>
+              <th>場景名稱</th>
+              <th>尺寸</th>
+              <th>預設過關制度</th>
+              <th>內建示範任務與特色互動</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>戶外</td><td>🏰 奇幻星光王國</td><td>40×40</td><td>積分達標制（100 分）</td><td>王國許願噴泉線索、騎士護盾支援、大法師選擇題與山賊攔截</td></tr>
+            <tr><td>戶外</td><td>🏙️ CityRT 霓虹都會</td><td>40×40</td><td>抓出真兇制（推理）</td><td>向拉麵店主與公車司機蒐證，從 3 位嫌疑犯中揪出真兇</td></tr>
+            <tr><td>戶外</td><td>🌾 療癒陽光農莊</td><td>40×40</td><td>尋寶探索制（3 寶藏）</td><td>看門柴犬護衛、擊退偷菜賊並尋回 3 份秋收秘寶</td></tr>
+            <tr><td>戶外</td><td>🌸 櫻花青春校園</td><td>40×40</td><td>知識解謎制（3 題）</td><td>鐘樓補給站與數學、自然科學、SQLite 資訊問答挑戰</td></tr>
+            <tr><td>戶外</td><td>⚓ 海港燈塔小鎮</td><td>40×40</td><td>尋寶探索制（2 寶藏）</td><td>參考老漁夫航海秘圖找回星光羅盤與沉船珍珠寶箱</td></tr>
+            <tr><td>戶外</td><td>🌱 空白自由島嶼</td><td>40×40</td><td>自由規劃</td><td>純淨草地起手，100% 由玩家自行塑形、放物件與設計任務</td></tr>
+            <tr><td>室內</td><td>👑 皇家宮殿大廳</td><td>24×24</td><td>抓出真兇制（推理）</td><td>查驗王座禦印與撬痕線索，盤查宮廷人員揪出王冠失竊內賊</td></tr>
+            <tr><td>室內</td><td>🛍️ 精品便利商店</td><td>24×24</td><td>積分達標制（80 分）</td><td>急智找零考驗、店長防盜警鈴支援與應對蒙面搶匪</td></tr>
+            <tr><td>室內</td><td>🏭 智慧自動化工廠</td><td>24×24</td><td>知識解謎制（2 題）</td><td>巡檢高爐壓力異常排除與機械手臂夾爪流程校正難題</td></tr>
+            <tr><td>室內</td><td>💼 現代科技辦公室</td><td>24×24</td><td>綜合清單制（3 項）</td><td>設計稿簽核、茶水間咖啡補給、架構抽考與會議桌專案簡報</td></tr>
+            <tr><td>室內</td><td>📚 陽光活力教室</td><td>24×24</td><td>知識解謎制（2 題）</td><td>班長重點提示、黑板幾何隨堂考與同學國語成語挑戰</td></tr>
+            <tr><td>室內</td><td>🛋️ 溫馨陽光住家</td><td>24×24</td><td>尋寶探索制（2 驚喜）</td><td>屋主提示與愛犬柴柴陪伴，尋回像素建築相冊與黃金手把</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 4. 安裝與介面導覽 -->
+      <section id="sec-start" class="card">
+        <h2>4. 系統安裝、啟動與介面導覽</h2>
+        <h3>4.1 三種啟動方式</h3>
+        <ol>
+          <li><strong>Windows 免安裝直接執行</strong>：下載 <code>stackcity-rt.exe</code> 放進任意可寫入的資料夾，直接雙擊啟動（預設網址 <code>http://127.0.0.1:8788</code>）。</li>
+          <li><strong>開放同區網（教室／家用 Wi-Fi）多人連線</strong>：
+            <pre><code>.\stackcity-rt.exe --host 0.0.0.0 --port 8788 --data-dir .\worlds</code></pre>
+            同網段其他裝置在瀏覽器輸入 <code>http://&lt;主機區網IP&gt;:8788</code> 即可共同遊玩。
+          </li>
+          <li><strong>macOS / Linux 原始碼編譯</strong>：安裝 Rust 工具鏈後執行 <code>cargo test &amp;&amp; cargo build --release</code> 即可編譯該平台單檔執行檔。</li>
+        </ol>
+        <div class="callout warn">
+          <strong>Windows SmartScreen 提醒：</strong>因個人開源程式未購買商業數位簽章，初次執行時若出現「Windows 已保護您的電腦」，點選「<strong>其他資訊 → 仍要執行</strong>」即可正常運作。
+        </div>
+        <h3>4.2 主畫面四大區塊</h3>
+        <ul>
+          <li><strong>頂部導覽列</strong>：世界切換與 <code>✏️</code> 重新命名、新建與擴展世界、編輯／參觀模式切換、24h 時光與天氣、玩家角色、街道漫步、音樂、重置／刪除、快照、分享、面板收合、多語系切換與全螢幕。</li>
+          <li><strong>左側工具與資產庫（可收合）</strong>：9 大編輯工具、生態筆刷子選項，以及可依分類篩選、點擊投放或按卡片右上角 <code>✕</code> 直接從本世界移除的資產網格。</li>
+          <li><strong>中央 3D 畫布與任務 HUD</strong>：WebGL2 立體視口、視角重設按鈕、街道漫步橫幅與右側浮動 <strong>任務追蹤面板</strong>（顯示分數、血量、護盾、線索筆記與重置按鈕）。</li>
+          <li><strong>右側屬性導演面板（可收合）</strong>：<code>🎛️ 屬性</code>（含三軸縮放、解除附掛與物件考驗設定）、<code>〰️ 路徑</code>、<code>🎬 事件</code>、<code>🏆 任務</code>。</li>
+        </ul>
+      </section>
+
+      <!-- 5. 快捷鍵對照表 -->
+      <section id="sec-controls" class="card">
+        <h2>5. 鍵盤與滑鼠快捷鍵對照表</h2>
+        <table>
+          <thead>
+            <tr><th>按鍵／滑鼠操作</th><th>上帝微縮視角</th><th>CityRT 街道漫步視角</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>W A S D</code> / <code>方向鍵</code></td><td>操控玩家角色移動（鏡頭柔和跟隨）</td><td>第三人稱移動玩家（<code>A</code> 左 / <code>D</code> 右）</td></tr>
+            <tr><td><code>Space</code>（空白鍵）</td><td>玩家跳躍；配合滑鼠左鍵拖曳可平移畫面</td><td>玩家角色跳躍</td></tr>
+            <tr><td><code>F</code> 鍵</td><td>與身旁最近的 NPC／物件互動</td><td>與身旁 NPC／物件互動</td></tr>
+            <tr><td>滑鼠左鍵點擊 / 雙擊</td><td>依工具編輯（選取/投放/塑形）；雙擊互動；訪客模式單擊互動</td><td>點擊畫面中人物／物件進行互動</td></tr>
+            <tr><td>滑鼠右鍵拖曳</td><td>360° 旋轉與調整視角高低仰角</td><td>左右環顧轉向</td></tr>
+            <tr><td>滑鼠中鍵 / <code>✋ 拖曳</code></td><td>自由平移觀察場景</td><td>—</td></tr>
+            <tr><td>滑鼠滾輪</td><td>視野無段縮放遠近</td><td>—</td></tr>
+            <tr><td><code>Q</code> / <code>E</code> / <code>R</code></td><td>左右旋轉視角 / 重設視角</td><td>左右轉向 / 重設視角</td></tr>
+            <tr><td><code>Delete</code> / <code>Esc</code></td><td>刪除選取物件（編輯模式） / 關閉視窗</td><td>— / 關閉視窗</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 6. 手把手使用教學 -->
+      <section id="sec-guide" class="card">
+        <h2>6. 手把手使用教學</h2>
+        <div class="grid-2">
+          <div class="mini-card">
+            <h4>步驟 1：建立與調整世界</h4>
+            <p>點「＋ 新建世界」從 12 種主題起手；隨時可按世界選單旁的 <code>✏️</code> 改名，或點「🗺️ 擴展場景」向東南西北四側擴張格數（既有建築與路徑自動保持相對位置遷移）。</p>
+          </div>
+          <div class="mini-card">
+            <h4>步驟 2：造物與精細修圖</h4>
+            <p>在「✨ 造物工坊」快速生成或進「🧱 3D 積木藍圖」調位置、長寬高與材質。未確認前僅在記憶體預覽；輸入目標名稱後點「💾 確認儲存至資產庫」才正式寫入。</p>
+          </div>
+          <div class="mini-card">
+            <h4>步驟 3：安排活體行為與任務</h4>
+            <p>選取場上 NPC 或道具，在右欄指派路徑、漫遊圈、事件規則，並在「🎯 任務互動與考驗設定」寫好對話、選擇題或搶劫／尋寶條件，再到「🏆 任務」分頁設定過關條件。</p>
+          </div>
+          <div class="mini-card">
+            <h4>步驟 4：測試遊玩與分享</h4>
+            <p>切至「👁️ 訪客參觀中」或進入「🚶 街道漫步」實測通關；確認滿意後按下「🔄 重置 → 清除遊玩進度」歸零測試成績，即可點「🤝 分享」傳給朋友。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. 雙模式分享 -->
+      <section id="sec-share" class="card">
+        <h2>7. 雙模式好友分享比較</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>比較面向</th>
+              <th>方式一：完整分享（<code>.stackworld.db</code>）</th>
+              <th>方式二：單純遊戲分享（獨立 <code>.html</code>）</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>對方需安裝的程式</td><td>需透過 <code>stackcity-rt.exe</code> 匯入</td><td><strong>免安裝！任意瀏覽器雙擊即可開啟遊玩</strong></td></tr>
+            <tr><td>可否修改場景或任務</td><td>可自由切換「編輯模式」共同創作擴建</td><td><strong>完全鎖定編輯介面</strong>，僅能以玩家身分闖關</td></tr>
+            <tr><td>貼圖、音樂與存檔</td><td>全部封裝於單一 SQLite 檔案絕不缺圖</td><td>全部 Base64 內嵌於網頁內，進度存於本機 <code>localStorage</code></td></tr>
+            <tr><td>多語系支援</td><td>支援（繁中 / English / 日本語）</td><td>支援（自動偵測對方系統語系並可即時切換）</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- 8. 適用場景 -->
+      <section id="sec-usecases" class="card">
+        <h2>8. 多元適用場景</h2>
+        <div class="grid-2">
+          <div class="mini-card">
+            <h4>🏫 教師與課堂遊戲化教學</h4>
+            <p>將國語成語、數學題、英文詞彙或自然科學問答設計成校園／王國中的 NPC 闖關題庫，匯出單檔 <code>.html</code> 給全班同學直接當小遊戲練習與計分。</p>
+          </div>
+          <div class="mini-card">
+            <h4>🕵️ 互動解謎與推理劇情創作</h4>
+            <p>善用「抓出真兇制」與線索筆記功能，在宮殿大廳或霓虹都會中安排目擊者與嫌疑犯，製作出短小精悍的 3D 偵探破案小品。</p>
+          </div>
+          <div class="mini-card">
+            <h4>📐 空間佈局與建築室內預演</h4>
+            <p>結合商店、工廠、辦公室與住家室內場景及 X/Y/Z 三軸縮放與 24h 日夜燈光，快速預覽貨架、產線動線與夜晚照明氣氛。</p>
+          </div>
+          <div class="mini-card">
+            <h4>👨‍👩‍👧 親子共創與親友同樂禮物</h4>
+            <p>親子一同用積木拼出房子、動物與禮物盒，寫下溫馨謎題或祝福對話，匯出成獨立網頁檔案送給親友破關領取生日驚喜。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. 系統技術架構 -->
+      <section id="sec-arch" class="card">
+        <h2>9. 系統技術架構與 SQLite 資料模型</h2>
+        <div class="arch-wrap">
+          <svg viewBox="0 0 820 220" width="100%" role="img" aria-label="StackCity RT 系統架構圖">
+            <rect x="10" y="18" width="245" height="184" rx="10" fill="#162033" stroke="#38bdf8" stroke-width="1.5"/>
+            <text x="132" y="42" fill="#f8fafc" font-size="14" font-weight="700" text-anchor="middle">前端（WebGL2 + Web Audio）</text>
+            <text x="26" y="68" fill="#cbd5e1" font-size="12">• 3D Instanced Sprite-Stacking</text>
+            <text x="26" y="90" fill="#cbd5e1" font-size="12">• 法線光影 / 24h 日夜 / 晴雨雪</text>
+            <text x="26" y="112" fill="#cbd5e1" font-size="12">• 防落水與旋轉 OBB 物理碰撞</text>
+            <text x="26" y="134" fill="#cbd5e1" font-size="12">• 任務過關引擎與 5 風格配樂</text>
+            <text x="26" y="156" fill="#cbd5e1" font-size="12">• 無損三語系 i18n（中 / 英 / 日）</text>
+            <text x="26" y="178" fill="#94a3b8" font-size="11">透過 rust-embed 直接編譯內嵌</text>
+
+            <line x1="258" y1="110" x2="312" y2="110" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow)"/>
+            <text x="285" y="98" fill="#7dd3fc" font-size="11" text-anchor="middle">REST/PNG</text>
+
+            <rect x="315" y="18" width="235" height="184" rx="10" fill="#162033" stroke="#34d399" stroke-width="1.5"/>
+            <text x="432" y="42" fill="#f8fafc" font-size="14" font-weight="700" text-anchor="middle">後端（Rust + Axum）</text>
+            <text x="331" y="68" fill="#cbd5e1" font-size="12">• 68 種體素原型與積木烘焙器</text>
+            <text x="331" y="90" fill="#cbd5e1" font-size="12">• 純記憶體預覽 API（零存庫）</text>
+            <text x="331" y="112" fill="#cbd5e1" font-size="12">• 四視圖外殼雕刻與套件解析</text>
+            <text x="331" y="134" fill="#cbd5e1" font-size="12">• Gemma 4 / Gemini / OpenAI 串接</text>
+            <text x="331" y="156" fill="#cbd5e1" font-size="12">• 完整 DB 與獨立 HTML 打包器</text>
+            <text x="331" y="178" fill="#94a3b8" font-size="11">單檔執行，無須 Python/Node</text>
+
+            <line x1="553" y1="110" x2="607" y2="110" stroke="#34d399" stroke-width="2" marker-end="url(#arrow)"/>
+            <text x="580" y="98" fill="#6ee7b7" font-size="11" text-anchor="middle">SQLite</text>
+
+            <rect x="610" y="18" width="200" height="184" rx="10" fill="#162033" stroke="#facc15" stroke-width="1.5"/>
+            <text x="710" y="42" fill="#f8fafc" font-size="14" font-weight="700" text-anchor="middle">SQLite 單檔資料庫</text>
+            <text x="625" y="68" fill="#cbd5e1" font-size="12">• world_meta（任務/玩家）</text>
+            <text x="625" y="90" fill="#cbd5e1" font-size="12">• terrain_tiles（地形路網）</text>
+            <text x="625" y="112" fill="#cbd5e1" font-size="12">• asset_catalog（PNG BLOB）</text>
+            <text x="625" y="134" fill="#cbd5e1" font-size="12">• world_entities（屬性/XYZ）</text>
+            <text x="625" y="156" fill="#cbd5e1" font-size="12">• paths / zones / events / bgm</text>
+            <text x="625" y="178" fill="#fde68a" font-size="11">+ _library.db 跨世界資產庫</text>
+
+            <defs>
+              <marker id="arrow" markerWidth="10" markerHeight="10" refX="7" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L8,3 z" fill="#38bdf8"/>
+              </marker>
+            </defs>
+          </svg>
+        </div>
+      </section>
+
+      <!-- 10. FAQ -->
+      <section id="sec-faq" class="card">
+        <h2>10. 常見問題 FAQ</h2>
+        <details class="faq" open>
+          <summary>Q1：分享程式或遊戲給朋友，對方電腦需要安裝什麼嗎？</summary>
+          <p>不需要安裝 Rust、Python、Node.js 或 SQLite。傳送 <code>stackcity-rt.exe</code> 給 Windows 朋友即可直接執行；若只要讓對方純玩關卡，匯出「單純遊戲網頁檔（<code>.html</code>）」後，對方在任何作業系統用瀏覽器雙擊即可離線遊玩。</p>
+        </details>
+        <details class="faq">
+          <summary>Q2：使用 AI 藍圖遇到 404 模型錯誤怎麼辦？</summary>
+          <p>請將供應商切為「Google Gemma 4（開放模型）」或「Google Gemini」，先填入 API Key 後按一下「🔍 查可用模型」，系統會自動向官方查詢您的金鑰實際支援的模型名稱並列出快捷晶片供點選。</p>
+        </details>
+        <details class="faq">
+          <summary>Q3：為什麼我在 3D 積木分頁調整數值，個人資產庫沒有馬上多出新檔案？</summary>
+          <p>為避免反覆微調尺寸產生大量半成品，所有即時預覽都在記憶體中完成；請在確認物件名稱與外型滿意後，點擊「💾 確認儲存至資產庫」或「💾 覆寫儲存原物件」，才會真正寫入資產庫。</p>
+        </details>
+        <details class="faq">
+          <summary>Q4：如何替換或切換介面語言？海外朋友看得到英文介面嗎？</summary>
+          <p>系統會自動偵測對方瀏覽器語系（英文系統自動顯示 English、日文系統自動顯示日本語），主程式與匯出的獨立 <code>.html</code> 頂部皆附有語系選單（🌐），隨時可於繁體中文、English 與日本語間無損切換。</p>
+        </details>
+      </section>
+
+      <footer>
+        《StackCity RT（像素疊界）》技術文件與使用指南 · Open Source on <a href="https://github.com/jrh2025/stackcity-rt" target="_blank" rel="noopener">GitHub</a>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // 主題切換（深色／淺色）
+    const themeBtn = document.getElementById("btnTheme");
+    themeBtn?.addEventListener("click", () => {
+      const isLight = document.documentElement.getAttribute("data-theme") === "light";
+      document.documentElement.setAttribute("data-theme", isLight ? "dark" : "light");
+      themeBtn.textContent = isLight ? "☀️ 切換淺色模式" : "🌙 切換深色模式";
+    });
+
+    // 左側目錄自動追蹤高亮
+    const tocLinks = Array.from(document.querySelectorAll(".toc a"));
+    const sections = tocLinks
+      .map((a) => document.querySelector(a.getAttribute("href")))
+      .filter(Boolean);
+
+    if ("IntersectionObserver" in window && sections.length > 0) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              const id = `#${entry.target.id}`;
+              tocLinks.forEach((a) => a.classList.toggle("active", a.getAttribute("href") === id));
+            }
+          }
+        },
+        { rootMargin: "-20% 0px -65% 0px" }
+      );
+      sections.forEach((s) => io.observe(s));
+    }
+  </script>
+</body>
+</html>
