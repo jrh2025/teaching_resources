@@ -412,13 +412,15 @@
           <span class="badge">Rust + Axum + SQLite</span>
           <span class="badge">WebGL2 GPU Sprite-Stacking</span>
           <span class="badge green">繁體中文 / English / 日本語</span>
-          <span class="badge gold">68 造物原型 · 12 大場景 · AI 藍圖</span>
+          <span class="badge gold">76 造物原型 · 載具搭乘 · 跨世界門 · 社畜的一天</span>
         </div>
         <h1>《StackCity RT（像素疊界）》</h1>
-        <p>結合 <strong>CityRT 即時微縮城市互動體驗</strong> 與 <strong>Sprite-Stacking（精靈堆疊）偽 3D 像素體素造物技術</strong> 的單一執行檔創意沙盒與互動遊戲導演系統。</p>
+        <p>結合 <strong>CityRT 即時微縮城市互動體驗</strong> 與 <strong>Sprite-Stacking（精靈堆疊）偽 3D 像素體素造物技術</strong> 的單一執行檔創意沙盒，支援 <strong>交通工具駕駛／巡航搭乘</strong>、<strong>建築物「門」跨世界探索</strong> 與 <strong>《社畜的一天》5 世界聯動企劃</strong>。</p>
         <div class="hero-btns">
-          <a class="btn btn-primary" href="https://github.com/jrh2025/stackcity-rt/raw/main/releases/stackcity-rt.exe">⬇️ 下載 stackcity-rt.exe（Windows 免安裝約 12.9 MB）</a>
-          <a class="btn btn-gold" href="#sec-guide">📖 立即查看手把手教學</a>
+          <a class="btn btn-primary" href="https://github.com/jrh2025/stackcity-rt/raw/main/releases/stackcity-rt.exe">⬇️ 下載 stackcity-rt.exe（Windows 免安裝約 13.8 MB）</a>
+          <a class="btn btn-gold" href="https://github.com/jrh2025/stackcity-rt/raw/main/releases/%E7%A4%BE%E7%95%9C%E7%9A%84%E4%B8%80%E5%A4%A9_%E7%B4%94%E9%81%8A%E6%88%B2%E7%8D%A8%E7%AB%8B%E7%89%88.html">🎮 《社畜的一天》純遊戲獨立版 (.html)</a>
+          <a class="btn" href="https://github.com/jrh2025/stackcity-rt/raw/main/releases/%E7%A4%BE%E7%95%9C%E7%9A%84%E4%B8%80%E5%A4%A9_%E5%A4%9A%E4%B8%96%E7%95%8C%E7%B7%A8%E8%BC%AF%E5%8C%85.stackpack.zip">📦 《社畜的一天》多世界編輯包 (.stackpack.zip)</a>
+          <a class="btn" href="#sec-guide">📖 立即查看手把手教學</a>
         </div>
       </section>
 
@@ -428,15 +430,15 @@
         <div class="grid-3">
           <div class="mini-card">
             <h4>🎨 人人皆可造物 3D 世界</h4>
-            <p>不需學習複雜的專業 3D 軟體，透過中文語意提示、68 種內建原型、3D 積木細調、四視圖雕刻或 AI 生成，由純 Rust 體素引擎瞬間烘焙出 360° 立體像素物件。</p>
+            <p>不需學習複雜的專業 3D 軟體，透過中文語意提示、76 種內建原型、3D 積木細調、四視圖雕刻或 AI 生成，由純 Rust 體素引擎瞬間烘焙出 360° 立體像素物件。</p>
           </div>
           <div class="mini-card">
-            <h4>🎮 從靜態搭建走向動態闖關</h4>
-            <p>不只是放置建築擺拍。您能設定三軸尺寸、巡航路徑、漫遊圍欄、乘載附掛與定時事件，更可設計推理抓兇、積分賽、尋寶與選擇題，製作成完整過關遊戲。</p>
+            <h4>🚌 搭乘交通工具與推門跨世界</h4>
+            <p>玩家可按 <code>G</code> 駕駛跑車／乘皇家馬車／划帆船或搭乘固定路線公車通勤，更能於任何建築大門按 <code>F</code> 跨入獨立的室內世界冒險，並攜帶共用積分與道具返回！</p>
           </div>
           <div class="mini-card">
-            <h4>📦 單檔自包含與零依賴分享</h4>
-            <p>主程式即單一 <code>.exe</code>；每個世界封裝於單一 <code>.stackworld.db</code>；更可一鍵匯出離線可玩的純玩家版 <code>.html</code> 網頁，傳給任何人皆零門檻開啟。</p>
+            <h4>📦 單檔自包含與多世界無痛分享</h4>
+            <p>主程式即單一 <code>.exe</code>；透過「門」互連的多座世界可自動 BFS 打包為 <code>.stackpack.zip</code> 編輯包，或匯出免安裝離線跨世界 <code>.html</code> 純遊戲網頁。</p>
           </div>
         </div>
       </section>
@@ -448,35 +450,34 @@
           <div class="mini-card">
             <h4>✨ 純 Rust Sprite-Stacking 造物工坊</h4>
             <ul>
-              <li>內建 6 大類 <strong>68 種原型</strong>（建築、人物、動物、植物、載具、家具），支援積雪／發光／色系語意修飾。</li>
+              <li>內建 6 大類 <strong>76 種原型</strong>（新增粉領女上班族、皇家馬車、古典木門、星光傳送門、公車站牌候車亭、咖啡茶水吧、事務印表機、浴室洗手台）。</li>
               <li><strong>3D 積木細部編輯器</strong>：可微調物件名稱、畫布 W×D×H、位置 X/Y/Z、長寬高、半徑、10 種材質、夜間發光與 X 軸鏡像。</li>
               <li><strong>純記憶體預覽保護</strong>：調整草稿時僅在記憶體烘焙轉盤預覽，未確認儲存前絕不寫入個人資產庫。</li>
-              <li>支援四視圖 PNG 外殼雕刻與 <code>.zip</code> / <code>blueprint.json</code> / <code>slices.png</code> 匯入。</li>
+              <li>支援 AI 藍圖建模（Gemma 4 / Gemini / OpenAI）與四視圖 PNG 外殼雕刻。</li>
             </ul>
           </div>
           <div class="mini-card">
-            <h4>🤖 AI 藍圖建模（Gemma 4 / Gemini / OpenAI）</h4>
+            <h4>🚗 交通工具搭乘系統（<code>G</code> / <code>Tab</code>）</h4>
             <ul>
-              <li>原生支援 <strong>Google Gemma 4</strong>（<code>gemma-4-31b-it</code>、<code>gemma-4-26b-a4b-it</code>）、<strong>Google Gemini</strong>（2.5 / 3 主流型號）與 <strong>OpenAI 相容端點</strong>。</li>
-              <li>模型名稱可自由編輯不過時，提供 <strong>「🔍 查可用模型」</strong> 即時查詢金鑰可用型號與 404 自動排錯建議。</li>
-              <li>支援依供應商本機 <strong>記憶與移除 API Key</strong>，並依介面語系引導 AI 生成對應語言物件標題。</li>
+              <li>跑車、城市公車、皇家馬車、火車、駿馬、帆船、熱氣球與太空船皆可按 <strong><code>G</code></strong> 鍵上下搭乘。</li>
+              <li>支援 <strong>「親自駕駛／騎乘」</strong>（水上航行、飛行器 <code>Space/Shift</code> 升降、陸上跳躍鳴笛）與 <strong>「自動巡航乘客」</strong>。</li>
+              <li>搭配移動路徑（如固定路線 208 號公車）可於車上按 <strong><code>Tab</code></strong> 即時切換駕駛與乘客模式，下車自動偵測安全陸地。</li>
             </ul>
           </div>
           <div class="mini-card">
-            <h4>🌆 WebGL2 3D 微縮渲染與貼近常理物理</h4>
+            <h4>🚪 建築物「門」與跨世界探索系統</h4>
             <ul>
-              <li>每層精靈切片採三疊微厚度重疊，支援硬體 Z-Buffer、<code>normals.png</code> 法線三階光影與地面動態陰影。</li>
-              <li>24 小時日夜光影、晴雨雪天氣（屋頂自動積雪）、夜晚自動點亮 <code>emissive.png</code> 燈光。</li>
-              <li>陸地角色／動物／玩家自動阻擋落入無橋深水（支援踏上橋面通行）並附 2D 旋轉 OBB 建築碰撞避障。</li>
+              <li>任一建築、木門或傳送門皆可於屬性欄點擊 <strong>「✨ 一鍵建立室內世界並建立雙向門」</strong>，自動建立室內空間與回程門。</li>
+              <li>門口顯示發光地墊與 <code>[F] 🚪</code>／<code>[F] 🔒</code> 鎖門條件（支援指定道具／任務旗標解鎖）。</li>
+              <li>跨世界自動同步玩家造型、積分、血量、護盾、道具背包、線索筆記與任務旗標。</li>
             </ul>
           </div>
           <div class="mini-card">
-            <h4>🏆 活體事件導演、專屬玩家與任務系統</h4>
+            <h4>🏆 WebGL2 微縮渲染、活體導演與任務系統</h4>
             <ul>
-              <li>可設定玩家專屬角色（Avatar）、自由換裝、上帝視角 WASD 移動與 <strong>CityRT 街道漫步視角</strong>。</li>
-              <li>支援三軸獨立縮放（X/Y/Z）、巡航路徑、漫遊圈、乘載附掛與解除附掛。</li>
-              <li>支援 6 種 NPC／物件考驗（線索、選擇題、搶劫、支援、寶藏、嫌疑犯）與 5 種過關目標，過關即觸發慶賀畫面。</li>
-              <li>內建 5 種截然不同的多軌程序化配樂＋自訂音樂封裝，及繁中／English／日本語三語系即時切換。</li>
+              <li>三疊微厚度切片搭配硬體 Z-Buffer、法線三階光影、地面陰影、24h 日夜、晴雨雪與防落水／OBB 物理碰撞。</li>
+              <li>支援上帝微縮視角與 <strong>CityRT 街道漫步模式</strong>、三軸縮放、巡航路徑、漫遊圈、乘載附掛與三步驟事件導演。</li>
+              <li>支援 6 種 NPC 考驗與 5 種過關制度、5 風格程序化配樂及繁中／English／日本語三語系即時切換。</li>
             </ul>
           </div>
         </div>
@@ -484,7 +485,11 @@
 
       <!-- 3. 12 大預設場景 -->
       <section id="sec-scenes" class="card">
-        <h2>3. 12 大內建預設場景與示範關卡一覽</h2>
+        <h2>3. 12 大預設場景 ＋ 🌟《社畜的一天》5 世界聯動企劃</h2>
+        <div class="callout">
+          <strong>💼 精選 5 世界聯動企劃《社畜的一天》（於「＋ 新建世界」一鍵建置，或直接下載上方分享檔）：</strong><br/>
+          化身粉領女上班族「小美」，從 <strong>溫馨住家</strong>（起床・刷牙洗臉・吃早餐拿悠遊卡）出發 → 走南門進入 <strong>都市通勤大道</strong> 搭乘固定路線 <strong>208 號通勤公車</strong>（含 4 座候車亭與夜間路燈）→ 進入 <strong>公司辦公室</strong>（業務聯繫・印表機列印・製作文件・開會・同事午餐・主管報告・茶水間咖啡）→ 下班至 <strong>生活大賣場</strong>（採買鮮奶零食與香氛）→ 散步進 <strong>療癒美食餐廳</strong> 點餐吃晚餐 → 夜間搭公車返家完成舒壓盥洗、沙發滑手機與睡覺收官！
+        </div>
         <table>
           <thead>
             <tr>
@@ -496,6 +501,7 @@
             </tr>
           </thead>
           <tbody>
+            <tr><td>🌟 多世界企劃</td><td>💼 社畜的一天（5 世界聯動）</td><td>24×24 ×4 + 40×40</td><td>跨世界綜合清單（12 項）</td><td>女上班族全日日記：住家早晚日常 ↔ 208 號固定路線公車都市 ↔ 辦公室 ↔ 大賣場 ↔ 餐廳完整跨門冒險</td></tr>
             <tr><td>戶外</td><td>🏰 奇幻星光王國</td><td>40×40</td><td>積分達標制（100 分）</td><td>王國許願噴泉線索、騎士護盾支援、大法師選擇題與山賊攔截</td></tr>
             <tr><td>戶外</td><td>🏙️ CityRT 霓虹都會</td><td>40×40</td><td>抓出真兇制（推理）</td><td>向拉麵店主與公車司機蒐證，從 3 位嫌疑犯中揪出真兇</td></tr>
             <tr><td>戶外</td><td>🌾 療癒陽光農莊</td><td>40×40</td><td>尋寶探索制（3 寶藏）</td><td>看門柴犬護衛、擊退偷菜賊並尋回 3 份秋收秘寶</td></tr>
@@ -544,10 +550,13 @@
             <tr><th>按鍵／滑鼠操作</th><th>上帝微縮視角</th><th>CityRT 街道漫步視角</th></tr>
           </thead>
           <tbody>
-            <tr><td><code>W A S D</code> / <code>方向鍵</code></td><td>操控玩家角色移動（鏡頭柔和跟隨）</td><td>第三人稱移動玩家（<code>A</code> 左 / <code>D</code> 右）</td></tr>
-            <tr><td><code>Space</code>（空白鍵）</td><td>玩家跳躍；配合滑鼠左鍵拖曳可平移畫面</td><td>玩家角色跳躍</td></tr>
-            <tr><td><code>F</code> 鍵</td><td>與身旁最近的 NPC／物件互動</td><td>與身旁 NPC／物件互動</td></tr>
-            <tr><td>滑鼠左鍵點擊 / 雙擊</td><td>依工具編輯（選取/投放/塑形）；雙擊互動；訪客模式單擊互動</td><td>點擊畫面中人物／物件進行互動</td></tr>
+            <tr><td><code>W A S D</code> / <code>方向鍵</code></td><td>操控玩家角色移動或駕駛載具（鏡頭柔和跟隨）</td><td>第三人稱移動玩家／駕駛載具（<code>A</code> 左 / <code>D</code> 右）</td></tr>
+            <tr><td><code>G</code> 鍵</td><td><strong>上／下附近最近的交通工具或坐騎</strong>（車・公車・馬車・船・馬・飛行器）</td><td><strong>上／下身旁的交通工具或坐騎</strong></td></tr>
+            <tr><td><code>Tab</code> 鍵</td><td>搭乘雙模式載具（如公車）時，<strong>切換「親自駕駛」↔「自動巡航乘客」</strong></td><td>切換「親自駕駛」↔「自動巡航乘客」</td></tr>
+            <tr><td><code>F</code> 鍵</td><td><strong>推開身旁的「門」進入／離開關聯世界</strong>，或與最近 NPC／物件互動</td><td>進出門扉或與身旁 NPC／物件互動</td></tr>
+            <tr><td><code>Space</code>（空白鍵）</td><td>徒步跳躍／騎馬跳躍／車輛鳴笛／<strong>駕駛飛行載具上升</strong>；配合左鍵拖曳可平移畫面</td><td>跳躍／鳴笛／飛行上升</td></tr>
+            <tr><td><code>Shift</code> / <code>C</code> 鍵</td><td>駕駛飛行載具（熱氣球／太空船）時<strong>降低高度</strong></td><td>駕駛飛行載具時降低高度</td></tr>
+            <tr><td>滑鼠左鍵點擊 / 雙擊</td><td>依工具編輯；雙擊互動；訪客模式單擊門或物件直接互動</td><td>點擊畫面中人物／門／物件進行互動</td></tr>
             <tr><td>滑鼠右鍵拖曳</td><td>360° 旋轉與調整視角高低仰角</td><td>左右環顧轉向</td></tr>
             <tr><td>滑鼠中鍵 / <code>✋ 拖曳</code></td><td>自由平移觀察場景</td><td>—</td></tr>
             <tr><td>滑鼠滾輪</td><td>視野無段縮放遠近</td><td>—</td></tr>
@@ -562,40 +571,40 @@
         <h2>6. 手把手使用教學</h2>
         <div class="grid-2">
           <div class="mini-card">
-            <h4>步驟 1：建立與調整世界</h4>
-            <p>點「＋ 新建世界」從 12 種主題起手；隨時可按世界選單旁的 <code>✏️</code> 改名，或點「🗺️ 擴展場景」向東南西北四側擴張格數（既有建築與路徑自動保持相對位置遷移）。</p>
+            <h4>步驟 1：建立場景或 5 世界企劃</h4>
+            <p>點「＋ 新建世界」從 12 種單一場景或 <strong>《社畜的一天》5 世界企劃</strong>起手；隨時可按世界選單旁的 <code>✏️</code> 改名，或點「🗺️ 擴展場景」擴張地圖。</p>
           </div>
           <div class="mini-card">
             <h4>步驟 2：造物與精細修圖</h4>
             <p>在「✨ 造物工坊」快速生成或進「🧱 3D 積木藍圖」調位置、長寬高與材質。未確認前僅在記憶體預覽；輸入目標名稱後點「💾 確認儲存至資產庫」才正式寫入。</p>
           </div>
           <div class="mini-card">
-            <h4>步驟 3：安排活體行為與任務</h4>
-            <p>選取場上 NPC 或道具，在右欄指派路徑、漫遊圈、事件規則，並在「🎯 任務互動與考驗設定」寫好對話、選擇題或搶劫／尋寶條件，再到「🏆 任務」分頁設定過關條件。</p>
+            <h4>步驟 3：設定公車載具與建築物「門」</h4>
+            <p>選取載具在「🚗 交通工具搭乘設定」勾選 <code>G</code> 鍵搭乘與駕駛／巡航模式；選取建築或木門在「🚪 建築物出入口（門）」點擊 <strong>一鍵建立室內世界並建立雙向門</strong>。</p>
           </div>
           <div class="mini-card">
-            <h4>步驟 4：測試遊玩與分享</h4>
-            <p>切至「👁️ 訪客參觀中」或進入「🚶 街道漫步」實測通關；確認滿意後按下「🔄 重置 → 清除遊玩進度」歸零測試成績，即可點「🤝 分享」傳給朋友。</p>
+            <h4>步驟 4：測試通關與三模式分享</h4>
+            <p>切至「👁️ 訪客參觀中」或「🚶 街道漫步」實測通關後，點「🤝 分享」自動偵測門連結的全部關聯世界，匯出 <code>.stackpack.zip</code> 編輯包或免安裝跨世界 <code>.html</code>！</p>
           </div>
         </div>
       </section>
 
-      <!-- 7. 雙模式分享 -->
+      <!-- 7. 三模式分享 -->
       <section id="sec-share" class="card">
-        <h2>7. 雙模式好友分享比較</h2>
+        <h2>7. 三模式好友分享比較</h2>
         <table>
           <thead>
             <tr>
               <th>比較面向</th>
-              <th>方式一：完整分享（<code>.stackworld.db</code>）</th>
-              <th>方式二：單純遊戲分享（獨立 <code>.html</code>）</th>
+              <th>方式一：單一世界（<code>.stackworld.db</code>）</th>
+              <th>方式二：多世界編輯包（<code>.stackpack.zip</code>）</th>
+              <th>方式三：跨世界獨立遊戲（<code>.html</code>）</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td>對方需安裝的程式</td><td>需透過 <code>stackcity-rt.exe</code> 匯入</td><td><strong>免安裝！任意瀏覽器雙擊即可開啟遊玩</strong></td></tr>
-            <tr><td>可否修改場景或任務</td><td>可自由切換「編輯模式」共同創作擴建</td><td><strong>完全鎖定編輯介面</strong>，僅能以玩家身分闖關</td></tr>
-            <tr><td>貼圖、音樂與存檔</td><td>全部封裝於單一 SQLite 檔案絕不缺圖</td><td>全部 Base64 內嵌於網頁內，進度存於本機 <code>localStorage</code></td></tr>
-            <tr><td>多語系支援</td><td>支援（繁中 / English / 日本語）</td><td>支援（自動偵測對方系統語系並可即時切換）</td></tr>
+            <tr><td>對方需安裝的程式</td><td>需透過 <code>stackcity-rt.exe</code> 匯入</td><td>需透過 <code>stackcity-rt.exe</code> 一鍵匯入整套專案</td><td><strong>免安裝！任意瀏覽器雙擊即可跨世界遊玩</strong></td></tr>
+            <tr><td>可否修改場景或任務</td><td>可自由切換「編輯模式」擴建</td><td><strong>全部關聯世界皆可共同編輯</strong>（自動配發不衝突 UUID）</td><td><strong>完全鎖定編輯介面</strong>，僅能以玩家身分闖關</td></tr>
+            <tr><td>跨世界進度與貼圖</td><td>封裝單一世界全部貼圖與音樂</td><td>BFS 打包全部門連結世界＋<code>manifest.json</code></td><td>SHA-256 貼圖去重打包全關聯世界，進度存 <code>localStorage</code></td></tr>
           </tbody>
         </table>
       </section>
@@ -642,11 +651,11 @@
 
             <rect x="315" y="18" width="235" height="184" rx="10" fill="#162033" stroke="#34d399" stroke-width="1.5"/>
             <text x="432" y="42" fill="#f8fafc" font-size="14" font-weight="700" text-anchor="middle">後端（Rust + Axum）</text>
-            <text x="331" y="68" fill="#cbd5e1" font-size="12">• 68 種體素原型與積木烘焙器</text>
-            <text x="331" y="90" fill="#cbd5e1" font-size="12">• 純記憶體預覽 API（零存庫）</text>
-            <text x="331" y="112" fill="#cbd5e1" font-size="12">• 四視圖外殼雕刻與套件解析</text>
-            <text x="331" y="134" fill="#cbd5e1" font-size="12">• Gemma 4 / Gemini / OpenAI 串接</text>
-            <text x="331" y="156" fill="#cbd5e1" font-size="12">• 完整 DB 與獨立 HTML 打包器</text>
+            <text x="331" y="68" fill="#cbd5e1" font-size="12">• 76 種體素原型與積木烘焙器</text>
+            <text x="331" y="90" fill="#cbd5e1" font-size="12">• 5 世界企劃與一鍵室內門連通</text>
+            <text x="331" y="112" fill="#cbd5e1" font-size="12">• 四視圖外殼雕刻與 AI 藍圖</text>
+            <text x="331" y="134" fill="#cbd5e1" font-size="12">• BFS 掃描門連結 (.stackpack.zip)</text>
+            <text x="331" y="156" fill="#cbd5e1" font-size="12">• SHA-256 去重多世界 HTML 匯出</text>
             <text x="331" y="178" fill="#94a3b8" font-size="11">單檔執行，無須 Python/Node</text>
 
             <line x1="553" y1="110" x2="607" y2="110" stroke="#34d399" stroke-width="2" marker-end="url(#arrow)"/>
@@ -675,15 +684,15 @@
         <h2>10. 常見問題 FAQ</h2>
         <details class="faq" open>
           <summary>Q1：分享程式或遊戲給朋友，對方電腦需要安裝什麼嗎？</summary>
-          <p>不需要安裝 Rust、Python、Node.js 或 SQLite。傳送 <code>stackcity-rt.exe</code> 給 Windows 朋友即可直接執行；若只要讓對方純玩關卡，匯出「單純遊戲網頁檔（<code>.html</code>）」後，對方在任何作業系統用瀏覽器雙擊即可離線遊玩。</p>
+          <p>不需要安裝 Rust、Python、Node.js 或 SQLite。傳送 <code>stackcity-rt.exe</code> 給 Windows 朋友即可直接執行；若只要讓對方純玩關卡，匯出「單純遊戲網頁檔（<code>.html</code>）」後，對方在任何作業系統用瀏覽器雙擊即可離線跨世界遊玩。</p>
         </details>
         <details class="faq">
-          <summary>Q2：使用 AI 藍圖遇到 404 模型錯誤怎麼辦？</summary>
-          <p>請將供應商切為「Google Gemma 4（開放模型）」或「Google Gemini」，先填入 API Key 後按一下「🔍 查可用模型」，系統會自動向官方查詢您的金鑰實際支援的模型名稱並列出快捷晶片供點選。</p>
+          <summary>Q2：如何搭乘固定路線公車、騎馬或推開建築物大門跨世界探索？</summary>
+          <p>走近汽車、公車、皇家馬車、駿馬或帆船時按 <code>G</code> 鍵即可搭乘（有路線的公車可用 <code>Tab</code> 切換自動巡航與親自駕駛）；走近建築門口或木門按 <code>F</code> 鍵即可進入建築內部世界並自動攜帶共用道具與積分。</p>
         </details>
         <details class="faq">
-          <summary>Q3：為什麼我在 3D 積木分頁調整數值，個人資產庫沒有馬上多出新檔案？</summary>
-          <p>為避免反覆微調尺寸產生大量半成品，所有即時預覽都在記憶體中完成；請在確認物件名稱與外型滿意後，點擊「💾 確認儲存至資產庫」或「💾 覆寫儲存原物件」，才會真正寫入資產庫。</p>
+          <summary>Q3：《社畜的一天》共有幾個世界？該如何分享整套專案？</summary>
+          <p>共包含溫馨住家、都市通勤大道、公司辦公室、生活大賣場與療癒美食餐廳 5 座世界。於任一座點選「🤝 分享」即可一鍵打包全 5 座世界的 <code>.stackpack.zip</code> 編輯包或單檔 <code>.html</code> 純遊戲版！</p>
         </details>
         <details class="faq">
           <summary>Q4：如何替換或切換介面語言？海外朋友看得到英文介面嗎？</summary>
